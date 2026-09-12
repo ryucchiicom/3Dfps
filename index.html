@@ -2,1989 +2,1067 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>Firebase 3D FPS</title>
-
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Firebase Online 3D FPS</title>
 <style>
-*{
-    box-sizing:border-box;
-    -webkit-tap-highlight-color:transparent;
-    user-select:none;
-}
-
-html,body{
-    margin:0;
-    width:100%;
-    height:100%;
-    overflow:hidden;
-    background:#111;
-    font-family:Arial,sans-serif;
-    color:white;
-}
-
-body{
-    touch-action:none;
-}
-
-#game{
-    position:fixed;
-    inset:0;
-    overflow:hidden;
-    background:
-        linear-gradient(#6ea8dc 0%,#b7d9f2 58%,#88b96d 58%,#65964d 100%);
-}
-
-#world{
-    position:absolute;
-    inset:0;
-    perspective:900px;
-    overflow:hidden;
-}
-
-#camera{
-    position:absolute;
-    left:50%;
-    top:50%;
-    width:0;
-    height:0;
-    transform-style:preserve-3d;
-}
-
-.platform{
-    position:absolute;
-    transform-style:preserve-3d;
-    background:linear-gradient(90deg,#777,#aaa);
-    border:2px solid rgba(255,255,255,.3);
-    box-shadow:
-        0 8px 20px rgba(0,0,0,.3),
-        inset 0 0 0 2px rgba(0,0,0,.15);
-}
-
-.platform::after{
-    content:"";
-    position:absolute;
-    left:0;
-    top:100%;
-    width:100%;
-    height:80px;
-    background:#555;
-    transform-origin:top;
-    transform:rotateX(-90deg);
-    opacity:.7;
-}
-
-.player{
-    position:absolute;
-    width:28px;
-    height:60px;
-    margin-left:-14px;
-    margin-top:-60px;
-    transform-style:preserve-3d;
-    border-radius:7px;
-    background:#28a9ff;
-    border:2px solid rgba(255,255,255,.7);
-    box-shadow:0 0 12px rgba(0,0,0,.3);
-}
-
-.player.me{
-    background:#36e36b;
-}
-
-.player.dead{
-    opacity:.25;
-}
-
-.bullet{
-    position:absolute;
-    width:8px;
-    height:8px;
-    margin:-4px;
-    border-radius:50%;
-    background:#ffe600;
-    box-shadow:0 0 10px #fff000;
-}
-
-#hud{
-    position:absolute;
-    inset:0;
-    pointer-events:none;
-}
-
-#crosshair{
-    position:absolute;
-    left:50%;
-    top:50%;
-    width:20px;
-    height:20px;
-    margin:-10px;
-}
-
-#crosshair::before,
-#crosshair::after{
-    content:"";
-    position:absolute;
-    background:white;
-    box-shadow:0 0 3px #000;
-}
-
-#crosshair::before{
-    left:9px;
-    top:0;
-    width:2px;
-    height:20px;
-}
-
-#crosshair::after{
-    left:0;
-    top:9px;
-    width:20px;
-    height:2px;
-}
-
-#roomScreen{
-    position:absolute;
-    inset:0;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:rgba(0,0,0,.55);
-    z-index:50;
-}
-
-.panel{
-    width:min(420px,90vw);
-    padding:28px;
-    border-radius:22px;
-    background:rgba(20,20,25,.9);
-    border:1px solid rgba(255,255,255,.15);
-    box-shadow:0 20px 60px rgba(0,0,0,.5);
-    text-align:center;
-}
-
-.panel h1{
-    margin:0 0 20px;
-}
-
-#roomCode{
-    width:100%;
-    padding:14px;
-    border:0;
-    border-radius:12px;
-    background:#292933;
-    color:white;
-    font-size:20px;
-    text-align:center;
-    outline:none;
-    margin-bottom:12px;
-}
-
-.bigButton{
-    width:100%;
-    padding:15px;
-    border:0;
-    border-radius:14px;
-    background:#238cff;
-    color:white;
-    font-size:18px;
-    font-weight:bold;
-}
-
-.bigButton:active{
-    transform:scale(.97);
-}
-
-#status{
-    min-height:24px;
-    margin-top:15px;
-    color:#ccc;
-}
-
-#roomInfo{
-    position:absolute;
-    top:15px;
-    left:15px;
-    padding:8px 12px;
-    border-radius:12px;
-    background:rgba(0,0,0,.45);
-    pointer-events:none;
-    z-index:20;
-}
-
-#playersInfo{
-    margin-top:4px;
-    font-size:12px;
-    opacity:.8;
-}
-
-#startButton{
-    position:absolute;
-    right:20px;
-    top:20px;
-    width:100px;
-    height:100px;
-    border-radius:50%;
-    border:3px solid rgba(255,255,255,.5);
-    background:rgba(20,20,20,.65);
-    color:white;
-    font-size:16px;
-    font-weight:bold;
-    display:none;
-    z-index:30;
-    overflow:hidden;
-}
-
-#startButton .progress{
-    position:absolute;
-    inset:5px;
-    border-radius:50%;
-    background:conic-gradient(#35d86b 0deg,#35d86b 0deg,transparent 0deg);
-    z-index:-1;
-}
-
-#startButton .inner{
-    position:absolute;
-    inset:8px;
-    border-radius:50%;
-    background:#181818;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-}
-
-#controls{
-    position:absolute;
-    inset:0;
-    z-index:25;
-    pointer-events:none;
-}
-
-.control{
-    position:absolute;
-    pointer-events:auto;
-    border:2px solid rgba(255,255,255,.4);
-    background:rgba(0,0,0,.35);
-    color:white;
-    font-weight:bold;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    touch-action:none;
-}
-
-#joystick{
-    left:25px;
-    bottom:30px;
-    width:125px;
-    height:125px;
-    border-radius:50%;
-}
-
-#stick{
-    width:55px;
-    height:55px;
-    border-radius:50%;
-    background:rgba(255,255,255,.35);
-    position:absolute;
-    left:35px;
-    top:35px;
-}
-
-.actionButton{
-    width:78px;
-    height:78px;
-    border-radius:50%;
-}
-
-#jumpButton{
-    right:25px;
-    bottom:125px;
-}
-
-#fireButton{
-    right:25px;
-    bottom:30px;
-}
-
-#grabButton{
-    right:25px;
-    bottom:125px;
-    display:none;
-}
-
-#fireButton .progress{
-    position:absolute;
-    inset:3px;
-    border-radius:50%;
-    background:conic-gradient(#ff4141 0deg,transparent 0deg);
-    pointer-events:none;
-}
-
-#fireButton .inner{
-    position:absolute;
-    inset:8px;
-    border-radius:50%;
-    background:rgba(0,0,0,.45);
-    display:flex;
-    justify-content:center;
-    align-items:center;
-}
-
-#fireButton.ready{
-    background:rgba(255,50,50,.45);
-}
-
-#grabButton.disabled{
-    opacity:.3;
-    color:rgba(255,255,255,.45);
-}
-
-#message{
-    position:absolute;
-    left:50%;
-    top:18%;
-    transform:translateX(-50%);
-    padding:12px 20px;
-    border-radius:14px;
-    background:rgba(0,0,0,.6);
-    font-weight:bold;
-    opacity:0;
-    transition:.2s;
-    z-index:40;
-}
-
-#message.show{
-    opacity:1;
-}
-
-#damage{
-    position:absolute;
-    inset:0;
-    background:rgba(255,0,0,.3);
-    opacity:0;
-    pointer-events:none;
-    z-index:35;
-}
-
-@media(min-width:800px){
-    #controls{
-        opacity:.75;
-    }
-}
-
-@media(max-width:799px){
-    #roomInfo{
-        font-size:13px;
-    }
+:root{--bg:rgba(10,15,25,.78);--border:rgba(255,255,255,.16);--accent:#66d9ff;--danger:#ff5e6c;--ok:#72f28b;--text:#f4f7fb}
+*{box-sizing:border-box}
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#000;color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+canvas{display:block}button,input{font:inherit}button{cursor:pointer}
+#game{position:fixed;inset:0}
+#menu,#lobby,#endScreen{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 45%,rgba(35,50,80,.92),rgba(5,8,14,.98))}
+#lobby,#endScreen{display:none}
+.panel{width:min(92vw,520px);padding:24px;border:1px solid var(--border);border-radius:20px;background:var(--bg);backdrop-filter:blur(16px);box-shadow:0 20px 70px rgba(0,0,0,.45)}
+h1{margin:0 0 8px;font-size:32px}h2{margin:0 0 12px}p{color:#b9c2d0;line-height:1.55}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--border);outline:0;color:#fff;background:rgba(255,255,255,.06)}
+button{border:0;border-radius:12px;padding:12px 16px;background:var(--accent);color:#041018;font-weight:700}
+button.secondary{background:rgba(255,255,255,.1);color:#fff;border:1px solid var(--border)}
+button.danger{background:var(--danger);color:#fff}
+.small{font-size:12px;color:#96a2b5}
+#status{min-height:24px;color:#b9c2d0;margin-top:12px;white-space:pre-wrap}
+#playersList{margin:12px 0 0;padding:0;list-style:none;display:grid;gap:8px;max-height:220px;overflow:auto}
+#playersList li{padding:9px 11px;border-radius:10px;background:rgba(255,255,255,.05);display:flex;justify-content:space-between}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+#hud{position:fixed;inset:0;z-index:10;pointer-events:none;display:none}
+#topbar{position:absolute;top:16px;left:16px;right:16px;display:flex;justify-content:space-between;gap:12px}
+.hudBox{background:rgba(7,11,18,.63);border:1px solid var(--border);backdrop-filter:blur(10px);border-radius:12px;padding:10px 12px}
+#healthBarOuter{width:240px;height:16px;border-radius:99px;overflow:hidden;background:rgba(255,255,255,.12);margin-top:4px}
+#healthBar{height:100%;width:100%;background:var(--ok)}
+#crosshair{position:absolute;left:50%;top:50%;width:18px;height:18px;transform:translate(-50%,-50%)}
+#crosshair:before,#crosshair:after{content:"";position:absolute;background:#fff;box-shadow:0 0 4px #000}
+#crosshair:before{left:8px;top:0;width:2px;height:18px}
+#crosshair:after{left:0;top:8px;width:18px;height:2px}
+#message{position:absolute;left:50%;bottom:12%;transform:translateX(-50%);padding:10px 14px;border-radius:999px;background:rgba(0,0,0,.55);border:1px solid var(--border);opacity:0;transition:opacity .15s}
+#help{position:absolute;left:16px;bottom:16px;max-width:450px;font-size:13px;color:#d5dbe6;background:rgba(7,11,18,.55);border:1px solid var(--border);border-radius:12px;padding:9px 11px}
+#mobileControls{display:none}
+.action{position:absolute;width:74px;height:74px;border-radius:50%;pointer-events:auto;color:#fff;border:1px solid rgba(255,255,255,.18);overflow:hidden;touch-action:none;z-index:5}
+.action:before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(rgba(255,255,255,.82) var(--progress,0%),rgba(255,255,255,.12) 0);opacity:.62;pointer-events:none}
+#jumpButton{right:42px;bottom:120px;background:rgba(102,217,255,.72)}
+#fireButton{right:42px;bottom:205px;background:rgba(255,94,108,.78)}
+#jumpButton.grab{background:rgba(114,242,139,.72)}
+#jumpButton.disabledGrab{background:rgba(255,255,255,.1);color:rgba(255,255,255,.45)}
+#startBtn{position:relative;overflow:hidden}
+#startBtn:after{content:"";position:absolute;inset:0;border-radius:inherit;background:conic-gradient(rgba(255,255,255,.75) var(--progress,0%),rgba(255,255,255,.1) 0);opacity:.55;pointer-events:none}
+@media(max-width:700px){
+#healthBarOuter{width:150px}#help{display:none}
+#mobileControls{display:block;position:absolute;inset:0;pointer-events:none}
+.stickArea{position:absolute;bottom:26px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);pointer-events:auto;touch-action:none}
+#moveStick{left:18px}#lookArea{right:18px;width:190px;border-radius:24px}
+.stickKnob{position:absolute;left:50%;top:50%;width:54px;height:54px;transform:translate(-50%,-50%);border-radius:50%;background:rgba(255,255,255,.2)}
 }
 </style>
 </head>
-
 <body>
+<div id="game"></div>
 
-<div id="game">
-
-    <div id="world">
-        <div id="camera"></div>
-    </div>
-
-    <div id="hud">
-        <div id="crosshair"></div>
-        <div id="damage"></div>
-
-        <div id="roomInfo">
-            <div>ROOM: <span id="roomText">----</span></div>
-            <div id="playersInfo">PLAYERS: 0</div>
-        </div>
-
-        <div id="message"></div>
-
-        <button id="startButton">
-            <div class="progress"></div>
-            <div class="inner">START</div>
-        </button>
-
-        <div id="controls">
-
-            <div id="joystick" class="control">
-                <div id="stick"></div>
-            </div>
-
-            <button id="jumpButton" class="control actionButton">
-                JUMP
-            </button>
-
-            <button id="grabButton" class="control actionButton">
-                GRAB
-            </button>
-
-            <button id="fireButton" class="control actionButton">
-                <div class="progress"></div>
-                <div class="inner">FIRE</div>
-            </button>
-
-        </div>
-    </div>
-
-    <div id="roomScreen">
-        <div class="panel">
-            <h1>3D FPS</h1>
-            <input
-                id="roomCode"
-                maxlength="12"
-                placeholder="試合コード"
-                autocomplete="off"
-            >
-            <button id="roomButton" class="bigButton">
-                試合を作成/参加
-            </button>
-            <div id="status"></div>
-        </div>
-    </div>
-
+<div id="menu">
+<div class="panel">
+<h1>Firebase 3D FPS</h1>
+<p>オンラインで同じアリーナに入り、相手を撃ってスコアを競うシンプルな対戦FPS。</p>
+<input id="nameInput" maxlength="16" placeholder="プレイヤー名" value="Player">
+<div style="height:10px"></div>
+<input id="roomInput" maxlength="20" placeholder="部屋コード（空欄なら新規作成）">
+<div style="height:10px"></div>
+<button id="createJoinBtn">試合を作成/参加</button>
+<div id="status"></div>
+<div class="small" style="margin-top:12px">PC: WASD移動 / マウス視点 / 左クリック射撃 / SpaceでJUMP・GRAB</div>
+<div class="small" style="margin-top:4px">スマホ: 左スティック移動 / 右側ドラッグで視点 / JUMP / GRAB / FIRE</div>
+</div>
 </div>
 
+<div id="lobby">
+<div class="panel">
+<h2>待機中</h2>
+<p>部屋ID: <span id="roomIdLabel" class="mono"></span></p>
+<p>参加者 <span id="playerCount">0</span> / 8</p>
+<ul id="playersList"></ul>
+<div class="row" style="margin-top:14px">
+<button id="startBtn" style="display:none">START</button>
+<button id="copyRoomBtn" class="secondary">部屋IDをコピー</button>
+<button id="leaveLobbyBtn" class="danger">退出</button>
+</div>
+<div class="small" style="margin-top:10px">部屋主だけSTARTを長押しすると試合開始。</div>
+</div>
+</div>
+
+<div id="hud">
+<div id="topbar">
+<div class="hudBox">
+<div>HP <span id="healthText">100</span></div>
+<div id="healthBarOuter"><div id="healthBar"></div></div>
+</div>
+<div class="hudBox">K/D: <span id="scoreText">0 / 0</span><br><span class="small">残り時間 <span id="timeText">03:00</span></span></div>
+</div>
+<div id="crosshair"></div>
+<div id="message"></div>
+<div id="help">WASDで移動 / マウスで視点 / クリックで射撃 / SpaceでJUMP・GRAB<br>弾速と最大連射速度あり。撃破すると1ポイント。</div>
+<div id="mobileControls">
+<div id="moveStick" class="stickArea"><div id="moveKnob" class="stickKnob"></div></div>
+<div id="lookArea" class="stickArea"></div>
+<button id="jumpButton" class="action">JUMP</button>
+<button id="fireButton" class="action">FIRE</button>
+</div>
+</div>
+
+<div id="endScreen">
+<div class="panel">
+<h2 id="winnerTitle">試合終了</h2>
+<p id="resultText"></p>
+<div id="finalRanking"></div>
+<div class="row" style="margin-top:14px"><button id="backToMenuBtn">メニューへ戻る</button></div>
+<div class="small" style="margin-top:10px">試合終了時に、この試合用のFirestoreデータを削除する処理が走ります。</div>
+</div>
+</div>
+
+<script type="importmap">
+{"imports":{
+"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+"three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+}}
+</script>
+
 <script type="module">
+import * as THREE from "three";
+import {PointerLockControls} from "three/addons/controls/PointerLockControls.js";
+import {initializeApp} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import {getFirestore,collection,doc,setDoc,getDoc,updateDoc,deleteDoc,onSnapshot,serverTimestamp,writeBatch,getDocs} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 
-import {
-    initializeApp
-} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-
-import {
-    getAnalytics
-} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-analytics.js";
-
-import {
-    getFirestore,
-    doc,
-    getDoc,
-    setDoc,
-    updateDoc,
-    deleteDoc,
-    onSnapshot,
-    collection,
-    serverTimestamp,
-    runTransaction,
-    getDocs
-} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
-
-const firebaseConfig = {
-    apiKey:"AIzaSyD5cTt3b1IeiGIOgJcC0sSFgO-Ce78JyIw",
-    authDomain:"dfps-4aa92.firebaseapp.com",
-    projectId:"dfps-4aa92",
-    storageBucket:"dfps-4aa92.firebasestorage.app",
-    messagingSenderId:"379021412536",
-    appId:"1:379021412536:web:003efdb33f6d6bb77d8c4d",
-    measurementId:"G-BG2KFTL9ZC"
+const firebaseConfig={
+apiKey:"AIzaSyD5cTt3b1IeiGIOgJcC0sSFgO-Ce78JyIw",
+authDomain:"dfps-4aa92.firebaseapp.com",
+projectId:"dfps-4aa92",
+storageBucket:"dfps-4aa92.firebasestorage.app",
+messagingSenderId:"379021412536",
+appId:"1:379021412536:web:003efdb33f6d6bb77d8c4d",
+measurementId:"G-BG2KFTL9ZC"
 };
 
 const app=initializeApp(firebaseConfig);
-
-let analytics=null;
-try{
-    analytics=getAnalytics(app);
-}catch(e){}
-
 const db=getFirestore(app);
+const auth=getAuth(app);
+const $=id=>document.getElementById(id);
 
-const roomScreen=document.getElementById("roomScreen");
-const roomCodeInput=document.getElementById("roomCode");
-const roomButton=document.getElementById("roomButton");
-const statusEl=document.getElementById("status");
+const menu=$("menu"),lobby=$("lobby"),hud=$("hud"),endScreen=$("endScreen");
+const statusEl=$("status"),nameInput=$("nameInput"),roomInput=$("roomInput");
+const roomIdLabel=$("roomIdLabel"),playerCount=$("playerCount"),playersList=$("playersList");
+const startBtn=$("startBtn"),createJoinBtn=$("createJoinBtn");
+const copyRoomBtn=$("copyRoomBtn"),leaveLobbyBtn=$("leaveLobbyBtn"),backToMenuBtn=$("backToMenuBtn");
 
-const roomText=document.getElementById("roomText");
-const playersInfo=document.getElementById("playersInfo");
+let authUser=null,roomId=null,playerId=null,playerName="Player",isHost=false;
+let roomUnsub=null,playersUnsub=null,started=false,ending=false;
+let scene,camera,renderer,controls,clock;
+let arenaGroup;
+const remotePlayers=new Map(),remoteState=new Map(),bullets=[];
+const keys=new Set();
 
-const world=document.getElementById("world");
-const camera=document.getElementById("camera");
+const MATCH_DURATION=180;
+const MAX_PLAYERS=8;
+const PLAYER_SPEED=7;
+const LOOK_SPEED=.0022;
+const PLAYER_RADIUS=.55;
+const PLAYER_HEIGHT=1.9;
+const EYE_HEIGHT=1.15;
+const GRAVITY=22;
+const JUMP_SPEED=8.2;
+const GRAB_DISTANCE=.72;
+const GRAB_DURATION=500;
+const START_HOLD_DURATION=1200;
+const BULLET_SPEED=34;
+const FIRE_INTERVAL=260;
+const BULLET_LIFETIME=2.2;
+const HIT_DAMAGE=25;
+const MAX_HP=100;
+const MAX_SCORE=10;
+const INACTIVE_LIMIT=60000;
+const STALE_MATCH_LIMIT=86400000;
 
-const startButton=document.getElementById("startButton");
-const startProgress=startButton.querySelector(".progress");
-
-const jumpButton=document.getElementById("jumpButton");
-const grabButton=document.getElementById("grabButton");
-
-const fireButton=document.getElementById("fireButton");
-const fireProgress=fireButton.querySelector(".progress");
-
-const joystick=document.getElementById("joystick");
-const stick=document.getElementById("stick");
-
-const message=document.getElementById("message");
-const damage=document.getElementById("damage");
-
-const clientId=
-    crypto.randomUUID ?
-    crypto.randomUUID() :
-    Math.random().toString(36).slice(2)+Date.now();
-
-let roomId="";
-let isHost=false;
-let roomRef=null;
-let unsubscribeRoom=null;
-
-let gameStarted=false;
-let startHeld=false;
-let startHoldStart=0;
-
-let lastLocalAction=Date.now();
-let lastRoomUpdate=0;
-
-let yaw=0;
-let pitch=0;
-
-const player={
-    x:0,
-    y:2,
-    z:0,
-    vx:0,
-    vy:0,
-    vz:0,
-    grounded:false,
-    hp:100,
-    alive:true,
-    invincibleUntil:0,
-    grabbing:false,
-    grabStart:0,
-    grabTarget:null,
-    lastShot:0
+let local={
+x:0,y:EYE_HEIGHT,z:0,yaw:0,pitch:0,hp:MAX_HP,kills:0,deaths:0,
+lastShot:0,lastWrite:0,respawnAt:0,vy:0,grounded:true,grabbing:false,
+grabStartedAt:0,invulnerableUntil:0,lastActiveAt:Date.now()
 };
-
-const remotePlayers=new Map();
-
-const bullets=new Map();
-
-const keys={};
+let matchEndAt=0,lastFrame=performance.now();
+let mobileMove={x:0,y:0},mobileFire=false;
+let startHoldTimer=null,startHoldStart=0,startHoldActive=false;
+let lastActivityPersist=0;
 
 const platforms=[
-    {
-        id:"ground",
-        x:0,
-        y:0,
-        z:0,
-        w:42,
-        h:1,
-        d:42
-    },
+{x:-8,y:1.2,z:-8,w:5,h:2.4,d:5},
+{x:8,y:1.2,z:-8,w:5,h:2.4,d:5},
+{x:-8,y:1.2,z:8,w:5,h:2.4,d:5},
+{x:8,y:1.2,z:8,w:5,h:2.4,d:5},
+{x:0,y:1.5,z:0,w:3.5,h:3,d:7},
+{x:-14,y:.9,z:0,w:3,h:1.8,d:10},
+{x:14,y:.9,z:0,w:3,h:1.8,d:10},
+{x:0,y:.9,z:-14,w:10,h:1.8,d:3},
+{x:0,y:.9,z:14,w:10,h:1.8,d:3},
 
-    {
-        id:"p1",
-        x:0,
-        y:3,
-        z:-8,
-        w:8,
-        h:1,
-        d:8
-    },
-
-    {
-        id:"p2",
-        x:7,
-        y:5.5,
-        z:-15,
-        w:7,
-        h:1,
-        d:7
-    },
-
-    {
-        id:"p3",
-        x:-7,
-        y:7.5,
-        z:-21,
-        w:8,
-        h:1,
-        d:7
-    },
-
-    {
-        id:"p4",
-        x:2,
-        y:9.5,
-        z:-27,
-        w:7,
-        h:1,
-        d:7
-    },
-
-    {
-        id:"p5",
-        x:11,
-        y:11.5,
-        z:-32,
-        w:8,
-        h:1,
-        d:7
-    },
-
-    {
-        id:"p6",
-        x:-4,
-        y:13.5,
-        z:-36,
-        w:8,
-        h:1,
-        d:8
-    },
-
-    {
-        id:"p7",
-        x:-13,
-        y:15.5,
-        z:-42,
-        w:8,
-        h:1,
-        d:8
-    }
+{x:-4,y:.6,z:-15,w:4,h:1.2,d:3},
+{x:4,y:.6,z:-15,w:4,h:1.2,d:3},
+{x:-4,y:.6,z:15,w:4,h:1.2,d:3},
+{x:4,y:.6,z:15,w:4,h:1.2,d:3},
+{x:-15,y:.6,z:-4,w:3,h:1.2,d:4},
+{x:-15,y:.6,z:4,w:3,h:1.2,d:4},
+{x:15,y:.6,z:-4,w:3,h:1.2,d:4},
+{x:15,y:.6,z:4,w:3,h:1.2,d:4}
 ];
 
-function createPlatform(p){
-
-    const el=document.createElement("div");
-
-    el.className="platform";
-
-    el.style.width=p.w*40+"px";
-    el.style.height=p.d*40+"px";
-
-    el.dataset.id=p.id;
-
-    world.appendChild(el);
-
-    p.el=el;
-
+function setStatus(t){statusEl.textContent=t}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function sanitizeName(v){return String(v||"Player").replace(/[<>"']/g,"").trim().slice(0,16)||"Player"}
+function randomRoomId(){
+const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let r="";
+for(let i=0;i<6;i++)r+=chars[Math.floor(Math.random()*chars.length)];
+return r
+}
+function formatTime(sec){
+sec=Math.max(0,Math.ceil(sec));
+return `${Math.floor(sec/60).toString().padStart(2,"0")}:${(sec%60).toString().padStart(2,"0")}`
+}
+function showMessage(t,ms=1000){
+const e=$("message");e.textContent=t;e.style.opacity=1;
+clearTimeout(showMessage.t);showMessage.t=setTimeout(()=>e.style.opacity=0,ms)
+}
+function esc(s){
+return String(s).replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]))
 }
 
-platforms.forEach(createPlatform);
-
-function showMessage(text,time=1500){
-
-    message.textContent=text;
-    message.classList.add("show");
-
-    clearTimeout(showMessage.timer);
-
-    showMessage.timer=setTimeout(()=>{
-        message.classList.remove("show");
-    },time);
+async function bootAuth(){
+setStatus("Firebaseへ接続中…");
+try{await signInAnonymously(auth)}
+catch(e){console.error(e);setStatus("Firebase Authenticationに接続できなかった。匿名ログインを有効にしてね。")}
 }
-
-function setStatus(text){
-    statusEl.textContent=text;
-}
-
-function normalizeRoomCode(value){
-
-    return value
-        .trim()
-        .toUpperCase()
-        .replace(/[^A-Z0-9_-]/g,"")
-        .slice(0,12);
-
-}
-
-function randomSpawn(){
-
-    const spawns=[
-        {x:0,y:2,z:12},
-        {x:8,y:2,z:8},
-        {x:-8,y:2,z:8},
-        {x:0,y:2,z:0},
-        {x:12,y:2,z:-4},
-        {x:-12,y:2,z:-4}
-    ];
-
-    return spawns[Math.floor(Math.random()*spawns.length)];
-
-}
-
-function resetPlayer(){
-
-    const s=randomSpawn();
-
-    player.x=s.x;
-    player.y=s.y;
-    player.z=s.z;
-
-    player.vx=0;
-    player.vy=0;
-    player.vz=0;
-
-    player.hp=100;
-    player.alive=true;
-    player.grounded=false;
-    player.grabbing=false;
-    player.grabTarget=null;
-
-}
-
-function markAction(){
-
-    lastLocalAction=Date.now();
-
-}
-
-async function createOrJoinRoom(){
-
-    const code=normalizeRoomCode(roomCodeInput.value);
-
-    if(!code){
-
-        setStatus("試合コードを入力してね");
-        return;
-
-    }
-
-    roomCodeInput.value=code;
-
-    roomButton.disabled=true;
-
-    try{
-
-        const ref=doc(db,"matches",code);
-        const snap=await getDoc(ref);
-
-        if(!snap.exists()){
-
-            const data={
-                code,
-                host:clientId,
-                started:false,
-                createdAt:serverTimestamp(),
-                updatedAt:serverTimestamp(),
-                players:{
-                    [clientId]:{
-                        id:clientId,
-                        x:0,
-                        y:2,
-                        z:0,
-                        yaw:0,
-                        pitch:0,
-                        hp:100,
-                        alive:true,
-                        lastActive:Date.now(),
-                        joinedAt:Date.now()
-                    }
-                }
-            };
-
-            await setDoc(ref,data);
-
-            isHost=true;
-            roomId=code;
-            roomRef=ref;
-
-            showMessage("試合を作成しました");
-
-        }else{
-
-            const data=snap.data();
-
-            roomId=code;
-            roomRef=ref;
-
-            if(data.started){
-
-                setStatus("その試合はすでに開始されています");
-                roomButton.disabled=false;
-                return;
-
-            }
-
-            await runTransaction(db,async transaction=>{
-
-                const current=await transaction.get(ref);
-
-                if(!current.exists()){
-                    throw new Error("ROOM_NOT_FOUND");
-                }
-
-                const d=current.data();
-
-                const players=d.players||{};
-
-                players[clientId]={
-                    id:clientId,
-                    x:0,
-                    y:2,
-                    z:0,
-                    yaw:0,
-                    pitch:0,
-                    hp:100,
-                    alive:true,
-                    lastActive:Date.now(),
-                    joinedAt:Date.now()
-                };
-
-                transaction.update(ref,{
-                    players,
-                    updatedAt:serverTimestamp()
-                });
-
-            });
-
-            isHost=data.host===clientId;
-
-            showMessage("試合に参加しました");
-
-        }
-
-        roomScreen.style.display="none";
-        roomText.textContent=roomId;
-
-        resetPlayer();
-
-        subscribeRoom();
-
-    }catch(e){
-
-        console.error(e);
-
-        setStatus("部屋の作成/参加に失敗しました");
-
-    }finally{
-
-        roomButton.disabled=false;
-
-    }
-
-}
-
-roomButton.addEventListener("click",createOrJoinRoom);
-
-roomCodeInput.addEventListener("keydown",e=>{
-
-    if(e.key==="Enter"){
-        createOrJoinRoom();
-    }
-
+onAuthStateChanged(auth,u=>{
+authUser=u;
+if(u&&!roomId)setStatus("接続OK。部屋コードを入力すると参加、空欄なら新規作成。")
 });
 
-function subscribeRoom(){
+function initThree(){
+if(renderer)return;
+scene=new THREE.Scene();
+scene.background=new THREE.Color(0x87a0b8);
+scene.fog=new THREE.Fog(0x87a0b8,20,80);
 
-    if(unsubscribeRoom){
-        unsubscribeRoom();
-    }
+camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.05,120);
+camera.position.set(0,EYE_HEIGHT,8);
 
-    unsubscribeRoom=onSnapshot(roomRef,snap=>{
+renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));
+renderer.setSize(innerWidth,innerHeight);
+renderer.shadowMap.enabled=true;
+$("game").appendChild(renderer.domElement);
 
-        if(!snap.exists()){
+scene.add(new THREE.HemisphereLight(0xcfe5ff,0x2c3340,2));
+const sun=new THREE.DirectionalLight(0xffffff,2);
+sun.position.set(10,20,6);sun.castShadow=true;scene.add(sun);
 
-            leaveToLobby("試合が終了しました");
-            return;
+arenaGroup=new THREE.Group();scene.add(arenaGroup);
 
-        }
+const floor=new THREE.Mesh(
+new THREE.BoxGeometry(48,.5,48),
+new THREE.MeshStandardMaterial({color:0x313b48,roughness:.92})
+);
+floor.position.y=-.3;floor.receiveShadow=true;arenaGroup.add(floor);
 
-        const data=snap.data();
+const wallMat=new THREE.MeshStandardMaterial({color:0x596579,roughness:.82});
+const crateMat=new THREE.MeshStandardMaterial({color:0x9e7b55,roughness:.95});
+const metalMat=new THREE.MeshStandardMaterial({color:0x78879a,roughness:.52,metalness:.55});
 
-        gameStarted=!!data.started;
-
-        if(data.host===clientId){
-            isHost=true;
-        }
-
-        const players=data.players||{};
-
-        playersInfo.textContent=
-            "PLAYERS: "+Object.keys(players).length;
-
-        updateRemotePlayers(players);
-
-        if(gameStarted){
-
-            startButton.style.display="none";
-
-        }else if(isHost){
-
-            startButton.style.display="block";
-
-        }else{
-
-            startButton.style.display="none";
-
-        }
-
-    },err=>{
-
-        console.error(err);
-
-    });
-
+function addBox(x,y,z,w,h,d,mat){
+const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);
+m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;arenaGroup.add(m)
 }
-
-function updateRemotePlayers(players){
-
-    for(const [id,p] of Object.entries(players)){
-
-        if(id===clientId) continue;
-
-        let el=remotePlayers.get(id);
-
-        if(!el){
-
-            el=document.createElement("div");
-            el.className="player";
-            world.appendChild(el);
-            remotePlayers.set(id,el);
-
-        }
-
-        el.classList.toggle("dead",p.alive===false);
-
-        el.style.transform=
-            `translate3d(${p.x*40}px,${-p.y*40}px,${p.z*40}px)`;
-
-    }
-
-    for(const [id,el] of remotePlayers){
-
-        if(!players[id]){
-
-            el.remove();
-            remotePlayers.delete(id);
-
-        }
-
-    }
-
-}
-
-async function syncPlayer(){
-
-    if(!roomRef || !roomId || !gameStarted){
-        return;
-    }
-
-    const now=Date.now();
-
-    if(now-lastRoomUpdate<80){
-        return;
-    }
-
-    lastRoomUpdate=now;
-
-    try{
-
-        await updateDoc(roomRef,{
-            [`players.${clientId}`]:{
-                id:clientId,
-                x:player.x,
-                y:player.y,
-                z:player.z,
-                yaw,
-                pitch,
-                hp:player.hp,
-                alive:player.alive,
-                lastActive:lastLocalAction
-            },
-            updatedAt:serverTimestamp()
-        });
-
-    }catch(e){
-
-        console.error(e);
-
-    }
-
-}
-
-async function cleanupInactivePlayers(){
-
-    if(!roomRef || !roomId){
-        return;
-    }
-
-    try{
-
-        const snap=await getDoc(roomRef);
-
-        if(!snap.exists()){
-            return;
-        }
-
-        const data=snap.data();
-
-        const players=data.players||{};
-        const now=Date.now();
-
-        const ids=Object.keys(players);
-
-        if(ids.length===0){
-
-            await deleteDoc(roomRef);
-            leaveToLobby("試合が終了しました");
-            return;
-
-        }
-
-        let allInactive=true;
-
-        for(const id of ids){
-
-            const active=Number(players[id].lastActive||0);
-
-            if(now-active<60000){
-
-                allInactive=false;
-                break;
-
-            }
-
-        }
-
-        if(allInactive){
-
-            await deleteDoc(roomRef);
-
-            leaveToLobby(
-                "全員が1分以上操作していないため試合を終了しました"
-            );
-
-        }
-
-    }catch(e){
-
-        console.error(e);
-
-    }
-
-}
-
-setInterval(cleanupInactivePlayers,10000);
-
-function leaveToLobby(text){
-
-    if(unsubscribeRoom){
-
-        unsubscribeRoom();
-        unsubscribeRoom=null;
-
-    }
-
-    roomId="";
-    roomRef=null;
-    gameStarted=false;
-    isHost=false;
-
-    roomScreen.style.display="flex";
-
-    startButton.style.display="none";
-
-    setStatus(text||"");
-
-    for(const [id,el] of remotePlayers){
-
-        el.remove();
-
-    }
-
-    remotePlayers.clear();
-
-}
-
-async function startMatch(){
-
-    if(!roomRef || !isHost || gameStarted){
-        return;
-    }
-
-    try{
-
-        const snap=await getDoc(roomRef);
-
-        if(!snap.exists()){
-            return;
-        }
-
-        const data=snap.data();
-        const players=data.players||{};
-
-        const now=Date.now();
-
-        const updated={};
-
-        for(const id of Object.keys(players)){
-
-            const s=randomSpawn();
-
-            updated[id]={
-                ...players[id],
-                x:s.x,
-                y:s.y,
-                z:s.z,
-                hp:100,
-                alive:true,
-                lastActive:now
-            };
-
-        }
-
-        await updateDoc(roomRef,{
-            started:true,
-            players:updated,
-            startedAt:serverTimestamp(),
-            updatedAt:serverTimestamp()
-        });
-
-        resetPlayer();
-
-        player.invincibleUntil=Date.now()+3000;
-
-        showMessage("START!");
-
-    }catch(e){
-
-        console.error(e);
-
-    }
-
-}
-
-function updateStartButton(){
-
-    if(!isHost || gameStarted){
-        startButton.style.display="none";
-        return;
-    }
-
-    startButton.style.display="block";
-
-    if(startHeld){
-
-        const elapsed=performance.now()-startHoldStart;
-        const progress=Math.min(1,elapsed/1000);
-
-        startProgress.style.background=
-            `conic-gradient(#35d86b ${progress*360}deg,transparent ${progress*360}deg)`;
-
-        if(progress>=1){
-
-            startHeld=false;
-            startProgress.style.background=
-                "conic-gradient(#35d86b 0deg,transparent 0deg)";
-
-            startMatch();
-
-        }
-
-    }else{
-
-        startProgress.style.background=
-            "conic-gradient(#35d86b 0deg,transparent 0deg)";
-
-    }
-
-    requestAnimationFrame(updateStartButton);
-
-}
-
-startButton.addEventListener("pointerdown",e=>{
-
-    e.preventDefault();
-
-    if(!isHost || gameStarted){
-        return;
-    }
-
-    markAction();
-
-    startHeld=true;
-    startHoldStart=performance.now();
-
+addBox(0,3,-24,48,6,.8,wallMat);
+addBox(0,3,24,48,6,.8,wallMat);
+addBox(-24,3,0,.8,6,48,wallMat);
+addBox(24,3,0,.8,6,48,wallMat);
+platforms.forEach(p=>addBox(p.x,p.y,p.z,p.w,p.h,p.d,p.h>=2?crateMat:metalMat));
+
+controls=new PointerLockControls(camera,renderer.domElement);
+renderer.domElement.addEventListener("click",()=>{
+if(started&&innerWidth>700)controls.lock()
 });
 
-for(const ev of ["pointerup","pointercancel","pointerleave"]){
+addEventListener("keydown",e=>{
+keys.add(e.code);
+markActivity();
+if(e.code==="Space"){
+e.preventDefault();
+if(started)jumpOrGrab()
+}
+});
+addEventListener("keyup",e=>keys.delete(e.code));
+addEventListener("mousedown",e=>{if(e.button===0&&started)shoot()});
+addEventListener("resize",onResize);
 
-    startButton.addEventListener(ev,()=>{
-
-        if(startHeld){
-
-            startHeld=false;
-
-            startProgress.style.background=
-                "conic-gradient(#35d86b 0deg,transparent 0deg)";
-
-        }
-
-    });
-
+setupMobileControls();
+clock=new THREE.Clock();
+animate()
 }
 
-requestAnimationFrame(updateStartButton);
-
-function checkGroundCollision(oldY,newY){
-
-    const bottom=newY;
-    const oldBottom=oldY;
-
-    let landed=false;
-
-    for(const p of platforms){
-
-        const minX=p.x-p.w/2;
-        const maxX=p.x+p.w/2;
-
-        const minZ=p.z-p.d/2;
-        const maxZ=p.z+p.d/2;
-
-        const insideXZ=
-            player.x>=minX &&
-            player.x<=maxX &&
-            player.z>=minZ &&
-            player.z<=maxZ;
-
-        if(!insideXZ){
-            continue;
-        }
-
-        const top=p.y+p.h;
-
-        if(
-            player.vy<=0 &&
-            oldBottom>=top &&
-            bottom<=top
-        ){
-
-            player.y=top;
-            player.vy=0;
-            player.grounded=true;
-            landed=true;
-
-            break;
-
-        }
-
-    }
-
-    if(!landed){
-
-        player.grounded=false;
-
-    }
-
-    return landed;
-
+function onResize(){
+if(!camera||!renderer)return;
+camera.aspect=innerWidth/innerHeight;
+camera.updateProjectionMatrix();
+renderer.setSize(innerWidth,innerHeight)
 }
 
-function findGrabTarget(){
+function makePlayerMesh(color){
+const g=new THREE.Group();
+const body=new THREE.Mesh(
+new THREE.CapsuleGeometry(.42,1,4,8),
+new THREE.MeshStandardMaterial({color,roughness:.68})
+);
+body.position.y=.86;body.castShadow=true;g.add(body);
 
-    if(player.grounded){
-        return null;
-    }
+const visor=new THREE.Mesh(
+new THREE.BoxGeometry(.52,.18,.08),
+new THREE.MeshStandardMaterial({color:0x101820,metalness:.7,roughness:.2})
+);
+visor.position.set(0,1.45,-.37);g.add(visor);
 
-    const playerTop=player.y;
+const gun=new THREE.Mesh(
+new THREE.BoxGeometry(.12,.12,.65),
+new THREE.MeshStandardMaterial({color:0x222831,metalness:.65,roughness:.3})
+);
+gun.position.set(.38,1.02,-.25);gun.rotation.x=-.1;g.add(gun);
+return g
+}
 
-    let best=null;
-    let bestDistance=Infinity;
+function colorFromId(id){
+let h=0;
+for(let i=0;i<id.length;i++)h=(h*31+id.charCodeAt(i))>>>0;
+const c=new THREE.Color();c.setHSL((h%360)/360,.72,.55);return c
+}
 
-    for(const p of platforms){
+function updateRemotePlayers(){
+for(const[id,state]of remoteState){
+if(id===playerId)continue;
+if(!state||state.alive===false){
+if(remotePlayers.has(id))remotePlayers.get(id).visible=false;
+continue
+}
+let mesh=remotePlayers.get(id);
+if(!mesh){
+mesh=makePlayerMesh(colorFromId(id));
+arenaGroup.add(mesh);remotePlayers.set(id,mesh)
+}
+mesh.visible=true;
+const targetY=(state.y??EYE_HEIGHT)-EYE_HEIGHT;
+mesh.userData.target=new THREE.Vector3(state.x,targetY,state.z);
+mesh.position.lerp(mesh.userData.target,.35);
+mesh.rotation.y=state.yaw||0
+}
+for(const[id,mesh]of remotePlayers){
+if(!remoteState.has(id)){
+arenaGroup.remove(mesh);remotePlayers.delete(id)
+}}
+}
 
-        const minX=p.x-p.w/2;
-        const maxX=p.x+p.w/2;
+function horizontalBlocked(x,z){
+const r=PLAYER_RADIUS;
+if(Math.abs(x)>22.8-r||Math.abs(z)>22.8-r)return true;
+for(const p of platforms){
+const top=p.y+p.h/2;
+const feet=local.y-EYE_HEIGHT;
+if(feet>=top-.08)continue;
+if(Math.abs(x-p.x)<p.w/2+r&&Math.abs(z-p.z)<p.d/2+r)return true
+}
+return false
+}
 
-        const minZ=p.z-p.d/2;
-        const maxZ=p.z+p.d/2;
-
-        const insideXZ=
-            player.x>=minX &&
-            player.x<=maxX &&
-            player.z>=minZ &&
-            player.z<=maxZ;
-
-        if(!insideXZ){
-            continue;
-        }
-
-        const top=p.y+p.h;
-
-        const verticalDistance=playerTop-top;
-
-        if(
-            verticalDistance>=0 &&
-            verticalDistance<=0.15
-        ){
-
-            const dx=player.x-p.x;
-            const dz=player.z-p.z;
-
-            const distance=Math.sqrt(dx*dx+dz*dz);
-
-            if(distance<bestDistance){
-
-                bestDistance=distance;
-                best=p;
-
-            }
-
-        }
-
-    }
-
-    return best;
-
+function groundTopAt(x,z){
+let top=0;
+for(const p of platforms){
+if(Math.abs(x-p.x)<=p.w/2-.1&&Math.abs(z-p.z)<=p.d/2-.1)
+top=Math.max(top,p.y+p.h/2)
+}
+return top
 }
 
 function canGrab(){
-
-    if(player.grounded){
-        return false;
-    }
-
-    return !!findGrabTarget();
-
+if(!started||local.grounded||local.hp<=0||local.grabbing)return false;
+const head=local.y+(PLAYER_HEIGHT-EYE_HEIGHT);
+for(const p of platforms){
+const pt=p.y+p.h/2;
+const hd=Math.max(Math.abs(local.x-p.x)-p.w/2,Math.abs(local.z-p.z)-p.d/2,0);
+if(hd<=GRAB_DISTANCE&&pt<head-.02&&pt>local.y-EYE_HEIGHT-1)return true
+}
+return false
 }
 
-function updateGrabButton(){
-
-    if(!gameStarted || player.grounded){
-
-        grabButton.style.display="none";
-        return;
-
-    }
-
-    grabButton.style.display="flex";
-
-    const target=findGrabTarget();
-
-    if(target){
-
-        grabButton.classList.remove("disabled");
-
-    }else{
-
-        grabButton.classList.add("disabled");
-
-    }
-
+function getGrabPlatform(){
+if(!canGrab())return null;
+const head=local.y+(PLAYER_HEIGHT-EYE_HEIGHT);
+let best=null,bd=Infinity;
+for(const p of platforms){
+const pt=p.y+p.h/2;
+const hd=Math.max(Math.abs(local.x-p.x)-p.w/2,Math.abs(local.z-p.z)-p.d/2,0);
+if(hd<=GRAB_DISTANCE&&pt<head-.02&&pt>local.y-EYE_HEIGHT-1&&hd<bd){
+best=p;bd=hd
+}}
+return best
 }
 
-function performGrab(){
-
-    markAction();
-
-    if(player.grounded || player.grabbing){
-        return;
-    }
-
-    const target=findGrabTarget();
-
-    if(!target){
-        return;
-    }
-
-    player.grabbing=true;
-    player.grabStart=performance.now();
-    player.grabTarget=target;
-
+function jumpOrGrab(){
+if(!started||ending||local.hp<=0)return;
+if(canGrab()){
+const p=getGrabPlatform();
+if(!p)return;
+local.grabbing=true;
+local.grabStartedAt=performance.now();
+local.vy=0;
+setTimeout(()=>{
+if(!started||ending||!local.grabbing)return;
+const top=p.y+p.h/2;
+local.x=clamp(local.x,p.x-p.w/2+PLAYER_RADIUS,p.x+p.w/2-PLAYER_RADIUS);
+local.z=clamp(local.z,p.z-p.d/2+PLAYER_RADIUS,p.z+p.d/2-PLAYER_RADIUS);
+local.y=top+EYE_HEIGHT;
+local.vy=0;
+local.grounded=true;
+local.grabbing=false;
+syncLocalState(true)
+},GRAB_DURATION);
+return
+}
+if(local.grounded){
+local.vy=JUMP_SPEED;
+local.grounded=false
+}
 }
 
-function updateGrab(){
-
-    if(!player.grabbing){
-        return;
-    }
-
-    const target=player.grabTarget;
-
-    if(!target){
-
-        player.grabbing=false;
-        return;
-
-    }
-
-    const progress=Math.min(
-        1,
-        (performance.now()-player.grabStart)/500
-    );
-
-    const targetY=target.y+target.h+1.2;
-
-    player.x+=(target.x-player.x)*0.15;
-    player.z+=(target.z-player.z)*0.15;
-
-    player.y+=
-        (targetY-player.y)*
-        Math.min(.25,progress*.25);
-
-    player.vx=0;
-    player.vy=0;
-    player.vz=0;
-
-    if(progress>=1){
-
-        player.x=target.x;
-        player.y=targetY;
-        player.z=target.z;
-
-        player.grounded=true;
-        player.grabbing=false;
-        player.grabTarget=null;
-
-    }
-
+function spawnPosition(i=0){
+const p=[[-18,-18],[18,-18],[-18,18],[18,18],[0,-18],[0,18],[-18,0],[18,0]];
+return p[i%p.length]
 }
 
-function jump(){
-
-    markAction();
-
-    if(!gameStarted || !player.alive){
-        return;
-    }
-
-    if(player.grounded){
-
-        player.vy=8.5;
-        player.grounded=false;
-
-    }
-
+function getSafeSpawnPositions(count){
+const c=[
+[-18,-18],[18,-18],[-18,18],[18,18],[0,-18],[0,18],[-18,0],[18,0],
+[-20,-8],[20,-8],[-20,8],[20,8],[-8,-20],[8,-20],[-8,20],[8,20]
+],out=[];
+for(const p of c){
+if(out.every(q=>Math.hypot(q[0]-p[0],q[1]-p[1])>=7))out.push(p);
+if(out.length>=count)break
+}
+return out
 }
 
-jumpButton.addEventListener("pointerdown",e=>{
+function resetLocalForStart(slot=0){
+const[x,z]=spawnPosition(slot);
+local.x=x;local.z=z;local.y=EYE_HEIGHT;local.yaw=0;local.pitch=0;
+local.hp=MAX_HP;local.kills=0;local.deaths=0;local.respawnAt=0;
+local.vy=0;local.grounded=true;local.grabbing=false;
+local.invulnerableUntil=Date.now()+3000;
+local.lastActiveAt=Date.now();
+camera.position.set(x,local.y,z);camera.rotation.set(0,0,0);
+if(controls?.isLocked)controls.unlock()
+}
 
-    e.preventDefault();
+async function createOrJoinRoom(){
+if(!authUser)return setStatus("まだFirebaseに接続中。少し待ってからもう一度やってね。");
+initThree();
+playerName=sanitizeName(nameInput.value);
+const code=roomInput.value.trim().toUpperCase();
+if(code)await joinRoomByCode(code);else await createRoom()
+}
 
-    jump();
-
+async function createRoom(){
+playerId=authUser.uid;isHost=true;
+for(let n=0;n<5;n++){
+const id=randomRoomId();
+const ref=doc(db,"matches",id);
+if((await getDoc(ref)).exists())continue;
+roomId=id;
+try{
+await setDoc(ref,{status:"lobby",hostUid:playerId,createdAt:serverTimestamp(),startedAt:null,endAt:null,winnerUid:null});
+await setDoc(doc(db,"matches",roomId,"players",playerId),{
+uid:playerId,name:playerName,x:0,y:EYE_HEIGHT,z:0,yaw:0,pitch:0,
+hp:MAX_HP,kills:0,deaths:0,alive:true,joinedAt:serverTimestamp(),
+updatedAt:serverTimestamp(),lastActiveAt:Date.now(),invulnerableUntil:0
 });
+enterLobby();return
+}catch(e){console.error(e);roomId=null;setStatus("部屋作成に失敗。\n"+e.message);return}
+}
+setStatus("部屋コードを作れなかった。もう一度試してね。")
+}
 
-grabButton.addEventListener("pointerdown",e=>{
+async function joinRoomByCode(id){
+roomId=id;playerId=authUser.uid;isHost=false;
+try{
+const ref=doc(db,"matches",roomId);
+const snap=await getDoc(ref);
+if(!snap.exists()){
+isHost=true;
+await setDoc(ref,{status:"lobby",hostUid:playerId,createdAt:serverTimestamp(),startedAt:null,endAt:null,winnerUid:null})
+}else if(snap.data().status!=="lobby")throw new Error("その試合はすでに開始済み。");
 
-    e.preventDefault();
+const me=await getDoc(doc(db,"matches",roomId,"players",playerId));
+if(!me.exists()&&(await getPlayersOnce(roomId)).length>=MAX_PLAYERS)throw new Error("満員。");
 
-    if(canGrab()){
-        performGrab();
-    }
-
+await setDoc(doc(db,"matches",roomId,"players",playerId),{
+uid:playerId,name:playerName,x:0,y:EYE_HEIGHT,z:0,yaw:0,pitch:0,
+hp:MAX_HP,kills:0,deaths:0,alive:true,joinedAt:serverTimestamp(),
+updatedAt:serverTimestamp(),lastActiveAt:Date.now(),invulnerableUntil:0
 });
-
-function fireCooldown(){
-
-    return 250;
-
+enterLobby()
+}catch(e){
+console.error(e);roomId=null;setStatus("参加/作成できなかった。\n"+e.message)
+}
 }
 
-function canFire(){
-
-    return Date.now()-player.lastShot>=fireCooldown();
-
+async function getPlayersOnce(id=roomId){
+const s=await getDocs(collection(db,"matches",id,"players"));
+return s.docs.map(d=>({id:d.id,...d.data()}))
 }
 
-async function fire(){
-
-    markAction();
-
-    if(!gameStarted || !player.alive){
-        return;
-    }
-
-    if(!canFire()){
-        return;
-    }
-
-    player.lastShot=Date.now();
-
-    const direction=getLookDirection();
-
-    const bulletId=
-        clientId+"_"+Date.now()+"_"+Math.random();
-
-    const bullet={
-        id:bulletId,
-        owner:clientId,
-        x:player.x,
-        y:player.y+1.1,
-        z:player.z,
-        vx:direction.x*32,
-        vy:direction.y*32,
-        vz:direction.z*32,
-        createdAt:Date.now()
-    };
-
-    bullets.set(bulletId,bullet);
-
-    drawBullet(bullet);
-
+function enterLobby(){
+menu.style.display="none";hud.style.display="none";endScreen.style.display="none";lobby.style.display="flex";
+roomIdLabel.textContent=roomId;
+startBtn.style.display=isHost?"inline-block":"none";
+subscribeRoom();subscribePlayers()
 }
 
-fireButton.addEventListener("pointerdown",e=>{
+function subscribeRoom(){
+roomUnsub?.();
+roomUnsub=onSnapshot(doc(db,"matches",roomId),async snap=>{
+if(!snap.exists()){
+handleRoomDeleted();
+lobby.style.display="none";hud.style.display="none";endScreen.style.display="none";menu.style.display="flex";
+setStatus("この部屋は削除されたよ。ロビーに戻った！");
+return
+}
+const data=snap.data();
+if(data.hostUid&&playerId)isHost=data.hostUid===playerId;
+startBtn.style.display=isHost&&data.status==="lobby"?"inline-block":"none";
 
-    e.preventDefault();
+const created=data.createdAt?.toMillis?data.createdAt.toMillis():Number(data.createdAt||0);
+if(created&&Date.now()-created>=STALE_MATCH_LIMIT){
+cleanupInactiveOrStale();return
+}
+if(data.status==="running"&&!started)startMatchClient(data);
+if(data.status==="finished"&&!ending)finishMatchClient(data)
+},e=>console.error("room snapshot",e))
+}
 
-    fire();
-
+function subscribePlayers(){
+playersUnsub?.();
+playersUnsub=onSnapshot(collection(db,"matches",roomId,"players"),snap=>{
+const arr=[];remoteState.clear();
+snap.docs.forEach(d=>{
+const data=d.data();arr.push({id:d.id,...data});remoteState.set(d.id,data);
+if(d.id===playerId){
+if(typeof data.hp==="number")local.hp=data.hp;
+if(typeof data.kills==="number")local.kills=data.kills;
+if(typeof data.deaths==="number")local.deaths=data.deaths;
+}
 });
-
-function updateFireButton(){
-
-    if(!gameStarted){
-
-        fireProgress.style.background=
-            "conic-gradient(#ff4141 0deg,transparent 0deg)";
-
-        return;
-
-    }
-
-    const elapsed=Date.now()-player.lastShot;
-
-    const progress=Math.min(
-        1,
-        elapsed/fireCooldown()
-    );
-
-    const degrees=progress*360;
-
-    fireProgress.style.background=
-        `conic-gradient(#ff4141 ${degrees}deg,transparent ${degrees}deg)`;
-
-    fireButton.classList.toggle(
-        "ready",
-        progress>=1
-    );
-
+playerCount.textContent=arr.length;
+playersList.innerHTML=arr.sort((a,b)=>(b.kills||0)-(a.kills||0))
+.map(p=>`<li><span>${esc(p.name||"Player")}${p.uid===playerId?"（自分）":""}</span><span>${p.kills||0} K</span></li>`).join("");
+updateRemotePlayers();
+if(started){
+const me=arr.find(p=>p.id===playerId);
+if(me&&me.hp<=0&&local.respawnAt===0)local.respawnAt=performance.now()+1800
+}
+},e=>console.error("players snapshot",e))
 }
 
-function getLookDirection(){
-
-    const yawRad=yaw*Math.PI/180;
-    const pitchRad=pitch*Math.PI/180;
-
-    return {
-        x:Math.sin(yawRad)*Math.cos(pitchRad),
-        y:Math.sin(pitchRad),
-        z:Math.cos(yawRad)*Math.cos(pitchRad)
-    };
-
+async function startMatchHost(){
+if(!roomId||!isHost)return;
+const players=await getPlayersOnce();
+if(players.length<2){alert("2人以上で試合開始にしてね。");return}
+const endMs=Date.now()+MATCH_DURATION*1000;
+await updateDoc(doc(db,"matches",roomId),{
+status:"running",startedAt:serverTimestamp(),endAt:endMs,winnerUid:null
+});
+const spawns=getSafeSpawnPositions(players.length),batch=writeBatch(db);
+players.forEach((p,i)=>{
+const[x,z]=spawns[i];
+batch.update(doc(db,"matches",roomId,"players",p.id),{
+x,y:EYE_HEIGHT,z,yaw:Math.atan2(-z,-x),pitch:0,
+hp:MAX_HP,kills:0,deaths:0,alive:true,lastActiveAt:Date.now(),
+invulnerableUntil:Date.now()+3000,updatedAt:serverTimestamp()
+})
+});
+await batch.commit()
 }
 
-function drawBullet(b){
+function startMatchClient(data){
+started=true;ending=false;lobby.style.display="none";hud.style.display="block";endScreen.style.display="none";
+matchEndAt=typeof data.endAt==="number"?data.endAt:Date.now()+MATCH_DURATION*1000;
+getPlayersOnce().then(ps=>{
+const i=Math.max(0,ps.findIndex(p=>p.id===playerId));
+resetLocalForStart(i);syncLocalState(true)
+});
+showMessage("MATCH START",900)
+}
 
-    let el=b.el;
+async function syncLocalState(force=false){
+if(!roomId||!playerId||!started)return;
+const now=performance.now();
+if(!force&&now-local.lastWrite<83)return;
+local.lastWrite=now;
+try{
+await updateDoc(doc(db,"matches",roomId,"players",playerId),{
+x:+local.x.toFixed(3),y:+local.y.toFixed(3),z:+local.z.toFixed(3),
+yaw:+local.yaw.toFixed(4),pitch:+local.pitch.toFixed(4),
+hp:Math.max(0,Math.round(local.hp)),kills:Math.max(0,Math.round(local.kills)),
+deaths:Math.max(0,Math.round(local.deaths)),alive:local.hp>0,
+lastActiveAt:local.lastActiveAt||Date.now(),
+invulnerableUntil:local.invulnerableUntil||0,updatedAt:serverTimestamp()
+})
+}catch(e){console.warn("sync failed",e)}
+}
 
-    if(!el){
+function movePlayer(dt){
+if(!started||ending||local.hp<=0||local.grabbing)return;
+if(innerWidth>700&&controls?.isLocked){
+local.yaw=camera.rotation.y;local.pitch=camera.rotation.x
+}
 
-        el=document.createElement("div");
-        el.className="bullet";
+let f=0,s=0;
+if(innerWidth<=700){
+f=-mobileMove.y;s=mobileMove.x
+}else{
+if(keys.has("KeyW"))f++;
+if(keys.has("KeyS"))f--;
+if(keys.has("KeyD"))s++;
+if(keys.has("KeyA"))s--
+}
+const len=Math.hypot(f,s)||1;f/=len;s/=len;
+const sin=Math.sin(local.yaw),cos=Math.cos(local.yaw);
+const dx=(s*cos+f*sin)*PLAYER_SPEED*dt;
+const dz=(f*cos-s*sin)*PLAYER_SPEED*dt;
 
-        world.appendChild(el);
+if(!horizontalBlocked(local.x+dx,local.z))local.x+=dx;
+if(!horizontalBlocked(local.x,local.z+dz))local.z+=dz;
 
-        b.el=el;
+local.vy-=GRAVITY*dt;
+let nextY=local.y+local.vy*dt;
+const ground=groundTopAt(local.x,local.z)+EYE_HEIGHT;
+if(local.vy<=0&&nextY<=ground){
+nextY=ground;local.vy=0;local.grounded=true
+}else local.grounded=false;
 
-    }
+local.y=nextY;
+if(local.y<-8){
+const[x,z]=spawnPosition(Math.floor(Math.random()*8));
+local.x=x;local.z=z;local.y=EYE_HEIGHT;local.vy=0;local.grounded=true
+}
+camera.position.set(local.x,local.y,local.z);
+camera.rotation.set(local.pitch,local.yaw,0,"YXZ");
 
-    el.style.transform=
-        `translate3d(${b.x*40}px,${-b.y*40}px,${b.z*40}px)`;
+if(f||s||Math.abs(local.vy)>.1)markActivity();
+updateActionButtons()
+}
 
+function shoot(){
+if(!started||ending||local.hp<=0||local.grabbing)return;
+const now=performance.now();
+if(now-local.lastShot<FIRE_INTERVAL)return;
+local.lastShot=now;markActivity();
+
+camera.updateMatrixWorld();
+const dir=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion).normalize();
+const origin=camera.position.clone().addScaledVector(dir,.55);
+
+const mesh=new THREE.Mesh(
+new THREE.SphereGeometry(.075,8,8),
+new THREE.MeshBasicMaterial({color:0xffe27a})
+);
+mesh.position.copy(origin);arenaGroup.add(mesh);
+bullets.push({mesh,velocity:dir.multiplyScalar(BULLET_SPEED),born:performance.now(),ownerId:playerId});
+showMessage("PEW",120);updateActionButtons()
 }
 
 function updateBullets(dt){
+for(let i=bullets.length-1;i>=0;i--){
+const b=bullets[i],old=b.mesh.position.clone();
+b.mesh.position.addScaledVector(b.velocity,dt);
+let remove=performance.now()-b.born>BULLET_LIFETIME*1000;
+const dist=old.distanceTo(b.mesh.position),steps=Math.max(1,Math.ceil(dist/.25));
 
-    for(const [id,b] of bullets){
+for(let n=1;n<=steps&&!remove;n++){
+const q=old.clone().lerp(b.mesh.position,n/steps);
 
-        b.x+=b.vx*dt;
-        b.y+=b.vy*dt;
-        b.z+=b.vz*dt;
+for(const p of platforms){
+if(q.x>=p.x-p.w/2&&q.x<=p.x+p.w/2&&q.y>=p.y-p.h/2&&q.y<=p.y+p.h/2&&q.z>=p.z-p.d/2&&q.z<=p.z+p.d/2){
+remove=true;break
+}}
+if(remove)break;
 
-        drawBullet(b);
-
-        let remove=false;
-
-        if(
-            Math.abs(b.x)>40 ||
-            Math.abs(b.z)>40 ||
-            b.y<-5 ||
-            b.y>30
-        ){
-            remove=true;
-        }
-
-        for(const p of platforms){
-
-            const minX=p.x-p.w/2;
-            const maxX=p.x+p.w/2;
-
-            const minZ=p.z-p.d/2;
-            const maxZ=p.z+p.d/2;
-
-            const top=p.y+p.h;
-
-            if(
-                b.x>=minX &&
-                b.x<=maxX &&
-                b.z>=minZ &&
-                b.z<=maxZ &&
-                b.y>=p.y &&
-                b.y<=top+1
-            ){
-
-                remove=true;
-                break;
-
-            }
-
-        }
-
-        for(const [otherId,el] of remotePlayers){
-
-            const rect=el.getBoundingClientRect();
-
-            const screenX=window.innerWidth/2+b.x*3;
-            const screenY=window.innerHeight/2-b.y*3;
-
-            if(
-                screenX>rect.left-10 &&
-                screenX<rect.right+10 &&
-                screenY>rect.top-10 &&
-                screenY<rect.bottom+10
-            ){
-
-                remove=true;
-                break;
-
-            }
-
-        }
-
-        if(remove){
-
-            if(b.el){
-                b.el.remove();
-            }
-
-            bullets.delete(id);
-
-        }
-
-    }
-
+for(const[id,mesh]of remotePlayers){
+if(id===b.ownerId||!mesh.visible)continue;
+const center=mesh.position.clone().add(new THREE.Vector3(0,.9,0));
+if(q.distanceTo(center)<.9){
+remove=true;applyDamage(id);break
+}}
+}
+if(remove){
+arenaGroup.remove(b.mesh);b.mesh.geometry.dispose();b.mesh.material.dispose();bullets.splice(i,1)
+}
+}
 }
 
-function updatePhysics(dt){
+async function applyDamage(targetId){
+try{
+const ref=doc(db,"matches",roomId,"players",targetId),snap=await getDoc(ref);
+if(!snap.exists())return;
+const t=snap.data();
+if(!t.alive||(t.hp||0)<=0)return;
+if(Number(t.invulnerableUntil||0)>Date.now())return;
 
-    if(!gameStarted || !player.alive){
-        return;
-    }
-
-    updateGrab();
-
-    if(player.grabbing){
-        return;
-    }
-
-    let mx=0;
-    let mz=0;
-
-    if(keys.KeyW || keys.ArrowUp) mz-=1;
-    if(keys.KeyS || keys.ArrowDown) mz+=1;
-    if(keys.KeyA || keys.ArrowLeft) mx-=1;
-    if(keys.KeyD || keys.ArrowRight) mx+=1;
-
-    mx+=joystickX;
-    mz+=joystickY;
-
-    const length=Math.sqrt(mx*mx+mz*mz);
-
-    if(length>1){
-
-        mx/=length;
-        mz/=length;
-
-    }
-
-    const speed=6;
-
-    const yawRad=yaw*Math.PI/180;
-
-    const worldX=
-        mx*Math.cos(yawRad)-
-        mz*Math.sin(yawRad);
-
-    const worldZ=
-        mx*Math.sin(yawRad)+
-        mz*Math.cos(yawRad);
-
-    player.vx=worldX*speed;
-    player.vz=worldZ*speed;
-
-    if(length===0){
-
-        player.vx*=.8;
-        player.vz*=.8;
-
-    }
-
-    const oldY=player.y;
-
-    player.x+=player.vx*dt;
-    player.z+=player.vz*dt;
-
-    player.vy-=22*dt;
-    player.y+=player.vy*dt;
-
-    checkGroundCollision(oldY,player.y);
-
-    if(player.y<-10){
-
-        resetPlayer();
-
-    }
-
+const hp=Math.max(0,(t.hp||0)-HIT_DAMAGE);
+const up={hp,alive:hp>0,updatedAt:serverTimestamp()};
+if(hp<=0){
+up.deaths=(t.deaths||0)+1;
+await updateDoc(ref,up);
+const meRef=doc(db,"matches",roomId,"players",playerId),me=await getDoc(meRef);
+if(me.exists()){
+const k=(me.data().kills||0)+1;
+await updateDoc(meRef,{kills:k,lastActiveAt:Date.now(),updatedAt:serverTimestamp()});
+local.kills=k;
+showMessage("+1 KILL",600);
+if(k>=MAX_SCORE)tryFinishMatch("score")
+}
+}else await updateDoc(ref,up)
+}catch(e){console.warn("damage failed",e)}
 }
 
-function updateCamera(){
-
-    camera.style.transform=
-        `translate3d(${-player.x*40}px,${player.y*40}px,${-player.z*40}px)
-         rotateX(${-pitch}deg)
-         rotateY(${-yaw}deg)`;
-
-    for(const p of platforms){
-
-        p.el.style.transform=
-            `translate3d(${p.x*40}px,${-p.y*40}px,${p.z*40}px)
-             rotateX(0deg)`;
-
-    }
-
-    const me=document.querySelector(".localPlayer");
-
-    if(!me){
-
-        const el=document.createElement("div");
-
-        el.className="player me localPlayer";
-
-        world.appendChild(el);
-
-    }
-
-    const local=document.querySelector(".localPlayer");
-
-    local.style.transform=
-        `translate3d(${player.x*40}px,${-player.y*40}px,${player.z*40}px)`;
-
+async function respawnIfNeeded(){
+if(local.hp>0||!local.respawnAt||performance.now()<local.respawnAt)return;
+local.respawnAt=0;
+const[x,z]=spawnPosition(Math.floor(Math.random()*8));
+local.x=x;local.z=z;local.y=EYE_HEIGHT;local.vy=0;local.grounded=true;
+local.hp=MAX_HP;local.invulnerableUntil=Date.now()+3000;markActivity();
+await syncLocalState(true);showMessage("RESPAWN",650)
 }
 
-window.addEventListener("keydown",e=>{
-
-    keys[e.code]=true;
-
-    markAction();
-
-    if(e.code==="Space"){
-        jump();
-    }
-
-    if(e.code==="KeyE"){
-        if(canGrab()){
-            performGrab();
-        }
-    }
-
-    if(e.code==="KeyF"){
-        fire();
-    }
-
-});
-
-window.addEventListener("keyup",e=>{
-
-    keys[e.code]=false;
-
-});
-
-let joystickActive=false;
-let joystickX=0;
-let joystickY=0;
-
-function updateJoystick(e){
-
-    const rect=joystick.getBoundingClientRect();
-
-    const cx=rect.left+rect.width/2;
-    const cy=rect.top+rect.height/2;
-
-    let dx=e.clientX-cx;
-    let dy=e.clientY-cy;
-
-    const max=45;
-
-    const len=Math.sqrt(dx*dx+dy*dy);
-
-    if(len>max){
-
-        dx=dx/len*max;
-        dy=dy/len*max;
-
-    }
-
-    stick.style.transform=
-        `translate(${dx}px,${dy}px)`;
-
-    joystickX=dx/max;
-    joystickY=dy/max;
-
+async function tryFinishMatch(reason){
+if(!isHost||!roomId||ending)return;
+const room=await getDoc(doc(db,"matches",roomId));
+if(!room.exists()||room.data().status!=="running")return;
+const ps=await getPlayersOnce();
+ps.sort((a,b)=>(b.kills||0)-(a.kills||0)||(a.deaths||0)-(b.deaths||0));
+await updateDoc(doc(db,"matches",roomId),{
+status:"finished",winnerUid:ps[0]?.id||null,finishedAt:serverTimestamp(),finishReason:reason
+})
 }
 
-joystick.addEventListener("pointerdown",e=>{
-
-    e.preventDefault();
-
-    joystickActive=true;
-    joystick.setPointerCapture(e.pointerId);
-
-    markAction();
-
-    updateJoystick(e);
-
-});
-
-joystick.addEventListener("pointermove",e=>{
-
-    if(!joystickActive){
-        return;
-    }
-
-    updateJoystick(e);
-
-    markAction();
-
-});
-
-joystick.addEventListener("pointerup",e=>{
-
-    joystickActive=false;
-
-    joystickX=0;
-    joystickY=0;
-
-    stick.style.transform="translate(0,0)";
-
-});
-
-joystick.addEventListener("pointercancel",()=>{
-
-    joystickActive=false;
-
-    joystickX=0;
-    joystickY=0;
-
-    stick.style.transform="translate(0,0)";
-
-});
-
-let lookPointer=null;
-let lastLookX=0;
-let lastLookY=0;
-
-world.addEventListener("pointerdown",e=>{
-
-    if(e.target.closest(".control")){
-        return;
-    }
-
-    lookPointer=e.pointerId;
-    lastLookX=e.clientX;
-    lastLookY=e.clientY;
-
-    try{
-        world.setPointerCapture(e.pointerId);
-    }catch(err){}
-
-});
-
-world.addEventListener("pointermove",e=>{
-
-    if(e.pointerId!==lookPointer){
-        return;
-    }
-
-    const dx=e.clientX-lastLookX;
-    const dy=e.clientY-lastLookY;
-
-    lastLookX=e.clientX;
-    lastLookY=e.clientY;
-
-    yaw+=dx*.18;
-    pitch-=dy*.18;
-
-    pitch=Math.max(-75,Math.min(75,pitch));
-
-    markAction();
-
-});
-
-world.addEventListener("pointerup",e=>{
-
-    if(e.pointerId===lookPointer){
-        lookPointer=null;
-    }
-
-});
-
-world.addEventListener("pointercancel",e=>{
-
-    if(e.pointerId===lookPointer){
-        lookPointer=null;
-    }
-
-});
-
-document.addEventListener("visibilitychange",()=>{
-
-    if(document.visibilityState==="visible"){
-        markAction();
-    }
-
-});
-
-window.addEventListener("beforeunload",()=>{
-
-    if(!roomRef){
-        return;
-    }
-
-    try{
-
-        updateDoc(roomRef,{
-            [`players.${clientId}.lastActive`]:0
-        });
-
-    }catch(e){}
-
-});
-
-let previous=performance.now();
-
-function gameLoop(now){
-
-    const dt=Math.min(
-        .05,
-        (now-previous)/1000
-    );
-
-    previous=now;
-
-    updatePhysics(dt);
-    updateBullets(dt);
-    updateCamera();
-    updateGrabButton();
-    updateFireButton();
-
-    syncPlayer();
-
-    requestAnimationFrame(gameLoop);
-
+async function finishMatchClient(){
+if(ending)return;
+ending=true;started=false;
+if(controls?.isLocked)controls.unlock();
+hud.style.display="none";endScreen.style.display="flex";
+const ps=await getPlayersOnce().catch(()=>[]);
+ps.sort((a,b)=>(b.kills||0)-(a.kills||0)||(a.deaths||0)-(b.deaths||0));
+const w=ps[0];
+$("winnerTitle").textContent=w?`${w.name||"Player"} の勝ち！`:"試合終了";
+$("resultText").textContent=w?`勝者: ${w.name} / ${w.kills||0} K - ${w.deaths||0} D`:"勝者情報を取得できなかった。";
+$("finalRanking").innerHTML=ps.map((p,i)=>
+`<div style="padding:8px 10px;margin:6px 0;background:rgba(255,255,255,.05);border-radius:10px">${i+1}. ${esc(p.name||"Player")} — ${p.kills||0} K / ${p.deaths||0} D</div>`
+).join("");
+if(isHost)await deleteMatchCompletely().catch(e=>console.warn("delete match failed",e))
 }
 
-resetPlayer();
+async function deleteMatchCompletely(){
+if(!roomId)return;
+const ps=await getPlayersOnce().catch(()=>[]);
+const batch=writeBatch(db);
+ps.forEach(p=>batch.delete(doc(db,"matches",roomId,"players",p.id)));
+batch.delete(doc(db,"matches",roomId));
+await batch.commit()
+}
 
-requestAnimationFrame(gameLoop);
+function handleRoomDeleted(){
+roomUnsub?.();playersUnsub?.();
+roomUnsub=null;playersUnsub=null;
+roomId=null;isHost=false;started=false;ending=false;
+remoteState.clear();
+for(const m of remotePlayers.values())arenaGroup?.remove(m);
+remotePlayers.clear();
+for(const b of bullets)arenaGroup?.remove(b.mesh);
+bullets.length=0
+}
 
+async function leaveRoom(){
+if(!roomId||!playerId)return;
+try{
+if(started){
+await updateDoc(doc(db,"matches",roomId,"players",playerId),{alive:false,hp:0,lastActiveAt:Date.now(),updatedAt:serverTimestamp()})
+}else{
+await deleteDoc(doc(db,"matches",roomId,"players",playerId));
+if(isHost){
+const ps=await getPlayersOnce().catch(()=>[]);
+if(ps.length===0)await deleteDoc(doc(db,"matches",roomId))
+}}
+}catch(e){console.warn("leave failed",e)}
+handleRoomDeleted();
+lobby.style.display="none";endScreen.style.display="none";hud.style.display="none";menu.style.display="flex";
+setStatus("退出したよ。")
+}
+
+async function copyRoomId(){
+try{await navigator.clipboard.writeText(roomId||"");showMessage("コピーした！",700)}
+catch{alert(`部屋ID: ${roomId}`)}
+}
+
+function setProgress(el,p){
+el?.style.setProperty("--progress",`${clamp(p,0,1)*100}%`)
+}
+
+function updateActionButtons(){
+const jump=$("jumpButton"),fire=$("fireButton");
+if(!jump||!fire)return;
+
+const fp=clamp((performance.now()-local.lastShot)/FIRE_INTERVAL,0,1);
+setProgress(fire,fp);
+
+if(started&&!ending&&local.hp>0){
+if(canGrab()){
+jump.textContent="GRAB";jump.classList.add("grab");jump.classList.remove("disabledGrab")
+}else if(!local.grounded){
+jump.textContent="GRAB";jump.classList.remove("grab");jump.classList.add("disabledGrab")
+}else{
+jump.textContent="JUMP";jump.classList.remove("grab","disabledGrab")
+}
+}
+setProgress(jump,local.grounded||canGrab()?1:.15)
+}
+
+function setupMobileControls(){
+const moveStick=$("moveStick"),knob=$("moveKnob"),look=$("lookArea");
+const fire=$("fireButton"),jump=$("jumpButton");
+let movePointer=null,lookPointer=null,lastLookX=0,lastLookY=0;
+
+function setKnob(x,y){
+const r=moveStick.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+let dx=x-cx,dy=y-cy,max=45,len=Math.hypot(dx,dy)||1;
+if(len>max){dx=dx/len*max;dy=dy/len*max}
+knob.style.transform=`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px))`;
+mobileMove.x=dx/max;mobileMove.y=dy/max;markActivity()
+}
+function resetKnob(){
+knob.style.transform="translate(-50%,-50%)";mobileMove.x=mobileMove.y=0
+}
+
+moveStick.addEventListener("pointerdown",e=>{
+e.preventDefault();movePointer=e.pointerId;moveStick.setPointerCapture(e.pointerId);setKnob(e.clientX,e.clientY)
+});
+moveStick.addEventListener("pointermove",e=>{if(e.pointerId===movePointer)setKnob(e.clientX,e.clientY)});
+["pointerup","pointercancel"].forEach(t=>moveStick.addEventListener(t,e=>{
+if(e.pointerId===movePointer){movePointer=null;resetKnob()}
+}));
+
+look.addEventListener("pointerdown",e=>{
+e.preventDefault();lookPointer=e.pointerId;lastLookX=e.clientX;lastLookY=e.clientY;look.setPointerCapture(e.pointerId);markActivity()
+});
+look.addEventListener("pointermove",e=>{
+if(e.pointerId!==lookPointer||!started||local.hp<=0)return;
+const dx=e.clientX-lastLookX,dy=e.clientY-lastLookY;
+lastLookX=e.clientX;lastLookY=e.clientY;
+local.yaw-=dx*LOOK_SPEED*1.7;
+local.pitch=clamp(local.pitch-dy*LOOK_SPEED*1.7,-1.45,1.45);
+markActivity()
+});
+["pointerup","pointercancel"].forEach(t=>look.addEventListener(t,e=>{
+if(e.pointerId===lookPointer)lookPointer=null
+}));
+
+fire.addEventListener("pointerdown",e=>{
+e.preventDefault();mobileFire=true;markActivity();shoot()
+});
+["pointerup","pointercancel","pointerleave"].forEach(t=>fire.addEventListener(t,()=>mobileFire=false));
+
+jump.addEventListener("pointerdown",e=>{
+e.preventDefault();markActivity();jumpOrGrab()
+})
+}
+
+function markActivity(){
+if(!roomId||!playerId)return;
+local.lastActiveAt=Date.now();
+const now=Date.now();
+if(now-lastActivityPersist<5000)return;
+lastActivityPersist=now;
+updateDoc(doc(db,"matches",roomId,"players",playerId),{
+lastActiveAt:local.lastActiveAt,updatedAt:serverTimestamp()
+}).catch(()=>{})
+}
+
+async function returnInactivePlayerToLobby(){
+if(!roomId||!playerId)return;
+const rid=roomId;
+try{
+const rs=await getDoc(doc(db,"matches",rid));
+const ps=await getPlayersOnce(rid).catch(()=>[]);
+if(rs.exists()&&rs.data().hostUid===playerId){
+const next=ps.find(p=>p.id!==playerId);
+if(next)await updateDoc(doc(db,"matches",rid),{hostUid:next.id})
+}
+await deleteDoc(doc(db,"matches",rid,"players",playerId))
+}catch(e){console.warn(e)}
+started=false;ending=false;
+if(controls?.isLocked)controls.unlock();
+hud.style.display="none";endScreen.style.display="none";menu.style.display="flex";
+setStatus("1分以上操作がなかったのでロビーに戻したよ。")
+}
+
+async function cleanupInactiveOrStale(){
+if(!roomId||!authUser)return;
+try{
+const rs=await getDoc(doc(db,"matches",roomId));
+if(!rs.exists())return;
+const room=rs.data()||{};
+const created=room.createdAt?.toMillis?room.createdAt.toMillis():Number(room.createdAt||0);
+
+if(created&&Date.now()-created>=STALE_MATCH_LIMIT){
+await deleteMatchCompletely();
+handleRoomDeleted();lobby.style.display="none";hud.style.display="none";endScreen.style.display="none";menu.style.display="flex";
+setStatus("1日以上残っていた部屋を削除してロビーに戻ったよ。");
+return
+}
+
+const ps=await getPlayersOnce();
+if(!ps.length)return;
+const now=Date.now();
+
+if(ps.every(p=>{
+const last=Number(p.lastActiveAt||0);
+return last>0&&now-last>=INACTIVE_LIMIT
+})){
+await deleteMatchCompletely();
+handleRoomDeleted();lobby.style.display="none";hud.style.display="none";endScreen.style.display="none";menu.style.display="flex";
+setStatus("全員が1分以上操作していなかったので部屋を削除してロビーに戻ったよ。");
+return
+}
+
+const me=ps.find(p=>p.id===playerId);
+if(me&&Number(me.lastActiveAt||0)>0&&now-Number(me.lastActiveAt)>=INACTIVE_LIMIT){
+await returnInactivePlayerToLobby()
+}
+}catch(e){console.warn("cleanup failed",e)}
+}
+
+async function checkMatchTimer(){
+if(!started||ending)return;
+const left=Math.max(0,matchEndAt-Date.now());
+$("timeText").textContent=formatTime(left/1000);
+if(left<=0){
+if(isHost)await tryFinishMatch("time");
+return
+}
+if(local.kills>=MAX_SCORE&&isHost)await tryFinishMatch("score")
+}
+
+function updateHud(){
+$("healthText").textContent=Math.max(0,Math.round(local.hp));
+$("healthBar").style.width=`${clamp(local.hp/MAX_HP*100,0,100)}%`;
+$("scoreText").textContent=`${local.kills} / ${local.deaths}`
+}
+
+function animate(){
+requestAnimationFrame(animate);
+const now=performance.now(),dt=Math.min(.05,(now-lastFrame)/1000);
+lastFrame=now;
+
+movePlayer(dt);
+if(mobileFire)shoot();
+updateBullets(dt);
+respawnIfNeeded();
+updateRemotePlayers();
+updateHud();
+updateActionButtons();
+
+if(started&&!ending){
+syncLocalState(false);
+checkMatchTimer()
+}
+if(renderer&&scene&&camera)renderer.render(scene,camera)
+}
+
+function setStartProgress(p){setProgress(startBtn,p)}
+function cancelStartHold(){
+if(startHoldTimer)clearInterval(startHoldTimer);
+startHoldTimer=null;startHoldActive=false;setStartProgress(0)
+}
+function beginStartHold(){
+if(!isHost||started||ending||startHoldActive)return;
+startHoldActive=true;startHoldStart=performance.now();setStartProgress(0);
+startHoldTimer=setInterval(async()=>{
+const p=(performance.now()-startHoldStart)/START_HOLD_DURATION;
+setStartProgress(p);
+if(p>=1){
+cancelStartHold();
+await startMatchHost()
+}
+},16)
+}
+
+createJoinBtn.addEventListener("click",createOrJoinRoom);
+
+startBtn.addEventListener("pointerdown",e=>{
+e.preventDefault();beginStartHold()
+});
+["pointerup","pointercancel","pointerleave"].forEach(t=>startBtn.addEventListener(t,cancelStartHold));
+
+copyRoomBtn.addEventListener("click",copyRoomId);
+leaveLobbyBtn.addEventListener("click",leaveRoom);
+
+backToMenuBtn.addEventListener("click",()=>{
+handleRoomDeleted();
+endScreen.style.display="none";menu.style.display="flex";
+setStatus("次の部屋を作れるよ。")
+});
+
+addEventListener("pointerdown",markActivity,{passive:true});
+addEventListener("mousemove",markActivity,{passive:true});
+addEventListener("touchstart",markActivity,{passive:true});
+
+setInterval(()=>{
+if(!roomId||!authUser)return;
+cleanupInactiveOrStale();
+if(started&&isHost&&!ending)checkMatchTimer()
+},10000);
+
+bootAuth();
 </script>
 
+<!--
+Firestoreルール例:
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /matches/{matchId} {
+      allow read, write: if request.auth != null;
+
+      match /players/{playerId} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null && request.auth.uid == playerId;
+        allow update: if request.auth != null;
+        allow delete: if request.auth != null;
+      }
+    }
+  }
+}
+
+注意:
+- Firebase Authenticationで匿名ログインを有効にすること。
+- このコードはクライアント側で対戦情報を共有するデモなので、競技用FPSの不正耐性はない。
+- 足場は3Dの当たり判定にも使用しているため、上の足場をすり抜けない。
+- ダッシュは実装していない。
+- JUMP中、プレイヤーの頭付近に足場がある場合はJUMPがGRABに変わり、0.5秒で登る。
+- STARTは部屋主だけ使用でき、長押しで円形の進捗が埋まり、完了すると開始する。
+- 試合開始時は各プレイヤーを距離を取った位置へランダム配置し、3秒間無敵。
+- FIREは弾丸オブジェクトを発射し、BULLET_SPEEDで飛ぶ。
+- FIRE_INTERVALが最大連射速度を制御する。
+- 試合終了時にmatches/{matchId}とplayersサブコレクションを削除する。
+- 全プレイヤーが1分以上操作していない場合も部屋を削除する。
+- 1日以上残っている部屋も削除する。
+-->
 </body>
 </html>
