@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>Online 3D FPS</title>
+<title>Firebase 3D FPS</title>
 
 <style>
 *{
@@ -22,123 +22,101 @@ html,body{
     color:white;
 }
 
-button,input{
-    font:inherit;
+body{
+    touch-action:none;
 }
 
 #game{
     position:fixed;
     inset:0;
-    display:none;
+    overflow:hidden;
+    background:
+        linear-gradient(#6ea8dc 0%,#b7d9f2 58%,#88b96d 58%,#65964d 100%);
 }
 
-canvas{
+#world{
     position:absolute;
     inset:0;
-    width:100%;
-    height:100%;
-    display:block;
-}
-
-#lobby{
-    position:fixed;
-    inset:0;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:
-        radial-gradient(circle at center,#27334a 0%,#111722 55%,#080b10 100%);
-    z-index:100;
-}
-
-#lobbyBox{
-    width:min(90vw,460px);
-    padding:28px;
-    border:1px solid rgba(255,255,255,.15);
-    border-radius:22px;
-    background:rgba(20,25,35,.78);
-    backdrop-filter:blur(18px);
-    box-shadow:0 20px 80px rgba(0,0,0,.45);
-    text-align:center;
-}
-
-#lobbyBox h1{
-    margin:0 0 10px;
-    font-size:32px;
-}
-
-#lobbyBox p{
-    opacity:.7;
-    margin:0 0 22px;
-}
-
-#roomCode{
-    width:100%;
-    height:54px;
-    padding:0 16px;
-    border:1px solid rgba(255,255,255,.15);
-    border-radius:13px;
-    outline:none;
-    background:rgba(255,255,255,.08);
-    color:white;
-    text-align:center;
-    font-size:20px;
-    letter-spacing:4px;
-}
-
-.mainButton{
-    position:relative;
+    perspective:900px;
     overflow:hidden;
+}
+
+#camera{
+    position:absolute;
+    left:50%;
+    top:50%;
+    width:0;
+    height:0;
+    transform-style:preserve-3d;
+}
+
+.platform{
+    position:absolute;
+    transform-style:preserve-3d;
+    background:linear-gradient(90deg,#777,#aaa);
+    border:2px solid rgba(255,255,255,.3);
+    box-shadow:
+        0 8px 20px rgba(0,0,0,.3),
+        inset 0 0 0 2px rgba(0,0,0,.15);
+}
+
+.platform::after{
+    content:"";
+    position:absolute;
+    left:0;
+    top:100%;
     width:100%;
-    height:58px;
-    margin-top:14px;
-    border:0;
-    border-radius:15px;
-    color:white;
-    background:rgba(75,130,255,.85);
-    cursor:pointer;
-    font-size:18px;
-    font-weight:bold;
+    height:80px;
+    background:#555;
+    transform-origin:top;
+    transform:rotateX(-90deg);
+    opacity:.7;
 }
 
-.mainButton:active{
-    transform:scale(.98);
+.player{
+    position:absolute;
+    width:28px;
+    height:60px;
+    margin-left:-14px;
+    margin-top:-60px;
+    transform-style:preserve-3d;
+    border-radius:7px;
+    background:#28a9ff;
+    border:2px solid rgba(255,255,255,.7);
+    box-shadow:0 0 12px rgba(0,0,0,.3);
 }
 
-#lobbyStatus{
-    min-height:24px;
-    margin-top:15px;
-    font-size:14px;
-    opacity:.75;
+.player.me{
+    background:#36e36b;
 }
 
-#roomUI{
-    position:fixed;
+.player.dead{
+    opacity:.25;
+}
+
+.bullet{
+    position:absolute;
+    width:8px;
+    height:8px;
+    margin:-4px;
+    border-radius:50%;
+    background:#ffe600;
+    box-shadow:0 0 10px #fff000;
+}
+
+#hud{
+    position:absolute;
     inset:0;
     pointer-events:none;
-    z-index:20;
-}
-
-#topInfo{
-    position:absolute;
-    top:15px;
-    left:50%;
-    transform:translateX(-50%);
-    padding:9px 15px;
-    border-radius:12px;
-    background:rgba(0,0,0,.4);
-    backdrop-filter:blur(10px);
-    font-size:14px;
-    white-space:nowrap;
 }
 
 #crosshair{
     position:absolute;
     left:50%;
     top:50%;
-    width:18px;
-    height:18px;
-    transform:translate(-50%,-50%);
+    width:20px;
+    height:20px;
+    margin:-10px;
 }
 
 #crosshair::before,
@@ -146,255 +124,256 @@ canvas{
     content:"";
     position:absolute;
     background:white;
-    box-shadow:0 0 3px black;
+    box-shadow:0 0 3px #000;
 }
 
 #crosshair::before{
-    width:18px;
-    height:2px;
-    top:8px;
-    left:0;
+    left:9px;
+    top:0;
+    width:2px;
+    height:20px;
 }
 
 #crosshair::after{
-    width:2px;
-    height:18px;
-    left:8px;
-    top:0;
+    left:0;
+    top:9px;
+    width:20px;
+    height:2px;
 }
 
-#hp{
-    position:absolute;
-    left:20px;
-    bottom:25px;
-    width:210px;
-    height:18px;
-    border-radius:10px;
-    overflow:hidden;
-    background:rgba(0,0,0,.5);
-    border:1px solid rgba(255,255,255,.2);
-}
-
-#hpBar{
-    height:100%;
-    width:100%;
-    background:#39e36f;
-    transition:width .15s;
-}
-
-#hpText{
+#roomScreen{
     position:absolute;
     inset:0;
     display:flex;
     align-items:center;
     justify-content:center;
-    font-size:11px;
-    font-weight:bold;
+    background:rgba(0,0,0,.55);
+    z-index:50;
 }
 
-#controls{
-    position:absolute;
-    inset:0;
-}
-
-.controlButton{
-    position:absolute;
-    width:82px;
-    height:82px;
-    border-radius:50%;
-    border:1px solid rgba(255,255,255,.22);
-    background:rgba(255,255,255,.12);
-    color:white;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-weight:bold;
-    font-size:14px;
-    backdrop-filter:blur(5px);
-    pointer-events:auto;
-    touch-action:none;
-}
-
-.controlButton:active{
-    background:rgba(255,255,255,.25);
-}
-
-#jumpButton{
-    right:25px;
-    bottom:28px;
-}
-
-#fireButton{
-    right:125px;
-    bottom:115px;
-}
-
-#fireButton .cooldownCircle,
-#startButton .holdCircle{
-    position:absolute;
-    inset:5px;
-    border-radius:50%;
-    background:conic-gradient(
-        rgba(90,180,255,.9) 0deg,
-        rgba(90,180,255,.9) 0deg,
-        transparent 0deg
-    );
-    mask:radial-gradient(
-        farthest-side,
-        transparent calc(100% - 5px),
-        #000 calc(100% - 4px)
-    );
-    -webkit-mask:radial-gradient(
-        farthest-side,
-        transparent calc(100% - 5px),
-        #000 calc(100% - 4px)
-    );
-    pointer-events:none;
-}
-
-#grabButton{
-    display:none;
-    right:25px;
-    bottom:28px;
-}
-
-#grabButton.weak{
-    opacity:.25;
-    color:rgba(255,255,255,.5);
-    background:rgba(255,255,255,.06);
-}
-
-#joystick{
-    position:absolute;
-    left:25px;
-    bottom:25px;
-    width:145px;
-    height:145px;
-    border-radius:50%;
-    background:rgba(255,255,255,.08);
+.panel{
+    width:min(420px,90vw);
+    padding:28px;
+    border-radius:22px;
+    background:rgba(20,20,25,.9);
     border:1px solid rgba(255,255,255,.15);
-    pointer-events:auto;
-    touch-action:none;
+    box-shadow:0 20px 60px rgba(0,0,0,.5);
+    text-align:center;
 }
 
-#stick{
-    position:absolute;
-    left:50%;
-    top:50%;
-    width:65px;
-    height:65px;
-    margin-left:-32.5px;
-    margin-top:-32.5px;
-    border-radius:50%;
-    background:rgba(255,255,255,.2);
-    border:1px solid rgba(255,255,255,.2);
+.panel h1{
+    margin:0 0 20px;
 }
 
-#lookArea{
+#roomCode{
+    width:100%;
+    padding:14px;
+    border:0;
+    border-radius:12px;
+    background:#292933;
+    color:white;
+    font-size:20px;
+    text-align:center;
+    outline:none;
+    margin-bottom:12px;
+}
+
+.bigButton{
+    width:100%;
+    padding:15px;
+    border:0;
+    border-radius:14px;
+    background:#238cff;
+    color:white;
+    font-size:18px;
+    font-weight:bold;
+}
+
+.bigButton:active{
+    transform:scale(.97);
+}
+
+#status{
+    min-height:24px;
+    margin-top:15px;
+    color:#ccc;
+}
+
+#roomInfo{
     position:absolute;
-    right:0;
-    top:0;
-    width:55%;
-    height:70%;
-    pointer-events:auto;
-    touch-action:none;
+    top:15px;
+    left:15px;
+    padding:8px 12px;
+    border-radius:12px;
+    background:rgba(0,0,0,.45);
+    pointer-events:none;
+    z-index:20;
+}
+
+#playersInfo{
+    margin-top:4px;
+    font-size:12px;
+    opacity:.8;
 }
 
 #startButton{
     position:absolute;
     right:20px;
     top:20px;
-    width:105px;
-    height:105px;
+    width:100px;
+    height:100px;
     border-radius:50%;
-    border:1px solid rgba(255,255,255,.25);
-    background:rgba(40,170,100,.18);
+    border:3px solid rgba(255,255,255,.5);
+    background:rgba(20,20,20,.65);
     color:white;
-    pointer-events:auto;
+    font-size:16px;
     font-weight:bold;
     display:none;
+    z-index:30;
     overflow:hidden;
 }
 
-#startButton .holdCircle{
-    background:conic-gradient(
-        rgba(70,230,120,.95) 0deg,
-        rgba(70,230,120,.95) 0deg,
-        transparent 0deg
-    );
+#startButton .progress{
+    position:absolute;
+    inset:5px;
+    border-radius:50%;
+    background:conic-gradient(#35d86b 0deg,#35d86b 0deg,transparent 0deg);
+    z-index:-1;
 }
 
-#startButton span{
-    position:relative;
-    z-index:2;
+#startButton .inner{
+    position:absolute;
+    inset:8px;
+    border-radius:50%;
+    background:#181818;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+#controls{
+    position:absolute;
+    inset:0;
+    z-index:25;
+    pointer-events:none;
+}
+
+.control{
+    position:absolute;
+    pointer-events:auto;
+    border:2px solid rgba(255,255,255,.4);
+    background:rgba(0,0,0,.35);
+    color:white;
+    font-weight:bold;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    touch-action:none;
+}
+
+#joystick{
+    left:25px;
+    bottom:30px;
+    width:125px;
+    height:125px;
+    border-radius:50%;
+}
+
+#stick{
+    width:55px;
+    height:55px;
+    border-radius:50%;
+    background:rgba(255,255,255,.35);
+    position:absolute;
+    left:35px;
+    top:35px;
+}
+
+.actionButton{
+    width:78px;
+    height:78px;
+    border-radius:50%;
+}
+
+#jumpButton{
+    right:25px;
+    bottom:125px;
+}
+
+#fireButton{
+    right:25px;
+    bottom:30px;
+}
+
+#grabButton{
+    right:25px;
+    bottom:125px;
+    display:none;
+}
+
+#fireButton .progress{
+    position:absolute;
+    inset:3px;
+    border-radius:50%;
+    background:conic-gradient(#ff4141 0deg,transparent 0deg);
+    pointer-events:none;
+}
+
+#fireButton .inner{
+    position:absolute;
+    inset:8px;
+    border-radius:50%;
+    background:rgba(0,0,0,.45);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+#fireButton.ready{
+    background:rgba(255,50,50,.45);
+}
+
+#grabButton.disabled{
+    opacity:.3;
+    color:rgba(255,255,255,.45);
 }
 
 #message{
     position:absolute;
     left:50%;
-    top:25%;
+    top:18%;
     transform:translateX(-50%);
-    padding:10px 18px;
-    border-radius:12px;
-    background:rgba(0,0,0,.5);
-    opacity:0;
-    transition:opacity .2s;
-}
-
-#deathScreen{
-    position:fixed;
-    inset:0;
-    display:none;
-    align-items:center;
-    justify-content:center;
-    background:rgba(0,0,0,.45);
-    z-index:50;
-    pointer-events:none;
-}
-
-#deathText{
-    padding:25px 35px;
-    border-radius:18px;
-    background:rgba(0,0,0,.7);
-    font-size:25px;
+    padding:12px 20px;
+    border-radius:14px;
+    background:rgba(0,0,0,.6);
     font-weight:bold;
+    opacity:0;
+    transition:.2s;
+    z-index:40;
 }
 
-#roomPlayers{
+#message.show{
+    opacity:1;
+}
+
+#damage{
     position:absolute;
-    top:58px;
-    left:15px;
-    padding:9px 12px;
-    border-radius:12px;
-    background:rgba(0,0,0,.35);
-    font-size:12px;
+    inset:0;
+    background:rgba(255,0,0,.3);
+    opacity:0;
+    pointer-events:none;
+    z-index:35;
 }
 
-@media (min-width:800px){
-    #joystick{
-        display:none;
-    }
-
-    #lookArea{
-        display:none;
-    }
-
+@media(min-width:800px){
     #controls{
-        pointer-events:none;
+        opacity:.75;
     }
+}
 
-    .controlButton{
-        pointer-events:auto;
-    }
-
-    #jumpButton{
-        right:30px;
-        bottom:30px;
-    }
-
-    #fireButton{
-        right:130px;
-        bottom:30px;
+@media(max-width:799px){
+    #roomInfo{
+        font-size:13px;
     }
 }
 </style>
@@ -402,82 +381,77 @@ canvas{
 
 <body>
 
-<div id="lobby">
-    <div id="lobbyBox">
-        <h1>3D FPS</h1>
-        <p>オンライン対戦</p>
-
-        <input
-            id="roomCode"
-            maxlength="12"
-            placeholder="試合コード"
-            autocomplete="off"
-        >
-
-        <button class="mainButton" id="roomButton">
-            試合を作成/参加
-        </button>
-
-        <div id="lobbyStatus"></div>
-    </div>
-</div>
-
 <div id="game">
-    <canvas id="canvas"></canvas>
 
-    <div id="roomUI">
+    <div id="world">
+        <div id="camera"></div>
+    </div>
 
-        <div id="topInfo">
-            ROOM: <span id="roomLabel">----</span>
-        </div>
-
-        <div id="roomPlayers">
-            PLAYERS: <span id="playerCount">0</span>
-        </div>
-
+    <div id="hud">
         <div id="crosshair"></div>
+        <div id="damage"></div>
+
+        <div id="roomInfo">
+            <div>ROOM: <span id="roomText">----</span></div>
+            <div id="playersInfo">PLAYERS: 0</div>
+        </div>
 
         <div id="message"></div>
 
-        <div id="hp">
-            <div id="hpBar"></div>
-            <div id="hpText">100 HP</div>
-        </div>
-
-        <button class="controlButton" id="jumpButton">
-            JUMP
-        </button>
-
-        <button class="controlButton" id="grabButton">
-            GRAB
-        </button>
-
-        <button class="controlButton" id="fireButton">
-            FIRE
-            <div class="cooldownCircle"></div>
-        </button>
-
-        <div id="joystick">
-            <div id="stick"></div>
-        </div>
-
-        <div id="lookArea"></div>
-
         <button id="startButton">
-            <div class="holdCircle"></div>
-            <span>START</span>
+            <div class="progress"></div>
+            <div class="inner">START</div>
         </button>
-    </div>
-</div>
 
-<div id="deathScreen">
-    <div id="deathText">YOU DIED</div>
+        <div id="controls">
+
+            <div id="joystick" class="control">
+                <div id="stick"></div>
+            </div>
+
+            <button id="jumpButton" class="control actionButton">
+                JUMP
+            </button>
+
+            <button id="grabButton" class="control actionButton">
+                GRAB
+            </button>
+
+            <button id="fireButton" class="control actionButton">
+                <div class="progress"></div>
+                <div class="inner">FIRE</div>
+            </button>
+
+        </div>
+    </div>
+
+    <div id="roomScreen">
+        <div class="panel">
+            <h1>3D FPS</h1>
+            <input
+                id="roomCode"
+                maxlength="12"
+                placeholder="試合コード"
+                autocomplete="off"
+            >
+            <button id="roomButton" class="bigButton">
+                試合を作成/参加
+            </button>
+            <div id="status"></div>
+        </div>
+    </div>
+
 </div>
 
 <script type="module">
 
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import {
+    initializeApp
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+
+import {
+    getAnalytics
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-analytics.js";
 
 import {
     getFirestore,
@@ -486,528 +460,868 @@ import {
     setDoc,
     updateDoc,
     deleteDoc,
-    collection,
     onSnapshot,
+    collection,
+    serverTimestamp,
     runTransaction,
-    serverTimestamp
-}
-from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
-
-import {
-    getAuth,
-    signInAnonymously
-}
-from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
-
-
-// ============================================================
-// FIREBASE
-// ============================================================
+    getDocs
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyD5cTt3b1IeiGIOgJcC0sSFgO-Ce78JyIw",
-    authDomain: "dfps-4aa92.firebaseapp.com",
-    projectId: "dfps-4aa92",
-    storageBucket: "dfps-4aa92.firebasestorage.app",
-    messagingSenderId: "379021412536",
-    appId: "1:379021412536:web:003efdb33f6d6bb77d8c4d",
-    measurementId: "G-BG2KFTL9ZC"
+    apiKey:"AIzaSyD5cTt3b1IeiGIOgJcC0sSFgO-Ce78JyIw",
+    authDomain:"dfps-4aa92.firebaseapp.com",
+    projectId:"dfps-4aa92",
+    storageBucket:"dfps-4aa92.firebasestorage.app",
+    messagingSenderId:"379021412536",
+    appId:"1:379021412536:web:003efdb33f6d6bb77d8c4d",
+    measurementId:"G-BG2KFTL9ZC"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+const app=initializeApp(firebaseConfig);
 
-let currentUser = null;
-
+let analytics=null;
 try{
-    const result = await signInAnonymously(auth);
-    currentUser = result.user;
-}catch(e){
-    console.error(e);
-    document.getElementById("lobbyStatus").textContent =
-        "Firebaseへの接続に失敗しました";
-}
+    analytics=getAnalytics(app);
+}catch(e){}
 
+const db=getFirestore(app);
 
-// ============================================================
-// DOM
-// ============================================================
+const roomScreen=document.getElementById("roomScreen");
+const roomCodeInput=document.getElementById("roomCode");
+const roomButton=document.getElementById("roomButton");
+const statusEl=document.getElementById("status");
 
-const lobby = document.getElementById("lobby");
-const game = document.getElementById("game");
-const roomCodeInput = document.getElementById("roomCode");
-const roomButton = document.getElementById("roomButton");
-const lobbyStatus = document.getElementById("lobbyStatus");
+const roomText=document.getElementById("roomText");
+const playersInfo=document.getElementById("playersInfo");
 
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
+const world=document.getElementById("world");
+const camera=document.getElementById("camera");
 
-const roomLabel = document.getElementById("roomLabel");
-const playerCount = document.getElementById("playerCount");
+const startButton=document.getElementById("startButton");
+const startProgress=startButton.querySelector(".progress");
 
-const jumpButton = document.getElementById("jumpButton");
-const grabButton = document.getElementById("grabButton");
-const fireButton = document.getElementById("fireButton");
-const startButton = document.getElementById("startButton");
+const jumpButton=document.getElementById("jumpButton");
+const grabButton=document.getElementById("grabButton");
 
-const joystick = document.getElementById("joystick");
-const stick = document.getElementById("stick");
-const lookArea = document.getElementById("lookArea");
+const fireButton=document.getElementById("fireButton");
+const fireProgress=fireButton.querySelector(".progress");
 
-const hpBar = document.getElementById("hpBar");
-const hpText = document.getElementById("hpText");
+const joystick=document.getElementById("joystick");
+const stick=document.getElementById("stick");
 
-const message = document.getElementById("message");
-const deathScreen = document.getElementById("deathScreen");
+const message=document.getElementById("message");
+const damage=document.getElementById("damage");
 
+const clientId=
+    crypto.randomUUID ?
+    crypto.randomUUID() :
+    Math.random().toString(36).slice(2)+Date.now();
 
-// ============================================================
-// GAME STATE
-// ============================================================
+let roomId="";
+let isHost=false;
+let roomRef=null;
+let unsubscribeRoom=null;
 
-let roomId = "";
-let isHost = false;
-let roomStarted = false;
-let roomEnded = false;
+let gameStarted=false;
+let startHeld=false;
+let startHoldStart=0;
 
-let players = {};
-let unsubscribePlayers = null;
-let unsubscribeRoom = null;
+let lastLocalAction=Date.now();
+let lastRoomUpdate=0;
 
-let lastActivity = Date.now();
-let lastFirebaseUpdate = 0;
-let lastCleanupCheck = 0;
+let yaw=0;
+let pitch=0;
 
-let gameRunning = false;
-
-const player = {
+const player={
     x:0,
     y:2,
     z:0,
-
     vx:0,
     vy:0,
     vz:0,
-
-    yaw:0,
-    pitch:0,
-
-    hp:100,
-
     grounded:false,
+    hp:100,
+    alive:true,
+    invincibleUntil:0,
     grabbing:false,
-
-    invulnerableUntil:0,
-
-    dead:false
+    grabStart:0,
+    grabTarget:null,
+    lastShot:0
 };
 
+const remotePlayers=new Map();
 
-// ============================================================
-// MAP
-// ============================================================
+const bullets=new Map();
 
-/*
-    低い足場を追加。
-    platform:
-      x,z = 中心
-      w,d = 横幅/奥行き
-      y = 上面の高さ
-      h = 厚さ
+const keys={};
 
-    「見た目」と「当たり判定」を同じ配列から生成するため、
-    上の足場も確実に衝突対象になる。
-*/
-
-const platforms = [
-
-    // 地面
+const platforms=[
     {
+        id:"ground",
         x:0,
         y:0,
         z:0,
         w:42,
-        d:42,
-        h:1
+        h:1,
+        d:42
     },
 
-    // 中央
     {
+        id:"p1",
         x:0,
         y:3,
-        z:-4,
-        w:7,
-        d:7,
-        h:1
-    },
-
-    // 左低台
-    {
-        x:-8,
-        y:2,
-        z:-2,
-        w:6,
-        d:6,
-        h:1
-    },
-
-    // 右低台
-    {
-        x:8,
-        y:2,
-        z:3,
-        w:6,
-        d:6,
-        h:1
-    },
-
-    // 奥低台
-    {
-        x:-3,
-        y:4,
-        z:-12,
-        w:7,
-        d:6,
-        h:1
-    },
-
-    // 高台
-    {
-        x:8,
-        y:6,
-        z:-9,
-        w:7,
-        d:7,
-        h:1
-    },
-
-    // 高台への途中
-    {
-        x:5,
-        y:4,
-        z:-6,
-        w:5,
-        d:5,
-        h:1
-    },
-
-    // 左奥
-    {
-        x:-11,
-        y:5,
-        z:-10,
-        w:6,
-        d:6,
-        h:1
-    },
-
-    // 右奥
-    {
-        x:12,
-        y:3,
-        z:-1,
-        w:5,
-        d:5,
-        h:1
-    },
-
-    // 中央奥
-    {
-        x:0,
-        y:6,
-        z:-18,
+        z:-8,
         w:8,
-        d:5,
-        h:1
+        h:1,
+        d:8
+    },
+
+    {
+        id:"p2",
+        x:7,
+        y:5.5,
+        z:-15,
+        w:7,
+        h:1,
+        d:7
+    },
+
+    {
+        id:"p3",
+        x:-7,
+        y:7.5,
+        z:-21,
+        w:8,
+        h:1,
+        d:7
+    },
+
+    {
+        id:"p4",
+        x:2,
+        y:9.5,
+        z:-27,
+        w:7,
+        h:1,
+        d:7
+    },
+
+    {
+        id:"p5",
+        x:11,
+        y:11.5,
+        z:-32,
+        w:8,
+        h:1,
+        d:7
+    },
+
+    {
+        id:"p6",
+        x:-4,
+        y:13.5,
+        z:-36,
+        w:8,
+        h:1,
+        d:8
+    },
+
+    {
+        id:"p7",
+        x:-13,
+        y:15.5,
+        z:-42,
+        w:8,
+        h:1,
+        d:8
     }
 ];
 
+function createPlatform(p){
 
-// ============================================================
-// SIMPLE 3D RENDERER
-// ============================================================
+    const el=document.createElement("div");
 
-function resize(){
-    canvas.width = innerWidth * devicePixelRatio;
-    canvas.height = innerHeight * devicePixelRatio;
+    el.className="platform";
 
-    canvas.style.width = innerWidth + "px";
-    canvas.style.height = innerHeight + "px";
+    el.style.width=p.w*40+"px";
+    el.style.height=p.d*40+"px";
 
-    ctx.setTransform(
-        devicePixelRatio,
-        0,
-        0,
-        devicePixelRatio,
-        0,
-        0
-    );
+    el.dataset.id=p.id;
+
+    world.appendChild(el);
+
+    p.el=el;
+
 }
 
-addEventListener("resize",resize);
-resize();
+platforms.forEach(createPlatform);
 
+function showMessage(text,time=1500){
 
-function rotatePoint(x,y,z){
-    const cy = Math.cos(player.yaw);
-    const sy = Math.sin(player.yaw);
+    message.textContent=text;
+    message.classList.add("show");
 
-    const rx = x * cy - z * sy;
-    const rz = x * sy + z * cy;
+    clearTimeout(showMessage.timer);
 
-    const cp = Math.cos(player.pitch);
-    const sp = Math.sin(player.pitch);
-
-    const ry = y * cp - rz * sp;
-    const rz2 = y * sp + rz * cp;
-
-    return {
-        x:rx,
-        y:ry,
-        z:rz2
-    };
+    showMessage.timer=setTimeout(()=>{
+        message.classList.remove("show");
+    },time);
 }
 
+function setStatus(text){
+    statusEl.textContent=text;
+}
 
-function project(x,y,z){
+function normalizeRoomCode(value){
 
-    const r = rotatePoint(
-        x - player.x,
-        y - player.y - 1.5,
-        z - player.z
-    );
+    return value
+        .trim()
+        .toUpperCase()
+        .replace(/[^A-Z0-9_-]/g,"")
+        .slice(0,12);
 
-    if(r.z <= 0.1){
-        return null;
+}
+
+function randomSpawn(){
+
+    const spawns=[
+        {x:0,y:2,z:12},
+        {x:8,y:2,z:8},
+        {x:-8,y:2,z:8},
+        {x:0,y:2,z:0},
+        {x:12,y:2,z:-4},
+        {x:-12,y:2,z:-4}
+    ];
+
+    return spawns[Math.floor(Math.random()*spawns.length)];
+
+}
+
+function resetPlayer(){
+
+    const s=randomSpawn();
+
+    player.x=s.x;
+    player.y=s.y;
+    player.z=s.z;
+
+    player.vx=0;
+    player.vy=0;
+    player.vz=0;
+
+    player.hp=100;
+    player.alive=true;
+    player.grounded=false;
+    player.grabbing=false;
+    player.grabTarget=null;
+
+}
+
+function markAction(){
+
+    lastLocalAction=Date.now();
+
+}
+
+async function createOrJoinRoom(){
+
+    const code=normalizeRoomCode(roomCodeInput.value);
+
+    if(!code){
+
+        setStatus("試合コードを入力してね");
+        return;
+
     }
 
-    const f = Math.min(innerWidth,innerHeight) * .9;
+    roomCodeInput.value=code;
 
-    return {
-        x:innerWidth / 2 + r.x * f / r.z,
-        y:innerHeight / 2 - r.y * f / r.z,
-        z:r.z
-    };
+    roomButton.disabled=true;
+
+    try{
+
+        const ref=doc(db,"matches",code);
+        const snap=await getDoc(ref);
+
+        if(!snap.exists()){
+
+            const data={
+                code,
+                host:clientId,
+                started:false,
+                createdAt:serverTimestamp(),
+                updatedAt:serverTimestamp(),
+                players:{
+                    [clientId]:{
+                        id:clientId,
+                        x:0,
+                        y:2,
+                        z:0,
+                        yaw:0,
+                        pitch:0,
+                        hp:100,
+                        alive:true,
+                        lastActive:Date.now(),
+                        joinedAt:Date.now()
+                    }
+                }
+            };
+
+            await setDoc(ref,data);
+
+            isHost=true;
+            roomId=code;
+            roomRef=ref;
+
+            showMessage("試合を作成しました");
+
+        }else{
+
+            const data=snap.data();
+
+            roomId=code;
+            roomRef=ref;
+
+            if(data.started){
+
+                setStatus("その試合はすでに開始されています");
+                roomButton.disabled=false;
+                return;
+
+            }
+
+            await runTransaction(db,async transaction=>{
+
+                const current=await transaction.get(ref);
+
+                if(!current.exists()){
+                    throw new Error("ROOM_NOT_FOUND");
+                }
+
+                const d=current.data();
+
+                const players=d.players||{};
+
+                players[clientId]={
+                    id:clientId,
+                    x:0,
+                    y:2,
+                    z:0,
+                    yaw:0,
+                    pitch:0,
+                    hp:100,
+                    alive:true,
+                    lastActive:Date.now(),
+                    joinedAt:Date.now()
+                };
+
+                transaction.update(ref,{
+                    players,
+                    updatedAt:serverTimestamp()
+                });
+
+            });
+
+            isHost=data.host===clientId;
+
+            showMessage("試合に参加しました");
+
+        }
+
+        roomScreen.style.display="none";
+        roomText.textContent=roomId;
+
+        resetPlayer();
+
+        subscribeRoom();
+
+    }catch(e){
+
+        console.error(e);
+
+        setStatus("部屋の作成/参加に失敗しました");
+
+    }finally{
+
+        roomButton.disabled=false;
+
+    }
+
 }
 
+roomButton.addEventListener("click",createOrJoinRoom);
 
-function drawPolygon(points,fill,stroke=null){
+roomCodeInput.addEventListener("keydown",e=>{
 
-    const projected = points.map(p =>
-        project(p.x,p.y,p.z)
-    );
+    if(e.key==="Enter"){
+        createOrJoinRoom();
+    }
 
-    if(projected.some(p=>!p)) return;
+});
 
-    ctx.beginPath();
+function subscribeRoom(){
 
-    projected.forEach((p,i)=>{
-        if(i===0){
-            ctx.moveTo(p.x,p.y);
-        }else{
-            ctx.lineTo(p.x,p.y);
+    if(unsubscribeRoom){
+        unsubscribeRoom();
+    }
+
+    unsubscribeRoom=onSnapshot(roomRef,snap=>{
+
+        if(!snap.exists()){
+
+            leaveToLobby("試合が終了しました");
+            return;
+
         }
+
+        const data=snap.data();
+
+        gameStarted=!!data.started;
+
+        if(data.host===clientId){
+            isHost=true;
+        }
+
+        const players=data.players||{};
+
+        playersInfo.textContent=
+            "PLAYERS: "+Object.keys(players).length;
+
+        updateRemotePlayers(players);
+
+        if(gameStarted){
+
+            startButton.style.display="none";
+
+        }else if(isHost){
+
+            startButton.style.display="block";
+
+        }else{
+
+            startButton.style.display="none";
+
+        }
+
+    },err=>{
+
+        console.error(err);
+
     });
 
-    ctx.closePath();
+}
 
-    ctx.fillStyle = fill;
-    ctx.fill();
+function updateRemotePlayers(players){
 
-    if(stroke){
-        ctx.strokeStyle = stroke;
-        ctx.stroke();
+    for(const [id,p] of Object.entries(players)){
+
+        if(id===clientId) continue;
+
+        let el=remotePlayers.get(id);
+
+        if(!el){
+
+            el=document.createElement("div");
+            el.className="player";
+            world.appendChild(el);
+            remotePlayers.set(id,el);
+
+        }
+
+        el.classList.toggle("dead",p.alive===false);
+
+        el.style.transform=
+            `translate3d(${p.x*40}px,${-p.y*40}px,${p.z*40}px)`;
+
     }
+
+    for(const [id,el] of remotePlayers){
+
+        if(!players[id]){
+
+            el.remove();
+            remotePlayers.delete(id);
+
+        }
+
+    }
+
 }
 
+async function syncPlayer(){
 
-function renderPlatform(p){
+    if(!roomRef || !roomId || !gameStarted){
+        return;
+    }
 
-    const x1 = p.x - p.w/2;
-    const x2 = p.x + p.w/2;
+    const now=Date.now();
 
-    const z1 = p.z - p.d/2;
-    const z2 = p.z + p.d/2;
+    if(now-lastRoomUpdate<80){
+        return;
+    }
 
-    const y = p.y;
-    const bottom = p.y - p.h;
+    lastRoomUpdate=now;
 
-    drawPolygon([
-        {x:x1,y:y,z:z1},
-        {x:x2,y:y,z:z1},
-        {x:x2,y:y,z:z2},
-        {x:x1,y:y,z:z2}
-    ],"#66717c");
+    try{
 
-    drawPolygon([
-        {x:x1,y:bottom,z:z1},
-        {x:x2,y:bottom,z:z1},
-        {x:x2,y:y,z:z1},
-        {x:x1,y:y,z:z1}
-    ],"#38414a");
-
-    drawPolygon([
-        {x:x2,y:bottom,z:z1},
-        {x:x2,y:bottom,z:z2},
-        {x:x2,y:y,z:z2},
-        {x:x2,y:y,z:z1}
-    ],"#303840");
-}
-
-
-function renderPlayer(p){
-
-    const headY = p.y + 1.65;
-    const bodyY = p.y + .75;
-
-    const size = .45;
-
-    const color =
-        p.id === currentUser?.uid
-        ? "#45a8ff"
-        : "#ff5151";
-
-    drawPolygon([
-        {x:p.x-size,y:p.y,z:p.z-size},
-        {x:p.x+size,y:p.y,z:p.z-size},
-        {x:p.x+size,y:bodyY,z:p.z-size},
-        {x:p.x-size,y:bodyY,z:p.z-size}
-    ],color);
-
-    drawPolygon([
-        {x:p.x-size,y:bodyY,z:p.z-size},
-        {x:p.x+size,y:bodyY,z:p.z-size},
-        {x:p.x+size,y:headY,z:p.z-size},
-        {x:p.x-size,y:headY,z:p.z-size}
-    ],"#f1c7a5");
-}
-
-
-function render(){
-
-    ctx.clearRect(0,0,innerWidth,innerHeight);
-
-    const gradient =
-        ctx.createLinearGradient(0,0,0,innerHeight);
-
-    gradient.addColorStop(0,"#111b2c");
-    gradient.addColorStop(.55,"#31445a");
-    gradient.addColorStop(1,"#101317");
-
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0,0,innerWidth,innerHeight);
-
-    const objects = [];
-
-    for(const p of platforms){
-
-        const center = project(
-            p.x,
-            p.y,
-            p.z
-        );
-
-        objects.push({
-            type:"platform",
-            data:p,
-            z:center ? center.z : -1
+        await updateDoc(roomRef,{
+            [`players.${clientId}`]:{
+                id:clientId,
+                x:player.x,
+                y:player.y,
+                z:player.z,
+                yaw,
+                pitch,
+                hp:player.hp,
+                alive:player.alive,
+                lastActive:lastLocalAction
+            },
+            updatedAt:serverTimestamp()
         });
+
+    }catch(e){
+
+        console.error(e);
+
     }
 
-    for(const id in players){
+}
 
-        const p = players[id];
+async function cleanupInactivePlayers(){
 
-        const center = project(
-            p.x,
-            p.y + .8,
-            p.z
-        );
-
-        objects.push({
-            type:"player",
-            data:p,
-            z:center ? center.z : -1
-        });
+    if(!roomRef || !roomId){
+        return;
     }
 
-    objects
-        .filter(o=>o.z>0)
-        .sort((a,b)=>b.z-a.z)
-        .forEach(o=>{
+    try{
 
-            if(o.type==="platform"){
-                renderPlatform(o.data);
-            }else{
-                renderPlayer(o.data);
+        const snap=await getDoc(roomRef);
+
+        if(!snap.exists()){
+            return;
+        }
+
+        const data=snap.data();
+
+        const players=data.players||{};
+        const now=Date.now();
+
+        const ids=Object.keys(players);
+
+        if(ids.length===0){
+
+            await deleteDoc(roomRef);
+            leaveToLobby("試合が終了しました");
+            return;
+
+        }
+
+        let allInactive=true;
+
+        for(const id of ids){
+
+            const active=Number(players[id].lastActive||0);
+
+            if(now-active<60000){
+
+                allInactive=false;
+                break;
+
             }
+
+        }
+
+        if(allInactive){
+
+            await deleteDoc(roomRef);
+
+            leaveToLobby(
+                "全員が1分以上操作していないため試合を終了しました"
+            );
+
+        }
+
+    }catch(e){
+
+        console.error(e);
+
+    }
+
+}
+
+setInterval(cleanupInactivePlayers,10000);
+
+function leaveToLobby(text){
+
+    if(unsubscribeRoom){
+
+        unsubscribeRoom();
+        unsubscribeRoom=null;
+
+    }
+
+    roomId="";
+    roomRef=null;
+    gameStarted=false;
+    isHost=false;
+
+    roomScreen.style.display="flex";
+
+    startButton.style.display="none";
+
+    setStatus(text||"");
+
+    for(const [id,el] of remotePlayers){
+
+        el.remove();
+
+    }
+
+    remotePlayers.clear();
+
+}
+
+async function startMatch(){
+
+    if(!roomRef || !isHost || gameStarted){
+        return;
+    }
+
+    try{
+
+        const snap=await getDoc(roomRef);
+
+        if(!snap.exists()){
+            return;
+        }
+
+        const data=snap.data();
+        const players=data.players||{};
+
+        const now=Date.now();
+
+        const updated={};
+
+        for(const id of Object.keys(players)){
+
+            const s=randomSpawn();
+
+            updated[id]={
+                ...players[id],
+                x:s.x,
+                y:s.y,
+                z:s.z,
+                hp:100,
+                alive:true,
+                lastActive:now
+            };
+
+        }
+
+        await updateDoc(roomRef,{
+            started:true,
+            players:updated,
+            startedAt:serverTimestamp(),
+            updatedAt:serverTimestamp()
         });
+
+        resetPlayer();
+
+        player.invincibleUntil=Date.now()+3000;
+
+        showMessage("START!");
+
+    }catch(e){
+
+        console.error(e);
+
+    }
+
 }
 
+function updateStartButton(){
 
-// ============================================================
-// COLLISION
-// ============================================================
+    if(!isHost || gameStarted){
+        startButton.style.display="none";
+        return;
+    }
 
-const PLAYER_RADIUS = .45;
-const PLAYER_HEIGHT = 1.7;
-const GRAVITY = 18;
-const MOVE_SPEED = 6.5;
-const JUMP_POWER = 8.5;
+    startButton.style.display="block";
 
+    if(startHeld){
 
-function platformContainsXZ(p,x,z){
+        const elapsed=performance.now()-startHoldStart;
+        const progress=Math.min(1,elapsed/1000);
 
-    return (
-        x >= p.x - p.w/2 - PLAYER_RADIUS &&
-        x <= p.x + p.w/2 + PLAYER_RADIUS &&
-        z >= p.z - p.d/2 - PLAYER_RADIUS &&
-        z <= p.z + p.d/2 + PLAYER_RADIUS
-    );
+        startProgress.style.background=
+            `conic-gradient(#35d86b ${progress*360}deg,transparent ${progress*360}deg)`;
+
+        if(progress>=1){
+
+            startHeld=false;
+            startProgress.style.background=
+                "conic-gradient(#35d86b 0deg,transparent 0deg)";
+
+            startMatch();
+
+        }
+
+    }else{
+
+        startProgress.style.background=
+            "conic-gradient(#35d86b 0deg,transparent 0deg)";
+
+    }
+
+    requestAnimationFrame(updateStartButton);
+
 }
 
+startButton.addEventListener("pointerdown",e=>{
 
-function getFloorY(x,z,currentY,vy){
+    e.preventDefault();
 
-    let floor = 0;
+    if(!isHost || gameStarted){
+        return;
+    }
+
+    markAction();
+
+    startHeld=true;
+    startHoldStart=performance.now();
+
+});
+
+for(const ev of ["pointerup","pointercancel","pointerleave"]){
+
+    startButton.addEventListener(ev,()=>{
+
+        if(startHeld){
+
+            startHeld=false;
+
+            startProgress.style.background=
+                "conic-gradient(#35d86b 0deg,transparent 0deg)";
+
+        }
+
+    });
+
+}
+
+requestAnimationFrame(updateStartButton);
+
+function checkGroundCollision(oldY,newY){
+
+    const bottom=newY;
+    const oldBottom=oldY;
+
+    let landed=false;
 
     for(const p of platforms){
 
-        if(!platformContainsXZ(p,x,z)){
+        const minX=p.x-p.w/2;
+        const maxX=p.x+p.w/2;
+
+        const minZ=p.z-p.d/2;
+        const maxZ=p.z+p.d/2;
+
+        const insideXZ=
+            player.x>=minX &&
+            player.x<=maxX &&
+            player.z>=minZ &&
+            player.z<=maxZ;
+
+        if(!insideXZ){
             continue;
         }
 
-        const top = p.y;
-
-        /*
-          下から上へ通過している場合だけ着地可能。
-          これで「上の足場をすり抜ける」問題を防止。
-        */
-
-        const oldBottom = currentY;
-        const newBottom = currentY + vy;
+        const top=p.y+p.h;
 
         if(
-            vy <= 0 &&
-            oldBottom >= top - .15 &&
-            newBottom <= top + .15
+            player.vy<=0 &&
+            oldBottom>=top &&
+            bottom<=top
         ){
-            floor = Math.max(floor,top);
+
+            player.y=top;
+            player.vy=0;
+            player.grounded=true;
+            landed=true;
+
+            break;
+
         }
 
-        if(currentY <= top + .05){
-            floor = Math.max(floor,top);
-        }
     }
 
-    return floor;
+    if(!landed){
+
+        player.grounded=false;
+
+    }
+
+    return landed;
+
 }
 
+function findGrabTarget(){
 
-// ============================================================
-// GRAB
-// ============================================================
+    if(player.grounded){
+        return null;
+    }
+
+    const playerTop=player.y;
+
+    let best=null;
+    let bestDistance=Infinity;
+
+    for(const p of platforms){
+
+        const minX=p.x-p.w/2;
+        const maxX=p.x+p.w/2;
+
+        const minZ=p.z-p.d/2;
+        const maxZ=p.z+p.d/2;
+
+        const insideXZ=
+            player.x>=minX &&
+            player.x<=maxX &&
+            player.z>=minZ &&
+            player.z<=maxZ;
+
+        if(!insideXZ){
+            continue;
+        }
+
+        const top=p.y+p.h;
+
+        const verticalDistance=playerTop-top;
+
+        if(
+            verticalDistance>=0 &&
+            verticalDistance<=0.15
+        ){
+
+            const dx=player.x-p.x;
+            const dz=player.z-p.z;
+
+            const distance=Math.sqrt(dx*dx+dz*dz);
+
+            if(distance<bestDistance){
+
+                bestDistance=distance;
+                best=p;
+
+            }
+
+        }
+
+    }
+
+    return best;
+
+}
 
 function canGrab(){
 
@@ -1015,1791 +1329,662 @@ function canGrab(){
         return false;
     }
 
-    const topOfBody = player.y + PLAYER_HEIGHT;
+    return !!findGrabTarget();
 
-    for(const p of platforms){
-
-        if(
-            Math.abs(player.x - p.x) >
-                p.w/2 + .15
-        ) continue;
-
-        if(
-            Math.abs(player.z - p.z) >
-                p.d/2 + .15
-        ) continue;
-
-        /*
-          「自分とほぼ0距離」
-          かつ
-          足場の高さが全身の一番上より下
-        */
-
-        const horizontalDistance =
-            Math.max(
-                Math.abs(player.x-p.x)-p.w/2,
-                Math.abs(player.z-p.z)-p.d/2,
-                0
-            );
-
-        if(horizontalDistance > .35){
-            continue;
-        }
-
-        if(
-            p.y < topOfBody &&
-            p.y > player.y + .2
-        ){
-            return true;
-        }
-    }
-
-    return false;
 }
 
+function updateGrabButton(){
 
-function updateGrabUI(){
+    if(!gameStarted || player.grounded){
 
-    const air = !player.grounded;
-    const available = canGrab();
+        grabButton.style.display="none";
+        return;
 
-    if(!air){
-        grabButton.style.display = "none";
-        jumpButton.style.display = "flex";
+    }
+
+    grabButton.style.display="flex";
+
+    const target=findGrabTarget();
+
+    if(target){
+
+        grabButton.classList.remove("disabled");
+
+    }else{
+
+        grabButton.classList.add("disabled");
+
+    }
+
+}
+
+function performGrab(){
+
+    markAction();
+
+    if(player.grounded || player.grabbing){
         return;
     }
 
-    jumpButton.style.display = "none";
-    grabButton.style.display = "flex";
+    const target=findGrabTarget();
 
-    if(available){
-        grabButton.classList.remove("weak");
-    }else{
-        grabButton.classList.add("weak");
+    if(!target){
+        return;
     }
+
+    player.grabbing=true;
+    player.grabStart=performance.now();
+    player.grabTarget=target;
+
 }
 
+function updateGrab(){
 
-function grab(){
-
-    if(!canGrab()) return;
-
-    let target = null;
-
-    for(const p of platforms){
-
-        const horizontalDistance =
-            Math.max(
-                Math.abs(player.x-p.x)-p.w/2,
-                Math.abs(player.z-p.z)-p.d/2,
-                0
-            );
-
-        if(horizontalDistance <= .35 &&
-           p.y < player.y + PLAYER_HEIGHT &&
-           p.y > player.y + .2){
-
-            if(!target || p.y < target.y){
-                target = p;
-            }
-        }
+    if(!player.grabbing){
+        return;
     }
 
-    if(!target) return;
+    const target=player.grabTarget;
 
-    player.grabbing = true;
-    player.vx = 0;
-    player.vy = 0;
-    player.vz = 0;
+    if(!target){
 
-    /*
-      登る時間 = 0.5秒
-    */
+        player.grabbing=false;
+        return;
 
-    const startY = player.y;
-    const targetY = target.y;
-
-    const startTime = performance.now();
-
-    function climb(now){
-
-        const t = Math.min(
-            1,
-            (now-startTime)/500
-        );
-
-        const smooth =
-            t*t*(3-2*t);
-
-        player.y =
-            startY +
-            (targetY-startY)*smooth;
-
-        if(t<1){
-
-            requestAnimationFrame(climb);
-
-        }else{
-
-            player.y = targetY;
-            player.grounded = true;
-            player.grabbing = false;
-            updateFirebasePlayer();
-        }
     }
 
-    requestAnimationFrame(climb);
+    const progress=Math.min(
+        1,
+        (performance.now()-player.grabStart)/500
+    );
+
+    const targetY=target.y+target.h+1.2;
+
+    player.x+=(target.x-player.x)*0.15;
+    player.z+=(target.z-player.z)*0.15;
+
+    player.y+=
+        (targetY-player.y)*
+        Math.min(.25,progress*.25);
+
+    player.vx=0;
+    player.vy=0;
+    player.vz=0;
+
+    if(progress>=1){
+
+        player.x=target.x;
+        player.y=targetY;
+        player.z=target.z;
+
+        player.grounded=true;
+        player.grabbing=false;
+        player.grabTarget=null;
+
+    }
+
 }
-
-
-// ============================================================
-// INPUT
-// ============================================================
-
-const keys = {};
-
-addEventListener("keydown",e=>{
-    keys[e.code] = true;
-    registerActivity();
-});
-
-addEventListener("keyup",e=>{
-    keys[e.code] = false;
-    registerActivity();
-});
-
-
-function registerActivity(){
-
-    lastActivity = Date.now();
-
-    if(roomId){
-        updateFirebasePlayer(true);
-    }
-}
-
-
-// ============================================================
-// JOYSTICK
-// ============================================================
-
-let joyActive = false;
-let joyX = 0;
-let joyY = 0;
-
-function updateJoystick(e){
-
-    const rect = joystick.getBoundingClientRect();
-
-    let x =
-        e.clientX -
-        (rect.left + rect.width/2);
-
-    let y =
-        e.clientY -
-        (rect.top + rect.height/2);
-
-    const max = rect.width/2 - 32;
-
-    const length = Math.hypot(x,y);
-
-    if(length > max){
-
-        x = x/length*max;
-        y = y/length*max;
-    }
-
-    joyX = x/max;
-    joyY = y/max;
-
-    stick.style.transform =
-        `translate(${x}px,${y}px)`;
-}
-
-joystick.addEventListener("pointerdown",e=>{
-    joyActive = true;
-    joystick.setPointerCapture(e.pointerId);
-    updateJoystick(e);
-    registerActivity();
-});
-
-joystick.addEventListener("pointermove",e=>{
-    if(!joyActive) return;
-    updateJoystick(e);
-    registerActivity();
-});
-
-joystick.addEventListener("pointerup",e=>{
-    joyActive = false;
-    joyX = 0;
-    joyY = 0;
-    stick.style.transform = "";
-});
-
-joystick.addEventListener("pointercancel",()=>{
-    joyActive = false;
-    joyX = 0;
-    joyY = 0;
-    stick.style.transform = "";
-});
-
-
-// ============================================================
-// LOOK
-// ============================================================
-
-let lookActive = false;
-let lastLookX = 0;
-let lastLookY = 0;
-
-lookArea.addEventListener("pointerdown",e=>{
-    lookActive = true;
-    lastLookX = e.clientX;
-    lastLookY = e.clientY;
-    lookArea.setPointerCapture(e.pointerId);
-    registerActivity();
-});
-
-lookArea.addEventListener("pointermove",e=>{
-
-    if(!lookActive) return;
-
-    const dx = e.clientX-lastLookX;
-    const dy = e.clientY-lastLookY;
-
-    lastLookX = e.clientX;
-    lastLookY = e.clientY;
-
-    player.yaw += dx*.008;
-    player.pitch += dy*.006;
-
-    player.pitch =
-        Math.max(
-            -1.35,
-            Math.min(1.35,player.pitch)
-        );
-
-    registerActivity();
-});
-
-lookArea.addEventListener("pointerup",()=>{
-    lookActive = false;
-});
-
-lookArea.addEventListener("pointercancel",()=>{
-    lookActive = false;
-});
-
-
-// ============================================================
-// JUMP / GRAB
-// ============================================================
 
 function jump(){
 
-    registerActivity();
+    markAction();
 
-    if(!roomStarted || player.dead) return;
-
-    if(canGrab() && !player.grounded){
-        grab();
+    if(!gameStarted || !player.alive){
         return;
     }
 
     if(player.grounded){
 
-        player.vy = JUMP_POWER;
-        player.grounded = false;
+        player.vy=8.5;
+        player.grounded=false;
+
     }
+
 }
 
 jumpButton.addEventListener("pointerdown",e=>{
+
     e.preventDefault();
+
     jump();
+
 });
 
 grabButton.addEventListener("pointerdown",e=>{
+
     e.preventDefault();
 
     if(canGrab()){
-        grab();
+        performGrab();
     }
+
 });
 
+function fireCooldown(){
 
-// ============================================================
-// BULLETS
-// ============================================================
+    return 250;
 
-const bullets = [];
+}
 
-const BULLET_SPEED = 30;
-const BULLET_LIFE = 2.5;
-const FIRE_INTERVAL = 250;
+function canFire(){
 
-let lastShot = 0;
-let firing = false;
+    return Date.now()-player.lastShot>=fireCooldown();
 
+}
 
-function shoot(){
+async function fire(){
 
-    const now = performance.now();
+    markAction();
 
-    if(
-        now-lastShot < FIRE_INTERVAL ||
-        !roomStarted ||
-        player.dead
-    ){
+    if(!gameStarted || !player.alive){
         return;
     }
 
-    lastShot = now;
-    registerActivity();
+    if(!canFire()){
+        return;
+    }
 
-    const dir = {
-        x:Math.sin(player.yaw)*Math.cos(player.pitch),
-        y:-Math.sin(player.pitch),
-        z:Math.cos(player.yaw)*Math.cos(player.pitch)
+    player.lastShot=Date.now();
+
+    const direction=getLookDirection();
+
+    const bulletId=
+        clientId+"_"+Date.now()+"_"+Math.random();
+
+    const bullet={
+        id:bulletId,
+        owner:clientId,
+        x:player.x,
+        y:player.y+1.1,
+        z:player.z,
+        vx:direction.x*32,
+        vy:direction.y*32,
+        vz:direction.z*32,
+        createdAt:Date.now()
     };
 
-    bullets.push({
-        owner:currentUser.uid,
-        x:player.x,
-        y:player.y+1.25,
-        z:player.z,
-        vx:dir.x*BULLET_SPEED,
-        vy:dir.y*BULLET_SPEED,
-        vz:dir.z*BULLET_SPEED,
-        born:now
-    });
+    bullets.set(bulletId,bullet);
 
-    updateFireUI(now);
+    drawBullet(bullet);
+
 }
-
-
-function updateFireUI(now=performance.now()){
-
-    const elapsed =
-        now-lastShot;
-
-    const progress =
-        Math.max(
-            0,
-            Math.min(1,elapsed/FIRE_INTERVAL)
-        );
-
-    const degrees =
-        progress*360;
-
-    fireButton.querySelector(".cooldownCircle")
-        .style.background =
-        `conic-gradient(
-            rgba(90,180,255,.9) 0deg,
-            rgba(90,180,255,.9) ${degrees}deg,
-            transparent ${degrees}deg
-        )`;
-}
-
 
 fireButton.addEventListener("pointerdown",e=>{
+
     e.preventDefault();
-    firing = true;
-    registerActivity();
-    shoot();
+
+    fire();
+
 });
 
-fireButton.addEventListener("pointerup",()=>{
-    firing = false;
-});
+function updateFireButton(){
 
-fireButton.addEventListener("pointercancel",()=>{
-    firing = false;
-});
+    if(!gameStarted){
 
+        fireProgress.style.background=
+            "conic-gradient(#ff4141 0deg,transparent 0deg)";
+
+        return;
+
+    }
+
+    const elapsed=Date.now()-player.lastShot;
+
+    const progress=Math.min(
+        1,
+        elapsed/fireCooldown()
+    );
+
+    const degrees=progress*360;
+
+    fireProgress.style.background=
+        `conic-gradient(#ff4141 ${degrees}deg,transparent ${degrees}deg)`;
+
+    fireButton.classList.toggle(
+        "ready",
+        progress>=1
+    );
+
+}
+
+function getLookDirection(){
+
+    const yawRad=yaw*Math.PI/180;
+    const pitchRad=pitch*Math.PI/180;
+
+    return {
+        x:Math.sin(yawRad)*Math.cos(pitchRad),
+        y:Math.sin(pitchRad),
+        z:Math.cos(yawRad)*Math.cos(pitchRad)
+    };
+
+}
+
+function drawBullet(b){
+
+    let el=b.el;
+
+    if(!el){
+
+        el=document.createElement("div");
+        el.className="bullet";
+
+        world.appendChild(el);
+
+        b.el=el;
+
+    }
+
+    el.style.transform=
+        `translate3d(${b.x*40}px,${-b.y*40}px,${b.z*40}px)`;
+
+}
 
 function updateBullets(dt){
 
-    const now = performance.now();
+    for(const [id,b] of bullets){
 
-    for(let i=bullets.length-1;i>=0;i--){
+        b.x+=b.vx*dt;
+        b.y+=b.vy*dt;
+        b.z+=b.vz*dt;
 
-        const b = bullets[i];
+        drawBullet(b);
 
-        b.x += b.vx*dt;
-        b.y += b.vy*dt;
-        b.z += b.vz*dt;
+        let remove=false;
 
-        if(now-b.born > BULLET_LIFE){
-            bullets.splice(i,1);
-            continue;
+        if(
+            Math.abs(b.x)>40 ||
+            Math.abs(b.z)>40 ||
+            b.y<-5 ||
+            b.y>30
+        ){
+            remove=true;
         }
-
-        let hitWall = false;
 
         for(const p of platforms){
 
-            if(
-                b.x >= p.x-p.w/2 &&
-                b.x <= p.x+p.w/2 &&
-                b.z >= p.z-p.d/2 &&
-                b.z <= p.z+p.d/2 &&
-                b.y >= p.y-p.h &&
-                b.y <= p.y
-            ){
-                hitWall = true;
-                break;
-            }
-        }
+            const minX=p.x-p.w/2;
+            const maxX=p.x+p.w/2;
 
-        if(hitWall){
-            bullets.splice(i,1);
-            continue;
-        }
+            const minZ=p.z-p.d/2;
+            const maxZ=p.z+p.d/2;
 
-        for(const id in players){
-
-            if(id===currentUser.uid) continue;
-
-            const target = players[id];
-
-            const dx = b.x-target.x;
-            const dy = b.y-(target.y+.8);
-            const dz = b.z-target.z;
+            const top=p.y+p.h;
 
             if(
-                dx*dx+
-                dy*dy+
-                dz*dz < .8*.8
+                b.x>=minX &&
+                b.x<=maxX &&
+                b.z>=minZ &&
+                b.z<=maxZ &&
+                b.y>=p.y &&
+                b.y<=top+1
             ){
 
-                hitPlayer(id);
-
-                bullets.splice(i,1);
+                remove=true;
                 break;
+
             }
-        }
-    }
-}
 
-
-async function hitPlayer(id){
-
-    if(!roomId) return;
-
-    const ref = doc(
-        db,
-        "dfpsRooms",
-        roomId,
-        "players",
-        id
-    );
-
-    try{
-
-        const snap = await getDoc(ref);
-
-        if(!snap.exists()) return;
-
-        const target = snap.data();
-
-        if(
-            target.invulnerableUntil &&
-            target.invulnerableUntil > Date.now()
-        ){
-            return;
         }
 
-        const hp =
-            Math.max(
-                0,
-                Number(target.hp ?? 100)-25
-            );
+        for(const [otherId,el] of remotePlayers){
 
-        await updateDoc(ref,{
-            hp,
-            lastActivity:Date.now()
-        });
+            const rect=el.getBoundingClientRect();
 
-    }catch(e){
-        console.error(e);
+            const screenX=window.innerWidth/2+b.x*3;
+            const screenY=window.innerHeight/2-b.y*3;
+
+            if(
+                screenX>rect.left-10 &&
+                screenX<rect.right+10 &&
+                screenY>rect.top-10 &&
+                screenY<rect.bottom+10
+            ){
+
+                remove=true;
+                break;
+
+            }
+
+        }
+
+        if(remove){
+
+            if(b.el){
+                b.el.remove();
+            }
+
+            bullets.delete(id);
+
+        }
+
     }
+
 }
 
+function updatePhysics(dt){
 
-// ============================================================
-// FIRE LOOP
-// ============================================================
-
-function fireLoop(){
-
-    if(firing){
-        shoot();
+    if(!gameStarted || !player.alive){
+        return;
     }
 
-    updateFireUI();
+    updateGrab();
 
-    requestAnimationFrame(fireLoop);
-}
-
-fireLoop();
-
-
-// ============================================================
-// PLAYER MOVEMENT
-// ============================================================
-
-function getMovementInput(){
-
-    let forward = 0;
-    let right = 0;
-
-    if(keys["KeyW"] || keys["ArrowUp"]) forward += 1;
-    if(keys["KeyS"] || keys["ArrowDown"]) forward -= 1;
-    if(keys["KeyD"] || keys["ArrowRight"]) right += 1;
-    if(keys["KeyA"] || keys["ArrowLeft"]) right -= 1;
-
-    if(Math.abs(joyX)>.05 || Math.abs(joyY)>.05){
-
-        right += joyX;
-        forward += -joyY;
+    if(player.grabbing){
+        return;
     }
 
-    const length =
-        Math.hypot(forward,right);
+    let mx=0;
+    let mz=0;
+
+    if(keys.KeyW || keys.ArrowUp) mz-=1;
+    if(keys.KeyS || keys.ArrowDown) mz+=1;
+    if(keys.KeyA || keys.ArrowLeft) mx-=1;
+    if(keys.KeyD || keys.ArrowRight) mx+=1;
+
+    mx+=joystickX;
+    mz+=joystickY;
+
+    const length=Math.sqrt(mx*mx+mz*mz);
 
     if(length>1){
 
-        forward/=length;
-        right/=length;
+        mx/=length;
+        mz/=length;
+
     }
 
-    return {forward,right};
+    const speed=6;
+
+    const yawRad=yaw*Math.PI/180;
+
+    const worldX=
+        mx*Math.cos(yawRad)-
+        mz*Math.sin(yawRad);
+
+    const worldZ=
+        mx*Math.sin(yawRad)+
+        mz*Math.cos(yawRad);
+
+    player.vx=worldX*speed;
+    player.vz=worldZ*speed;
+
+    if(length===0){
+
+        player.vx*=.8;
+        player.vz*=.8;
+
+    }
+
+    const oldY=player.y;
+
+    player.x+=player.vx*dt;
+    player.z+=player.vz*dt;
+
+    player.vy-=22*dt;
+    player.y+=player.vy*dt;
+
+    checkGroundCollision(oldY,player.y);
+
+    if(player.y<-10){
+
+        resetPlayer();
+
+    }
+
 }
 
+function updateCamera(){
 
-function updateMovement(dt){
+    camera.style.transform=
+        `translate3d(${-player.x*40}px,${player.y*40}px,${-player.z*40}px)
+         rotateX(${-pitch}deg)
+         rotateY(${-yaw}deg)`;
 
-    if(!roomStarted || player.dead || player.grabbing){
-        return;
+    for(const p of platforms){
+
+        p.el.style.transform=
+            `translate3d(${p.x*40}px,${-p.y*40}px,${p.z*40}px)
+             rotateX(0deg)`;
+
     }
 
-    const input = getMovementInput();
+    const me=document.querySelector(".localPlayer");
 
-    const sin = Math.sin(player.yaw);
-    const cos = Math.cos(player.yaw);
+    if(!me){
 
-    const dx =
-        (right=input.right)*cos +
-        input.forward*sin;
+        const el=document.createElement("div");
 
-    const dz =
-        input.forward*cos -
-        input.right*sin;
+        el.className="player me localPlayer";
 
-    player.vx =
-        dx*MOVE_SPEED;
+        world.appendChild(el);
 
-    player.vz =
-        dz*MOVE_SPEED;
-
-    const oldY = player.y;
-
-    if(!player.grounded){
-
-        player.vy -= GRAVITY*dt;
     }
 
-    let newX =
-        player.x + player.vx*dt;
+    const local=document.querySelector(".localPlayer");
 
-    let newZ =
-        player.z + player.vz*dt;
+    local.style.transform=
+        `translate3d(${player.x*40}px,${-player.y*40}px,${player.z*40}px)`;
 
-    /*
-      地図外への移動制限
-    */
+}
 
-    newX = Math.max(-19,Math.min(19,newX));
-    newZ = Math.max(-19,Math.min(19,newZ));
+window.addEventListener("keydown",e=>{
 
-    const previousY = player.y;
+    keys[e.code]=true;
 
-    player.x = newX;
-    player.z = newZ;
+    markAction();
 
-    if(!player.grounded){
+    if(e.code==="Space"){
+        jump();
+    }
 
-        const nextY =
-            player.y + player.vy*dt;
-
-        let landed = false;
-
-        for(const p of platforms){
-
-            if(!platformContainsXZ(p,player.x,player.z)){
-                continue;
-            }
-
-            const top = p.y;
-
-            /*
-              前フレームの足元が足場より上、
-              今フレームの足元が足場以下なら着地。
-            */
-
-            if(
-                player.vy <= 0 &&
-                previousY >= top &&
-                nextY <= top
-            ){
-
-                player.y = top;
-                player.vy = 0;
-                player.grounded = true;
-                landed = true;
-                break;
-            }
-        }
-
-        if(!landed){
-            player.y = nextY;
-        }
-
-    }else{
-
-        /*
-          現在乗っている足場がなくなった場合なども
-          落下状態に戻せる。
-        */
-
-        let supported = false;
-
-        for(const p of platforms){
-
-            if(
-                Math.abs(player.y-p.y)<.08 &&
-                platformContainsXZ(p,player.x,player.z)
-            ){
-                supported = true;
-                break;
-            }
-        }
-
-        if(!supported){
-            player.grounded = false;
-            player.vy = 0;
+    if(e.code==="KeyE"){
+        if(canGrab()){
+            performGrab();
         }
     }
 
-    if(player.y < -10){
-
-        player.y = 2;
-        player.vy = 0;
-        player.x = 0;
-        player.z = 0;
-        player.grounded = false;
-    }
-}
-
-
-// ============================================================
-// HP / DEATH
-// ============================================================
-
-function updateLocalHP(){
-
-    hpBar.style.width =
-        Math.max(
-            0,
-            Math.min(100,player.hp)
-        ) + "%";
-
-    hpText.textContent =
-        Math.round(player.hp) + " HP";
-}
-
-
-function checkDeath(){
-
-    if(player.hp<=0 && !player.dead){
-
-        player.dead = true;
-
-        deathScreen.style.display =
-            "flex";
-
-        setTimeout(()=>{
-
-            if(!roomStarted) return;
-
-            player.dead = false;
-            player.hp = 100;
-
-            randomTeleport();
-
-            deathScreen.style.display =
-                "none";
-
-            updateFirebasePlayer();
-
-        },3000);
-    }
-}
-
-
-// ============================================================
-// RANDOM TELEPORT
-// ============================================================
-
-function randomTeleport(){
-
-    /*
-      マップ外や足場内部を避け、
-      プレイヤー同士の初期位置が重ならないよう調整。
-    */
-
-    const safeSpawns = [
-        {x:-15,z:14,y:1},
-        {x:14,z:13,y:1},
-        {x:-14,z:5,y:1},
-        {x:14,z:-13,y:1},
-        {x:0,z:10,y:1},
-        {x:-10,z:-2,y:2},
-        {x:10,z:3,y:2}
-    ];
-
-    let candidates =
-        [...safeSpawns];
-
-    candidates.sort(
-        ()=>Math.random()-.5
-    );
-
-    for(const s of candidates){
-
-        let tooClose = false;
-
-        for(const id in players){
-
-            if(id===currentUser.uid) continue;
-
-            const p = players[id];
-
-            if(
-                Math.hypot(
-                    p.x-s.x,
-                    p.z-s.z
-                ) < 4
-            ){
-                tooClose = true;
-                break;
-            }
-        }
-
-        if(!tooClose){
-
-            player.x = s.x;
-            player.y = s.y;
-            player.z = s.z;
-
-            player.vx = 0;
-            player.vy = 0;
-            player.vz = 0;
-
-            return;
-        }
+    if(e.code==="KeyF"){
+        fire();
     }
 
-    const s = safeSpawns[
-        Math.floor(
-            Math.random()*safeSpawns.length
-        )
-    ];
+});
 
-    player.x=s.x;
-    player.y=s.y;
-    player.z=s.z;
-}
+window.addEventListener("keyup",e=>{
 
+    keys[e.code]=false;
 
-// ============================================================
-// FIREBASE ROOM
-// ============================================================
+});
 
-function roomRef(id){
-    return doc(db,"dfpsRooms",id);
-}
+let joystickActive=false;
+let joystickX=0;
+let joystickY=0;
 
-function playerRef(id){
-    return doc(
-        db,
-        "dfpsRooms",
-        roomId,
-        "players",
-        id
-    );
-}
+function updateJoystick(e){
 
+    const rect=joystick.getBoundingClientRect();
 
-async function createOrJoinRoom(){
+    const cx=rect.left+rect.width/2;
+    const cy=rect.top+rect.height/2;
 
-    if(!currentUser){
-        lobbyStatus.textContent =
-            "Firebase接続中……";
-        return;
+    let dx=e.clientX-cx;
+    let dy=e.clientY-cy;
+
+    const max=45;
+
+    const len=Math.sqrt(dx*dx+dy*dy);
+
+    if(len>max){
+
+        dx=dx/len*max;
+        dy=dy/len*max;
+
     }
 
-    let code =
-        roomCodeInput.value
-            .trim()
-            .toUpperCase()
-            .replace(/[^A-Z0-9]/g,"");
+    stick.style.transform=
+        `translate(${dx}px,${dy}px)`;
 
-    if(!code){
-        code =
-            Math.random()
-                .toString(36)
-                .slice(2,8)
-                .toUpperCase();
+    joystickX=dx/max;
+    joystickY=dy/max;
 
-        roomCodeInput.value = code;
-    }
-
-    if(code.length<3){
-        lobbyStatus.textContent =
-            "試合コードは3文字以上で入力してね";
-        return;
-    }
-
-    roomButton.disabled = true;
-    lobbyStatus.textContent =
-        "接続中……";
-
-    roomId = code;
-
-    const ref = roomRef(roomId);
-
-    try{
-
-        await runTransaction(db,async transaction=>{
-
-            const snap =
-                await transaction.get(ref);
-
-            if(!snap.exists()){
-
-                transaction.set(ref,{
-                    hostUid:currentUser.uid,
-                    started:false,
-                    ended:false,
-                    createdAt:Date.now(),
-                    lastRoomActivity:Date.now()
-                });
-
-                isHost = true;
-
-            }else{
-
-                const data = snap.data();
-
-                if(data.ended){
-
-                    transaction.set(ref,{
-                        hostUid:currentUser.uid,
-                        started:false,
-                        ended:false,
-                        createdAt:Date.now(),
-                        lastRoomActivity:Date.now()
-                    });
-
-                    isHost = true;
-
-                }else{
-
-                    isHost =
-                        data.hostUid === currentUser.uid;
-                }
-            }
-        });
-
-        await setDoc(
-            playerRef(currentUser.uid),
-            {
-                id:currentUser.uid,
-                x:0,
-                y:1,
-                z:0,
-                yaw:0,
-                pitch:0,
-                hp:100,
-                dead:false,
-                lastActivity:Date.now(),
-                invulnerableUntil:0
-            },
-            {merge:true}
-        );
-
-        enterRoom();
-
-    }catch(e){
-
-        console.error(e);
-
-        lobbyStatus.textContent =
-            "部屋への接続に失敗しました";
-
-        roomButton.disabled = false;
-    }
 }
 
-
-// ============================================================
-// ENTER ROOM
-// ============================================================
-
-function enterRoom(){
-
-    lobby.style.display = "none";
-    game.style.display = "block";
-
-    roomLabel.textContent =
-        roomId;
-
-    startButton.style.display =
-        isHost ? "block" : "none";
-
-    gameRunning = true;
-
-    randomTeleport();
-    updateLocalHP();
-
-    listenRoom();
-    listenPlayers();
-
-    showMessage(
-        isHost
-        ? "STARTを長押しして開始"
-        : "部屋主のSTARTを待っています"
-    );
-
-    updateFirebasePlayer();
-}
-
-
-// ============================================================
-// ROOM LISTENER
-// ============================================================
-
-function listenRoom(){
-
-    if(unsubscribeRoom){
-        unsubscribeRoom();
-    }
-
-    unsubscribeRoom =
-        onSnapshot(
-            roomRef(roomId),
-            snap=>{
-
-                if(!snap.exists()){
-
-                    returnToLobby(
-                        "試合が削除されました"
-                    );
-
-                    return;
-                }
-
-                const data =
-                    snap.data();
-
-                roomStarted =
-                    data.started === true;
-
-                roomEnded =
-                    data.ended === true;
-
-                if(roomEnded){
-
-                    returnToLobby(
-                        "試合が終了しました"
-                    );
-                }
-
-                if(
-                    roomStarted &&
-                    startButton
-                ){
-                    startButton.style.display =
-                        "none";
-                }
-            },
-            error=>{
-                console.error(error);
-            }
-        );
-}
-
-
-// ============================================================
-// PLAYERS LISTENER
-// ============================================================
-
-function listenPlayers(){
-
-    if(unsubscribePlayers){
-        unsubscribePlayers();
-    }
-
-    unsubscribePlayers =
-        onSnapshot(
-            collection(
-                db,
-                "dfpsRooms",
-                roomId,
-                "players"
-            ),
-            snapshot=>{
-
-                const next = {};
-
-                snapshot.forEach(snap=>{
-                    next[snap.id] = snap.data();
-                });
-
-                players = next;
-
-                playerCount.textContent =
-                    Object.keys(players).length;
-
-                const me =
-                    players[currentUser.uid];
-
-                if(me){
-
-                    player.hp =
-                        Number(me.hp ?? 100);
-
-                    player.dead =
-                        me.dead === true;
-
-                    updateLocalHP();
-                }
-            }
-        );
-}
-
-
-// ============================================================
-// FIREBASE PLAYER UPDATE
-// ============================================================
-
-let updateQueued = false;
-
-
-async function updateFirebasePlayer(force=false){
-
-    if(!roomId || !currentUser) return;
-
-    const now = Date.now();
-
-    if(
-        !force &&
-        now-lastFirebaseUpdate < 100
-    ){
-        if(!updateQueued){
-
-            updateQueued = true;
-
-            setTimeout(()=>{
-                updateQueued = false;
-                updateFirebasePlayer();
-            },110);
-        }
-
-        return;
-    }
-
-    lastFirebaseUpdate = now;
-
-    try{
-
-        await updateDoc(
-            playerRef(currentUser.uid),
-            {
-                x:player.x,
-                y:player.y,
-                z:player.z,
-                yaw:player.yaw,
-                pitch:player.pitch,
-                hp:player.hp,
-                dead:player.dead,
-                lastActivity:lastActivity
-            }
-        );
-
-    }catch(e){
-
-        if(e.code !== "not-found"){
-            console.error(e);
-        }
-    }
-}
-
-
-// ============================================================
-// START HOLD
-// ============================================================
-
-let startHolding = false;
-let startHoldStart = 0;
-const START_HOLD_TIME = 1800;
-
-
-function startHoldBegin(e){
+joystick.addEventListener("pointerdown",e=>{
 
     e.preventDefault();
 
-    if(
-        !isHost ||
-        roomStarted ||
-        roomEnded
-    ){
-        return;
-    }
+    joystickActive=true;
+    joystick.setPointerCapture(e.pointerId);
 
-    startHolding = true;
-    startHoldStart = performance.now();
+    markAction();
 
-    registerActivity();
+    updateJoystick(e);
 
-    updateStartHold();
-}
-
-
-function startHoldEnd(){
-
-    if(!startHolding) return;
-
-    startHolding = false;
-
-    updateStartCircle(0);
-}
-
-
-function updateStartHold(){
-
-    if(!startHolding){
-        return;
-    }
-
-    const progress =
-        Math.min(
-            1,
-            (performance.now()-startHoldStart) /
-            START_HOLD_TIME
-        );
-
-    updateStartCircle(progress);
-
-    if(progress>=1){
-
-        startHolding = false;
-        updateStartCircle(0);
-
-        startMatch();
-
-        return;
-    }
-
-    requestAnimationFrame(
-        updateStartHold
-    );
-}
-
-
-function updateStartCircle(progress){
-
-    const deg =
-        progress*360;
-
-    startButton
-        .querySelector(".holdCircle")
-        .style.background =
-        `conic-gradient(
-            rgba(70,230,120,.95) 0deg,
-            rgba(70,230,120,.95) ${deg}deg,
-            transparent ${deg}deg
-        )`;
-}
-
-
-startButton.addEventListener(
-    "pointerdown",
-    startHoldBegin
-);
-
-startButton.addEventListener(
-    "pointerup",
-    startHoldEnd
-);
-
-startButton.addEventListener(
-    "pointercancel",
-    startHoldEnd
-);
-
-startButton.addEventListener(
-    "pointerleave",
-    startHoldEnd
-);
-
-
-// ============================================================
-// START MATCH
-// ============================================================
-
-async function startMatch(){
-
-    if(!isHost || roomStarted) return;
-
-    try{
-
-        const spawnData = {};
-
-        for(const id in players){
-
-            const spawn = {
-                x:0,
-                y:1,
-                z:0
-            };
-
-            spawnData[id] = spawn;
-        }
-
-        /*
-          ランダムTP。
-          プレイヤー同士が埋まらないように
-          4m以上離す。
-        */
-
-        const shuffled =
-            [...[
-                {x:-15,z:14,y:1},
-                {x:14,z:13,y:1},
-                {x:-14,z:5,y:1},
-                {x:14,z:-13,y:1},
-                {x:0,z:10,y:1},
-                {x:-10,z:-2,y:2},
-                {x:10,z:3,y:2}
-            ]].sort(
-                ()=>Math.random()-.5
-            );
-
-        let index=0;
-
-        for(const id in players){
-
-            let chosen =
-                shuffled[index % shuffled.length];
-
-            /*
-              同じ位置になる可能性がある場合は
-              少しずつずらす。
-            */
-
-            chosen = {
-                x:chosen.x + index*.7,
-                y:chosen.y,
-                z:chosen.z
-            };
-
-            spawnData[id] = chosen;
-
-            index++;
-        }
-
-        await runTransaction(
-            db,
-            async transaction=>{
-
-                const snap =
-                    await transaction.get(
-                        roomRef(roomId)
-                    );
-
-                if(!snap.exists()) return;
-
-                const data =
-                    snap.data();
-
-                if(
-                    data.started ||
-                    data.ended
-                ){
-                    return;
-                }
-
-                transaction.update(
-                    roomRef(roomId),
-                    {
-                        started:true,
-                        lastRoomActivity:Date.now()
-                    }
-                );
-
-                for(const id in spawnData){
-
-                    const s =
-                        spawnData[id];
-
-                    transaction.update(
-                        playerRef(id),
-                        {
-                            x:s.x,
-                            y:s.y,
-                            z:s.z,
-                            hp:100,
-                            dead:false,
-
-                            /*
-                              3秒間無敵
-                            */
-                            invulnerableUntil:
-                                Date.now()+3000,
-
-                            lastActivity:Date.now()
-                        }
-                    );
-                }
-            }
-        );
-
-    }catch(e){
-
-        console.error(e);
-
-        showMessage(
-            "開始に失敗しました"
-        );
-    }
-}
-
-
-// ============================================================
-// INACTIVITY CLEANUP
-// ============================================================
-
-/*
-  条件:
-  「部屋にいる全プレイヤーが1分以上操作していない」
-
-  → 部屋を終了
-  → プレイヤー情報を削除
-  → 各クライアントはroom snapshotが消えたことを検知して
-    ロビーへ戻る
-*/
-
-const INACTIVE_LIMIT = 60 * 1000;
-
-
-async function checkInactiveRoom(){
-
-    if(
-        !roomId ||
-        roomEnded ||
-        Date.now()-lastCleanupCheck < 5000
-    ){
-        return;
-    }
-
-    lastCleanupCheck = Date.now();
-
-    try{
-
-        const roomSnap =
-            await getDoc(roomRef(roomId));
-
-        if(!roomSnap.exists()){
-            returnToLobby(
-                "試合が削除されました"
-            );
-            return;
-        }
-
-        const roomData =
-            roomSnap.data();
-
-        if(roomData.ended){
-            return;
-        }
-
-        const playerIds =
-            Object.keys(players);
-
-        if(playerIds.length===0){
-            return;
-        }
-
-        const now = Date.now();
-
-        const allInactive =
-            playerIds.every(id=>{
-
-                const p =
-                    players[id];
-
-                return (
-                    Number(p.lastActivity || 0) <
-                    now-INACTIVE_LIMIT
-                );
-            });
-
-        if(!allInactive){
-            return;
-        }
-
-        /*
-          削除処理はホストだけが実行。
-          ただしホスト自身が1分以上操作していないため、
-          その時点では他のクライアントが
-          「削除対象になった部屋」として検出できるよう、
-          まず ended を設定。
-        */
-
-        if(roomData.hostUid !== currentUser.uid){
-            return;
-        }
-
-        await updateDoc(
-            roomRef(roomId),
-            {
-                ended:true,
-                endedReason:"allPlayersInactive",
-                lastRoomActivity:now
-            }
-        );
-
-        /*
-          試合情報そのものを削除。
-        */
-
-        for(const id of playerIds){
-
-            try{
-                await deleteDoc(
-                    playerRef(id)
-                );
-            }catch(e){
-                console.error(e);
-            }
-        }
-
-        try{
-            await deleteDoc(
-                roomRef(roomId)
-            );
-        }catch(e){
-            console.error(e);
-        }
-
-    }catch(e){
-
-        console.error(
-            "inactive cleanup error:",
-            e
-        );
-    }
-}
-
-
-// ============================================================
-// ACTIVITY LOOP
-// ============================================================
-
-setInterval(()=>{
-
-    if(!roomId) return;
-
-    /*
-      自分が操作した場合、
-      最終操作時刻を常に維持。
-    */
-
-    if(
-        Date.now()-lastActivity < 10000
-    ){
-        updateFirebasePlayer();
-    }
-
-    checkInactiveRoom();
-
-},5000);
-
-
-// ============================================================
-// RETURN TO LOBBY
-// ============================================================
-
-async function returnToLobby(reason=""){
-
-    if(!roomId && !gameRunning){
-        return;
-    }
-
-    gameRunning = false;
-
-    if(unsubscribePlayers){
-        unsubscribePlayers();
-        unsubscribePlayers = null;
-    }
-
-    if(unsubscribeRoom){
-        unsubscribeRoom();
-        unsubscribeRoom = null;
-    }
-
-    const oldRoom =
-        roomId;
-
-    roomId = "";
-    roomStarted = false;
-    roomEnded = false;
-    isHost = false;
-
-    players = {};
-
-    startButton.style.display =
-        "none";
-
-    deathScreen.style.display =
-        "none";
-
-    game.style.display =
-        "none";
-
-    lobby.style.display =
-        "flex";
-
-    roomButton.disabled = false;
-
-    if(reason){
-        lobbyStatus.textContent =
-            reason;
-    }else{
-        lobbyStatus.textContent =
-            "";
-    }
-
-    /*
-      自分のプレイヤーデータが残っていた場合のみ削除。
-    */
-
-    if(
-        oldRoom &&
-        currentUser
-    ){
-
-        try{
-
-            await deleteDoc(
-                doc(
-                    db,
-                    "dfpsRooms",
-                    oldRoom,
-                    "players",
-                    currentUser.uid
-                )
-            );
-
-        }catch(e){
-            console.error(e);
-        }
-    }
-}
-
-
-// ============================================================
-// MESSAGE
-// ============================================================
-
-let messageTimer = null;
-
-function showMessage(text){
-
-    message.textContent = text;
-    message.style.opacity = "1";
-
-    clearTimeout(messageTimer);
-
-    messageTimer =
-        setTimeout(()=>{
-            message.style.opacity = "0";
-        },2500);
-}
-
-
-// ============================================================
-// ROOM BUTTON
-// ============================================================
-
-roomButton.addEventListener(
-    "click",
-    createOrJoinRoom
-);
-
-roomCodeInput.addEventListener(
-    "keydown",
-    e=>{
-        if(e.key==="Enter"){
-            createOrJoinRoom();
-        }
-    }
-);
-
-
-// ============================================================
-// DESKTOP MOUSE LOOK
-// ============================================================
-
-let mouseLocked = false;
-
-canvas.addEventListener("click",()=>{
-
-    if(innerWidth>=800 && gameRunning){
-
-        canvas.requestPointerLock?.();
-    }
 });
 
+joystick.addEventListener("pointermove",e=>{
 
-document.addEventListener(
-    "pointerlockchange",
-    ()=>{
-        mouseLocked =
-            document.pointerLockElement === canvas;
-    }
-);
-
-
-document.addEventListener(
-    "mousemove",
-    e=>{
-
-        if(!mouseLocked) return;
-
-        player.yaw += e.movementX*.003;
-        player.pitch += e.movementY*.003;
-
-        player.pitch =
-            Math.max(
-                -1.35,
-                Math.min(1.35,player.pitch)
-            );
-
-        registerActivity();
-    }
-);
-
-
-// ============================================================
-// DESKTOP JUMP
-// ============================================================
-
-addEventListener(
-    "keydown",
-    e=>{
-
-        if(e.code==="Space"){
-            e.preventDefault();
-            jump();
-        }
-
-        if(e.code==="Mouse0"){
-            shoot();
-        }
-    }
-);
-
-
-// ============================================================
-// MAIN LOOP
-// ============================================================
-
-let previousTime =
-    performance.now();
-
-
-function loop(now){
-
-    const dt =
-        Math.min(
-            .05,
-            (now-previousTime)/1000
-        );
-
-    previousTime = now;
-
-    if(gameRunning){
-
-        updateMovement(dt);
-        updateBullets(dt);
-        updateGrabUI();
-        checkDeath();
-
-        updateLocalHP();
-
-        /*
-          3秒無敵中は画面上では特に変更せず、
-          Firebase側のinvulnerableUntilで判定。
-        */
-
-        render();
-
-        updateFirebasePlayer();
+    if(!joystickActive){
+        return;
     }
 
-    requestAnimationFrame(loop);
+    updateJoystick(e);
+
+    markAction();
+
+});
+
+joystick.addEventListener("pointerup",e=>{
+
+    joystickActive=false;
+
+    joystickX=0;
+    joystickY=0;
+
+    stick.style.transform="translate(0,0)";
+
+});
+
+joystick.addEventListener("pointercancel",()=>{
+
+    joystickActive=false;
+
+    joystickX=0;
+    joystickY=0;
+
+    stick.style.transform="translate(0,0)";
+
+});
+
+let lookPointer=null;
+let lastLookX=0;
+let lastLookY=0;
+
+world.addEventListener("pointerdown",e=>{
+
+    if(e.target.closest(".control")){
+        return;
+    }
+
+    lookPointer=e.pointerId;
+    lastLookX=e.clientX;
+    lastLookY=e.clientY;
+
+    try{
+        world.setPointerCapture(e.pointerId);
+    }catch(err){}
+
+});
+
+world.addEventListener("pointermove",e=>{
+
+    if(e.pointerId!==lookPointer){
+        return;
+    }
+
+    const dx=e.clientX-lastLookX;
+    const dy=e.clientY-lastLookY;
+
+    lastLookX=e.clientX;
+    lastLookY=e.clientY;
+
+    yaw+=dx*.18;
+    pitch-=dy*.18;
+
+    pitch=Math.max(-75,Math.min(75,pitch));
+
+    markAction();
+
+});
+
+world.addEventListener("pointerup",e=>{
+
+    if(e.pointerId===lookPointer){
+        lookPointer=null;
+    }
+
+});
+
+world.addEventListener("pointercancel",e=>{
+
+    if(e.pointerId===lookPointer){
+        lookPointer=null;
+    }
+
+});
+
+document.addEventListener("visibilitychange",()=>{
+
+    if(document.visibilityState==="visible"){
+        markAction();
+    }
+
+});
+
+window.addEventListener("beforeunload",()=>{
+
+    if(!roomRef){
+        return;
+    }
+
+    try{
+
+        updateDoc(roomRef,{
+            [`players.${clientId}.lastActive`]:0
+        });
+
+    }catch(e){}
+
+});
+
+let previous=performance.now();
+
+function gameLoop(now){
+
+    const dt=Math.min(
+        .05,
+        (now-previous)/1000
+    );
+
+    previous=now;
+
+    updatePhysics(dt);
+    updateBullets(dt);
+    updateCamera();
+    updateGrabButton();
+    updateFireButton();
+
+    syncPlayer();
+
+    requestAnimationFrame(gameLoop);
+
 }
 
-requestAnimationFrame(loop);
+resetPlayer();
 
-
-// ============================================================
-// PAGE CLOSE
-// ============================================================
-
-addEventListener(
-    "beforeunload",
-    ()=>{
-        /*
-          ページ終了時にも操作時刻を更新しておく。
-          実際の部屋削除は他のクライアント/ホストが判定する。
-        */
-
-        if(roomId && currentUser){
-
-            updateDoc(
-                playerRef(currentUser.uid),
-                {
-                    lastActivity:Date.now()
-                }
-            ).catch(()=>{});
-        }
-    }
-);
-
-
-// ============================================================
-// INITIAL UI
-// ============================================================
-
-lobbyStatus.textContent =
-    currentUser
-    ? "試合コードを入力してね"
-    : "Firebase接続中……";
+requestAnimationFrame(gameLoop);
 
 </script>
+
 </body>
 </html>
