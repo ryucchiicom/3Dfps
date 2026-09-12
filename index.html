@@ -90,6 +90,7 @@ canvas{
   font-weight:700;
   margin-top:8px;
   cursor:pointer;
+  touch-action:manipulation;
 }
 
 .button.secondary{
@@ -318,6 +319,7 @@ canvas{
   display:flex;
   justify-content:center;
   align-items:center;
+  touch-action:manipulation;
 }
 
 #fireButton{
@@ -384,32 +386,35 @@ canvas{
 
 <div id="menu">
   <div class="menuBox">
+
     <h1 class="title">3D FPS</h1>
-    <div class="subtitle">Firebase Online Battle</div>
+
+    <div class="subtitle">
+      Firebase Online Battle
+    </div>
 
     <input
       id="matchCodeInput"
       class="input"
       maxlength="8"
-      placeholder="試合コード"
+      placeholder="試合コード（参加する場合）"
       autocomplete="off"
       spellcheck="false"
     >
 
-    <button id="createButton" class="button">
-      新しい試合を作る
-    </button>
-
-    <button id="joinButton" class="button secondary">
-      試合に参加
+    <button id="matchButton" class="button">
+      試合を作成
     </button>
 
     <div id="status"></div>
 
     <div class="info">
+      コードを空欄のまま押す → 新しい試合を作成<br>
+      コードを入力して押す → その試合に参加<br><br>
       PC：WASDで移動、マウスで視点、クリックで射撃、Spaceでジャンプ<br>
       スマホ：左スティックで移動、右側スワイプで視点、射撃ボタン、ジャンプボタン
     </div>
+
   </div>
 </div>
 
@@ -419,15 +424,27 @@ canvas{
 
     <div id="healthBox">
       <div id="healthText">HP 100</div>
+
       <div id="health">
         <div id="healthBar"></div>
       </div>
     </div>
 
     <div id="matchBox">
-      <div>ROOM: <span id="roomText">----</span></div>
-      <div>PLAYER: <span id="playerCountText">0</span></div>
-      <div>KILLS: <span id="killsText">0</span></div>
+      <div>
+        ROOM:
+        <span id="roomText">----</span>
+      </div>
+
+      <div>
+        PLAYER:
+        <span id="playerCountText">0</span>
+      </div>
+
+      <div>
+        KILLS:
+        <span id="killsText">0</span>
+      </div>
     </div>
 
   </div>
@@ -445,9 +462,13 @@ canvas{
   <div id="mobileControls">
 
     <div id="joystickZone">
+
       <div id="joystickBase">
+
         <div id="joystickKnob"></div>
+
       </div>
+
     </div>
 
     <div id="lookZone"></div>
@@ -471,6 +492,7 @@ canvas{
 <div id="gameOver">
 
   <div class="gameOverBox">
+
     <div id="gameOverTitle" class="gameOverTitle">
       試合終了
     </div>
@@ -482,6 +504,7 @@ canvas{
     <button id="returnButton" class="button">
       メニューへ戻る
     </button>
+
   </div>
 
 </div>
@@ -512,6 +535,7 @@ import {
 
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
 
+
 const firebaseConfig = {
   apiKey: "AIzaSyD5cTt3b1IeiGIOgJcC0sSFgO-Ce78JyIw",
   authDomain: "dfps-4aa92.firebaseapp.com",
@@ -522,26 +546,42 @@ const firebaseConfig = {
   measurementId: "G-BG2KFTL9ZC"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+
+const app =
+  initializeApp(firebaseConfig);
+
+const auth =
+  getAuth(app);
+
+const db =
+  getFirestore(app);
+
 
 let currentUser = null;
+
 let currentMatchId = null;
+
 let matchRef = null;
+
 let unsubscribeMatch = null;
 
 let isHost = false;
+
 let gameStarted = false;
+
 let gameEnded = false;
 
 let localPlayer = null;
+
 let remotePlayers = new Map();
 
 let lastNetworkUpdate = 0;
-let lastFrameTime = performance.now();
+
+let lastFrameTime =
+  performance.now();
 
 let localKills = 0;
+
 
 const keys = {
   w:false,
@@ -551,6 +591,7 @@ const keys = {
   shift:false
 };
 
+
 const mobileInput = {
   x:0,
   y:0,
@@ -558,10 +599,12 @@ const mobileInput = {
   sprinting:false
 };
 
+
 const cameraState = {
   yaw:0,
   pitch:0
 };
+
 
 const physics = {
   gravity:-25,
@@ -570,178 +613,340 @@ const physics = {
   sprintSpeed:9
 };
 
+
 const ARENA_SIZE = 70;
+
 const PLAYER_HEIGHT = 1.6;
+
 const MAX_HP = 100;
+
 const FIRE_COOLDOWN = 180;
+
 const DAMAGE = 34;
 
+
 let fireCooldownUntil = 0;
+
 let velocityY = 0;
+
 let grounded = true;
 
+
 let scene;
+
 let camera;
+
 let renderer;
+
 let raycaster;
 
+
 const colliders = [];
+
 const playerMeshes = new Map();
 
-const menu = document.getElementById("menu");
-const gameUI = document.getElementById("gameUI");
-const gameOver = document.getElementById("gameOver");
 
-const statusEl = document.getElementById("status");
-const matchCodeInput = document.getElementById("matchCodeInput");
+const menu =
+  document.getElementById("menu");
 
-const createButton = document.getElementById("createButton");
-const joinButton = document.getElementById("joinButton");
+const gameUI =
+  document.getElementById("gameUI");
 
-const roomText = document.getElementById("roomText");
-const playerCountText = document.getElementById("playerCountText");
-const killsText = document.getElementById("killsText");
+const gameOver =
+  document.getElementById("gameOver");
 
-const healthText = document.getElementById("healthText");
-const healthBar = document.getElementById("healthBar");
 
-const scoreBoard = document.getElementById("scoreBoard");
+const statusEl =
+  document.getElementById("status");
 
-const killMessage = document.getElementById("killMessage");
+const matchCodeInput =
+  document.getElementById("matchCodeInput");
 
-const gameOverTitle = document.getElementById("gameOverTitle");
-const gameOverText = document.getElementById("gameOverText");
 
-const returnButton = document.getElementById("returnButton");
+const matchButton =
+  document.getElementById("matchButton");
 
-const joystickZone = document.getElementById("joystickZone");
-const joystickKnob = document.getElementById("joystickKnob");
 
-const lookZone = document.getElementById("lookZone");
-const fireButton = document.getElementById("fireButton");
-const jumpButton = document.getElementById("jumpButton");
-const sprintButton = document.getElementById("sprintButton");
+const roomText =
+  document.getElementById("roomText");
+
+const playerCountText =
+  document.getElementById("playerCountText");
+
+const killsText =
+  document.getElementById("killsText");
+
+
+const healthText =
+  document.getElementById("healthText");
+
+const healthBar =
+  document.getElementById("healthBar");
+
+
+const scoreBoard =
+  document.getElementById("scoreBoard");
+
+
+const killMessage =
+  document.getElementById("killMessage");
+
+
+const gameOverText =
+  document.getElementById("gameOverText");
+
+
+const returnButton =
+  document.getElementById("returnButton");
+
+
+const joystickZone =
+  document.getElementById("joystickZone");
+
+const joystickKnob =
+  document.getElementById("joystickKnob");
+
+
+const lookZone =
+  document.getElementById("lookZone");
+
+const fireButton =
+  document.getElementById("fireButton");
+
+const jumpButton =
+  document.getElementById("jumpButton");
+
+const sprintButton =
+  document.getElementById("sprintButton");
+
 
 function randomCode(length = 6){
 
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const chars =
+    "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
   let result = "";
 
-  for(let i=0;i<length;i++){
-    result += chars[Math.floor(Math.random() * chars.length)];
+  for(
+    let i = 0;
+    i < length;
+    i++
+  ){
+
+    result +=
+      chars[
+        Math.floor(
+          Math.random() *
+          chars.length
+        )
+      ];
+
   }
 
   return result;
+
 }
+
 
 function randomSpawn(){
 
   const margin = 7;
 
   return {
-    x:(Math.random() * (ARENA_SIZE - margin * 2)) - (ARENA_SIZE / 2 - margin),
-    y:PLAYER_HEIGHT,
-    z:(Math.random() * (ARENA_SIZE - margin * 2)) - (ARENA_SIZE / 2 - margin)
+
+    x:
+      (Math.random() *
+        (ARENA_SIZE - margin * 2))
+      -
+      (ARENA_SIZE / 2 - margin),
+
+    y:
+      PLAYER_HEIGHT,
+
+    z:
+      (Math.random() *
+        (ARENA_SIZE - margin * 2))
+      -
+      (ARENA_SIZE / 2 - margin)
+
   };
+
 }
+
 
 function playerColor(uid){
 
   let hash = 0;
 
-  for(let i=0;i<uid.length;i++){
-    hash = ((hash << 5) - hash) + uid.charCodeAt(i);
+  for(
+    let i = 0;
+    i < uid.length;
+    i++
+  ){
+
+    hash =
+      ((hash << 5) -
+        hash) +
+      uid.charCodeAt(i);
+
     hash |= 0;
+
   }
 
-  const hue = Math.abs(hash) % 360;
+  const hue =
+    Math.abs(hash) % 360;
 
-  return new THREE.Color(`hsl(${hue},70%,58%)`);
+  return new THREE.Color(
+    `hsl(${hue},70%,58%)`
+  );
+
 }
+
 
 function createPlayerMesh(uid){
 
-  const group = new THREE.Group();
+  const group =
+    new THREE.Group();
 
-  const bodyGeometry = new THREE.CapsuleGeometry(.45,.8,6,12);
-  const bodyMaterial = new THREE.MeshStandardMaterial({
-    color:playerColor(uid),
-    roughness:.8
-  });
 
-  const body = new THREE.Mesh(
-    bodyGeometry,
-    bodyMaterial
-  );
+  const bodyGeometry =
+    new THREE.CapsuleGeometry(
+      .45,
+      .8,
+      6,
+      12
+    );
 
-  body.position.y:.0;
-  body.position.y = 0.8;
+
+  const bodyMaterial =
+    new THREE.MeshStandardMaterial({
+      color:playerColor(uid),
+      roughness:.8
+    });
+
+
+  const body =
+    new THREE.Mesh(
+      bodyGeometry,
+      bodyMaterial
+    );
+
+
+  body.position.y =
+    0.8;
+
 
   group.add(body);
 
-  const headGeometry = new THREE.SphereGeometry(.32,16,12);
 
-  const headMaterial = new THREE.MeshStandardMaterial({
-    color:0xe7c5a5
-  });
+  const headGeometry =
+    new THREE.SphereGeometry(
+      .32,
+      16,
+      12
+    );
 
-  const head = new THREE.Mesh(
-    headGeometry,
-    headMaterial
-  );
 
-  head.position.y = 1.55;
+  const headMaterial =
+    new THREE.MeshStandardMaterial({
+      color:0xe7c5a5
+    });
+
+
+  const head =
+    new THREE.Mesh(
+      headGeometry,
+      headMaterial
+    );
+
+
+  head.position.y =
+    1.55;
+
 
   group.add(head);
 
-  const gunGeometry = new THREE.BoxGeometry(.12,.12,.75);
 
-  const gunMaterial = new THREE.MeshStandardMaterial({
-    color:0x202020,
-    metalness:.8,
-    roughness:.3
-  });
+  const gunGeometry =
+    new THREE.BoxGeometry(
+      .12,
+      .12,
+      .75
+    );
 
-  const gun = new THREE.Mesh(
-    gunGeometry,
-    gunMaterial
+
+  const gunMaterial =
+    new THREE.MeshStandardMaterial({
+      color:0x202020,
+      metalness:.8,
+      roughness:.3
+    });
+
+
+  const gun =
+    new THREE.Mesh(
+      gunGeometry,
+      gunMaterial
+    );
+
+
+  gun.position.set(
+    .35,
+    1.15,
+    -.42
   );
 
-  gun.position.set(.35,1.15,-.42);
 
   group.add(gun);
 
-  group.userData.uid = uid;
+
+  group.userData.uid =
+    uid;
+
 
   scene.add(group);
 
+
   return group;
+
 }
+
 
 function removeRemoteMesh(uid){
 
-  const mesh = playerMeshes.get(uid);
+  const mesh =
+    playerMeshes.get(uid);
+
 
   if(!mesh){
     return;
   }
 
+
   scene.remove(mesh);
+
 
   mesh.traverse(object => {
 
     if(object.geometry){
+
       object.geometry.dispose();
+
     }
+
 
     if(object.material){
 
-      if(Array.isArray(object.material)){
+      if(
+        Array.isArray(
+          object.material
+        )
+      ){
 
-        object.material.forEach(material => {
-          material.dispose();
-        });
+        object.material.forEach(
+          material =>
+            material.dispose()
+        );
 
       }else{
 
@@ -753,65 +958,99 @@ function removeRemoteMesh(uid){
 
   });
 
+
   playerMeshes.delete(uid);
+
 }
+
 
 function setupScene(){
 
-  scene = new THREE.Scene();
+  scene =
+    new THREE.Scene();
 
-  scene.background = new THREE.Color(0x8eb3d9);
 
-  scene.fog = new THREE.Fog(
-    0x8eb3d9,
-    55,
-    140
-  );
+  scene.background =
+    new THREE.Color(
+      0x8eb3d9
+    );
 
-  camera = new THREE.PerspectiveCamera(
-    75,
-    window.innerWidth / window.innerHeight,
-    .05,
-    300
-  );
 
-  renderer = new THREE.WebGLRenderer({
-    antialias:true,
-    powerPreference:"high-performance"
-  });
+  scene.fog =
+    new THREE.Fog(
+      0x8eb3d9,
+      55,
+      140
+    );
+
+
+  camera =
+    new THREE.PerspectiveCamera(
+      75,
+      window.innerWidth /
+        window.innerHeight,
+      .05,
+      300
+    );
+
+
+  renderer =
+    new THREE.WebGLRenderer({
+      antialias:true,
+      powerPreference:
+        "high-performance"
+    });
+
 
   renderer.setPixelRatio(
-    Math.min(window.devicePixelRatio,2)
+    Math.min(
+      window.devicePixelRatio,
+      2
+    )
   );
+
 
   renderer.setSize(
     window.innerWidth,
     window.innerHeight
   );
 
-  renderer.shadowMap.enabled = true;
 
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.enabled =
+    true;
+
+
+  renderer.shadowMap.type =
+    THREE.PCFSoftShadowMap;
+
 
   document.body.insertBefore(
     renderer.domElement,
     document.body.firstChild
   );
 
-  raycaster = new THREE.Raycaster();
 
-  const ambient = new THREE.HemisphereLight(
-    0xffffff,
-    0x3c4550,
-    1.5
-  );
+  raycaster =
+    new THREE.Raycaster();
+
+
+  const ambient =
+    new THREE.HemisphereLight(
+      0xffffff,
+      0x3c4550,
+      1.5
+    );
+
 
   scene.add(ambient);
 
-  const sun = new THREE.DirectionalLight(
-    0xffffff,
-    2.2
-  );
+
+  const sun =
+    new THREE.DirectionalLight(
+      0xffffff,
+      2.2
+    );
+
 
   sun.position.set(
     20,
@@ -819,50 +1058,75 @@ function setupScene(){
     15
   );
 
-  sun.castShadow = true;
 
-  sun.shadow.mapSize.width = 2048;
-  sun.shadow.mapSize.height = 2048;
+  sun.castShadow =
+    true;
+
+
+  sun.shadow.mapSize.width =
+    2048;
+
+  sun.shadow.mapSize.height =
+    2048;
+
 
   scene.add(sun);
 
+
   createArena();
+
 
   window.addEventListener(
     "resize",
     onResize
   );
+
 }
+
 
 function createArena(){
 
-  const floorGeometry = new THREE.BoxGeometry(
-    ARENA_SIZE,
-    1,
-    ARENA_SIZE
-  );
+  const floorGeometry =
+    new THREE.BoxGeometry(
+      ARENA_SIZE,
+      1,
+      ARENA_SIZE
+    );
 
-  const floorMaterial = new THREE.MeshStandardMaterial({
-    color:0x41474d,
-    roughness:.92
-  });
 
-  const floor = new THREE.Mesh(
-    floorGeometry,
-    floorMaterial
-  );
+  const floorMaterial =
+    new THREE.MeshStandardMaterial({
+      color:0x41474d,
+      roughness:.92
+    });
 
-  floor.position.y = -.5;
 
-  floor.receiveShadow = true;
+  const floor =
+    new THREE.Mesh(
+      floorGeometry,
+      floorMaterial
+    );
+
+
+  floor.position.y =
+    -.5;
+
+
+  floor.receiveShadow =
+    true;
+
 
   scene.add(floor);
 
+
   colliders.push(floor);
 
-  const wallMaterial = new THREE.MeshStandardMaterial({
-    color:0x252b31
-  });
+
+  const wallMaterial =
+    new THREE.MeshStandardMaterial({
+      color:0x252b31
+    });
+
 
   createBox(
     ARENA_SIZE,
@@ -874,6 +1138,7 @@ function createArena(){
     wallMaterial
   );
 
+
   createBox(
     ARENA_SIZE,
     6,
@@ -883,6 +1148,7 @@ function createArena(){
     ARENA_SIZE / 2,
     wallMaterial
   );
+
 
   createBox(
     1,
@@ -894,6 +1160,7 @@ function createArena(){
     wallMaterial
   );
 
+
   createBox(
     1,
     6,
@@ -904,10 +1171,13 @@ function createArena(){
     wallMaterial
   );
 
-  const obstacleMaterial = new THREE.MeshStandardMaterial({
-    color:0x69727b,
-    roughness:.7
-  });
+
+  const obstacleMaterial =
+    new THREE.MeshStandardMaterial({
+      color:0x69727b,
+      roughness:.7
+    });
+
 
   createBox(
     8,
@@ -919,6 +1189,7 @@ function createArena(){
     obstacleMaterial
   );
 
+
   createBox(
     11,
     3,
@@ -928,6 +1199,7 @@ function createArena(){
     -8,
     obstacleMaterial
   );
+
 
   createBox(
     6,
@@ -939,6 +1211,7 @@ function createArena(){
     obstacleMaterial
   );
 
+
   createBox(
     10,
     2.5,
@@ -948,6 +1221,7 @@ function createArena(){
     15,
     obstacleMaterial
   );
+
 
   createBox(
     5,
@@ -959,7 +1233,12 @@ function createArena(){
     obstacleMaterial
   );
 
-  for(let i=0;i<10;i++){
+
+  for(
+    let i = 0;
+    i < 10;
+    i++
+  ){
 
     const x =
       Math.random() * 42 - 21;
@@ -967,10 +1246,14 @@ function createArena(){
     const z =
       Math.random() * 42 - 21;
 
+
     createBox(
-      2.5 + Math.random() * 2,
-      2 + Math.random() * 2,
-      2.5 + Math.random() * 2,
+      2.5 +
+        Math.random() * 2,
+      2 +
+        Math.random() * 2,
+      2.5 +
+        Math.random() * 2,
       x,
       1,
       z,
@@ -980,6 +1263,7 @@ function createArena(){
   }
 
 }
+
 
 function createBox(
   width,
@@ -991,16 +1275,20 @@ function createBox(
   material
 ){
 
-  const geometry = new THREE.BoxGeometry(
-    width,
-    height,
-    depth
-  );
+  const geometry =
+    new THREE.BoxGeometry(
+      width,
+      height,
+      depth
+    );
 
-  const mesh = new THREE.Mesh(
-    geometry,
-    material
-  );
+
+  const mesh =
+    new THREE.Mesh(
+      geometry,
+      material
+    );
+
 
   mesh.position.set(
     x,
@@ -1008,26 +1296,44 @@ function createBox(
     z
   );
 
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
+
+  mesh.castShadow =
+    true;
+
+  mesh.receiveShadow =
+    true;
+
 
   scene.add(mesh);
 
+
   colliders.push(mesh);
 
+
   return mesh;
+
 }
+
 
 function onResize(){
 
-  if(!camera || !renderer){
+  if(
+    !camera ||
+    !renderer
+  ){
+
     return;
+
   }
 
+
   camera.aspect =
-    window.innerWidth / window.innerHeight;
+    window.innerWidth /
+    window.innerHeight;
+
 
   camera.updateProjectionMatrix();
+
 
   renderer.setSize(
     window.innerWidth,
@@ -1036,86 +1342,118 @@ function onResize(){
 
 }
 
+
 async function ensureAuth(){
 
   if(currentUser){
+
     return currentUser;
+
   }
 
-  return new Promise((resolve,reject) => {
 
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      async user => {
+  return new Promise(
+    (resolve,reject) => {
 
-        if(user){
+      const unsubscribe =
+        onAuthStateChanged(
+          auth,
+          async user => {
 
-          currentUser = user;
+            if(user){
 
-          unsubscribe();
+              currentUser =
+                user;
 
-          resolve(user);
+              unsubscribe();
 
-          return;
-        }
+              resolve(user);
 
-        try{
+              return;
 
-          await signInAnonymously(auth);
+            }
 
-        }catch(error){
 
-          unsubscribe();
+            try{
 
-          reject(error);
+              await signInAnonymously(
+                auth
+              );
 
-        }
+            }catch(error){
 
-      },
-      error => {
+              unsubscribe();
 
-        unsubscribe();
+              reject(error);
 
-        reject(error);
+            }
 
-      }
-    );
+          },
+          error => {
 
-  });
+            unsubscribe();
+
+            reject(error);
+
+          }
+        );
+
+    }
+  );
 
 }
 
+
 async function createMatch(){
 
-  statusEl.textContent = "試合を作成中…";
+  statusEl.textContent =
+    "試合を作成中…";
+
 
   try{
 
-    const user = await ensureAuth();
+    const user =
+      await ensureAuth();
+
 
     let code = "";
 
-    for(let attempt=0;attempt<20;attempt++){
 
-      const candidate = randomCode();
+    for(
+      let attempt = 0;
+      attempt < 20;
+      attempt++
+    ){
 
-      const ref = doc(
-        db,
-        "matches",
-        candidate
-      );
+      const candidate =
+        randomCode();
 
-      const existing = await getDoc(ref);
 
-      if(!existing.exists()){
+      const ref =
+        doc(
+          db,
+          "matches",
+          candidate
+        );
 
-        code = candidate;
+
+      const existing =
+        await getDoc(ref);
+
+
+      if(
+        !existing.exists()
+      ){
+
+        code =
+          candidate;
 
         break;
 
       }
 
     }
+
 
     if(!code){
 
@@ -1125,51 +1463,92 @@ async function createMatch(){
 
     }
 
-    const spawn = randomSpawn();
+
+    const spawn =
+      randomSpawn();
+
 
     const player = {
+
       uid:user.uid,
-      name:"Player-" + user.uid.slice(-4),
+
+      name:
+        "Player-" +
+        user.uid.slice(-4),
+
       x:spawn.x,
+
       y:spawn.y,
+
       z:spawn.z,
+
       yaw:0,
+
       pitch:0,
+
       hp:MAX_HP,
+
       kills:0,
+
       alive:true
+
     };
 
-    const ref = doc(
-      db,
-      "matches",
-      code
+
+    const ref =
+      doc(
+        db,
+        "matches",
+        code
+      );
+
+
+    await setDoc(
+      ref,
+      {
+
+        hostUid:user.uid,
+
+        status:"active",
+
+        winnerUid:null,
+
+        createdAt:
+          serverTimestamp(),
+
+        players:{
+          [user.uid]:player
+        }
+
+      }
     );
 
-    await setDoc(ref,{
-      hostUid:user.uid,
-      status:"active",
-      winnerUid:null,
-      createdAt:serverTimestamp(),
-      players:{
-        [user.uid]:player
-      }
-    });
 
     isHost = true;
 
-    await startMatch(code);
+
+    matchCodeInput.value =
+      code;
+
+
+    await startMatch(
+      code
+    );
+
 
   }catch(error){
 
     console.error(error);
 
+
     statusEl.textContent =
-      "作成失敗：" + getFriendlyError(error);
+      "作成失敗：" +
+      getFriendlyError(error);
 
   }
 
 }
+
 
 async function joinMatch(){
 
@@ -1178,34 +1557,47 @@ async function joinMatch(){
       .trim()
       .toUpperCase();
 
+
   if(!code){
 
-    statusEl.textContent =
-      "試合コードを入力して！";
+    await createMatch();
 
     return;
+
   }
 
-  statusEl.textContent = "試合に参加中…";
+
+  statusEl.textContent =
+    "試合に参加中…";
+
 
   try{
 
-    const user = await ensureAuth();
+    const user =
+      await ensureAuth();
 
-    const ref = doc(
-      db,
-      "matches",
-      code
-    );
+
+    const ref =
+      doc(
+        db,
+        "matches",
+        code
+      );
+
 
     await runTransaction(
       db,
       async transaction => {
 
         const snap =
-          await transaction.get(ref);
+          await transaction.get(
+            ref
+          );
 
-        if(!snap.exists()){
+
+        if(
+          !snap.exists()
+        ){
 
           throw new Error(
             "NOT_FOUND"
@@ -1213,9 +1605,15 @@ async function joinMatch(){
 
         }
 
-        const data = snap.data();
 
-        if(data.status !== "active"){
+        const data =
+          snap.data();
+
+
+        if(
+          data.status !==
+          "active"
+        ){
 
           throw new Error(
             "ENDED"
@@ -1223,11 +1621,18 @@ async function joinMatch(){
 
         }
 
+
         const players =
-          data.players || {};
+          {
+            ...(data.players || {})
+          };
+
 
         const count =
-          Object.keys(players).length;
+          Object.keys(
+            players
+          ).length;
+
 
         if(count >= 8){
 
@@ -1237,26 +1642,46 @@ async function joinMatch(){
 
         }
 
-        if(players[user.uid]){
+
+        if(
+          players[user.uid]
+        ){
 
           return;
 
         }
 
-        const spawn = randomSpawn();
+
+        const spawn =
+          randomSpawn();
+
 
         players[user.uid] = {
+
           uid:user.uid,
-          name:"Player-" + user.uid.slice(-4),
+
+          name:
+            "Player-" +
+            user.uid.slice(-4),
+
           x:spawn.x,
+
           y:spawn.y,
+
           z:spawn.z,
+
           yaw:0,
+
           pitch:0,
+
           hp:MAX_HP,
+
           kills:0,
+
           alive:true
+
         };
+
 
         transaction.update(
           ref,
@@ -1268,28 +1693,44 @@ async function joinMatch(){
       }
     );
 
+
     isHost = false;
 
-    await startMatch(code);
+
+    await startMatch(
+      code
+    );
+
 
   }catch(error){
 
     console.error(error);
 
+
     const message =
       error?.message || "";
 
-    if(message === "NOT_FOUND"){
+
+    if(
+      message ===
+      "NOT_FOUND"
+    ){
 
       statusEl.textContent =
         "その試合コードは存在しないよ。";
 
-    }else if(message === "FULL"){
+    }else if(
+      message ===
+      "FULL"
+    ){
 
       statusEl.textContent =
         "その試合は満員だよ。";
 
-    }else if(message === "ENDED"){
+    }else if(
+      message ===
+      "ENDED"
+    ){
 
       statusEl.textContent =
         "その試合はもう終了してるよ。";
@@ -1298,7 +1739,9 @@ async function joinMatch(){
 
       statusEl.textContent =
         "参加失敗：" +
-        getFriendlyError(error);
+        getFriendlyError(
+          error
+        );
 
     }
 
@@ -1306,41 +1749,73 @@ async function joinMatch(){
 
 }
 
+
 function getFriendlyError(error){
 
   if(!error){
+
     return "不明なエラー";
+
   }
 
-  if(error.code === "permission-denied"){
+
+  if(
+    error.code ===
+    "permission-denied"
+  ){
+
     return "Firestoreの権限設定を確認して！";
+
   }
 
-  if(error.code === "auth/operation-not-allowed"){
+
+  if(
+    error.code ===
+    "auth/operation-not-allowed"
+  ){
+
     return "Firebaseで匿名ログインを有効にして！";
+
   }
 
-  return error.message || String(error);
+
+  return (
+    error.message ||
+    String(error)
+  );
 
 }
 
+
 async function startMatch(code){
 
-  currentMatchId = code;
+  currentMatchId =
+    code;
 
-  matchRef = doc(
-    db,
-    "matches",
-    code
-  );
 
-  menu.style.display = "none";
+  matchRef =
+    doc(
+      db,
+      "matches",
+      code
+    );
 
-  gameUI.style.display = "block";
 
-  gameOver.style.display = "none";
+  menu.style.display =
+    "none";
 
-  roomText.textContent = code;
+
+  gameUI.style.display =
+    "block";
+
+
+  gameOver.style.display =
+    "none";
+
+
+  roomText.textContent =
+    code;
+
 
   if(!scene){
 
@@ -1348,13 +1823,18 @@ async function startMatch(code){
 
   }
 
+
   gameEnded = false;
+
   gameStarted = true;
+
   localKills = 0;
 
   velocityY = 0;
 
+
   await loadLocalPlayer();
+
 
   if(unsubscribeMatch){
 
@@ -1364,91 +1844,130 @@ async function startMatch(code){
 
   }
 
-  unsubscribeMatch = onSnapshot(
-    matchRef,
-    async snapshot => {
 
-      if(!snapshot.exists()){
+  unsubscribeMatch =
+    onSnapshot(
+      matchRef,
+      async snapshot => {
 
-        if(gameStarted){
+        if(
+          !snapshot.exists()
+        ){
+
+          if(gameStarted){
+
+            finishLocalGame(
+              "試合データが削除されました。"
+            );
+
+          }
+
+          return;
+
+        }
+
+
+        const data =
+          snapshot.data();
+
+
+        const players =
+          data.players || {};
+
+
+        const count =
+          Object.keys(
+            players
+          ).length;
+
+
+        playerCountText.textContent =
+          String(count);
+
+
+        updateRemotePlayers(
+          players
+        );
+
+
+        updateScoreboard(
+          players
+        );
+
+
+        const me =
+          players[
+            currentUser.uid
+          ];
+
+
+        if(me){
+
+          localPlayer = {
+
+            ...localPlayer,
+
+            ...me
+
+          };
+
+
+          updateLocalHUD();
+
+        }
+
+
+        if(
+          data.status ===
+          "ended" &&
+          !gameEnded
+        ){
+
+          const winner =
+            data.winnerUid;
+
+
+          const winnerName =
+            winner &&
+            players[winner] &&
+            players[winner].name
+              ? players[winner].name
+              : "勝者";
+
 
           finishLocalGame(
-            "試合データが削除されました。"
+
+            winner ===
+            currentUser.uid
+
+              ? "YOU WIN!"
+
+              : winnerName +
+                " の勝利！"
+
           );
 
         }
 
-        return;
+      },
+      error => {
 
-      }
-
-      const data = snapshot.data();
-
-      const players =
-        data.players || {};
-
-      const count =
-        Object.keys(players).length;
-
-      playerCountText.textContent =
-        String(count);
-
-      updateRemotePlayers(players);
-
-      updateScoreboard(players);
-
-      const me =
-        players[currentUser.uid];
-
-      if(me){
-
-        localPlayer = {
-          ...localPlayer,
-          ...me
-        };
-
-        updateLocalHUD();
-
-      }
-
-      if(
-        data.status === "ended" &&
-        !gameEnded
-      ){
-
-        const winner =
-          data.winnerUid;
-
-        const winnerName =
-          winner &&
-          players[winner] &&
-          players[winner].name
-            ? players[winner].name
-            : "勝者";
-
-        finishLocalGame(
-          winner === currentUser.uid
-            ? "YOU WIN!"
-            : winnerName + " の勝利！"
+        console.error(
+          error
         );
 
-      }
 
-    },
-    error => {
+        if(gameStarted){
 
-      console.error(error);
+          finishLocalGame(
+            "通信エラーが発生しました。"
+          );
 
-      if(gameStarted){
-
-        finishLocalGame(
-          "通信エラーが発生しました。"
-        );
+        }
 
       }
+    );
 
-    }
-  );
 
   if(!gameLoopStarted){
 
@@ -1462,12 +1981,18 @@ async function startMatch(code){
 
 }
 
+
 async function loadLocalPlayer(){
 
   const snap =
-    await getDoc(matchRef);
+    await getDoc(
+      matchRef
+    );
 
-  if(!snap.exists()){
+
+  if(
+    !snap.exists()
+  ){
 
     throw new Error(
       "試合が見つかりません。"
@@ -1475,10 +2000,16 @@ async function loadLocalPlayer(){
 
   }
 
-  const data = snap.data();
+
+  const data =
+    snap.data();
+
 
   const player =
-    data.players?.[currentUser.uid];
+    data.players?.[
+      currentUser.uid
+    ];
+
 
   if(!player){
 
@@ -1488,69 +2019,109 @@ async function loadLocalPlayer(){
 
   }
 
+
   localPlayer = {
     ...player
   };
 
+
   localKills =
     player.kills || 0;
 
+
   cameraState.yaw =
-    Number(player.yaw || 0);
+    Number(
+      player.yaw || 0
+    );
+
 
   cameraState.pitch =
-    Number(player.pitch || 0);
+    Number(
+      player.pitch || 0
+    );
+
 
   setCameraFromPlayer();
+
 
   updateLocalHUD();
 
 }
 
+
 function setCameraFromPlayer(){
 
   if(!localPlayer){
+
     return;
+
   }
+
 
   camera.position.set(
     localPlayer.x,
-    localPlayer.y + 0.45,
+    localPlayer.y + .45,
     localPlayer.z
   );
 
-  camera.rotation.order = "YXZ";
+
+  camera.rotation.order =
+    "YXZ";
+
 
   camera.rotation.y =
     cameraState.yaw;
+
 
   camera.rotation.x =
     cameraState.pitch;
 
 }
 
-function updateRemotePlayers(players){
 
-  const seen = new Set();
+function updateRemotePlayers(
+  players
+){
 
-  for(const [
-    uid,
-    player
-  ] of Object.entries(players)){
+  const seen =
+    new Set();
 
-    if(uid === currentUser.uid){
+
+  for(
+    const [
+      uid,
+      player
+    ] of Object.entries(
+      players
+    )
+  ){
+
+    if(
+      uid ===
+      currentUser.uid
+    ){
+
       continue;
+
     }
+
 
     seen.add(uid);
 
+
     let mesh =
-      playerMeshes.get(uid);
+      playerMeshes.get(
+        uid
+      );
+
 
     if(!mesh){
 
       mesh =
-        createPlayerMesh(uid);
+        createPlayerMesh(
+          uid
+        );
+
 
       playerMeshes.set(
         uid,
@@ -1559,25 +2130,44 @@ function updateRemotePlayers(players){
 
     }
 
+
     mesh.position.set(
       player.x,
-      Math.max(0,player.y - PLAYER_HEIGHT),
+      Math.max(
+        0,
+        player.y -
+        PLAYER_HEIGHT
+      ),
       player.z
     );
 
+
     mesh.rotation.y =
-      Number(player.yaw || 0);
+      Number(
+        player.yaw || 0
+      );
+
 
     mesh.visible =
-      Boolean(player.alive);
+      Boolean(
+        player.alive
+      );
 
   }
 
-  for(const uid of playerMeshes.keys()){
 
-    if(!seen.has(uid)){
+  for(
+    const uid of
+    playerMeshes.keys()
+  ){
 
-      removeRemoteMesh(uid);
+    if(
+      !seen.has(uid)
+    ){
+
+      removeRemoteMesh(
+        uid
+      );
 
     }
 
@@ -1585,76 +2175,124 @@ function updateRemotePlayers(players){
 
 }
 
-function updateScoreboard(players){
+
+function updateScoreboard(
+  players
+){
 
   const entries =
-    Object.entries(players)
-      .sort(
-        (a,b) =>
-          (b[1].kills || 0) -
-          (a[1].kills || 0)
-      );
+    Object.entries(
+      players
+    ).sort(
+      (a,b) =>
+        (b[1].kills || 0) -
+        (a[1].kills || 0)
+    );
 
-  scoreBoard.innerHTML = "";
 
-  for(const [
-    uid,
-    player
-  ] of entries){
+  scoreBoard.innerHTML =
+    "";
+
+
+  for(
+    const [
+      uid,
+      player
+    ] of entries
+  ){
 
     const row =
-      document.createElement("div");
+      document.createElement(
+        "div"
+      );
+
 
     row.className =
       "scoreRow";
 
+
     const name =
-      document.createElement("span");
+      document.createElement(
+        "span"
+      );
+
 
     name.textContent =
-      uid === currentUser.uid
+      uid ===
+      currentUser.uid
+
         ? "YOU"
-        : player.name || uid.slice(-4);
+
+        : player.name ||
+          uid.slice(-4);
+
 
     const state =
-      document.createElement("span");
+      document.createElement(
+        "span"
+      );
+
 
     state.textContent =
       player.alive
+
         ? `${player.kills || 0} K`
+
         : "DEAD";
+
 
     state.className =
       player.alive
+
         ? "scoreAlive"
+
         : "scoreDead";
 
-    row.appendChild(name);
-    row.appendChild(state);
 
-    scoreBoard.appendChild(row);
+    row.appendChild(
+      name
+    );
+
+
+    row.appendChild(
+      state
+    );
+
+
+    scoreBoard.appendChild(
+      row
+    );
 
   }
 
 }
 
+
 function updateLocalHUD(){
 
   if(!localPlayer){
+
     return;
+
   }
+
 
   const hp =
     Math.max(
       0,
-      Math.round(localPlayer.hp)
+      Math.round(
+        localPlayer.hp
+      )
     );
+
 
   healthText.textContent =
     `HP ${hp}`;
 
+
   healthBar.style.width =
     `${hp}%`;
+
 
   if(hp > 60){
 
@@ -1673,86 +2311,161 @@ function updateLocalHUD(){
 
   }
 
+
   killsText.textContent =
-    String(localKills);
+    String(
+      localKills
+    );
 
 }
 
-function clamp(value,min,max){
+
+function clamp(
+  value,
+  min,
+  max
+){
+
   return Math.max(
     min,
-    Math.min(max,value)
+    Math.min(
+      max,
+      value
+    )
   );
-}
-
-function tryMove(dx,dz){
-
-  if(!localPlayer || !localPlayer.alive){
-    return;
-  }
-
-  const nextX =
-    localPlayer.x + dx;
-
-  const nextZ =
-    localPlayer.z + dz;
-
-  if(isPositionFree(nextX,localPlayer.y,nextZ)){
-
-    localPlayer.x = nextX;
-    localPlayer.z = nextZ;
-
-  }
 
 }
 
-function isPositionFree(x,y,z){
 
-  const radius = .38;
+function tryMove(
+  dx,
+  dz
+){
 
   if(
-    x < -ARENA_SIZE / 2 + radius ||
-    x > ARENA_SIZE / 2 - radius ||
-    z < -ARENA_SIZE / 2 + radius ||
-    z > ARENA_SIZE / 2 - radius
+    !localPlayer ||
+    !localPlayer.alive
+  ){
+
+    return;
+
+  }
+
+
+  const nextX =
+    localPlayer.x +
+    dx;
+
+
+  const nextZ =
+    localPlayer.z +
+    dz;
+
+
+  if(
+    isPositionFree(
+      nextX,
+      localPlayer.y,
+      nextZ
+    )
+  ){
+
+    localPlayer.x =
+      nextX;
+
+    localPlayer.z =
+      nextZ;
+
+  }
+
+}
+
+
+function isPositionFree(
+  x,
+  y,
+  z
+){
+
+  const radius =
+    .38;
+
+
+  if(
+    x <
+      -ARENA_SIZE / 2 +
+      radius ||
+
+    x >
+      ARENA_SIZE / 2 -
+      radius ||
+
+    z <
+      -ARENA_SIZE / 2 +
+      radius ||
+
+    z >
+      ARENA_SIZE / 2 -
+      radius
   ){
 
     return false;
 
   }
 
+
   const playerBox =
     new THREE.Box3(
+
       new THREE.Vector3(
         x-radius,
-        Math.max(0,y-1.6),
+        Math.max(
+          0,
+          y-1.6
+        ),
         z-radius
       ),
+
       new THREE.Vector3(
         x+radius,
         y+.4,
         z+radius
       )
+
     );
 
-  for(const collider of colliders){
+
+  for(
+    const collider of
+    colliders
+  ){
 
     if(
       collider === undefined ||
       !collider.geometry
     ){
+
       continue;
+
     }
 
+
     if(
-      collider === colliders[0]
+      collider ===
+      colliders[0]
     ){
+
       continue;
+
     }
+
 
     const box =
       new THREE.Box3()
-        .setFromObject(collider);
+        .setFromObject(
+          collider
+        );
+
 
     if(
       box.intersectsBox(
@@ -1766,40 +2479,76 @@ function isPositionFree(x,y,z){
 
   }
 
+
   return true;
 
 }
 
-function updateMovement(delta){
 
-  if(!localPlayer || !localPlayer.alive){
+function updateMovement(
+  delta
+){
+
+  if(
+    !localPlayer ||
+    !localPlayer.alive
+  ){
+
     return;
+
   }
 
+
   let inputX = 0;
+
   let inputZ = 0;
 
-  if(keys.w) inputZ -= 1;
-  if(keys.s) inputZ += 1;
-  if(keys.a) inputX -= 1;
-  if(keys.d) inputX += 1;
 
-  inputX += mobileInput.x;
-  inputZ += mobileInput.y;
+  if(keys.w)
+    inputZ -= 1;
+
+  if(keys.s)
+    inputZ += 1;
+
+  if(keys.a)
+    inputX -= 1;
+
+  if(keys.d)
+    inputX += 1;
+
+
+  inputX +=
+    mobileInput.x;
+
+  inputZ +=
+    mobileInput.y;
+
 
   const length =
-    Math.hypot(inputX,inputZ);
+    Math.hypot(
+      inputX,
+      inputZ
+    );
+
 
   if(length > 1){
 
-    inputX /= length;
-    inputZ /= length;
+    inputX /=
+      length;
+
+    inputZ /=
+      length;
 
   }
 
+
   const moving =
-    Math.abs(inputX) > .01 ||
-    Math.abs(inputZ) > .01;
+    Math.abs(inputX) >
+      .01 ||
+
+    Math.abs(inputZ) >
+      .01;
+
 
   if(moving){
 
@@ -1808,47 +2557,78 @@ function updateMovement(delta){
         keys.shift ||
         mobileInput.sprinting
       )
+
         ? physics.sprintSpeed
+
         : physics.moveSpeed;
+
 
     const amount =
       speed * delta;
 
+
     const forwardX =
-      -Math.sin(cameraState.yaw);
+      -Math.sin(
+        cameraState.yaw
+      );
+
 
     const forwardZ =
-      -Math.cos(cameraState.yaw);
+      -Math.cos(
+        cameraState.yaw
+      );
+
 
     const rightX =
-      Math.cos(cameraState.yaw);
+      Math.cos(
+        cameraState.yaw
+      );
+
 
     const rightZ =
-      -Math.sin(cameraState.yaw);
+      -Math.sin(
+        cameraState.yaw
+      );
+
 
     const moveX =
       (
         forwardX * -inputZ +
         rightX * inputX
-      ) * amount;
+      ) *
+      amount;
+
 
     const moveZ =
       (
         forwardZ * -inputZ +
         rightZ * inputX
-      ) * amount;
+      ) *
+      amount;
 
-    tryMove(moveX,moveZ);
+
+    tryMove(
+      moveX,
+      moveZ
+    );
 
   }
 
+
   velocityY +=
-    physics.gravity * delta;
+    physics.gravity *
+    delta;
+
 
   localPlayer.y +=
-    velocityY * delta;
+    velocityY *
+    delta;
 
-  if(localPlayer.y <= PLAYER_HEIGHT){
+
+  if(
+    localPlayer.y <=
+    PLAYER_HEIGHT
+  ){
 
     localPlayer.y =
       PLAYER_HEIGHT;
@@ -1863,21 +2643,27 @@ function updateMovement(delta){
 
   }
 
+
   camera.position.set(
     localPlayer.x,
     localPlayer.y + .45,
     localPlayer.z
   );
 
-  camera.rotation.order = "YXZ";
+
+  camera.rotation.order =
+    "YXZ";
+
 
   camera.rotation.y =
     cameraState.yaw;
+
 
   camera.rotation.x =
     cameraState.pitch;
 
 }
+
 
 function jump(){
 
@@ -1896,22 +2682,31 @@ function jump(){
 
 }
 
-function showKillMessage(text){
+
+function showKillMessage(
+  text
+){
 
   killMessage.textContent =
     text;
 
+
   killMessage.style.opacity =
     "1";
 
-  setTimeout(() => {
 
-    killMessage.style.opacity =
-      "0";
+  setTimeout(
+    () => {
 
-  },900);
+      killMessage.style.opacity =
+        "0";
+
+    },
+    900
+  );
 
 }
+
 
 function shoot(){
 
@@ -1925,37 +2720,62 @@ function shoot(){
 
   }
 
+
   const now =
     performance.now();
 
-  if(now < fireCooldownUntil){
+
+  if(
+    now <
+    fireCooldownUntil
+  ){
+
     return;
+
   }
 
+
   fireCooldownUntil =
-    now + FIRE_COOLDOWN;
+    now +
+    FIRE_COOLDOWN;
+
 
   raycaster.setFromCamera(
-    new THREE.Vector2(0,0),
+    new THREE.Vector2(
+      0,
+      0
+    ),
     camera
   );
 
+
   const targets = [];
 
-  for(const mesh of playerMeshes.values()){
 
-    mesh.traverse(object => {
+  for(
+    const mesh of
+    playerMeshes.values()
+  ){
 
-      if(object.isMesh){
-        object.userData.targetUid =
-          mesh.userData.uid;
+    mesh.traverse(
+      object => {
 
-        targets.push(object);
+        if(object.isMesh){
+
+          object.userData.targetUid =
+            mesh.userData.uid;
+
+          targets.push(
+            object
+          );
+
+        }
+
       }
-
-    });
+    );
 
   }
+
 
   const hits =
     raycaster.intersectObjects(
@@ -1963,24 +2783,35 @@ function shoot(){
       false
     );
 
-  let targetUid = null;
 
-  for(const hit of hits){
+  let targetUid =
+    null;
+
+
+  for(
+    const hit of hits
+  ){
 
     const uid =
-      hit.object.userData.targetUid;
+      hit.object.userData
+        .targetUid;
+
 
     if(uid){
 
       const mesh =
-        playerMeshes.get(uid);
+        playerMeshes.get(
+          uid
+        );
+
 
       if(
         mesh &&
         mesh.visible
       ){
 
-        targetUid = uid;
+        targetUid =
+          uid;
 
         break;
 
@@ -1990,26 +2821,37 @@ function shoot(){
 
   }
 
+
   if(targetUid){
 
-    damagePlayer(targetUid);
+    damagePlayer(
+      targetUid
+    );
 
   }
 
 }
 
-async function damagePlayer(targetUid){
+
+async function damagePlayer(
+  targetUid
+){
 
   if(
     !matchRef ||
     gameEnded
   ){
+
     return;
+
   }
+
 
   try{
 
-    let wasKill = false;
+    let wasKill =
+      false;
+
 
     await runTransaction(
       db,
@@ -2020,93 +2862,159 @@ async function damagePlayer(targetUid){
             matchRef
           );
 
-        if(!snap.exists()){
+
+        if(
+          !snap.exists()
+        ){
+
           return;
+
         }
+
 
         const data =
           snap.data();
 
-        if(data.status !== "active"){
+
+        if(
+          data.status !==
+          "active"
+        ){
+
           return;
+
         }
+
 
         const players =
           {
             ...(data.players || {})
           };
 
+
         const shooter =
-          players[currentUser.uid];
+          players[
+            currentUser.uid
+          ];
+
 
         const target =
-          players[targetUid];
+          players[
+            targetUid
+          ];
 
-        if(!shooter || !target){
+
+        if(
+          !shooter ||
+          !target
+        ){
+
           return;
+
         }
 
-        if(!shooter.alive || !target.alive){
+
+        if(
+          !shooter.alive ||
+          !target.alive
+        ){
+
           return;
+
         }
+
 
         target.hp =
           Math.max(
             0,
-            Number(target.hp || 0) -
+            Number(
+              target.hp || 0
+            ) -
             DAMAGE
           );
 
-        if(target.hp <= 0){
 
-          target.alive = false;
+        if(
+          target.hp <= 0
+        ){
 
-          target.hp = 0;
+          target.alive =
+            false;
+
+          target.hp =
+            0;
+
 
           shooter.kills =
-            Number(shooter.kills || 0) + 1;
+            Number(
+              shooter.kills || 0
+            ) +
+            1;
 
-          wasKill = true;
+
+          wasKill =
+            true;
+
 
           localKills =
             shooter.kills;
 
+
           const alivePlayers =
-            Object.values(players)
-              .filter(
-                player => player.alive
-              );
+            Object.values(
+              players
+            ).filter(
+              player =>
+                player.alive
+            );
 
-          if(alivePlayers.length <= 1){
 
-            data.status = "ended";
+          if(
+            alivePlayers.length <= 1
+          ){
+
+            data.status =
+              "ended";
+
 
             data.winnerUid =
               alivePlayers.length === 1
+
                 ? alivePlayers[0].uid
+
                 : null;
 
           }
 
         }
 
+
         transaction.update(
           matchRef,
           {
+
             players:players,
+
             status:
-              data.status || "active",
+              data.status ||
+              "active",
+
             winnerUid:
-              data.winnerUid || null
+              data.winnerUid ||
+              null
+
           }
         );
 
       }
     );
 
+
     if(wasKill){
 
-      showKillMessage("ELIMINATED");
+      showKillMessage(
+        "ELIMINATED"
+      );
 
     }
 
@@ -2121,6 +3029,7 @@ async function damagePlayer(targetUid){
 
 }
 
+
 async function syncLocalPlayer(){
 
   if(
@@ -2128,39 +3037,71 @@ async function syncLocalPlayer(){
     !localPlayer ||
     gameEnded
   ){
+
     return;
+
   }
+
 
   const now =
     performance.now();
 
+
   if(
-    now - lastNetworkUpdate <
+    now -
+    lastNetworkUpdate <
     100
   ){
+
     return;
+
   }
+
 
   lastNetworkUpdate =
     now;
+
 
   try{
 
     await updateDoc(
       matchRef,
       {
+
         [`players.${currentUser.uid}`]:{
-          uid:currentUser.uid,
-          name:localPlayer.name,
-          x:localPlayer.x,
-          y:localPlayer.y,
-          z:localPlayer.z,
-          yaw:cameraState.yaw,
-          pitch:cameraState.pitch,
-          hp:localPlayer.hp,
-          kills:localKills,
-          alive:localPlayer.alive
+
+          uid:
+            currentUser.uid,
+
+          name:
+            localPlayer.name,
+
+          x:
+            localPlayer.x,
+
+          y:
+            localPlayer.y,
+
+          z:
+            localPlayer.z,
+
+          yaw:
+            cameraState.yaw,
+
+          pitch:
+            cameraState.pitch,
+
+          hp:
+            localPlayer.hp,
+
+          kills:
+            localKills,
+
+          alive:
+            localPlayer.alive
+
         }
+
       }
     );
 
@@ -2175,19 +3116,27 @@ async function syncLocalPlayer(){
 
 }
 
+
 async function endMatchIfNeeded(){
 
   if(
     !matchRef ||
     gameEnded
   ){
+
     return;
+
   }
+
 
   try{
 
-    let shouldDelete = false;
-    let winnerUid = null;
+    let shouldDelete =
+      false;
+
+    let winnerUid =
+      null;
+
 
     await runTransaction(
       db,
@@ -2198,45 +3147,77 @@ async function endMatchIfNeeded(){
             matchRef
           );
 
-        if(!snap.exists()){
+
+        if(
+          !snap.exists()
+        ){
+
           return;
+
         }
+
 
         const data =
           snap.data();
 
-        if(data.status === "ended"){
-          shouldDelete = true;
+
+        if(
+          data.status ===
+          "ended"
+        ){
+
+          shouldDelete =
+            true;
+
           winnerUid =
-            data.winnerUid || null;
+            data.winnerUid ||
+            null;
+
           return;
+
         }
+
 
         const players =
           {
             ...(data.players || {})
           };
 
+
         const alive =
-          Object.values(players)
-            .filter(
-              player => player.alive
-            );
+          Object.values(
+            players
+          ).filter(
+            player =>
+              player.alive
+          );
 
-        if(alive.length <= 1){
 
-          shouldDelete = true;
+        if(
+          alive.length <= 1
+        ){
+
+          shouldDelete =
+            true;
+
 
           winnerUid =
             alive.length === 1
+
               ? alive[0].uid
+
               : null;
+
 
           transaction.update(
             matchRef,
             {
-              status:"ended",
+
+              status:
+                "ended",
+
               winnerUid
+
             }
           );
 
@@ -2244,6 +3225,7 @@ async function endMatchIfNeeded(){
 
       }
     );
+
 
     if(shouldDelete){
 
@@ -2282,22 +3264,34 @@ async function endMatchIfNeeded(){
 
 }
 
-function finishLocalGame(text){
+
+function finishLocalGame(
+  text
+){
 
   if(gameEnded){
+
     return;
+
   }
 
-  gameEnded = true;
-  gameStarted = false;
+
+  gameEnded =
+    true;
+
+  gameStarted =
+    false;
+
 
   gameOverText.textContent =
     text;
+
 
   gameOver.style.display =
     "flex";
 
 }
+
 
 function leaveCurrentMatch(){
 
@@ -2305,57 +3299,94 @@ function leaveCurrentMatch(){
 
     unsubscribeMatch();
 
-    unsubscribeMatch = null;
+    unsubscribeMatch =
+      null;
 
   }
 
-  for(const uid of playerMeshes.keys()){
 
-    removeRemoteMesh(uid);
+  for(
+    const uid of
+    playerMeshes.keys()
+  ){
+
+    removeRemoteMesh(
+      uid
+    );
 
   }
 
-  currentMatchId = null;
-  matchRef = null;
-  localPlayer = null;
 
-  gameStarted = false;
-  gameEnded = false;
+  currentMatchId =
+    null;
+
+  matchRef =
+    null;
+
+  localPlayer =
+    null;
+
+
+  gameStarted =
+    false;
+
+  gameEnded =
+    false;
+
 
   gameUI.style.display =
     "none";
 
+
   gameOver.style.display =
     "none";
+
 
   menu.style.display =
     "flex";
 
-  statusEl.textContent = "";
 
-  matchCodeInput.value = "";
+  statusEl.textContent =
+    "";
+
+
+  matchCodeInput.value =
+    "";
+
+
+  matchButton.textContent =
+    "試合を作成";
 
 }
+
 
 async function handleReturn(){
 
   const ref =
     matchRef;
 
+
   const shouldDelete =
-    isHost && ref;
+    isHost &&
+    ref;
+
 
   leaveCurrentMatch();
+
 
   if(shouldDelete){
 
     try{
 
-      await deleteDoc(ref);
+      await deleteDoc(
+        ref
+      );
 
     }catch(error){
 
-      console.error(error);
+      console.error(
+        error
+      );
 
     }
 
@@ -2363,28 +3394,43 @@ async function handleReturn(){
 
 }
 
-function handleMouseMove(event){
+
+function handleMouseMove(
+  event
+){
 
   if(
     !gameStarted ||
     gameEnded ||
-    matchMedia("(pointer:coarse)").matches
+    matchMedia(
+      "(pointer:coarse)"
+    ).matches
   ){
+
     return;
+
   }
+
 
   if(
     document.pointerLockElement !==
     renderer.domElement
   ){
+
     return;
+
   }
 
+
   cameraState.yaw -=
-    event.movementX * .0023;
+    event.movementX *
+    .0023;
+
 
   cameraState.pitch -=
-    event.movementY * .0023;
+    event.movementY *
+    .0023;
+
 
   cameraState.pitch =
     clamp(
@@ -2395,22 +3441,33 @@ function handleMouseMove(event){
 
 }
 
+
 function requestPointerLock(){
 
-  if(matchMedia("(pointer:coarse)").matches){
+  if(
+    matchMedia(
+      "(pointer:coarse)"
+    ).matches
+  ){
+
     return;
+
   }
+
 
   if(
     renderer &&
-    renderer.domElement.requestPointerLock
+    renderer.domElement
+      .requestPointerLock
   ){
 
-    renderer.domElement.requestPointerLock();
+    renderer.domElement
+      .requestPointerLock();
 
   }
 
 }
+
 
 function setupDesktopInput(){
 
@@ -2418,14 +3475,47 @@ function setupDesktopInput(){
     "keydown",
     event => {
 
-      if(event.code === "KeyW") keys.w = true;
-      if(event.code === "KeyA") keys.a = true;
-      if(event.code === "KeyS") keys.s = true;
-      if(event.code === "KeyD") keys.d = true;
-      if(event.code === "ShiftLeft") keys.shift = true;
-      if(event.code === "ShiftRight") keys.shift = true;
+      if(
+        event.code ===
+        "KeyW"
+      )
+        keys.w = true;
 
-      if(event.code === "Space"){
+      if(
+        event.code ===
+        "KeyA"
+      )
+        keys.a = true;
+
+      if(
+        event.code ===
+        "KeyS"
+      )
+        keys.s = true;
+
+      if(
+        event.code ===
+        "KeyD"
+      )
+        keys.d = true;
+
+      if(
+        event.code ===
+        "ShiftLeft"
+      )
+        keys.shift = true;
+
+      if(
+        event.code ===
+        "ShiftRight"
+      )
+        keys.shift = true;
+
+
+      if(
+        event.code ===
+        "Space"
+      ){
 
         event.preventDefault();
 
@@ -2436,93 +3526,168 @@ function setupDesktopInput(){
     }
   );
 
+
   window.addEventListener(
     "keyup",
     event => {
 
-      if(event.code === "KeyW") keys.w = false;
-      if(event.code === "KeyA") keys.a = false;
-      if(event.code === "KeyS") keys.s = false;
-      if(event.code === "KeyD") keys.d = false;
-      if(event.code === "ShiftLeft") keys.shift = false;
-      if(event.code === "ShiftRight") keys.shift = false;
+      if(
+        event.code ===
+        "KeyW"
+      )
+        keys.w = false;
+
+      if(
+        event.code ===
+        "KeyA"
+      )
+        keys.a = false;
+
+      if(
+        event.code ===
+        "KeyS"
+      )
+        keys.s = false;
+
+      if(
+        event.code ===
+        "KeyD"
+      )
+        keys.d = false;
+
+      if(
+        event.code ===
+        "ShiftLeft"
+      )
+        keys.shift = false;
+
+      if(
+        event.code ===
+        "ShiftRight"
+      )
+        keys.shift = false;
 
     }
   );
+
 
   document.addEventListener(
     "mousemove",
     handleMouseMove
   );
 
-  if(renderer){
 
-    renderer.domElement.addEventListener(
-      "mousedown",
-      event => {
+  document.addEventListener(
+    "mousedown",
+    event => {
 
-        if(event.button === 0){
+      if(
+        !renderer ||
+        !renderer.domElement
+      ){
 
-          requestPointerLock();
-
-          shoot();
-
-        }
+        return;
 
       }
-    );
 
-  }
+
+      if(
+        event.button === 0 &&
+        event.target ===
+        renderer.domElement
+      ){
+
+        requestPointerLock();
+
+        shoot();
+
+      }
+
+    }
+  );
 
 }
 
+
 function setupMobileInput(){
 
-  let joystickPointerId = null;
+  let joystickPointerId =
+    null;
 
-  function updateJoystick(clientX,clientY){
+
+  function updateJoystick(
+    clientX,
+    clientY
+  ){
 
     const rect =
-      joystickZone.getBoundingClientRect();
+      joystickZone
+        .getBoundingClientRect();
+
 
     const centerX =
-      rect.left + rect.width / 2;
+      rect.left +
+      rect.width / 2;
+
 
     const centerY =
-      rect.top + rect.height / 2;
+      rect.top +
+      rect.height / 2;
+
 
     let dx =
-      clientX - centerX;
+      clientX -
+      centerX;
+
 
     let dy =
-      clientY - centerY;
+      clientY -
+      centerY;
+
 
     const max =
       53;
 
-    const distance =
-      Math.hypot(dx,dy);
 
-    if(distance > max){
+    const distance =
+      Math.hypot(
+        dx,
+        dy
+      );
+
+
+    if(
+      distance >
+      max
+    ){
 
       dx =
-        dx / distance * max;
+        dx /
+        distance *
+        max;
+
 
       dy =
-        dy / distance * max;
+        dy /
+        distance *
+        max;
 
     }
+
 
     mobileInput.x =
       dx / max;
 
+
     mobileInput.y =
       dy / max;
+
 
     joystickKnob.style.transform =
       `translate(${dx}px,${dy}px)`;
 
   }
+
 
   joystickZone.addEventListener(
     "pointerdown",
@@ -2531,9 +3696,11 @@ function setupMobileInput(){
       joystickPointerId =
         event.pointerId;
 
+
       joystickZone.setPointerCapture(
         event.pointerId
       );
+
 
       updateJoystick(
         event.clientX,
@@ -2542,6 +3709,7 @@ function setupMobileInput(){
 
     }
   );
+
 
   joystickZone.addEventListener(
     "pointermove",
@@ -2562,38 +3730,58 @@ function setupMobileInput(){
     }
   );
 
-  const endJoystick = event => {
 
-    if(
-      event.pointerId !==
-      joystickPointerId
-    ){
-      return;
-    }
+  const endJoystick =
+    event => {
 
-    joystickPointerId = null;
+      if(
+        event.pointerId !==
+        joystickPointerId
+      ){
 
-    mobileInput.x = 0;
-    mobileInput.y = 0;
+        return;
 
-    joystickKnob.style.transform =
-      "translate(0,0)";
+      }
 
-  };
+
+      joystickPointerId =
+        null;
+
+
+      mobileInput.x =
+        0;
+
+      mobileInput.y =
+        0;
+
+
+      joystickKnob.style.transform =
+        "translate(0,0)";
+
+    };
+
 
   joystickZone.addEventListener(
     "pointerup",
     endJoystick
   );
 
+
   joystickZone.addEventListener(
     "pointercancel",
     endJoystick
   );
 
-  let lookPointerId = null;
-  let lastLookX = 0;
-  let lastLookY = 0;
+
+  let lookPointerId =
+    null;
+
+  let lastLookX =
+    0;
+
+  let lastLookY =
+    0;
+
 
   lookZone.addEventListener(
     "pointerdown",
@@ -2602,11 +3790,14 @@ function setupMobileInput(){
       lookPointerId =
         event.pointerId;
 
+
       lastLookX =
         event.clientX;
 
+
       lastLookY =
         event.clientY;
+
 
       lookZone.setPointerCapture(
         event.pointerId
@@ -2614,6 +3805,7 @@ function setupMobileInput(){
 
     }
   );
+
 
   lookZone.addEventListener(
     "pointermove",
@@ -2623,26 +3815,37 @@ function setupMobileInput(){
         event.pointerId !==
         lookPointerId
       ){
+
         return;
+
       }
 
+
       const dx =
-        event.clientX - lastLookX;
+        event.clientX -
+        lastLookX;
+
 
       const dy =
-        event.clientY - lastLookY;
+        event.clientY -
+        lastLookY;
+
 
       lastLookX =
         event.clientX;
 
+
       lastLookY =
         event.clientY;
+
 
       cameraState.yaw -=
         dx * .006;
 
+
       cameraState.pitch -=
         dy * .006;
+
 
       cameraState.pitch =
         clamp(
@@ -2654,28 +3857,34 @@ function setupMobileInput(){
     }
   );
 
-  const endLook = event => {
 
-    if(
-      event.pointerId ===
-      lookPointerId
-    ){
+  const endLook =
+    event => {
 
-      lookPointerId = null;
+      if(
+        event.pointerId ===
+        lookPointerId
+      ){
 
-    }
+        lookPointerId =
+          null;
 
-  };
+      }
+
+    };
+
 
   lookZone.addEventListener(
     "pointerup",
     endLook
   );
 
+
   lookZone.addEventListener(
     "pointercancel",
     endLook
   );
+
 
   fireButton.addEventListener(
     "pointerdown",
@@ -2683,12 +3892,14 @@ function setupMobileInput(){
 
       event.preventDefault();
 
-      mobileInput.firing = true;
+      mobileInput.firing =
+        true;
 
       shoot();
 
     }
   );
+
 
   fireButton.addEventListener(
     "pointerup",
@@ -2696,19 +3907,23 @@ function setupMobileInput(){
 
       event.preventDefault();
 
-      mobileInput.firing = false;
+      mobileInput.firing =
+        false;
 
     }
   );
+
 
   fireButton.addEventListener(
     "pointercancel",
-    event => {
+    () => {
 
-      mobileInput.firing = false;
+      mobileInput.firing =
+        false;
 
     }
   );
+
 
   jumpButton.addEventListener(
     "pointerdown",
@@ -2721,16 +3936,19 @@ function setupMobileInput(){
     }
   );
 
+
   sprintButton.addEventListener(
     "pointerdown",
     event => {
 
       event.preventDefault();
 
-      mobileInput.sprinting = true;
+      mobileInput.sprinting =
+        true;
 
     }
   );
+
 
   sprintButton.addEventListener(
     "pointerup",
@@ -2738,44 +3956,63 @@ function setupMobileInput(){
 
       event.preventDefault();
 
-      mobileInput.sprinting = false;
+      mobileInput.sprinting =
+        false;
 
     }
   );
+
 
   sprintButton.addEventListener(
     "pointercancel",
     () => {
 
-      mobileInput.sprinting = false;
+      mobileInput.sprinting =
+        false;
 
     }
   );
 
 }
 
+
 function gameLoop(time){
 
   const delta =
     Math.min(
-      (time - lastFrameTime) / 1000,
+      (
+        time -
+        lastFrameTime
+      ) / 1000,
       .05
     );
+
 
   lastFrameTime =
     time;
 
-  if(gameStarted && !gameEnded){
 
-    updateMovement(delta);
+  if(
+    gameStarted &&
+    !gameEnded
+  ){
 
-    if(mobileInput.firing){
+    updateMovement(
+      delta
+    );
+
+
+    if(
+      mobileInput.firing
+    ){
 
       shoot();
 
     }
 
+
     syncLocalPlayer();
+
 
     if(
       localPlayer &&
@@ -2788,7 +4025,12 @@ function gameLoop(time){
 
   }
 
-  if(renderer && scene && camera){
+
+  if(
+    renderer &&
+    scene &&
+    camera
+  ){
 
     renderer.render(
       scene,
@@ -2797,28 +4039,40 @@ function gameLoop(time){
 
   }
 
+
   requestAnimationFrame(
     gameLoop
   );
 
 }
 
-let gameLoopStarted = false;
 
-createButton.addEventListener(
+let gameLoopStarted =
+  false;
+
+
+matchButton.addEventListener(
   "click",
-  createMatch
+  async () => {
+
+    const code =
+      matchCodeInput.value
+        .trim();
+
+
+    if(code){
+
+      await joinMatch();
+
+    }else{
+
+      await createMatch();
+
+    }
+
+  }
 );
 
-joinButton.addEventListener(
-  "click",
-  joinMatch
-);
-
-returnButton.addEventListener(
-  "click",
-  handleReturn
-);
 
 matchCodeInput.addEventListener(
   "input",
@@ -2826,28 +4080,60 @@ matchCodeInput.addEventListener(
 
     matchCodeInput.value =
       matchCodeInput.value
-        .replace(/[^A-Za-z0-9]/g,"")
+        .replace(
+          /[^A-Za-z0-9]/g,
+          ""
+        )
         .toUpperCase();
 
-  }
-);
 
-matchCodeInput.addEventListener(
-  "keydown",
-  event => {
+    if(
+      matchCodeInput.value
+    ){
 
-    if(event.key === "Enter"){
+      matchButton.textContent =
+        "試合に参加";
 
-      joinMatch();
+    }else{
+
+      matchButton.textContent =
+        "試合を作成";
 
     }
 
   }
 );
 
+
+matchCodeInput.addEventListener(
+  "keydown",
+  event => {
+
+    if(
+      event.key ===
+      "Enter"
+    ){
+
+      event.preventDefault();
+
+      matchButton.click();
+
+    }
+
+  }
+);
+
+
+returnButton.addEventListener(
+  "click",
+  handleReturn
+);
+
+
 setupDesktopInput();
 
 setupMobileInput();
+
 
 window.addEventListener(
   "beforeunload",
@@ -2869,20 +4155,28 @@ window.addEventListener(
   }
 );
 
+
 try{
 
   await ensureAuth();
 
+
   statusEl.textContent =
     "接続準備OK";
 
+
 }catch(error){
 
-  console.error(error);
+  console.error(
+    error
+  );
+
 
   statusEl.textContent =
     "Firebase接続失敗：" +
-    getFriendlyError(error);
+    getFriendlyError(
+      error
+    );
 
 }
 
