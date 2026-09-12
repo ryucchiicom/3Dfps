@@ -1,1 +1,2905 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<title>Firebase 3D FPS</title>
 
+<style>
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+}
+
+html,body{
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:#000;
+  font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+  touch-action:none;
+}
+
+canvas{
+  display:block;
+}
+
+#menu{
+  position:fixed;
+  inset:0;
+  z-index:100;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:
+    radial-gradient(circle at 50% 30%,#26384f 0%,#111822 40%,#05070a 100%);
+  color:white;
+}
+
+.menuBox{
+  width:min(92vw,480px);
+  padding:28px;
+  border-radius:22px;
+  background:rgba(15,20,28,.88);
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 20px 80px rgba(0,0,0,.45);
+  backdrop-filter:blur(18px);
+}
+
+.title{
+  margin:0 0 8px;
+  font-size:34px;
+  font-weight:800;
+  text-align:center;
+}
+
+.subtitle{
+  text-align:center;
+  opacity:.72;
+  margin-bottom:24px;
+}
+
+.input{
+  width:100%;
+  height:48px;
+  padding:0 16px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:12px;
+  background:rgba(255,255,255,.07);
+  color:#fff;
+  font-size:18px;
+  outline:none;
+  text-transform:uppercase;
+  margin-bottom:12px;
+}
+
+.button{
+  width:100%;
+  height:48px;
+  border:0;
+  border-radius:12px;
+  color:#fff;
+  background:#1976ff;
+  font-size:17px;
+  font-weight:700;
+  margin-top:8px;
+  cursor:pointer;
+}
+
+.button.secondary{
+  background:#2a3039;
+}
+
+.button:active{
+  transform:scale(.98);
+}
+
+.info{
+  margin-top:18px;
+  font-size:13px;
+  line-height:1.6;
+  color:#c5ccd5;
+}
+
+#status{
+  min-height:22px;
+  margin-top:12px;
+  text-align:center;
+  color:#ffce66;
+  font-size:14px;
+}
+
+#gameUI{
+  position:fixed;
+  inset:0;
+  z-index:20;
+  pointer-events:none;
+  display:none;
+  color:#fff;
+}
+
+#topBar{
+  position:absolute;
+  top:12px;
+  left:12px;
+  right:12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:8px;
+}
+
+#healthBox,#matchBox{
+  padding:9px 12px;
+  border-radius:12px;
+  background:rgba(0,0,0,.45);
+  backdrop-filter:blur(8px);
+  font-size:14px;
+}
+
+#health{
+  margin-top:5px;
+  width:170px;
+  height:10px;
+  overflow:hidden;
+  border-radius:99px;
+  background:#252525;
+}
+
+#healthBar{
+  width:100%;
+  height:100%;
+  background:#48e27d;
+  transition:width .15s;
+}
+
+#crosshair{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:18px;
+  height:18px;
+  margin-left:-9px;
+  margin-top:-9px;
+}
+
+#crosshair::before,
+#crosshair::after{
+  content:"";
+  position:absolute;
+  background:#fff;
+  box-shadow:0 0 3px #000;
+}
+
+#crosshair::before{
+  width:2px;
+  height:18px;
+  left:8px;
+  top:0;
+}
+
+#crosshair::after{
+  width:18px;
+  height:2px;
+  left:0;
+  top:8px;
+}
+
+#killMessage{
+  position:absolute;
+  left:50%;
+  top:42%;
+  transform:translate(-50%,-50%);
+  font-size:28px;
+  font-weight:900;
+  text-shadow:0 3px 15px #000;
+  opacity:0;
+  transition:opacity .15s;
+}
+
+#scoreBoard{
+  position:absolute;
+  right:12px;
+  top:70px;
+  min-width:150px;
+  max-width:220px;
+  padding:10px;
+  border-radius:12px;
+  background:rgba(0,0,0,.45);
+  backdrop-filter:blur(8px);
+  font-size:12px;
+}
+
+.scoreRow{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  margin:3px 0;
+}
+
+.scoreAlive{
+  color:#6dff8f;
+}
+
+.scoreDead{
+  color:#ff7070;
+}
+
+#gameOver{
+  position:fixed;
+  inset:0;
+  z-index:50;
+  display:none;
+  justify-content:center;
+  align-items:center;
+  background:rgba(0,0,0,.68);
+  backdrop-filter:blur(10px);
+  color:white;
+}
+
+.gameOverBox{
+  width:min(88vw,430px);
+  padding:28px;
+  border-radius:22px;
+  text-align:center;
+  background:rgba(18,22,29,.94);
+}
+
+.gameOverTitle{
+  font-size:38px;
+  font-weight:900;
+  margin-bottom:8px;
+}
+
+.gameOverText{
+  font-size:18px;
+  opacity:.85;
+  margin-bottom:20px;
+}
+
+#mobileControls{
+  display:none;
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
+
+#joystickZone{
+  position:absolute;
+  left:18px;
+  bottom:20px;
+  width:150px;
+  height:150px;
+  border-radius:50%;
+  pointer-events:auto;
+}
+
+#joystickBase{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:118px;
+  height:118px;
+  margin-left:-59px;
+  margin-top:-59px;
+  border-radius:50%;
+  border:2px solid rgba(255,255,255,.23);
+  background:rgba(255,255,255,.06);
+}
+
+#joystickKnob{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:54px;
+  height:54px;
+  margin-left:-27px;
+  margin-top:-27px;
+  border-radius:50%;
+  border:2px solid rgba(255,255,255,.35);
+  background:rgba(255,255,255,.16);
+}
+
+.mobileButton{
+  position:absolute;
+  border:1px solid rgba(255,255,255,.25);
+  background:rgba(20,20,20,.45);
+  color:#fff;
+  border-radius:50%;
+  backdrop-filter:blur(8px);
+  pointer-events:auto;
+  font-weight:800;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+#fireButton{
+  width:88px;
+  height:88px;
+  right:24px;
+  bottom:32px;
+  background:rgba(220,50,50,.3);
+}
+
+#jumpButton{
+  width:64px;
+  height:64px;
+  right:125px;
+  bottom:44px;
+}
+
+#sprintButton{
+  width:58px;
+  height:58px;
+  right:142px;
+  bottom:122px;
+  font-size:11px;
+}
+
+#lookZone{
+  position:absolute;
+  right:0;
+  top:0;
+  width:55%;
+  height:70%;
+  pointer-events:auto;
+}
+
+#desktopHint{
+  position:absolute;
+  bottom:14px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:7px 11px;
+  border-radius:8px;
+  background:rgba(0,0,0,.38);
+  font-size:12px;
+  opacity:.65;
+}
+
+@media (pointer:coarse){
+  #mobileControls{
+    display:block;
+  }
+
+  #desktopHint{
+    display:none;
+  }
+}
+
+.hidden{
+  display:none !important;
+}
+</style>
+</head>
+
+<body>
+
+<div id="menu">
+  <div class="menuBox">
+    <h1 class="title">3D FPS</h1>
+    <div class="subtitle">Firebase Online Battle</div>
+
+    <input
+      id="matchCodeInput"
+      class="input"
+      maxlength="8"
+      placeholder="試合コード"
+      autocomplete="off"
+      spellcheck="false"
+    >
+
+    <button id="matchButton" class="button">
+      試合を作成/参加
+    </button>
+
+    <div id="status"></div>
+
+    <div class="info">
+      PC：WASDで移動、マウスで視点、クリックで射撃、Spaceでジャンプ<br>
+      スマホ：左スティックで移動、右側スワイプで視点、射撃ボタン、ジャンプボタン
+    </div>
+  </div>
+</div>
+
+<div id="gameUI">
+
+  <div id="topBar">
+
+    <div id="healthBox">
+      <div id="healthText">HP 100</div>
+      <div id="health">
+        <div id="healthBar"></div>
+      </div>
+    </div>
+
+    <div id="matchBox">
+      <div>ROOM: <span id="roomText">----</span></div>
+      <div>PLAYER: <span id="playerCountText">0</span></div>
+      <div>KILLS: <span id="killsText">0</span></div>
+    </div>
+
+  </div>
+
+  <div id="scoreBoard"></div>
+
+  <div id="crosshair"></div>
+
+  <div id="killMessage"></div>
+
+  <div id="desktopHint">
+    WASD / Mouse / Click / Space
+  </div>
+
+  <div id="mobileControls">
+
+    <div id="joystickZone">
+      <div id="joystickBase">
+        <div id="joystickKnob"></div>
+      </div>
+    </div>
+
+    <div id="lookZone"></div>
+
+    <div id="jumpButton" class="mobileButton">
+      JUMP
+    </div>
+
+    <div id="sprintButton" class="mobileButton">
+      RUN
+    </div>
+
+    <div id="fireButton" class="mobileButton">
+      FIRE
+    </div>
+
+  </div>
+
+</div>
+
+<div id="gameOver">
+
+  <div class="gameOverBox">
+    <div id="gameOverTitle" class="gameOverTitle">
+      試合終了
+    </div>
+
+    <div id="gameOverText" class="gameOverText">
+      ---
+    </div>
+
+    <button id="returnButton" class="button">
+      メニューへ戻る
+    </button>
+  </div>
+
+</div>
+
+<script type="module">
+
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+
+import {
+  getAuth,
+  signInAnonymously,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  updateDoc,
+  deleteDoc,
+  onSnapshot,
+  runTransaction,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD5cTt3b1IeiGIOgJcC0sSFgO-Ce78JyIw",
+  authDomain: "dfps-4aa92.firebaseapp.com",
+  projectId: "dfps-4aa92",
+  storageBucket: "dfps-4aa92.firebasestorage.app",
+  messagingSenderId: "379021412536",
+  appId: "1:379021412536:web:003efdb33f6d6bb77d8c4d",
+  measurementId: "G-BG2KFTL9ZC"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUser = null;
+let currentMatchId = null;
+let matchRef = null;
+let unsubscribeMatch = null;
+
+let isHost = false;
+let gameStarted = false;
+let gameEnded = false;
+
+let localPlayer = null;
+let remotePlayers = new Map();
+
+let lastNetworkUpdate = 0;
+let lastFrameTime = performance.now();
+
+let localKills = 0;
+
+const keys = {
+  w:false,
+  a:false,
+  s:false,
+  d:false,
+  shift:false
+};
+
+const mobileInput = {
+  x:0,
+  y:0,
+  firing:false,
+  sprinting:false
+};
+
+const cameraState = {
+  yaw:0,
+  pitch:0
+};
+
+const physics = {
+  gravity:-25,
+  jumpPower:9,
+  moveSpeed:6,
+  sprintSpeed:9
+};
+
+const ARENA_SIZE = 70;
+const PLAYER_HEIGHT = 1.6;
+const MAX_HP = 100;
+const FIRE_COOLDOWN = 180;
+const DAMAGE = 34;
+
+let fireCooldownUntil = 0;
+let velocityY = 0;
+let grounded = true;
+
+let scene;
+let camera;
+let renderer;
+let raycaster;
+
+const colliders = [];
+const playerMeshes = new Map();
+
+const menu = document.getElementById("menu");
+const gameUI = document.getElementById("gameUI");
+const gameOver = document.getElementById("gameOver");
+
+const statusEl = document.getElementById("status");
+const matchCodeInput = document.getElementById("matchCodeInput");
+
+const matchButton = document.getElementById("matchButton");
+
+const roomText = document.getElementById("roomText");
+const playerCountText = document.getElementById("playerCountText");
+const killsText = document.getElementById("killsText");
+
+const healthText = document.getElementById("healthText");
+const healthBar = document.getElementById("healthBar");
+
+const scoreBoard = document.getElementById("scoreBoard");
+
+const killMessage = document.getElementById("killMessage");
+
+const gameOverText = document.getElementById("gameOverText");
+
+const returnButton = document.getElementById("returnButton");
+
+const joystickZone = document.getElementById("joystickZone");
+const joystickKnob = document.getElementById("joystickKnob");
+
+const lookZone = document.getElementById("lookZone");
+const fireButton = document.getElementById("fireButton");
+const jumpButton = document.getElementById("jumpButton");
+const sprintButton = document.getElementById("sprintButton");
+
+function randomCode(length = 6){
+
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+  let result = "";
+
+  for(let i=0;i<length;i++){
+    result += chars[Math.floor(Math.random() * chars.length)];
+  }
+
+  return result;
+}
+
+function randomSpawn(){
+
+  const margin = 7;
+
+  return {
+    x:(Math.random() * (ARENA_SIZE - margin * 2)) - (ARENA_SIZE / 2 - margin),
+    y:PLAYER_HEIGHT,
+    z:(Math.random() * (ARENA_SIZE - margin * 2)) - (ARENA_SIZE / 2 - margin)
+  };
+}
+
+function playerColor(uid){
+
+  let hash = 0;
+
+  for(let i=0;i<uid.length;i++){
+    hash = ((hash << 5) - hash) + uid.charCodeAt(i);
+    hash |= 0;
+  }
+
+  const hue = Math.abs(hash) % 360;
+
+  return new THREE.Color(`hsl(${hue},70%,58%)`);
+}
+
+function createPlayerMesh(uid){
+
+  const group = new THREE.Group();
+
+  const bodyGeometry = new THREE.CapsuleGeometry(.45,.8,6,12);
+  const bodyMaterial = new THREE.MeshStandardMaterial({
+    color:playerColor(uid),
+    roughness:.8
+  });
+
+  const body = new THREE.Mesh(
+    bodyGeometry,
+    bodyMaterial
+  );
+
+  body.position.y = 0.8;
+
+  group.add(body);
+
+  const headGeometry = new THREE.SphereGeometry(.32,16,12);
+
+  const headMaterial = new THREE.MeshStandardMaterial({
+    color:0xe7c5a5
+  });
+
+  const head = new THREE.Mesh(
+    headGeometry,
+    headMaterial
+  );
+
+  head.position.y = 1.55;
+
+  group.add(head);
+
+  const gunGeometry = new THREE.BoxGeometry(.12,.12,.75);
+
+  const gunMaterial = new THREE.MeshStandardMaterial({
+    color:0x202020,
+    metalness:.8,
+    roughness:.3
+  });
+
+  const gun = new THREE.Mesh(
+    gunGeometry,
+    gunMaterial
+  );
+
+  gun.position.set(.35,1.15,-.42);
+
+  group.add(gun);
+
+  group.userData.uid = uid;
+
+  scene.add(group);
+
+  return group;
+}
+
+function removeRemoteMesh(uid){
+
+  const mesh = playerMeshes.get(uid);
+
+  if(!mesh){
+    return;
+  }
+
+  scene.remove(mesh);
+
+  mesh.traverse(object => {
+
+    if(object.geometry){
+      object.geometry.dispose();
+    }
+
+    if(object.material){
+
+      if(Array.isArray(object.material)){
+
+        object.material.forEach(material => {
+          material.dispose();
+        });
+
+      }else{
+
+        object.material.dispose();
+
+      }
+
+    }
+
+  });
+
+  playerMeshes.delete(uid);
+}
+
+function setupScene(){
+
+  scene = new THREE.Scene();
+
+  scene.background = new THREE.Color(0x8eb3d9);
+
+  scene.fog = new THREE.Fog(
+    0x8eb3d9,
+    55,
+    140
+  );
+
+  camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    .05,
+    300
+  );
+
+  renderer = new THREE.WebGLRenderer({
+    antialias:true,
+    powerPreference:"high-performance"
+  });
+
+  renderer.setPixelRatio(
+    Math.min(window.devicePixelRatio,2)
+  );
+
+  renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+  );
+
+  renderer.shadowMap.enabled = true;
+
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  document.body.insertBefore(
+    renderer.domElement,
+    document.body.firstChild
+  );
+
+  raycaster = new THREE.Raycaster();
+
+  const ambient = new THREE.HemisphereLight(
+    0xffffff,
+    0x3c4550,
+    1.5
+  );
+
+  scene.add(ambient);
+
+  const sun = new THREE.DirectionalLight(
+    0xffffff,
+    2.2
+  );
+
+  sun.position.set(
+    20,
+    40,
+    15
+  );
+
+  sun.castShadow = true;
+
+  sun.shadow.mapSize.width = 2048;
+  sun.shadow.mapSize.height = 2048;
+
+  scene.add(sun);
+
+  createArena();
+
+  window.addEventListener(
+    "resize",
+    onResize
+  );
+
+  setupRendererInput();
+}
+
+function createArena(){
+
+  const floorGeometry = new THREE.BoxGeometry(
+    ARENA_SIZE,
+    1,
+    ARENA_SIZE
+  );
+
+  const floorMaterial = new THREE.MeshStandardMaterial({
+    color:0x41474d,
+    roughness:.92
+  });
+
+  const floor = new THREE.Mesh(
+    floorGeometry,
+    floorMaterial
+  );
+
+  floor.position.y = -.5;
+
+  floor.receiveShadow = true;
+
+  scene.add(floor);
+
+  colliders.push(floor);
+
+  const wallMaterial = new THREE.MeshStandardMaterial({
+    color:0x252b31
+  });
+
+  createBox(
+    ARENA_SIZE,
+    6,
+    1,
+    0,
+    3,
+    -ARENA_SIZE / 2,
+    wallMaterial
+  );
+
+  createBox(
+    ARENA_SIZE,
+    6,
+    1,
+    0,
+    3,
+    ARENA_SIZE / 2,
+    wallMaterial
+  );
+
+  createBox(
+    1,
+    6,
+    ARENA_SIZE,
+    -ARENA_SIZE / 2,
+    3,
+    0,
+    wallMaterial
+  );
+
+  createBox(
+    1,
+    6,
+    ARENA_SIZE,
+    ARENA_SIZE / 2,
+    3,
+    0,
+    wallMaterial
+  );
+
+  const obstacleMaterial = new THREE.MeshStandardMaterial({
+    color:0x69727b,
+    roughness:.7
+  });
+
+  createBox(
+    8,
+    4,
+    8,
+    -15,
+    2,
+    -10,
+    obstacleMaterial
+  );
+
+  createBox(
+    11,
+    3,
+    5,
+    13,
+    1.5,
+    -8,
+    obstacleMaterial
+  );
+
+  createBox(
+    6,
+    6,
+    6,
+    17,
+    3,
+    14,
+    obstacleMaterial
+  );
+
+  createBox(
+    10,
+    2.5,
+    5,
+    -15,
+    1.25,
+    15,
+    obstacleMaterial
+  );
+
+  createBox(
+    5,
+    4,
+    12,
+    0,
+    2,
+    17,
+    obstacleMaterial
+  );
+
+  for(let i=0;i<10;i++){
+
+    const x =
+      Math.random() * 42 - 21;
+
+    const z =
+      Math.random() * 42 - 21;
+
+    createBox(
+      2.5 + Math.random() * 2,
+      2 + Math.random() * 2,
+      2.5 + Math.random() * 2,
+      x,
+      1,
+      z,
+      obstacleMaterial
+    );
+
+  }
+
+}
+
+function createBox(
+  width,
+  height,
+  depth,
+  x,
+  y,
+  z,
+  material
+){
+
+  const geometry = new THREE.BoxGeometry(
+    width,
+    height,
+    depth
+  );
+
+  const mesh = new THREE.Mesh(
+    geometry,
+    material
+  );
+
+  mesh.position.set(
+    x,
+    y,
+    z
+  );
+
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+
+  scene.add(mesh);
+
+  colliders.push(mesh);
+
+  return mesh;
+}
+
+function onResize(){
+
+  if(!camera || !renderer){
+    return;
+  }
+
+  camera.aspect =
+    window.innerWidth / window.innerHeight;
+
+  camera.updateProjectionMatrix();
+
+  renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+  );
+
+}
+
+async function ensureAuth(){
+
+  if(currentUser){
+    return currentUser;
+  }
+
+  return new Promise((resolve,reject) => {
+
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      async user => {
+
+        if(user){
+
+          currentUser = user;
+
+          unsubscribe();
+
+          resolve(user);
+
+          return;
+        }
+
+        try{
+
+          await signInAnonymously(auth);
+
+        }catch(error){
+
+          unsubscribe();
+
+          reject(error);
+
+        }
+
+      },
+      error => {
+
+        unsubscribe();
+
+        reject(error);
+
+      }
+    );
+
+  });
+
+}
+
+async function createMatch(){
+
+  statusEl.textContent = "試合を作成中…";
+
+  try{
+
+    const user = await ensureAuth();
+
+    let code = "";
+
+    for(let attempt=0;attempt<20;attempt++){
+
+      const candidate = randomCode();
+
+      const ref = doc(
+        db,
+        "matches",
+        candidate
+      );
+
+      const existing = await getDoc(ref);
+
+      if(!existing.exists()){
+
+        code = candidate;
+
+        break;
+
+      }
+
+    }
+
+    if(!code){
+
+      throw new Error(
+        "試合コードを作成できませんでした。"
+      );
+
+    }
+
+    const spawn = randomSpawn();
+
+    const player = {
+      uid:user.uid,
+      name:"Player-" + user.uid.slice(-4),
+      x:spawn.x,
+      y:spawn.y,
+      z:spawn.z,
+      yaw:0,
+      pitch:0,
+      hp:MAX_HP,
+      kills:0,
+      alive:true
+    };
+
+    const ref = doc(
+      db,
+      "matches",
+      code
+    );
+
+    await setDoc(ref,{
+      hostUid:user.uid,
+      status:"active",
+      winnerUid:null,
+      createdAt:serverTimestamp(),
+      players:{
+        [user.uid]:player
+      }
+    });
+
+    isHost = true;
+
+    await startMatch(code);
+
+  }catch(error){
+
+    console.error(error);
+
+    statusEl.textContent =
+      "作成失敗：" + getFriendlyError(error);
+
+  }
+
+}
+
+async function joinMatch(){
+
+  const code =
+    matchCodeInput.value
+      .trim()
+      .toUpperCase();
+
+  if(!code){
+
+    statusEl.textContent =
+      "試合コードを入力して！";
+
+    return;
+  }
+
+  statusEl.textContent = "試合に参加中…";
+
+  try{
+
+    const user = await ensureAuth();
+
+    const ref = doc(
+      db,
+      "matches",
+      code
+    );
+
+    await runTransaction(
+      db,
+      async transaction => {
+
+        const snap =
+          await transaction.get(ref);
+
+        if(!snap.exists()){
+
+          throw new Error(
+            "NOT_FOUND"
+          );
+
+        }
+
+        const data = snap.data();
+
+        if(data.status !== "active"){
+
+          throw new Error(
+            "ENDED"
+          );
+
+        }
+
+        const players =
+          data.players || {};
+
+        const count =
+          Object.keys(players).length;
+
+        if(count >= 8){
+
+          throw new Error(
+            "FULL"
+          );
+
+        }
+
+        if(players[user.uid]){
+
+          return;
+
+        }
+
+        const spawn = randomSpawn();
+
+        players[user.uid] = {
+          uid:user.uid,
+          name:"Player-" + user.uid.slice(-4),
+          x:spawn.x,
+          y:spawn.y,
+          z:spawn.z,
+          yaw:0,
+          pitch:0,
+          hp:MAX_HP,
+          kills:0,
+          alive:true
+        };
+
+        transaction.update(
+          ref,
+          {
+            players
+          }
+        );
+
+      }
+    );
+
+    isHost = false;
+
+    await startMatch(code);
+
+  }catch(error){
+
+    console.error(error);
+
+    const message =
+      error?.message || "";
+
+    if(message === "NOT_FOUND"){
+
+      statusEl.textContent =
+        "その試合コードは存在しないよ。";
+
+    }else if(message === "FULL"){
+
+      statusEl.textContent =
+        "その試合は満員だよ。";
+
+    }else if(message === "ENDED"){
+
+      statusEl.textContent =
+        "その試合はもう終了してるよ。";
+
+    }else{
+
+      statusEl.textContent =
+        "参加失敗：" +
+        getFriendlyError(error);
+
+    }
+
+  }
+
+}
+
+async function handleMatchButton(){
+
+  const code =
+    matchCodeInput.value
+      .trim()
+      .toUpperCase();
+
+  if(code){
+
+    await joinMatch();
+
+  }else{
+
+    await createMatch();
+
+  }
+
+}
+
+function getFriendlyError(error){
+
+  if(!error){
+    return "不明なエラー";
+  }
+
+  if(error.code === "permission-denied"){
+    return "Firestoreの権限設定を確認して！";
+  }
+
+  if(error.code === "auth/operation-not-allowed"){
+    return "Firebaseで匿名ログインを有効にして！";
+  }
+
+  return error.message || String(error);
+
+}
+
+async function startMatch(code){
+
+  currentMatchId = code;
+
+  matchRef = doc(
+    db,
+    "matches",
+    code
+  );
+
+  menu.style.display = "none";
+
+  gameUI.style.display = "block";
+
+  gameOver.style.display = "none";
+
+  roomText.textContent = code;
+
+  if(!scene){
+
+    setupScene();
+
+  }
+
+  gameEnded = false;
+  gameStarted = true;
+  localKills = 0;
+
+  velocityY = 0;
+
+  await loadLocalPlayer();
+
+  if(unsubscribeMatch){
+
+    unsubscribeMatch();
+
+    unsubscribeMatch = null;
+
+  }
+
+  unsubscribeMatch = onSnapshot(
+    matchRef,
+    async snapshot => {
+
+      if(!snapshot.exists()){
+
+        if(gameStarted){
+
+          finishLocalGame(
+            "試合データが削除されました。"
+          );
+
+        }
+
+        return;
+
+      }
+
+      const data = snapshot.data();
+
+      const players =
+        data.players || {};
+
+      const count =
+        Object.keys(players).length;
+
+      playerCountText.textContent =
+        String(count);
+
+      updateRemotePlayers(players);
+
+      updateScoreboard(players);
+
+      const me =
+        players[currentUser.uid];
+
+      if(me){
+
+        localPlayer = {
+          ...localPlayer,
+          ...me
+        };
+
+        updateLocalHUD();
+
+      }
+
+      if(
+        data.status === "ended" &&
+        !gameEnded
+      ){
+
+        const winner =
+          data.winnerUid;
+
+        const winnerName =
+          winner &&
+          players[winner] &&
+          players[winner].name
+            ? players[winner].name
+            : "勝者";
+
+        finishLocalGame(
+          winner === currentUser.uid
+            ? "YOU WIN!"
+            : winnerName + " の勝利！"
+        );
+
+      }
+
+    },
+    error => {
+
+      console.error(error);
+
+      if(gameStarted){
+
+        finishLocalGame(
+          "通信エラーが発生しました。"
+        );
+
+      }
+
+    }
+  );
+
+  if(!gameLoopStarted){
+
+    gameLoopStarted = true;
+
+    requestAnimationFrame(
+      gameLoop
+    );
+
+  }
+
+}
+
+async function loadLocalPlayer(){
+
+  const snap =
+    await getDoc(matchRef);
+
+  if(!snap.exists()){
+
+    throw new Error(
+      "試合が見つかりません。"
+    );
+
+  }
+
+  const data = snap.data();
+
+  const player =
+    data.players?.[currentUser.uid];
+
+  if(!player){
+
+    throw new Error(
+      "プレイヤーデータがありません。"
+    );
+
+  }
+
+  localPlayer = {
+    ...player
+  };
+
+  localKills =
+    player.kills || 0;
+
+  cameraState.yaw =
+    Number(player.yaw || 0);
+
+  cameraState.pitch =
+    Number(player.pitch || 0);
+
+  setCameraFromPlayer();
+
+  updateLocalHUD();
+
+}
+
+function setCameraFromPlayer(){
+
+  if(!localPlayer){
+    return;
+  }
+
+  camera.position.set(
+    localPlayer.x,
+    localPlayer.y + 0.45,
+    localPlayer.z
+  );
+
+  camera.rotation.order = "YXZ";
+
+  camera.rotation.y =
+    cameraState.yaw;
+
+  camera.rotation.x =
+    cameraState.pitch;
+
+}
+
+function updateRemotePlayers(players){
+
+  const seen = new Set();
+
+  for(const [
+    uid,
+    player
+  ] of Object.entries(players)){
+
+    if(uid === currentUser.uid){
+      continue;
+    }
+
+    seen.add(uid);
+
+    let mesh =
+      playerMeshes.get(uid);
+
+    if(!mesh){
+
+      mesh =
+        createPlayerMesh(uid);
+
+      playerMeshes.set(
+        uid,
+        mesh
+      );
+
+    }
+
+    mesh.position.set(
+      player.x,
+      Math.max(0,player.y - PLAYER_HEIGHT),
+      player.z
+    );
+
+    mesh.rotation.y =
+      Number(player.yaw || 0);
+
+    mesh.visible =
+      Boolean(player.alive);
+
+  }
+
+  for(const uid of playerMeshes.keys()){
+
+    if(!seen.has(uid)){
+
+      removeRemoteMesh(uid);
+
+    }
+
+  }
+
+}
+
+function updateScoreboard(players){
+
+  const entries =
+    Object.entries(players)
+      .sort(
+        (a,b) =>
+          (b[1].kills || 0) -
+          (a[1].kills || 0)
+      );
+
+  scoreBoard.innerHTML = "";
+
+  for(const [
+    uid,
+    player
+  ] of entries){
+
+    const row =
+      document.createElement("div");
+
+    row.className =
+      "scoreRow";
+
+    const name =
+      document.createElement("span");
+
+    name.textContent =
+      uid === currentUser.uid
+        ? "YOU"
+        : player.name || uid.slice(-4);
+
+    const state =
+      document.createElement("span");
+
+    state.textContent =
+      player.alive
+        ? `${player.kills || 0} K`
+        : "DEAD";
+
+    state.className =
+      player.alive
+        ? "scoreAlive"
+        : "scoreDead";
+
+    row.appendChild(name);
+    row.appendChild(state);
+
+    scoreBoard.appendChild(row);
+
+  }
+
+}
+
+function updateLocalHUD(){
+
+  if(!localPlayer){
+    return;
+  }
+
+  const hp =
+    Math.max(
+      0,
+      Math.round(localPlayer.hp)
+    );
+
+  healthText.textContent =
+    `HP ${hp}`;
+
+  healthBar.style.width =
+    `${hp}%`;
+
+  if(hp > 60){
+
+    healthBar.style.background =
+      "#48e27d";
+
+  }else if(hp > 30){
+
+    healthBar.style.background =
+      "#ffd84d";
+
+  }else{
+
+    healthBar.style.background =
+      "#ff5959";
+
+  }
+
+  killsText.textContent =
+    String(localKills);
+
+}
+
+function clamp(value,min,max){
+  return Math.max(
+    min,
+    Math.min(max,value)
+  );
+}
+
+function tryMove(dx,dz){
+
+  if(!localPlayer || !localPlayer.alive){
+    return;
+  }
+
+  const nextX =
+    localPlayer.x + dx;
+
+  const nextZ =
+    localPlayer.z + dz;
+
+  if(isPositionFree(nextX,localPlayer.y,nextZ)){
+
+    localPlayer.x = nextX;
+    localPlayer.z = nextZ;
+
+  }
+
+}
+
+function isPositionFree(x,y,z){
+
+  const radius = .38;
+
+  if(
+    x < -ARENA_SIZE / 2 + radius ||
+    x > ARENA_SIZE / 2 - radius ||
+    z < -ARENA_SIZE / 2 + radius ||
+    z > ARENA_SIZE / 2 - radius
+  ){
+
+    return false;
+
+  }
+
+  const playerBox =
+    new THREE.Box3(
+      new THREE.Vector3(
+        x-radius,
+        Math.max(0,y-1.6),
+        z-radius
+      ),
+      new THREE.Vector3(
+        x+radius,
+        y+.4,
+        z+radius
+      )
+    );
+
+  for(const collider of colliders){
+
+    if(
+      collider === undefined ||
+      !collider.geometry
+    ){
+      continue;
+    }
+
+    if(
+      collider === colliders[0]
+    ){
+      continue;
+    }
+
+    const box =
+      new THREE.Box3()
+        .setFromObject(collider);
+
+    if(
+      box.intersectsBox(
+        playerBox
+      )
+    ){
+
+      return false;
+
+    }
+
+  }
+
+  return true;
+
+}
+
+function updateMovement(delta){
+
+  if(!localPlayer || !localPlayer.alive){
+    return;
+  }
+
+  let inputX = 0;
+  let inputZ = 0;
+
+  if(keys.w) inputZ -= 1;
+  if(keys.s) inputZ += 1;
+  if(keys.a) inputX -= 1;
+  if(keys.d) inputX += 1;
+
+  inputX += mobileInput.x;
+  inputZ += mobileInput.y;
+
+  const length =
+    Math.hypot(inputX,inputZ);
+
+  if(length > 1){
+
+    inputX /= length;
+    inputZ /= length;
+
+  }
+
+  const moving =
+    Math.abs(inputX) > .01 ||
+    Math.abs(inputZ) > .01;
+
+  if(moving){
+
+    const speed =
+      (
+        keys.shift ||
+        mobileInput.sprinting
+      )
+        ? physics.sprintSpeed
+        : physics.moveSpeed;
+
+    const amount =
+      speed * delta;
+
+    const forwardX =
+      -Math.sin(cameraState.yaw);
+
+    const forwardZ =
+      -Math.cos(cameraState.yaw);
+
+    const rightX =
+      Math.cos(cameraState.yaw);
+
+    const rightZ =
+      -Math.sin(cameraState.yaw);
+
+    const moveX =
+      (
+        forwardX * -inputZ +
+        rightX * inputX
+      ) * amount;
+
+    const moveZ =
+      (
+        forwardZ * -inputZ +
+        rightZ * inputX
+      ) * amount;
+
+    tryMove(moveX,moveZ);
+
+  }
+
+  velocityY +=
+    physics.gravity * delta;
+
+  localPlayer.y +=
+    velocityY * delta;
+
+  if(localPlayer.y <= PLAYER_HEIGHT){
+
+    localPlayer.y =
+      PLAYER_HEIGHT;
+
+    velocityY = 0;
+
+    grounded = true;
+
+  }else{
+
+    grounded = false;
+
+  }
+
+  camera.position.set(
+    localPlayer.x,
+    localPlayer.y + .45,
+    localPlayer.z
+  );
+
+  camera.rotation.order = "YXZ";
+
+  camera.rotation.y =
+    cameraState.yaw;
+
+  camera.rotation.x =
+    cameraState.pitch;
+
+}
+
+function jump(){
+
+  if(
+    localPlayer &&
+    localPlayer.alive &&
+    grounded
+  ){
+
+    velocityY =
+      physics.jumpPower;
+
+    grounded = false;
+
+  }
+
+}
+
+function showKillMessage(text){
+
+  killMessage.textContent =
+    text;
+
+  killMessage.style.opacity =
+    "1";
+
+  setTimeout(() => {
+
+    killMessage.style.opacity =
+      "0";
+
+  },900);
+
+}
+
+async function damagePlayer(targetUid){
+
+  if(
+    !matchRef ||
+    gameEnded
+  ){
+    return;
+  }
+
+  try{
+
+    let wasKill = false;
+
+    await runTransaction(
+      db,
+      async transaction => {
+
+        const snap =
+          await transaction.get(
+            matchRef
+          );
+
+        if(!snap.exists()){
+          return;
+        }
+
+        const data =
+          snap.data();
+
+        if(data.status !== "active"){
+          return;
+        }
+
+        const players =
+          {
+            ...(data.players || {})
+          };
+
+        const shooter =
+          players[currentUser.uid];
+
+        const target =
+          players[targetUid];
+
+        if(!shooter || !target){
+          return;
+        }
+
+        if(!shooter.alive || !target.alive){
+          return;
+        }
+
+        target.hp =
+          Math.max(
+            0,
+            Number(target.hp || 0) -
+            DAMAGE
+          );
+
+        if(target.hp <= 0){
+
+          target.alive = false;
+
+          target.hp = 0;
+
+          shooter.kills =
+            Number(shooter.kills || 0) + 1;
+
+          wasKill = true;
+
+          localKills =
+            shooter.kills;
+
+          const alivePlayers =
+            Object.values(players)
+              .filter(
+                player => player.alive
+              );
+
+          if(alivePlayers.length <= 1){
+
+            data.status = "ended";
+
+            data.winnerUid =
+              alivePlayers.length === 1
+                ? alivePlayers[0].uid
+                : null;
+
+          }
+
+        }
+
+        transaction.update(
+          matchRef,
+          {
+            players:players,
+            status:
+              data.status || "active",
+            winnerUid:
+              data.winnerUid || null
+          }
+        );
+
+      }
+    );
+
+    if(wasKill){
+
+      showKillMessage("ELIMINATED");
+
+    }
+
+  }catch(error){
+
+    console.error(
+      "damage error",
+      error
+    );
+
+  }
+
+}
+
+function shoot(){
+
+  if(
+    !localPlayer ||
+    !localPlayer.alive ||
+    gameEnded
+  ){
+
+    return;
+
+  }
+
+  const now =
+    performance.now();
+
+  if(now < fireCooldownUntil){
+    return;
+  }
+
+  fireCooldownUntil =
+    now + FIRE_COOLDOWN;
+
+  raycaster.setFromCamera(
+    new THREE.Vector2(0,0),
+    camera
+  );
+
+  const targets = [];
+
+  for(const mesh of playerMeshes.values()){
+
+    mesh.traverse(object => {
+
+      if(object.isMesh){
+        object.userData.targetUid =
+          mesh.userData.uid;
+
+        targets.push(object);
+      }
+
+    });
+
+  }
+
+  const hits =
+    raycaster.intersectObjects(
+      targets,
+      false
+    );
+
+  let targetUid = null;
+
+  for(const hit of hits){
+
+    const uid =
+      hit.object.userData.targetUid;
+
+    if(uid){
+
+      const mesh =
+        playerMeshes.get(uid);
+
+      if(
+        mesh &&
+        mesh.visible
+      ){
+
+        targetUid = uid;
+
+        break;
+
+      }
+
+    }
+
+  }
+
+  if(targetUid){
+
+    damagePlayer(targetUid);
+
+  }
+
+}
+
+async function syncLocalPlayer(){
+
+  if(
+    !matchRef ||
+    !localPlayer ||
+    gameEnded
+  ){
+    return;
+  }
+
+  const now =
+    performance.now();
+
+  if(
+    now - lastNetworkUpdate <
+    100
+  ){
+    return;
+  }
+
+  lastNetworkUpdate =
+    now;
+
+  try{
+
+    await updateDoc(
+      matchRef,
+      {
+        [`players.${currentUser.uid}`]:{
+          uid:currentUser.uid,
+          name:localPlayer.name,
+          x:localPlayer.x,
+          y:localPlayer.y,
+          z:localPlayer.z,
+          yaw:cameraState.yaw,
+          pitch:cameraState.pitch,
+          hp:localPlayer.hp,
+          kills:localKills,
+          alive:localPlayer.alive
+        }
+      }
+    );
+
+  }catch(error){
+
+    console.error(
+      "sync error",
+      error
+    );
+
+  }
+
+}
+
+async function endMatchIfNeeded(){
+
+  if(
+    !matchRef ||
+    gameEnded
+  ){
+    return;
+  }
+
+  try{
+
+    let shouldDelete = false;
+    let winnerUid = null;
+
+    await runTransaction(
+      db,
+      async transaction => {
+
+        const snap =
+          await transaction.get(
+            matchRef
+          );
+
+        if(!snap.exists()){
+          return;
+        }
+
+        const data =
+          snap.data();
+
+        if(data.status === "ended"){
+          shouldDelete = true;
+          winnerUid =
+            data.winnerUid || null;
+          return;
+        }
+
+        const players =
+          {
+            ...(data.players || {})
+          };
+
+        const alive =
+          Object.values(players)
+            .filter(
+              player => player.alive
+            );
+
+        if(alive.length <= 1){
+
+          shouldDelete = true;
+
+          winnerUid =
+            alive.length === 1
+              ? alive[0].uid
+              : null;
+
+          transaction.update(
+            matchRef,
+            {
+              status:"ended",
+              winnerUid
+            }
+          );
+
+        }
+
+      }
+    );
+
+    if(shouldDelete){
+
+      setTimeout(
+        async () => {
+
+          try{
+
+            await deleteDoc(
+              matchRef
+            );
+
+          }catch(error){
+
+            console.error(
+              "match delete error",
+              error
+            );
+
+          }
+
+        },
+        3500
+      );
+
+    }
+
+  }catch(error){
+
+    console.error(
+      "end match error",
+      error
+    );
+
+  }
+
+}
+
+function finishLocalGame(text){
+
+  if(gameEnded){
+    return;
+  }
+
+  gameEnded = true;
+  gameStarted = false;
+
+  gameOverText.textContent =
+    text;
+
+  gameOver.style.display =
+    "flex";
+
+}
+
+function leaveCurrentMatch(){
+
+  if(unsubscribeMatch){
+
+    unsubscribeMatch();
+
+    unsubscribeMatch = null;
+
+  }
+
+  for(const uid of playerMeshes.keys()){
+
+    removeRemoteMesh(uid);
+
+  }
+
+  currentMatchId = null;
+  matchRef = null;
+  localPlayer = null;
+
+  gameStarted = false;
+  gameEnded = false;
+
+  gameUI.style.display =
+    "none";
+
+  gameOver.style.display =
+    "none";
+
+  menu.style.display =
+    "flex";
+
+  statusEl.textContent = "";
+
+  matchCodeInput.value = "";
+
+}
+
+async function handleReturn(){
+
+  const ref =
+    matchRef;
+
+  const shouldDelete =
+    isHost && ref;
+
+  leaveCurrentMatch();
+
+  if(shouldDelete){
+
+    try{
+
+      await deleteDoc(ref);
+
+    }catch(error){
+
+      console.error(error);
+
+    }
+
+  }
+
+}
+
+function handleMouseMove(event){
+
+  if(
+    !gameStarted ||
+    gameEnded ||
+    matchMedia("(pointer:coarse)").matches
+  ){
+    return;
+  }
+
+  if(
+    document.pointerLockElement !==
+    renderer.domElement
+  ){
+    return;
+  }
+
+  cameraState.yaw -=
+    event.movementX * .0023;
+
+  cameraState.pitch -=
+    event.movementY * .0023;
+
+  cameraState.pitch =
+    clamp(
+      cameraState.pitch,
+      -1.45,
+      1.45
+    );
+
+}
+
+function requestPointerLock(){
+
+  if(matchMedia("(pointer:coarse)").matches){
+    return;
+  }
+
+  if(
+    renderer &&
+    renderer.domElement.requestPointerLock
+  ){
+
+    renderer.domElement.requestPointerLock();
+
+  }
+
+}
+
+function setupRendererInput(){
+
+  if(!renderer){
+    return;
+  }
+
+  renderer.domElement.addEventListener(
+    "mousedown",
+    event => {
+
+      if(event.button === 0){
+
+        requestPointerLock();
+
+        shoot();
+
+      }
+
+    }
+  );
+
+}
+
+function setupDesktopInput(){
+
+  window.addEventListener(
+    "keydown",
+    event => {
+
+      if(event.code === "KeyW") keys.w = true;
+      if(event.code === "KeyA") keys.a = true;
+      if(event.code === "KeyS") keys.s = true;
+      if(event.code === "KeyD") keys.d = true;
+      if(event.code === "ShiftLeft") keys.shift = true;
+      if(event.code === "ShiftRight") keys.shift = true;
+
+      if(event.code === "Space"){
+
+        event.preventDefault();
+
+        jump();
+
+      }
+
+    }
+  );
+
+  window.addEventListener(
+    "keyup",
+    event => {
+
+      if(event.code === "KeyW") keys.w = false;
+      if(event.code === "KeyA") keys.a = false;
+      if(event.code === "KeyS") keys.s = false;
+      if(event.code === "KeyD") keys.d = false;
+      if(event.code === "ShiftLeft") keys.shift = false;
+      if(event.code === "ShiftRight") keys.shift = false;
+
+    }
+  );
+
+  document.addEventListener(
+    "mousemove",
+    handleMouseMove
+  );
+
+}
+
+function setupMobileInput(){
+
+  let joystickPointerId = null;
+
+  function updateJoystick(clientX,clientY){
+
+    const rect =
+      joystickZone.getBoundingClientRect();
+
+    const centerX =
+      rect.left + rect.width / 2;
+
+    const centerY =
+      rect.top + rect.height / 2;
+
+    let dx =
+      clientX - centerX;
+
+    let dy =
+      clientY - centerY;
+
+    const max =
+      53;
+
+    const distance =
+      Math.hypot(dx,dy);
+
+    if(distance > max){
+
+      dx =
+        dx / distance * max;
+
+      dy =
+        dy / distance * max;
+
+    }
+
+    mobileInput.x =
+      dx / max;
+
+    mobileInput.y =
+      dy / max;
+
+    joystickKnob.style.transform =
+      `translate(${dx}px,${dy}px)`;
+
+  }
+
+  joystickZone.addEventListener(
+    "pointerdown",
+    event => {
+
+      joystickPointerId =
+        event.pointerId;
+
+      joystickZone.setPointerCapture(
+        event.pointerId
+      );
+
+      updateJoystick(
+        event.clientX,
+        event.clientY
+      );
+
+    }
+  );
+
+  joystickZone.addEventListener(
+    "pointermove",
+    event => {
+
+      if(
+        event.pointerId ===
+        joystickPointerId
+      ){
+
+        updateJoystick(
+          event.clientX,
+          event.clientY
+        );
+
+      }
+
+    }
+  );
+
+  const endJoystick = event => {
+
+    if(
+      event.pointerId !==
+      joystickPointerId
+    ){
+      return;
+    }
+
+    joystickPointerId = null;
+
+    mobileInput.x = 0;
+    mobileInput.y = 0;
+
+    joystickKnob.style.transform =
+      "translate(0,0)";
+
+  };
+
+  joystickZone.addEventListener(
+    "pointerup",
+    endJoystick
+  );
+
+  joystickZone.addEventListener(
+    "pointercancel",
+    endJoystick
+  );
+
+  let lookPointerId = null;
+  let lastLookX = 0;
+  let lastLookY = 0;
+
+  lookZone.addEventListener(
+    "pointerdown",
+    event => {
+
+      lookPointerId =
+        event.pointerId;
+
+      lastLookX =
+        event.clientX;
+
+      lastLookY =
+        event.clientY;
+
+      lookZone.setPointerCapture(
+        event.pointerId
+      );
+
+    }
+  );
+
+  lookZone.addEventListener(
+    "pointermove",
+    event => {
+
+      if(
+        event.pointerId !==
+        lookPointerId
+      ){
+        return;
+      }
+
+      const dx =
+        event.clientX - lastLookX;
+
+      const dy =
+        event.clientY - lastLookY;
+
+      lastLookX =
+        event.clientX;
+
+      lastLookY =
+        event.clientY;
+
+      cameraState.yaw -=
+        dx * .006;
+
+      cameraState.pitch -=
+        dy * .006;
+
+      cameraState.pitch =
+        clamp(
+          cameraState.pitch,
+          -1.45,
+          1.45
+        );
+
+    }
+  );
+
+  const endLook = event => {
+
+    if(
+      event.pointerId ===
+      lookPointerId
+    ){
+
+      lookPointerId = null;
+
+    }
+
+  };
+
+  lookZone.addEventListener(
+    "pointerup",
+    endLook
+  );
+
+  lookZone.addEventListener(
+    "pointercancel",
+    endLook
+  );
+
+  fireButton.addEventListener(
+    "pointerdown",
+    event => {
+
+      event.preventDefault();
+
+      mobileInput.firing = true;
+
+      shoot();
+
+    }
+  );
+
+  fireButton.addEventListener(
+    "pointerup",
+    event => {
+
+      event.preventDefault();
+
+      mobileInput.firing = false;
+
+    }
+  );
+
+  fireButton.addEventListener(
+    "pointercancel",
+    event => {
+
+      mobileInput.firing = false;
+
+    }
+  );
+
+  jumpButton.addEventListener(
+    "pointerdown",
+    event => {
+
+      event.preventDefault();
+
+      jump();
+
+    }
+  );
+
+  sprintButton.addEventListener(
+    "pointerdown",
+    event => {
+
+      event.preventDefault();
+
+      mobileInput.sprinting = true;
+
+    }
+  );
+
+  sprintButton.addEventListener(
+    "pointerup",
+    event => {
+
+      event.preventDefault();
+
+      mobileInput.sprinting = false;
+
+    }
+  );
+
+  sprintButton.addEventListener(
+    "pointercancel",
+    () => {
+
+      mobileInput.sprinting = false;
+
+    }
+  );
+
+}
+
+function gameLoop(time){
+
+  const delta =
+    Math.min(
+      (time - lastFrameTime) / 1000,
+      .05
+    );
+
+  lastFrameTime =
+    time;
+
+  if(gameStarted && !gameEnded){
+
+    updateMovement(delta);
+
+    if(mobileInput.firing){
+
+      shoot();
+
+    }
+
+    syncLocalPlayer();
+
+    if(
+      localPlayer &&
+      !localPlayer.alive
+    ){
+
+      endMatchIfNeeded();
+
+    }
+
+  }
+
+  if(renderer && scene && camera){
+
+    renderer.render(
+      scene,
+      camera
+    );
+
+  }
+
+  requestAnimationFrame(
+    gameLoop
+  );
+
+}
+
+let gameLoopStarted = false;
+
+matchButton.addEventListener(
+  "click",
+  handleMatchButton
+);
+
+returnButton.addEventListener(
+  "click",
+  handleReturn
+);
+
+matchCodeInput.addEventListener(
+  "input",
+  () => {
+
+    matchCodeInput.value =
+      matchCodeInput.value
+        .replace(/[^A-Za-z0-9]/g,"")
+        .toUpperCase();
+
+  }
+);
+
+matchCodeInput.addEventListener(
+  "keydown",
+  event => {
+
+    if(event.key === "Enter"){
+
+      handleMatchButton();
+
+    }
+
+  }
+);
+
+setupDesktopInput();
+
+setupMobileInput();
+
+window.addEventListener(
+  "beforeunload",
+  () => {
+
+    if(
+      isHost &&
+      matchRef
+    ){
+
+      deleteDoc(
+        matchRef
+      ).catch(
+        () => {}
+      );
+
+    }
+
+  }
+);
+
+try{
+
+  await ensureAuth();
+
+  statusEl.textContent =
+    "接続準備OK";
+
+}catch(error){
+
+  console.error(error);
+
+  statusEl.textContent =
+    "Firebase接続失敗：" +
+    getFriendlyError(error);
+
+}
+
+</script>
+
+</body>
+</html>
