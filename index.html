@@ -532,8 +532,6 @@ let gameStarted = false;
 let gameEnded = false;
 
 let localPlayer = null;
-let remotePlayers = new Map();
-
 let lastNetworkUpdate = 0;
 let lastFrameTime = performance.now();
 
@@ -659,6 +657,7 @@ function createPlayerMesh(uid){
   const group = new THREE.Group();
 
   const bodyGeometry = new THREE.CapsuleGeometry(.45,.8,6,12);
+
   const bodyMaterial = new THREE.MeshStandardMaterial({
     color:playerColor(uid),
     roughness:.8
@@ -1080,7 +1079,7 @@ async function ensureAuth(){
 
 }
 
-async function createMatch(){
+async function createMatch(requestedCode = ""){
 
   statusEl.textContent = "試合を作成中…";
 
@@ -1088,25 +1087,33 @@ async function createMatch(){
 
     const user = await ensureAuth();
 
-    let code = "";
+    let code =
+      requestedCode
+        .trim()
+        .toUpperCase();
 
-    for(let attempt=0;attempt<20;attempt++){
+    if(!code){
 
-      const candidate = randomCode();
+      for(let attempt=0;attempt<20;attempt++){
 
-      const ref = doc(
-        db,
-        "matches",
-        candidate
-      );
+        const candidate = randomCode();
 
-      const existing = await getDoc(ref);
+        const ref = doc(
+          db,
+          "matches",
+          candidate
+        );
 
-      if(!existing.exists()){
+        const existing =
+          await getDoc(ref);
 
-        code = candidate;
+        if(!existing.exists()){
 
-        break;
+          code = candidate;
+
+          break;
+
+        }
 
       }
 
@@ -1141,15 +1148,36 @@ async function createMatch(){
       code
     );
 
-    await setDoc(ref,{
-      hostUid:user.uid,
-      status:"active",
-      winnerUid:null,
-      createdAt:serverTimestamp(),
-      players:{
-        [user.uid]:player
+    await runTransaction(
+      db,
+      async transaction => {
+
+        const snap =
+          await transaction.get(ref);
+
+        if(snap.exists()){
+
+          throw new Error(
+            "ALREADY_EXISTS"
+          );
+
+        }
+
+        transaction.set(
+          ref,
+          {
+            hostUid:user.uid,
+            status:"active",
+            winnerUid:null,
+            createdAt:serverTimestamp(),
+            players:{
+              [user.uid]:player
+            }
+          }
+        );
+
       }
-    });
+    );
 
     isHost = true;
 
@@ -1159,29 +1187,47 @@ async function createMatch(){
 
     console.error(error);
 
+    if(
+      error?.message ===
+      "ALREADY_EXISTS"
+    ){
+
+      await joinMatch(
+        requestedCode
+      );
+
+      return;
+
+    }
+
     statusEl.textContent =
-      "作成失敗：" + getFriendlyError(error);
+      "作成失敗：" +
+      getFriendlyError(error);
 
   }
 
 }
 
-async function joinMatch(){
+async function joinMatch(codeOverride = ""){
 
   const code =
-    matchCodeInput.value
+    (
+      codeOverride ||
+      matchCodeInput.value
+    )
       .trim()
       .toUpperCase();
 
   if(!code){
 
-    statusEl.textContent =
-      "試合コードを入力して！";
+    await createMatch("");
 
     return;
+
   }
 
-  statusEl.textContent = "試合に参加中…";
+  statusEl.textContent =
+    "試合を確認中…";
 
   try{
 
@@ -1192,6 +1238,17 @@ async function joinMatch(){
       "matches",
       code
     );
+
+    const existing =
+      await getDoc(ref);
+
+    if(!existing.exists()){
+
+      await createMatch(code);
+
+      return;
+
+    }
 
     await runTransaction(
       db,
@@ -1219,7 +1276,9 @@ async function joinMatch(){
         }
 
         const players =
-          data.players || {};
+          {
+            ...(data.players || {})
+          };
 
         const count =
           Object.keys(players).length;
@@ -1276,8 +1335,7 @@ async function joinMatch(){
 
     if(message === "NOT_FOUND"){
 
-      statusEl.textContent =
-        "その試合コードは存在しないよ。";
+      await createMatch(code);
 
     }else if(message === "FULL"){
 
@@ -1292,7 +1350,7 @@ async function joinMatch(){
     }else{
 
       statusEl.textContent =
-        "参加失敗：" +
+        "参加/作成失敗：" +
         getFriendlyError(error);
 
     }
@@ -1310,11 +1368,11 @@ async function handleMatchButton(){
 
   if(code){
 
-    await joinMatch();
+    await joinMatch(code);
 
   }else{
 
-    await createMatch();
+    await createMatch("");
 
   }
 
@@ -2084,10 +2142,12 @@ function shoot(){
     mesh.traverse(object => {
 
       if(object.isMesh){
+
         object.userData.targetUid =
           mesh.userData.uid;
 
         targets.push(object);
+
       }
 
     });
@@ -2201,7 +2261,6 @@ async function endMatchIfNeeded(){
   try{
 
     let shouldDelete = false;
-    let winnerUid = null;
 
     await runTransaction(
       db,
@@ -2220,10 +2279,11 @@ async function endMatchIfNeeded(){
           snap.data();
 
         if(data.status === "ended"){
+
           shouldDelete = true;
-          winnerUid =
-            data.winnerUid || null;
+
           return;
+
         }
 
         const players =
@@ -2241,16 +2301,14 @@ async function endMatchIfNeeded(){
 
           shouldDelete = true;
 
-          winnerUid =
-            alive.length === 1
-              ? alive[0].uid
-              : null;
-
           transaction.update(
             matchRef,
             {
               status:"ended",
-              winnerUid
+              winnerUid:
+                alive.length === 1
+                  ? alive[0].uid
+                  : null
             }
           );
 
