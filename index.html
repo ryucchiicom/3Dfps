@@ -1,1068 +1,5645 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Firebase Online 3D FPS</title>
-<style>
-:root{--bg:rgba(10,15,25,.78);--border:rgba(255,255,255,.16);--accent:#66d9ff;--danger:#ff5e6c;--ok:#72f28b;--text:#f4f7fb}
-*{box-sizing:border-box}
-html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#000;color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-canvas{display:block}button,input{font:inherit}button{cursor:pointer}
-#game{position:fixed;inset:0}
-#menu,#lobby,#endScreen{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 45%,rgba(35,50,80,.92),rgba(5,8,14,.98))}
-#lobby,#endScreen{display:none}
-.panel{width:min(92vw,520px);padding:24px;border:1px solid var(--border);border-radius:20px;background:var(--bg);backdrop-filter:blur(16px);box-shadow:0 20px 70px rgba(0,0,0,.45)}
-h1{margin:0 0 8px;font-size:32px}h2{margin:0 0 12px}p{color:#b9c2d0;line-height:1.55}
-.row{display:flex;gap:10px;flex-wrap:wrap}
-input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--border);outline:0;color:#fff;background:rgba(255,255,255,.06)}
-button{border:0;border-radius:12px;padding:12px 16px;background:var(--accent);color:#041018;font-weight:700}
-button.secondary{background:rgba(255,255,255,.1);color:#fff;border:1px solid var(--border)}
-button.danger{background:var(--danger);color:#fff}
-.small{font-size:12px;color:#96a2b5}
-#status{min-height:24px;color:#b9c2d0;margin-top:12px;white-space:pre-wrap}
-#playersList{margin:12px 0 0;padding:0;list-style:none;display:grid;gap:8px;max-height:220px;overflow:auto}
-#playersList li{padding:9px 11px;border-radius:10px;background:rgba(255,255,255,.05);display:flex;justify-content:space-between}
-.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
-#hud{position:fixed;inset:0;z-index:10;pointer-events:none;display:none}
-#topbar{position:absolute;top:16px;left:16px;right:16px;display:flex;justify-content:space-between;gap:12px}
-.hudBox{background:rgba(7,11,18,.63);border:1px solid var(--border);backdrop-filter:blur(10px);border-radius:12px;padding:10px 12px}
-#healthBarOuter{width:240px;height:16px;border-radius:99px;overflow:hidden;background:rgba(255,255,255,.12);margin-top:4px}
-#healthBar{height:100%;width:100%;background:var(--ok)}
-#crosshair{position:absolute;left:50%;top:50%;width:18px;height:18px;transform:translate(-50%,-50%)}
-#crosshair:before,#crosshair:after{content:"";position:absolute;background:#fff;box-shadow:0 0 4px #000}
-#crosshair:before{left:8px;top:0;width:2px;height:18px}
-#crosshair:after{left:0;top:8px;width:18px;height:2px}
-#message{position:absolute;left:50%;bottom:12%;transform:translateX(-50%);padding:10px 14px;border-radius:999px;background:rgba(0,0,0,.55);border:1px solid var(--border);opacity:0;transition:opacity .15s}
-#help{position:absolute;left:16px;bottom:16px;max-width:450px;font-size:13px;color:#d5dbe6;background:rgba(7,11,18,.55);border:1px solid var(--border);border-radius:12px;padding:9px 11px}
-#mobileControls{display:none}
-.action{position:absolute;width:74px;height:74px;border-radius:50%;pointer-events:auto;color:#fff;border:1px solid rgba(255,255,255,.18);overflow:hidden;touch-action:none;z-index:5}
-.action:before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(rgba(255,255,255,.82) var(--progress,0%),rgba(255,255,255,.12) 0);opacity:.62;pointer-events:none}
-#jumpButton{right:42px;bottom:120px;background:rgba(102,217,255,.72)}
-#fireButton{right:42px;bottom:205px;background:rgba(255,94,108,.78)}
-#jumpButton.grab{background:rgba(114,242,139,.72)}
-#jumpButton.disabledGrab{background:rgba(255,255,255,.1);color:rgba(255,255,255,.45)}
-#startBtn{position:relative;overflow:hidden}
-#startBtn:after{content:"";position:absolute;inset:0;border-radius:inherit;background:conic-gradient(rgba(255,255,255,.75) var(--progress,0%),rgba(255,255,255,.1) 0);opacity:.55;pointer-events:none}
-@media(max-width:700px){
-#healthBarOuter{width:150px}#help{display:none}
-#mobileControls{display:block;position:absolute;inset:0;pointer-events:none}
-.stickArea{position:absolute;bottom:26px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);pointer-events:auto;touch-action:none}
-#moveStick{left:18px}#lookArea{right:18px;width:190px;border-radius:24px}
-.stickKnob{position:absolute;left:50%;top:50%;width:54px;height:54px;transform:translate(-50%,-50%);border-radius:50%;background:rgba(255,255,255,.2)}
-}
-</style>
-</head>
-<body>
-<div id="game"></div>
-
-<div id="menu">
-<div class="panel">
-<h1>Firebase 3D FPS</h1>
-<p>オンラインで同じアリーナに入り、相手を撃ってスコアを競うシンプルな対戦FPS。</p>
-<input id="nameInput" maxlength="16" placeholder="プレイヤー名" value="Player">
-<div style="height:10px"></div>
-<input id="roomInput" maxlength="20" placeholder="部屋コード（空欄なら新規作成）">
-<div style="height:10px"></div>
-<button id="createJoinBtn">試合を作成/参加</button>
-<div id="status"></div>
-<div class="small" style="margin-top:12px">PC: WASD移動 / マウス視点 / 左クリック射撃 / SpaceでJUMP・GRAB</div>
-<div class="small" style="margin-top:4px">スマホ: 左スティック移動 / 右側ドラッグで視点 / JUMP / GRAB / FIRE</div>
-</div>
-</div>
-
-<div id="lobby">
-<div class="panel">
-<h2>待機中</h2>
-<p>部屋ID: <span id="roomIdLabel" class="mono"></span></p>
-<p>参加者 <span id="playerCount">0</span> / 8</p>
-<ul id="playersList"></ul>
-<div class="row" style="margin-top:14px">
-<button id="startBtn" style="display:none">START</button>
-<button id="copyRoomBtn" class="secondary">部屋IDをコピー</button>
-<button id="leaveLobbyBtn" class="danger">退出</button>
-</div>
-<div class="small" style="margin-top:10px">部屋主だけSTARTを長押しすると試合開始。</div>
-</div>
-</div>
-
-<div id="hud">
-<div id="topbar">
-<div class="hudBox">
-<div>HP <span id="healthText">100</span></div>
-<div id="healthBarOuter"><div id="healthBar"></div></div>
-</div>
-<div class="hudBox">K/D: <span id="scoreText">0 / 0</span><br><span class="small">残り時間 <span id="timeText">03:00</span></span></div>
-</div>
-<div id="crosshair"></div>
-<div id="message"></div>
-<div id="help">WASDで移動 / マウスで視点 / クリックで射撃 / SpaceでJUMP・GRAB<br>弾速と最大連射速度あり。撃破すると1ポイント。</div>
-<div id="mobileControls">
-<div id="moveStick" class="stickArea"><div id="moveKnob" class="stickKnob"></div></div>
-<div id="lookArea" class="stickArea"></div>
-<button id="jumpButton" class="action">JUMP</button>
-<button id="fireButton" class="action">FIRE</button>
-</div>
-</div>
-
-<div id="endScreen">
-<div class="panel">
-<h2 id="winnerTitle">試合終了</h2>
-<p id="resultText"></p>
-<div id="finalRanking"></div>
-<div class="row" style="margin-top:14px"><button id="backToMenuBtn">メニューへ戻る</button></div>
-<div class="small" style="margin-top:10px">試合終了時に、この試合用のFirestoreデータを削除する処理が走ります。</div>
-</div>
-</div>
-
-<script type="importmap">
-{"imports":{
-"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
-"three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
-}}
-</script>
-
-<script type="module">
-import * as THREE from "three";
-import {PointerLockControls} from "three/addons/controls/PointerLockControls.js";
-import {initializeApp} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-import {getFirestore,collection,doc,setDoc,getDoc,updateDoc,deleteDoc,onSnapshot,serverTimestamp,writeBatch,getDocs} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
-import {getAuth,signInAnonymously,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
-
-const firebaseConfig={
-apiKey:"AIzaSyD5cTt3b1IeiGIOgJcC0sSFgO-Ce78JyIw",
-authDomain:"dfps-4aa92.firebaseapp.com",
-projectId:"dfps-4aa92",
-storageBucket:"dfps-4aa92.firebasestorage.app",
-messagingSenderId:"379021412536",
-appId:"1:379021412536:web:003efdb33f6d6bb77d8c4d",
-measurementId:"G-BG2KFTL9ZC"
-};
-
-const app=initializeApp(firebaseConfig);
-const db=getFirestore(app);
-const auth=getAuth(app);
-const $=id=>document.getElementById(id);
-
-const menu=$("menu"),lobby=$("lobby"),hud=$("hud"),endScreen=$("endScreen");
-const statusEl=$("status"),nameInput=$("nameInput"),roomInput=$("roomInput");
-const roomIdLabel=$("roomIdLabel"),playerCount=$("playerCount"),playersList=$("playersList");
-const startBtn=$("startBtn"),createJoinBtn=$("createJoinBtn");
-const copyRoomBtn=$("copyRoomBtn"),leaveLobbyBtn=$("leaveLobbyBtn"),backToMenuBtn=$("backToMenuBtn");
-
-let authUser=null,roomId=null,playerId=null,playerName="Player",isHost=false;
-let roomUnsub=null,playersUnsub=null,started=false,ending=false;
-let scene,camera,renderer,controls,clock;
-let arenaGroup;
-const remotePlayers=new Map(),remoteState=new Map(),bullets=[];
-const keys=new Set();
-
-const MATCH_DURATION=180;
-const MAX_PLAYERS=8;
-const PLAYER_SPEED=7;
-const LOOK_SPEED=.0022;
-const PLAYER_RADIUS=.55;
-const PLAYER_HEIGHT=1.9;
-const EYE_HEIGHT=1.15;
-const GRAVITY=22;
-const JUMP_SPEED=8.2;
-const GRAB_DISTANCE=.72;
-const GRAB_DURATION=500;
-const START_HOLD_DURATION=1200;
-const BULLET_SPEED=34;
-const FIRE_INTERVAL=260;
-const BULLET_LIFETIME=2.2;
-const HIT_DAMAGE=25;
-const MAX_HP=100;
-const MAX_SCORE=10;
-const INACTIVE_LIMIT=60000;
-const STALE_MATCH_LIMIT=86400000;
-
-let local={
-x:0,y:EYE_HEIGHT,z:0,yaw:0,pitch:0,hp:MAX_HP,kills:0,deaths:0,
-lastShot:0,lastWrite:0,respawnAt:0,vy:0,grounded:true,grabbing:false,
-grabStartedAt:0,invulnerableUntil:0,lastActiveAt:Date.now()
-};
-let matchEndAt=0,lastFrame=performance.now();
-let mobileMove={x:0,y:0},mobileFire=false;
-let startHoldTimer=null,startHoldStart=0,startHoldActive=false;
-let lastActivityPersist=0;
-
-const platforms=[
-{x:-8,y:1.2,z:-8,w:5,h:2.4,d:5},
-{x:8,y:1.2,z:-8,w:5,h:2.4,d:5},
-{x:-8,y:1.2,z:8,w:5,h:2.4,d:5},
-{x:8,y:1.2,z:8,w:5,h:2.4,d:5},
-{x:0,y:1.5,z:0,w:3.5,h:3,d:7},
-{x:-14,y:.9,z:0,w:3,h:1.8,d:10},
-{x:14,y:.9,z:0,w:3,h:1.8,d:10},
-{x:0,y:.9,z:-14,w:10,h:1.8,d:3},
-{x:0,y:.9,z:14,w:10,h:1.8,d:3},
-
-{x:-4,y:.6,z:-15,w:4,h:1.2,d:3},
-{x:4,y:.6,z:-15,w:4,h:1.2,d:3},
-{x:-4,y:.6,z:15,w:4,h:1.2,d:3},
-{x:4,y:.6,z:15,w:4,h:1.2,d:3},
-{x:-15,y:.6,z:-4,w:3,h:1.2,d:4},
-{x:-15,y:.6,z:4,w:3,h:1.2,d:4},
-{x:15,y:.6,z:-4,w:3,h:1.2,d:4},
-{x:15,y:.6,z:4,w:3,h:1.2,d:4}
-];
-
-function setStatus(t){statusEl.textContent=t}
-function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
-function sanitizeName(v){return String(v||"Player").replace(/[<>"']/g,"").trim().slice(0,16)||"Player"}
-function randomRoomId(){
-const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let r="";
-for(let i=0;i<6;i++)r+=chars[Math.floor(Math.random()*chars.length)];
-return r
-}
-function formatTime(sec){
-sec=Math.max(0,Math.ceil(sec));
-return `${Math.floor(sec/60).toString().padStart(2,"0")}:${(sec%60).toString().padStart(2,"0")}`
-}
-function showMessage(t,ms=1000){
-const e=$("message");e.textContent=t;e.style.opacity=1;
-clearTimeout(showMessage.t);showMessage.t=setTimeout(()=>e.style.opacity=0,ms)
-}
-function esc(s){
-return String(s).replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]))
-}
-
-async function bootAuth(){
-setStatus("Firebaseへ接続中…");
-try{await signInAnonymously(auth)}
-catch(e){console.error(e);setStatus("Firebase Authenticationに接続できなかった。匿名ログインを有効にしてね。")}
-}
-onAuthStateChanged(auth,u=>{
-authUser=u;
-if(u&&!roomId)setStatus("接続OK。部屋コードを入力すると参加、空欄なら新規作成。")
-});
-
-function initThree(){
-if(renderer)return;
-scene=new THREE.Scene();
-scene.background=new THREE.Color(0x87a0b8);
-scene.fog=new THREE.Fog(0x87a0b8,20,80);
-
-camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.05,120);
-camera.position.set(0,EYE_HEIGHT,8);
-
-renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});
-renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));
-renderer.setSize(innerWidth,innerHeight);
-renderer.shadowMap.enabled=true;
-$("game").appendChild(renderer.domElement);
-
-scene.add(new THREE.HemisphereLight(0xcfe5ff,0x2c3340,2));
-const sun=new THREE.DirectionalLight(0xffffff,2);
-sun.position.set(10,20,6);sun.castShadow=true;scene.add(sun);
-
-arenaGroup=new THREE.Group();scene.add(arenaGroup);
-
-const floor=new THREE.Mesh(
-new THREE.BoxGeometry(48,.5,48),
-new THREE.MeshStandardMaterial({color:0x313b48,roughness:.92})
-);
-floor.position.y=-.3;floor.receiveShadow=true;arenaGroup.add(floor);
-
-const wallMat=new THREE.MeshStandardMaterial({color:0x596579,roughness:.82});
-const crateMat=new THREE.MeshStandardMaterial({color:0x9e7b55,roughness:.95});
-const metalMat=new THREE.MeshStandardMaterial({color:0x78879a,roughness:.52,metalness:.55});
-
-function addBox(x,y,z,w,h,d,mat){
-const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);
-m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;arenaGroup.add(m)
-}
-addBox(0,3,-24,48,6,.8,wallMat);
-addBox(0,3,24,48,6,.8,wallMat);
-addBox(-24,3,0,.8,6,48,wallMat);
-addBox(24,3,0,.8,6,48,wallMat);
-platforms.forEach(p=>addBox(p.x,p.y,p.z,p.w,p.h,p.d,p.h>=2?crateMat:metalMat));
-
-controls=new PointerLockControls(camera,renderer.domElement);
-renderer.domElement.addEventListener("click",()=>{
-if(started&&innerWidth>700)controls.lock()
-});
-
-addEventListener("keydown",e=>{
-keys.add(e.code);
-markActivity();
-if(e.code==="Space"){
-e.preventDefault();
-if(started)jumpOrGrab()
-}
-});
-addEventListener("keyup",e=>keys.delete(e.code));
-addEventListener("mousedown",e=>{if(e.button===0&&started)shoot()});
-addEventListener("resize",onResize);
-
-setupMobileControls();
-clock=new THREE.Clock();
-animate()
-}
-
-function onResize(){
-if(!camera||!renderer)return;
-camera.aspect=innerWidth/innerHeight;
-camera.updateProjectionMatrix();
-renderer.setSize(innerWidth,innerHeight)
-}
-
-function makePlayerMesh(color){
-const g=new THREE.Group();
-const body=new THREE.Mesh(
-new THREE.CapsuleGeometry(.42,1,4,8),
-new THREE.MeshStandardMaterial({color,roughness:.68})
-);
-body.position.y=.86;body.castShadow=true;g.add(body);
-
-const visor=new THREE.Mesh(
-new THREE.BoxGeometry(.52,.18,.08),
-new THREE.MeshStandardMaterial({color:0x101820,metalness:.7,roughness:.2})
-);
-visor.position.set(0,1.45,-.37);g.add(visor);
-
-const gun=new THREE.Mesh(
-new THREE.BoxGeometry(.12,.12,.65),
-new THREE.MeshStandardMaterial({color:0x222831,metalness:.65,roughness:.3})
-);
-gun.position.set(.38,1.02,-.25);gun.rotation.x=-.1;g.add(gun);
-return g
-}
-
-function colorFromId(id){
-let h=0;
-for(let i=0;i<id.length;i++)h=(h*31+id.charCodeAt(i))>>>0;
-const c=new THREE.Color();c.setHSL((h%360)/360,.72,.55);return c
-}
-
-function updateRemotePlayers(){
-for(const[id,state]of remoteState){
-if(id===playerId)continue;
-if(!state||state.alive===false){
-if(remotePlayers.has(id))remotePlayers.get(id).visible=false;
-continue
-}
-let mesh=remotePlayers.get(id);
-if(!mesh){
-mesh=makePlayerMesh(colorFromId(id));
-arenaGroup.add(mesh);remotePlayers.set(id,mesh)
-}
-mesh.visible=true;
-const targetY=(state.y??EYE_HEIGHT)-EYE_HEIGHT;
-mesh.userData.target=new THREE.Vector3(state.x,targetY,state.z);
-mesh.position.lerp(mesh.userData.target,.35);
-mesh.rotation.y=state.yaw||0
-}
-for(const[id,mesh]of remotePlayers){
-if(!remoteState.has(id)){
-arenaGroup.remove(mesh);remotePlayers.delete(id)
-}}
-}
-
-function horizontalBlocked(x,z){
-const r=PLAYER_RADIUS;
-if(Math.abs(x)>22.8-r||Math.abs(z)>22.8-r)return true;
-for(const p of platforms){
-const top=p.y+p.h/2;
-const feet=local.y-EYE_HEIGHT;
-if(feet>=top-.08)continue;
-if(Math.abs(x-p.x)<p.w/2+r&&Math.abs(z-p.z)<p.d/2+r)return true
-}
-return false
-}
-
-function groundTopAt(x,z){
-let top=0;
-for(const p of platforms){
-if(Math.abs(x-p.x)<=p.w/2-.1&&Math.abs(z-p.z)<=p.d/2-.1)
-top=Math.max(top,p.y+p.h/2)
-}
-return top
-}
-
-function canGrab(){
-if(!started||local.grounded||local.hp<=0||local.grabbing)return false;
-const head=local.y+(PLAYER_HEIGHT-EYE_HEIGHT);
-for(const p of platforms){
-const pt=p.y+p.h/2;
-const hd=Math.max(Math.abs(local.x-p.x)-p.w/2,Math.abs(local.z-p.z)-p.d/2,0);
-if(hd<=GRAB_DISTANCE&&pt<head-.02&&pt>local.y-EYE_HEIGHT-1)return true
-}
-return false
-}
-
-function getGrabPlatform(){
-if(!canGrab())return null;
-const head=local.y+(PLAYER_HEIGHT-EYE_HEIGHT);
-let best=null,bd=Infinity;
-for(const p of platforms){
-const pt=p.y+p.h/2;
-const hd=Math.max(Math.abs(local.x-p.x)-p.w/2,Math.abs(local.z-p.z)-p.d/2,0);
-if(hd<=GRAB_DISTANCE&&pt<head-.02&&pt>local.y-EYE_HEIGHT-1&&hd<bd){
-best=p;bd=hd
-}}
-return best
-}
-
-function jumpOrGrab(){
-if(!started||ending||local.hp<=0)return;
-if(canGrab()){
-const p=getGrabPlatform();
-if(!p)return;
-local.grabbing=true;
-local.grabStartedAt=performance.now();
-local.vy=0;
-setTimeout(()=>{
-if(!started||ending||!local.grabbing)return;
-const top=p.y+p.h/2;
-local.x=clamp(local.x,p.x-p.w/2+PLAYER_RADIUS,p.x+p.w/2-PLAYER_RADIUS);
-local.z=clamp(local.z,p.z-p.d/2+PLAYER_RADIUS,p.z+p.d/2-PLAYER_RADIUS);
-local.y=top+EYE_HEIGHT;
-local.vy=0;
-local.grounded=true;
-local.grabbing=false;
-syncLocalState(true)
-},GRAB_DURATION);
-return
-}
-if(local.grounded){
-local.vy=JUMP_SPEED;
-local.grounded=false
-}
-}
-
-function spawnPosition(i=0){
-const p=[[-18,-18],[18,-18],[-18,18],[18,18],[0,-18],[0,18],[-18,0],[18,0]];
-return p[i%p.length]
-}
-
-function getSafeSpawnPositions(count){
-const c=[
-[-18,-18],[18,-18],[-18,18],[18,18],[0,-18],[0,18],[-18,0],[18,0],
-[-20,-8],[20,-8],[-20,8],[20,8],[-8,-20],[8,-20],[-8,20],[8,20]
-],out=[];
-for(const p of c){
-if(out.every(q=>Math.hypot(q[0]-p[0],q[1]-p[1])>=7))out.push(p);
-if(out.length>=count)break
-}
-return out
-}
-
-function resetLocalForStart(slot=0){
-const[x,z]=spawnPosition(slot);
-local.x=x;local.z=z;local.y=EYE_HEIGHT;local.yaw=0;local.pitch=0;
-local.hp=MAX_HP;local.kills=0;local.deaths=0;local.respawnAt=0;
-local.vy=0;local.grounded=true;local.grabbing=false;
-local.invulnerableUntil=Date.now()+3000;
-local.lastActiveAt=Date.now();
-camera.position.set(x,local.y,z);camera.rotation.set(0,0,0);
-if(controls?.isLocked)controls.unlock()
-}
-
-async function createOrJoinRoom(){
-if(!authUser)return setStatus("まだFirebaseに接続中。少し待ってからもう一度やってね。");
-initThree();
-playerName=sanitizeName(nameInput.value);
-const code=roomInput.value.trim().toUpperCase();
-if(code)await joinRoomByCode(code);else await createRoom()
-}
-
-async function createRoom(){
-playerId=authUser.uid;isHost=true;
-for(let n=0;n<5;n++){
-const id=randomRoomId();
-const ref=doc(db,"matches",id);
-if((await getDoc(ref)).exists())continue;
-roomId=id;
-try{
-await setDoc(ref,{status:"lobby",hostUid:playerId,createdAt:serverTimestamp(),startedAt:null,endAt:null,winnerUid:null});
-await setDoc(doc(db,"matches",roomId,"players",playerId),{
-uid:playerId,name:playerName,x:0,y:EYE_HEIGHT,z:0,yaw:0,pitch:0,
-hp:MAX_HP,kills:0,deaths:0,alive:true,joinedAt:serverTimestamp(),
-updatedAt:serverTimestamp(),lastActiveAt:Date.now(),invulnerableUntil:0
-});
-enterLobby();return
-}catch(e){console.error(e);roomId=null;setStatus("部屋作成に失敗。\n"+e.message);return}
-}
-setStatus("部屋コードを作れなかった。もう一度試してね。")
-}
-
-async function joinRoomByCode(id){
-roomId=id;playerId=authUser.uid;isHost=false;
-try{
-const ref=doc(db,"matches",roomId);
-const snap=await getDoc(ref);
-if(!snap.exists()){
-isHost=true;
-await setDoc(ref,{status:"lobby",hostUid:playerId,createdAt:serverTimestamp(),startedAt:null,endAt:null,winnerUid:null})
-}else if(snap.data().status!=="lobby")throw new Error("その試合はすでに開始済み。");
-
-const me=await getDoc(doc(db,"matches",roomId,"players",playerId));
-if(!me.exists()&&(await getPlayersOnce(roomId)).length>=MAX_PLAYERS)throw new Error("満員。");
-
-await setDoc(doc(db,"matches",roomId,"players",playerId),{
-uid:playerId,name:playerName,x:0,y:EYE_HEIGHT,z:0,yaw:0,pitch:0,
-hp:MAX_HP,kills:0,deaths:0,alive:true,joinedAt:serverTimestamp(),
-updatedAt:serverTimestamp(),lastActiveAt:Date.now(),invulnerableUntil:0
-});
-enterLobby()
-}catch(e){
-console.error(e);roomId=null;setStatus("参加/作成できなかった。\n"+e.message)
-}
-}
-
-async function getPlayersOnce(id=roomId){
-const s=await getDocs(collection(db,"matches",id,"players"));
-return s.docs.map(d=>({id:d.id,...d.data()}))
-}
-
-function enterLobby(){
-menu.style.display="none";hud.style.display="none";endScreen.style.display="none";lobby.style.display="flex";
-roomIdLabel.textContent=roomId;
-startBtn.style.display=isHost?"inline-block":"none";
-subscribeRoom();subscribePlayers()
-}
-
-function subscribeRoom(){
-roomUnsub?.();
-roomUnsub=onSnapshot(doc(db,"matches",roomId),async snap=>{
-if(!snap.exists()){
-handleRoomDeleted();
-lobby.style.display="none";hud.style.display="none";endScreen.style.display="none";menu.style.display="flex";
-setStatus("この部屋は削除されたよ。ロビーに戻った！");
-return
-}
-const data=snap.data();
-if(data.hostUid&&playerId)isHost=data.hostUid===playerId;
-startBtn.style.display=isHost&&data.status==="lobby"?"inline-block":"none";
-
-const created=data.createdAt?.toMillis?data.createdAt.toMillis():Number(data.createdAt||0);
-if(created&&Date.now()-created>=STALE_MATCH_LIMIT){
-cleanupInactiveOrStale();return
-}
-if(data.status==="running"&&!started)startMatchClient(data);
-if(data.status==="finished"&&!ending)finishMatchClient(data)
-},e=>console.error("room snapshot",e))
-}
-
-function subscribePlayers(){
-playersUnsub?.();
-playersUnsub=onSnapshot(collection(db,"matches",roomId,"players"),snap=>{
-const arr=[];remoteState.clear();
-snap.docs.forEach(d=>{
-const data=d.data();arr.push({id:d.id,...data});remoteState.set(d.id,data);
-if(d.id===playerId){
-if(typeof data.hp==="number")local.hp=data.hp;
-if(typeof data.kills==="number")local.kills=data.kills;
-if(typeof data.deaths==="number")local.deaths=data.deaths;
-}
-});
-playerCount.textContent=arr.length;
-playersList.innerHTML=arr.sort((a,b)=>(b.kills||0)-(a.kills||0))
-.map(p=>`<li><span>${esc(p.name||"Player")}${p.uid===playerId?"（自分）":""}</span><span>${p.kills||0} K</span></li>`).join("");
-updateRemotePlayers();
-if(started){
-const me=arr.find(p=>p.id===playerId);
-if(me&&me.hp<=0&&local.respawnAt===0)local.respawnAt=performance.now()+1800
-}
-},e=>console.error("players snapshot",e))
-}
-
-async function startMatchHost(){
-if(!roomId||!isHost)return;
-const players=await getPlayersOnce();
-if(players.length<2){alert("2人以上で試合開始にしてね。");return}
-const endMs=Date.now()+MATCH_DURATION*1000;
-await updateDoc(doc(db,"matches",roomId),{
-status:"running",startedAt:serverTimestamp(),endAt:endMs,winnerUid:null
-});
-const spawns=getSafeSpawnPositions(players.length),batch=writeBatch(db);
-players.forEach((p,i)=>{
-const[x,z]=spawns[i];
-batch.update(doc(db,"matches",roomId,"players",p.id),{
-x,y:EYE_HEIGHT,z,yaw:Math.atan2(-z,-x),pitch:0,
-hp:MAX_HP,kills:0,deaths:0,alive:true,lastActiveAt:Date.now(),
-invulnerableUntil:Date.now()+3000,updatedAt:serverTimestamp()
-})
-});
-await batch.commit()
-}
-
-function startMatchClient(data){
-started=true;ending=false;lobby.style.display="none";hud.style.display="block";endScreen.style.display="none";
-matchEndAt=typeof data.endAt==="number"?data.endAt:Date.now()+MATCH_DURATION*1000;
-getPlayersOnce().then(ps=>{
-const i=Math.max(0,ps.findIndex(p=>p.id===playerId));
-resetLocalForStart(i);syncLocalState(true)
-});
-showMessage("MATCH START",900)
-}
-
-async function syncLocalState(force=false){
-if(!roomId||!playerId||!started)return;
-const now=performance.now();
-if(!force&&now-local.lastWrite<83)return;
-local.lastWrite=now;
-try{
-await updateDoc(doc(db,"matches",roomId,"players",playerId),{
-x:+local.x.toFixed(3),y:+local.y.toFixed(3),z:+local.z.toFixed(3),
-yaw:+local.yaw.toFixed(4),pitch:+local.pitch.toFixed(4),
-hp:Math.max(0,Math.round(local.hp)),kills:Math.max(0,Math.round(local.kills)),
-deaths:Math.max(0,Math.round(local.deaths)),alive:local.hp>0,
-lastActiveAt:local.lastActiveAt||Date.now(),
-invulnerableUntil:local.invulnerableUntil||0,updatedAt:serverTimestamp()
-})
-}catch(e){console.warn("sync failed",e)}
-}
-
-function movePlayer(dt){
-if(!started||ending||local.hp<=0||local.grabbing)return;
-if(innerWidth>700&&controls?.isLocked){
-local.yaw=camera.rotation.y;local.pitch=camera.rotation.x
-}
-
-let f=0,s=0;
-if(innerWidth<=700){
-f=-mobileMove.y;s=mobileMove.x
-}else{
-if(keys.has("KeyW"))f++;
-if(keys.has("KeyS"))f--;
-if(keys.has("KeyD"))s++;
-if(keys.has("KeyA"))s--
-}
-const len=Math.hypot(f,s)||1;f/=len;s/=len;
-const sin=Math.sin(local.yaw),cos=Math.cos(local.yaw);
-const dx=(s*cos+f*sin)*PLAYER_SPEED*dt;
-const dz=(f*cos-s*sin)*PLAYER_SPEED*dt;
-
-if(!horizontalBlocked(local.x+dx,local.z))local.x+=dx;
-if(!horizontalBlocked(local.x,local.z+dz))local.z+=dz;
-
-local.vy-=GRAVITY*dt;
-let nextY=local.y+local.vy*dt;
-const ground=groundTopAt(local.x,local.z)+EYE_HEIGHT;
-if(local.vy<=0&&nextY<=ground){
-nextY=ground;local.vy=0;local.grounded=true
-}else local.grounded=false;
-
-local.y=nextY;
-if(local.y<-8){
-const[x,z]=spawnPosition(Math.floor(Math.random()*8));
-local.x=x;local.z=z;local.y=EYE_HEIGHT;local.vy=0;local.grounded=true
-}
-camera.position.set(local.x,local.y,local.z);
-camera.rotation.set(local.pitch,local.yaw,0,"YXZ");
-
-if(f||s||Math.abs(local.vy)>.1)markActivity();
-updateActionButtons()
-}
-
-function shoot(){
-if(!started||ending||local.hp<=0||local.grabbing)return;
-const now=performance.now();
-if(now-local.lastShot<FIRE_INTERVAL)return;
-local.lastShot=now;markActivity();
-
-camera.updateMatrixWorld();
-const dir=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion).normalize();
-const origin=camera.position.clone().addScaledVector(dir,.55);
-
-const mesh=new THREE.Mesh(
-new THREE.SphereGeometry(.075,8,8),
-new THREE.MeshBasicMaterial({color:0xffe27a})
-);
-mesh.position.copy(origin);arenaGroup.add(mesh);
-bullets.push({mesh,velocity:dir.multiplyScalar(BULLET_SPEED),born:performance.now(),ownerId:playerId});
-showMessage("PEW",120);updateActionButtons()
-}
-
-function updateBullets(dt){
-for(let i=bullets.length-1;i>=0;i--){
-const b=bullets[i],old=b.mesh.position.clone();
-b.mesh.position.addScaledVector(b.velocity,dt);
-let remove=performance.now()-b.born>BULLET_LIFETIME*1000;
-const dist=old.distanceTo(b.mesh.position),steps=Math.max(1,Math.ceil(dist/.25));
-
-for(let n=1;n<=steps&&!remove;n++){
-const q=old.clone().lerp(b.mesh.position,n/steps);
-
-for(const p of platforms){
-if(q.x>=p.x-p.w/2&&q.x<=p.x+p.w/2&&q.y>=p.y-p.h/2&&q.y<=p.y+p.h/2&&q.z>=p.z-p.d/2&&q.z<=p.z+p.d/2){
-remove=true;break
-}}
-if(remove)break;
-
-for(const[id,mesh]of remotePlayers){
-if(id===b.ownerId||!mesh.visible)continue;
-const center=mesh.position.clone().add(new THREE.Vector3(0,.9,0));
-if(q.distanceTo(center)<.9){
-remove=true;applyDamage(id);break
-}}
-}
-if(remove){
-arenaGroup.remove(b.mesh);b.mesh.geometry.dispose();b.mesh.material.dispose();bullets.splice(i,1)
-}
-}
-}
-
-async function applyDamage(targetId){
-try{
-const ref=doc(db,"matches",roomId,"players",targetId),snap=await getDoc(ref);
-if(!snap.exists())return;
-const t=snap.data();
-if(!t.alive||(t.hp||0)<=0)return;
-if(Number(t.invulnerableUntil||0)>Date.now())return;
-
-const hp=Math.max(0,(t.hp||0)-HIT_DAMAGE);
-const up={hp,alive:hp>0,updatedAt:serverTimestamp()};
-if(hp<=0){
-up.deaths=(t.deaths||0)+1;
-await updateDoc(ref,up);
-const meRef=doc(db,"matches",roomId,"players",playerId),me=await getDoc(meRef);
-if(me.exists()){
-const k=(me.data().kills||0)+1;
-await updateDoc(meRef,{kills:k,lastActiveAt:Date.now(),updatedAt:serverTimestamp()});
-local.kills=k;
-showMessage("+1 KILL",600);
-if(k>=MAX_SCORE)tryFinishMatch("score")
-}
-}else await updateDoc(ref,up)
-}catch(e){console.warn("damage failed",e)}
-}
-
-async function respawnIfNeeded(){
-if(local.hp>0||!local.respawnAt||performance.now()<local.respawnAt)return;
-local.respawnAt=0;
-const[x,z]=spawnPosition(Math.floor(Math.random()*8));
-local.x=x;local.z=z;local.y=EYE_HEIGHT;local.vy=0;local.grounded=true;
-local.hp=MAX_HP;local.invulnerableUntil=Date.now()+3000;markActivity();
-await syncLocalState(true);showMessage("RESPAWN",650)
-}
-
-async function tryFinishMatch(reason){
-if(!isHost||!roomId||ending)return;
-const room=await getDoc(doc(db,"matches",roomId));
-if(!room.exists()||room.data().status!=="running")return;
-const ps=await getPlayersOnce();
-ps.sort((a,b)=>(b.kills||0)-(a.kills||0)||(a.deaths||0)-(b.deaths||0));
-await updateDoc(doc(db,"matches",roomId),{
-status:"finished",winnerUid:ps[0]?.id||null,finishedAt:serverTimestamp(),finishReason:reason
-})
-}
-
-async function finishMatchClient(){
-if(ending)return;
-ending=true;started=false;
-if(controls?.isLocked)controls.unlock();
-hud.style.display="none";endScreen.style.display="flex";
-const ps=await getPlayersOnce().catch(()=>[]);
-ps.sort((a,b)=>(b.kills||0)-(a.kills||0)||(a.deaths||0)-(b.deaths||0));
-const w=ps[0];
-$("winnerTitle").textContent=w?`${w.name||"Player"} の勝ち！`:"試合終了";
-$("resultText").textContent=w?`勝者: ${w.name} / ${w.kills||0} K - ${w.deaths||0} D`:"勝者情報を取得できなかった。";
-$("finalRanking").innerHTML=ps.map((p,i)=>
-`<div style="padding:8px 10px;margin:6px 0;background:rgba(255,255,255,.05);border-radius:10px">${i+1}. ${esc(p.name||"Player")} — ${p.kills||0} K / ${p.deaths||0} D</div>`
-).join("");
-if(isHost)await deleteMatchCompletely().catch(e=>console.warn("delete match failed",e))
-}
-
-async function deleteMatchCompletely(){
-if(!roomId)return;
-const ps=await getPlayersOnce().catch(()=>[]);
-const batch=writeBatch(db);
-ps.forEach(p=>batch.delete(doc(db,"matches",roomId,"players",p.id)));
-batch.delete(doc(db,"matches",roomId));
-await batch.commit()
-}
-
-function handleRoomDeleted(){
-roomUnsub?.();playersUnsub?.();
-roomUnsub=null;playersUnsub=null;
-roomId=null;isHost=false;started=false;ending=false;
-remoteState.clear();
-for(const m of remotePlayers.values())arenaGroup?.remove(m);
-remotePlayers.clear();
-for(const b of bullets)arenaGroup?.remove(b.mesh);
-bullets.length=0
-}
-
-async function leaveRoom(){
-if(!roomId||!playerId)return;
-try{
-if(started){
-await updateDoc(doc(db,"matches",roomId,"players",playerId),{alive:false,hp:0,lastActiveAt:Date.now(),updatedAt:serverTimestamp()})
-}else{
-await deleteDoc(doc(db,"matches",roomId,"players",playerId));
-if(isHost){
-const ps=await getPlayersOnce().catch(()=>[]);
-if(ps.length===0)await deleteDoc(doc(db,"matches",roomId))
-}}
-}catch(e){console.warn("leave failed",e)}
-handleRoomDeleted();
-lobby.style.display="none";endScreen.style.display="none";hud.style.display="none";menu.style.display="flex";
-setStatus("退出したよ。")
-}
-
-async function copyRoomId(){
-try{await navigator.clipboard.writeText(roomId||"");showMessage("コピーした！",700)}
-catch{alert(`部屋ID: ${roomId}`)}
-}
-
-function setProgress(el,p){
-el?.style.setProperty("--progress",`${clamp(p,0,1)*100}%`)
-}
-
-function updateActionButtons(){
-const jump=$("jumpButton"),fire=$("fireButton");
-if(!jump||!fire)return;
-
-const fp=clamp((performance.now()-local.lastShot)/FIRE_INTERVAL,0,1);
-setProgress(fire,fp);
-
-if(started&&!ending&&local.hp>0){
-if(canGrab()){
-jump.textContent="GRAB";jump.classList.add("grab");jump.classList.remove("disabledGrab")
-}else if(!local.grounded){
-jump.textContent="GRAB";jump.classList.remove("grab");jump.classList.add("disabledGrab")
-}else{
-jump.textContent="JUMP";jump.classList.remove("grab","disabledGrab")
-}
-}
-setProgress(jump,local.grounded||canGrab()?1:.15)
-}
-
-function setupMobileControls(){
-const moveStick=$("moveStick"),knob=$("moveKnob"),look=$("lookArea");
-const fire=$("fireButton"),jump=$("jumpButton");
-let movePointer=null,lookPointer=null,lastLookX=0,lastLookY=0;
-
-function setKnob(x,y){
-const r=moveStick.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
-let dx=x-cx,dy=y-cy,max=45,len=Math.hypot(dx,dy)||1;
-if(len>max){dx=dx/len*max;dy=dy/len*max}
-knob.style.transform=`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px))`;
-mobileMove.x=dx/max;mobileMove.y=dy/max;markActivity()
-}
-function resetKnob(){
-knob.style.transform="translate(-50%,-50%)";mobileMove.x=mobileMove.y=0
-}
-
-moveStick.addEventListener("pointerdown",e=>{
-e.preventDefault();movePointer=e.pointerId;moveStick.setPointerCapture(e.pointerId);setKnob(e.clientX,e.clientY)
-});
-moveStick.addEventListener("pointermove",e=>{if(e.pointerId===movePointer)setKnob(e.clientX,e.clientY)});
-["pointerup","pointercancel"].forEach(t=>moveStick.addEventListener(t,e=>{
-if(e.pointerId===movePointer){movePointer=null;resetKnob()}
-}));
-
-look.addEventListener("pointerdown",e=>{
-e.preventDefault();lookPointer=e.pointerId;lastLookX=e.clientX;lastLookY=e.clientY;look.setPointerCapture(e.pointerId);markActivity()
-});
-look.addEventListener("pointermove",e=>{
-if(e.pointerId!==lookPointer||!started||local.hp<=0)return;
-const dx=e.clientX-lastLookX,dy=e.clientY-lastLookY;
-lastLookX=e.clientX;lastLookY=e.clientY;
-local.yaw-=dx*LOOK_SPEED*1.7;
-local.pitch=clamp(local.pitch-dy*LOOK_SPEED*1.7,-1.45,1.45);
-markActivity()
-});
-["pointerup","pointercancel"].forEach(t=>look.addEventListener(t,e=>{
-if(e.pointerId===lookPointer)lookPointer=null
-}));
-
-fire.addEventListener("pointerdown",e=>{
-e.preventDefault();mobileFire=true;markActivity();shoot()
-});
-["pointerup","pointercancel","pointerleave"].forEach(t=>fire.addEventListener(t,()=>mobileFire=false));
-
-jump.addEventListener("pointerdown",e=>{
-e.preventDefault();markActivity();jumpOrGrab()
-})
-}
-
-function markActivity(){
-if(!roomId||!playerId)return;
-local.lastActiveAt=Date.now();
-const now=Date.now();
-if(now-lastActivityPersist<5000)return;
-lastActivityPersist=now;
-updateDoc(doc(db,"matches",roomId,"players",playerId),{
-lastActiveAt:local.lastActiveAt,updatedAt:serverTimestamp()
-}).catch(()=>{})
-}
-
-async function returnInactivePlayerToLobby(){
-if(!roomId||!playerId)return;
-const rid=roomId;
-try{
-const rs=await getDoc(doc(db,"matches",rid));
-const ps=await getPlayersOnce(rid).catch(()=>[]);
-if(rs.exists()&&rs.data().hostUid===playerId){
-const next=ps.find(p=>p.id!==playerId);
-if(next)await updateDoc(doc(db,"matches",rid),{hostUid:next.id})
-}
-await deleteDoc(doc(db,"matches",rid,"players",playerId))
-}catch(e){console.warn(e)}
-started=false;ending=false;
-if(controls?.isLocked)controls.unlock();
-hud.style.display="none";endScreen.style.display="none";menu.style.display="flex";
-setStatus("1分以上操作がなかったのでロビーに戻したよ。")
-}
-
-async function cleanupInactiveOrStale(){
-if(!roomId||!authUser)return;
-try{
-const rs=await getDoc(doc(db,"matches",roomId));
-if(!rs.exists())return;
-const room=rs.data()||{};
-const created=room.createdAt?.toMillis?room.createdAt.toMillis():Number(room.createdAt||0);
-
-if(created&&Date.now()-created>=STALE_MATCH_LIMIT){
-await deleteMatchCompletely();
-handleRoomDeleted();lobby.style.display="none";hud.style.display="none";endScreen.style.display="none";menu.style.display="flex";
-setStatus("1日以上残っていた部屋を削除してロビーに戻ったよ。");
-return
-}
-
-const ps=await getPlayersOnce();
-if(!ps.length)return;
-const now=Date.now();
-
-if(ps.every(p=>{
-const last=Number(p.lastActiveAt||0);
-return last>0&&now-last>=INACTIVE_LIMIT
-})){
-await deleteMatchCompletely();
-handleRoomDeleted();lobby.style.display="none";hud.style.display="none";endScreen.style.display="none";menu.style.display="flex";
-setStatus("全員が1分以上操作していなかったので部屋を削除してロビーに戻ったよ。");
-return
-}
-
-const me=ps.find(p=>p.id===playerId);
-if(me&&Number(me.lastActiveAt||0)>0&&now-Number(me.lastActiveAt)>=INACTIVE_LIMIT){
-await returnInactivePlayerToLobby()
-}
-}catch(e){console.warn("cleanup failed",e)}
-}
-
-async function checkMatchTimer(){
-if(!started||ending)return;
-const left=Math.max(0,matchEndAt-Date.now());
-$("timeText").textContent=formatTime(left/1000);
-if(left<=0){
-if(isHost)await tryFinishMatch("time");
-return
-}
-if(local.kills>=MAX_SCORE&&isHost)await tryFinishMatch("score")
-}
-
-function updateHud(){
-$("healthText").textContent=Math.max(0,Math.round(local.hp));
-$("healthBar").style.width=`${clamp(local.hp/MAX_HP*100,0,100)}%`;
-$("scoreText").textContent=`${local.kills} / ${local.deaths}`
-}
-
-function animate(){
-requestAnimationFrame(animate);
-const now=performance.now(),dt=Math.min(.05,(now-lastFrame)/1000);
-lastFrame=now;
-
-movePlayer(dt);
-if(mobileFire)shoot();
-updateBullets(dt);
-respawnIfNeeded();
-updateRemotePlayers();
-updateHud();
-updateActionButtons();
-
-if(started&&!ending){
-syncLocalState(false);
-checkMatchTimer()
-}
-if(renderer&&scene&&camera)renderer.render(scene,camera)
-}
-
-function setStartProgress(p){setProgress(startBtn,p)}
-function cancelStartHold(){
-if(startHoldTimer)clearInterval(startHoldTimer);
-startHoldTimer=null;startHoldActive=false;setStartProgress(0)
-}
-function beginStartHold(){
-if(!isHost||started||ending||startHoldActive)return;
-startHoldActive=true;startHoldStart=performance.now();setStartProgress(0);
-startHoldTimer=setInterval(async()=>{
-const p=(performance.now()-startHoldStart)/START_HOLD_DURATION;
-setStartProgress(p);
-if(p>=1){
-cancelStartHold();
-await startMatchHost()
-}
-},16)
-}
-
-createJoinBtn.addEventListener("click",createOrJoinRoom);
-
-startBtn.addEventListener("pointerdown",e=>{
-e.preventDefault();beginStartHold()
-});
-["pointerup","pointercancel","pointerleave"].forEach(t=>startBtn.addEventListener(t,cancelStartHold));
-
-copyRoomBtn.addEventListener("click",copyRoomId);
-leaveLobbyBtn.addEventListener("click",leaveRoom);
-
-backToMenuBtn.addEventListener("click",()=>{
-handleRoomDeleted();
-endScreen.style.display="none";menu.style.display="flex";
-setStatus("次の部屋を作れるよ。")
-});
-
-addEventListener("pointerdown",markActivity,{passive:true});
-addEventListener("mousemove",markActivity,{passive:true});
-addEventListener("touchstart",markActivity,{passive:true});
-
-setInterval(()=>{
-if(!roomId||!authUser)return;
-cleanupInactiveOrStale();
-if(started&&isHost&&!ending)checkMatchTimer()
-},10000);
-
-bootAuth();
-</script>
-
-<!--
-Firestoreルール例:
-
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /matches/{matchId} {
-      allow read, write: if request.auth != null;
-
-      match /players/{playerId} {
-        allow read: if request.auth != null;
-        allow create: if request.auth != null && request.auth.uid == playerId;
-        allow update: if request.auth != null;
-        allow delete: if request.auth != null;
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Firebase Online 3D FPS</title>
+  <style>
+    :root {
+      --ui-bg: rgba(10, 15, 25, 0.78);
+      --ui-border: rgba(255,255,255,0.16);
+      --accent: #66d9ff;
+      --danger: #ff5e6c;
+      --ok: #72f28b;
+      --text: #f4f7fb;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #000;
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      touch-action: none;
+    }
+
+    canvas {
+      display: block;
+    }
+
+    button, input {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    #game {
+      position: fixed;
+      inset: 0;
+    }
+
+    #menu, #lobby, #endScreen {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 50% 45%, rgba(35,50,80,.92), rgba(5,8,14,.98));
+    }
+
+    .panel {
+      width: min(92vw, 520px);
+      padding: 24px;
+      border: 1px solid var(--ui-border);
+      border-radius: 20px;
+      background: var(--ui-bg);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 20px 70px rgba(0,0,0,.45);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 32px;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+    }
+
+    p {
+      color: #b9c2d0;
+      line-height: 1.55;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--ui-border);
+      outline: none;
+      color: white;
+      background: rgba(255,255,255,.06);
+    }
+
+    input:focus {
+      border-color: var(--accent);
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      background: var(--accent);
+      color: #041018;
+      font-weight: 700;
+    }
+
+    button.secondary {
+      background: rgba(255,255,255,.1);
+      color: white;
+      border: 1px solid var(--ui-border);
+    }
+
+    button.danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    button:disabled {
+      opacity: .5;
+      cursor: default;
+    }
+
+    #status {
+      min-height: 24px;
+      color: #b9c2d0;
+      margin-top: 12px;
+      white-space: pre-wrap;
+    }
+
+    #lobby {
+      display: none;
+    }
+
+    #endScreen {
+      display: none;
+    }
+
+    #hud {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      pointer-events: none;
+      display: none;
+    }
+
+    #topbar {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      right: 16px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .hudBox {
+      background: rgba(7,11,18,.63);
+      border: 1px solid var(--ui-border);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+
+    #healthBarOuter {
+      width: 240px;
+      height: 16px;
+      border-radius: 99px;
+      overflow: hidden;
+      background: rgba(255,255,255,.12);
+      margin-top: 4px;
+    }
+
+    #healthBar {
+      height: 100%;
+      width: 100%;
+      background: var(--ok);
+      transition: width .08s linear;
+    }
+
+    #crosshair {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 18px;
+      height: 18px;
+      transform: translate(-50%,-50%);
+    }
+
+    #crosshair::before,
+    #crosshair::after {
+      content: "";
+      position: absolute;
+      background: rgba(255,255,255,.92);
+      box-shadow: 0 0 4px rgba(0,0,0,.8);
+    }
+
+    #crosshair::before {
+      left: 8px;
+      top: 0;
+      width: 2px;
+      height: 18px;
+    }
+
+    #crosshair::after {
+      left: 0;
+      top: 8px;
+      width: 18px;
+      height: 2px;
+    }
+
+    #message {
+      position: absolute;
+      left: 50%;
+      bottom: 12%;
+      transform: translateX(-50%);
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(0,0,0,.55);
+      border: 1px solid var(--ui-border);
+      opacity: 0;
+      transition: opacity .15s;
+    }
+
+    #help {
+      position: absolute;
+      left: 16px;
+      bottom: 16px;
+      max-width: 500px;
+      font-size: 13px;
+      color: #d5dbe6;
+      background: rgba(7,11,18,.55);
+      border: 1px solid var(--ui-border);
+      border-radius: 12px;
+      padding: 9px 11px;
+    }
+
+    #mobileControls {
+      display: none;
+    }
+
+    .small {
+      font-size: 12px;
+      color: #96a2b5;
+    }
+
+    code {
+      color: #cceeff;
+    }
+
+    #playersList {
+      margin: 12px 0 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 8px;
+      max-height: 220px;
+      overflow: auto;
+    }
+
+    #playersList li {
+      padding: 9px 11px;
+      border-radius: 10px;
+      background: rgba(255,255,255,.05);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    .holdButton {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .holdButton::before {
+      content: "";
+      position: absolute;
+      inset: 3px;
+      border-radius: 10px;
+      background: conic-gradient(
+        var(--accent) calc(var(--progress, 0) * 1turn),
+        rgba(255,255,255,.12) 0
+      );
+      opacity: .9;
+      pointer-events: none;
+    }
+
+    .holdButton::after {
+      content: "";
+      position: absolute;
+      inset: 6px;
+      border-radius: 8px;
+      background: var(--accent);
+      pointer-events: none;
+    }
+
+    .holdButton > span {
+      position: relative;
+      z-index: 2;
+    }
+
+    #fireButton,
+    #jumpButton {
+      position: relative;
+      overflow: hidden;
+    }
+
+    #fireButton::before,
+    #jumpButton::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: conic-gradient(
+        rgba(255,255,255,.72) calc(var(--progress, 0) * 1turn),
+        rgba(255,255,255,.10) 0
+      );
+      opacity: .7;
+      pointer-events: none;
+    }
+
+    #fireButton > span,
+    #jumpButton > span {
+      position: relative;
+      z-index: 2;
+    }
+
+    #jumpButton.grabAvailable {
+      background: rgba(102,217,255,.92);
+      color: #041018;
+    }
+
+    #jumpButton.grabUnavailable {
+      background: rgba(255,255,255,.08);
+      color: rgba(255,255,255,.35);
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    #startBtn {
+      --progress: 0;
+    }
+
+    @media (max-width: 700px) {
+      #healthBarOuter {
+        width: 150px;
+      }
+
+      #help {
+        display: none;
+      }
+
+      #mobileControls {
+        display: block;
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      .stickArea {
+        position: absolute;
+        bottom: 26px;
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.06);
+        border: 1px solid rgba(255,255,255,.12);
+        pointer-events: auto;
+        touch-action: none;
+      }
+
+      #moveStick {
+        left: 18px;
+      }
+
+      #lookArea {
+        right: 18px;
+        width: 190px;
+        border-radius: 24px;
+      }
+
+      .stickKnob {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 54px;
+        height: 54px;
+        transform: translate(-50%,-50%);
+        border-radius: 50%;
+        background: rgba(255,255,255,.2);
+      }
+
+      #fireButton {
+        position: absolute;
+        right: 42px;
+        bottom: 205px;
+        width: 74px;
+        height: 74px;
+        border-radius: 50%;
+        pointer-events: auto;
+        background: rgba(255,94,108,.78);
+        color: white;
+        border: 1px solid rgba(255,255,255,.18);
+      }
+
+      #jumpButton {
+        position: absolute;
+        right: 42px;
+        bottom: 110px;
+        width: 74px;
+        height: 74px;
+        border-radius: 50%;
+        pointer-events: auto;
+      }
+
+      #startBtn {
+        width: 150px;
       }
     }
-  }
-}
+  </style>
+</head>
 
-注意:
-- Firebase Authenticationで匿名ログインを有効にすること。
-- このコードはクライアント側で対戦情報を共有するデモなので、競技用FPSの不正耐性はない。
-- 足場は3Dの当たり判定にも使用しているため、上の足場をすり抜けない。
-- ダッシュは実装していない。
-- JUMP中、プレイヤーの頭付近に足場がある場合はJUMPがGRABに変わり、0.5秒で登る。
-- STARTは部屋主だけ使用でき、長押しで円形の進捗が埋まり、完了すると開始する。
-- 試合開始時は各プレイヤーを距離を取った位置へランダム配置し、3秒間無敵。
-- FIREは弾丸オブジェクトを発射し、BULLET_SPEEDで飛ぶ。
-- FIRE_INTERVALが最大連射速度を制御する。
-- 試合終了時にmatches/{matchId}とplayersサブコレクションを削除する。
-- 全プレイヤーが1分以上操作していない場合も部屋を削除する。
-- 1日以上残っている部屋も削除する。
--->
+<body>
+  <div id="game"></div>
+
+  <div id="menu">
+    <div class="panel">
+      <h1>Firebase 3D FPS</h1>
+      <p>オンラインで同じアリーナに入り、相手を撃ってスコアを競うシンプルな対戦FPS。</p>
+
+      <input id="nameInput" maxlength="16" placeholder="プレイヤー名" value="Player" />
+
+      <div style="height:10px"></div>
+
+      <input id="roomInput" maxlength="20" placeholder="部屋コード（空欄なら自動作成）" />
+
+      <div style="height:10px"></div>
+
+      <div class="row">
+        <button id="roomActionBtn">試合を作成/参加</button>
+      </div>
+
+      <div id="status"></div>
+
+      <div class="small" style="margin-top:12px">
+        PC: WASD移動 / マウス視点 / 左クリック射撃 / Spaceジャンプ・GRAB
+      </div>
+
+      <div class="small" style="margin-top:4px">
+        スマホ: 左スティック移動 / 右側ドラッグで視点 / FIRE / JUMP・GRAB
+      </div>
+    </div>
+  </div>
+
+  <div id="lobby">
+    <div class="panel">
+      <h2>待機中</h2>
+
+      <p>
+        部屋コード:
+        <span id="roomIdLabel" class="mono"></span>
+      </p>
+
+      <p>
+        参加者
+        <span id="playerCount">0</span> / 8
+      </p>
+
+      <ul id="playersList"></ul>
+
+      <div class="row" style="margin-top:14px">
+        <button id="startBtn" class="holdButton">
+          <span>START</span>
+        </button>
+
+        <button id="copyRoomBtn" class="secondary">
+          部屋コードをコピー
+        </button>
+
+        <button id="leaveLobbyBtn" class="danger">
+          退出
+        </button>
+      </div>
+
+      <div class="small" style="margin-top:10px">
+        部屋主だけSTARTを長押しすると試合開始。
+      </div>
+    </div>
+  </div>
+
+  <div id="hud">
+    <div id="topbar">
+      <div class="hudBox">
+        <div>HP <span id="healthText">100</span></div>
+        <div id="healthBarOuter">
+          <div id="healthBar"></div>
+        </div>
+      </div>
+
+      <div class="hudBox">
+        K/D: <span id="scoreText">0 / 0</span>
+        <br>
+        <span class="small">
+          残り時間 <span id="timeText">03:00</span>
+        </span>
+      </div>
+    </div>
+
+    <div id="crosshair"></div>
+    <div id="message"></div>
+
+    <div id="help">
+      WASDで移動 / マウスで視点 / クリックで射撃 / Spaceでジャンプ・GRAB<br>
+      銃弾には速度があり、FIREには連射間隔がある。
+    </div>
+
+    <div id="mobileControls">
+      <div id="moveStick" class="stickArea">
+        <div id="moveKnob" class="stickKnob"></div>
+      </div>
+
+      <div id="lookArea" class="stickArea"></div>
+
+      <button id="fireButton">
+        <span>FIRE</span>
+      </button>
+
+      <button id="jumpButton" class="grabUnavailable">
+        <span>JUMP</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="endScreen">
+    <div class="panel">
+      <h2 id="winnerTitle">試合終了</h2>
+
+      <p id="resultText"></p>
+
+      <div id="finalRanking"></div>
+
+      <div class="row" style="margin-top:14px">
+        <button id="backToMenuBtn">
+          ロビーへ戻る
+        </button>
+      </div>
+
+      <div class="small" style="margin-top:10px">
+        試合終了時、この試合用のFirestoreデータを削除する。
+      </div>
+    </div>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from "three";
+    import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
+
+    import {
+      initializeApp
+    } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+
+    import {
+      getFirestore,
+      collection,
+      doc,
+      setDoc,
+      getDoc,
+      getDocs,
+      updateDoc,
+      deleteDoc,
+      onSnapshot,
+      serverTimestamp,
+      writeBatch
+    } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
+    import {
+      getAuth,
+      signInAnonymously,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD5cTt3b1IeiGIOgJcC0sSFgO-Ce78JyIw",
+      authDomain: "dfps-4aa92.firebaseapp.com",
+      projectId: "dfps-4aa92",
+      storageBucket: "dfps-4aa92.firebasestorage.app",
+      messagingSenderId: "379021412536",
+      appId: "1:379021412536:web:003efdb33f6d6bb77d8c4d",
+      measurementId: "G-BG2KFTL9ZC"
+    };
+
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+
+    const $ = (id) => document.getElementById(id);
+
+    const menu = $("menu");
+    const lobby = $("lobby");
+    const hud = $("hud");
+    const endScreen = $("endScreen");
+
+    const statusEl = $("status");
+    const nameInput = $("nameInput");
+    const roomInput = $("roomInput");
+
+    const roomIdLabel = $("roomIdLabel");
+    const playerCount = $("playerCount");
+    const playersList = $("playersList");
+
+    const roomActionBtn = $("roomActionBtn");
+    const startBtn = $("startBtn");
+    const copyRoomBtn = $("copyRoomBtn");
+    const leaveLobbyBtn = $("leaveLobbyBtn");
+
+    const backToMenuBtn = $("backToMenuBtn");
+
+    const jumpButton = $("jumpButton");
+    const fireButton = $("fireButton");
+
+
+    let authUser = null;
+
+    let roomId = null;
+    let playerId = null;
+    let playerName = "Player";
+
+    let isHost = false;
+
+    let roomUnsub = null;
+    let playersUnsub = null;
+
+    let started = false;
+    let ending = false;
+
+    let roomDataCache = null;
+
+
+    const MATCH_DURATION = 180;
+    const MAX_PLAYERS = 8;
+
+    const TICK_RATE = 12;
+
+    const PLAYER_SPEED = 7.0;
+
+    const LOOK_SPEED = 0.0022;
+
+    const PLAYER_RADIUS = 0.55;
+
+    const MAX_HP = 100;
+
+    const HIT_DAMAGE = 25;
+
+    const MAX_SCORE = 10;
+
+    const JUMP_SPEED = 8.5;
+    const GRAVITY = 22;
+
+    const EYE_HEIGHT = 1.15;
+    const PLAYER_HEAD_HEIGHT = 1.75;
+
+    const GRAB_DISTANCE = 0.9;
+    const CLIMB_TIME = 500;
+
+    const BULLET_SPEED = 32;
+    const BULLET_RADIUS = 0.075;
+    const FIRE_COOLDOWN = 300;
+
+    const START_HOLD_TIME = 1200;
+
+    const START_INVINCIBILITY = 3000;
+
+    const INACTIVITY_LIMIT = 60 * 1000;
+    const STALE_MATCH_LIMIT = 24 * 60 * 60 * 1000;
+
+
+    let scene;
+    let camera;
+    let renderer;
+    let controls;
+    let clock;
+
+    let arenaGroup;
+
+
+    const remotePlayers = new Map();
+    const remoteState = new Map();
+
+    const bullets = [];
+
+    const keys = new Set();
+
+
+    let local = {
+      x: 0,
+      y: EYE_HEIGHT,
+      z: 0,
+
+      yaw: 0,
+      pitch: 0,
+
+      hp: MAX_HP,
+      kills: 0,
+      deaths: 0,
+
+      lastWrite: 0,
+
+      lastActivityAt: Date.now(),
+      lastActivitySent: 0,
+
+      respawnAt: 0,
+
+      vx: 0,
+      vy: 0,
+      vz: 0,
+
+      grounded: true,
+
+      invulnerableUntil: 0,
+
+      climbing: false,
+      climbStart: 0,
+      climbEnd: 0,
+      climbFromY: EYE_HEIGHT,
+      climbToY: EYE_HEIGHT,
+
+      nextFireAt: 0
+    };
+
+
+    let matchEndAt = 0;
+
+    let lastFrame = performance.now();
+
+    let raycaster = new THREE.Raycaster();
+
+
+    const platforms = [];
+
+
+    function setStatus(text) {
+      statusEl.textContent = text;
+    }
+
+
+    function sanitizeName(v) {
+      const s = String(v || "Player")
+        .replace(/[<>"']/g, "")
+        .trim()
+        .slice(0, 16);
+
+      return s || "Player";
+    }
+
+
+    function randomRoomId() {
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+      let out = "";
+
+      for (let i = 0; i < 6; i++) {
+        out += chars[Math.floor(Math.random() * chars.length)];
+      }
+
+      return out;
+    }
+
+
+    function clamp(v, a, b) {
+      return Math.max(a, Math.min(b, v));
+    }
+
+
+    function formatTime(sec) {
+      sec = Math.max(0, Math.ceil(sec));
+
+      const m = Math.floor(sec / 60)
+        .toString()
+        .padStart(2, "0");
+
+      const s = (sec % 60)
+        .toString()
+        .padStart(2, "0");
+
+      return `${m}:${s}`;
+    }
+
+
+    function showMessage(text, ms = 1000) {
+      const el = $("message");
+
+      el.textContent = text;
+      el.style.opacity = "1";
+
+      clearTimeout(showMessage._t);
+
+      showMessage._t = setTimeout(() => {
+        el.style.opacity = "0";
+      }, ms);
+    }
+
+
+    function markActivity() {
+      local.lastActivityAt = Date.now();
+    }
+
+
+    function timestampMs(value) {
+      if (!value) return 0;
+
+      if (typeof value === "number") {
+        return value;
+      }
+
+      if (typeof value.toMillis === "function") {
+        return value.toMillis();
+      }
+
+      if (value.seconds != null) {
+        return value.seconds * 1000 +
+          Math.floor((value.nanoseconds || 0) / 1000000);
+      }
+
+      return 0;
+    }
+
+
+    async function bootAuth() {
+      setStatus("Firebaseへ接続中…");
+
+      try {
+        await signInAnonymously(auth);
+      } catch (e) {
+        console.error(e);
+
+        setStatus(
+          "Firebase Authenticationに接続できなかった。\n" +
+          "Firebaseコンソールで匿名ログインを有効にしてね。"
+        );
+      }
+    }
+
+
+    onAuthStateChanged(auth, (user) => {
+      authUser = user;
+
+      if (user && !roomId) {
+        setStatus(
+          "接続OK。部屋コードを入力するか、空欄のまま試合を作成/参加してね。"
+        );
+      }
+    });
+
+
+    function initThree() {
+      if (renderer) return;
+
+      scene = new THREE.Scene();
+
+      scene.background = new THREE.Color(0x87a0b8);
+
+      scene.fog = new THREE.Fog(
+        0x87a0b8,
+        20,
+        80
+      );
+
+
+      camera = new THREE.PerspectiveCamera(
+        75,
+        innerWidth / innerHeight,
+        0.05,
+        120
+      );
+
+      camera.position.set(
+        0,
+        EYE_HEIGHT,
+        8
+      );
+
+
+      renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        powerPreference: "high-performance"
+      });
+
+      renderer.setPixelRatio(
+        Math.min(devicePixelRatio, 1.75)
+      );
+
+      renderer.setSize(
+        innerWidth,
+        innerHeight
+      );
+
+      renderer.shadowMap.enabled = true;
+
+      $("game").appendChild(
+        renderer.domElement
+      );
+
+
+      const hemi =
+        new THREE.HemisphereLight(
+          0xcfe5ff,
+          0x2c3340,
+          2.0
+        );
+
+      scene.add(hemi);
+
+
+      const sun =
+        new THREE.DirectionalLight(
+          0xffffff,
+          2.0
+        );
+
+      sun.position.set(
+        10,
+        20,
+        6
+      );
+
+      sun.castShadow = true;
+
+      scene.add(sun);
+
+
+      arenaGroup = new THREE.Group();
+
+      scene.add(arenaGroup);
+
+
+      const floor = new THREE.Mesh(
+        new THREE.BoxGeometry(
+          48,
+          0.5,
+          48
+        ),
+        new THREE.MeshStandardMaterial({
+          color: 0x313b48,
+          roughness: 0.92
+        })
+      );
+
+      floor.position.y = -0.3;
+
+      floor.receiveShadow = true;
+
+      arenaGroup.add(floor);
+
+
+      const wallMat =
+        new THREE.MeshStandardMaterial({
+          color: 0x596579,
+          roughness: 0.82
+        });
+
+      const crateMat =
+        new THREE.MeshStandardMaterial({
+          color: 0x9e7b55,
+          roughness: 0.95
+        });
+
+      const metalMat =
+        new THREE.MeshStandardMaterial({
+          color: 0x78879a,
+          roughness: 0.52,
+          metalness: 0.55
+        });
+
+      const platformMat =
+        new THREE.MeshStandardMaterial({
+          color: 0x4c89b8,
+          roughness: 0.7,
+          metalness: 0.1
+        });
+
+
+      platforms.length = 0;
+
+
+      const addBox = (
+        x,
+        y,
+        z,
+        w,
+        h,
+        d,
+        mat,
+        collision = true
+      ) => {
+        const m = new THREE.Mesh(
+          new THREE.BoxGeometry(
+            w,
+            h,
+            d
+          ),
+          mat
+        );
+
+        m.position.set(
+          x,
+          y,
+          z
+        );
+
+        m.castShadow = true;
+        m.receiveShadow = true;
+
+        arenaGroup.add(m);
+
+
+        if (collision) {
+          platforms.push({
+            x,
+            y,
+            z,
+            w,
+            h,
+            d,
+            top: y + h / 2
+          });
+        }
+
+        return m;
+      };
+
+
+      addBox(
+        0,
+        3.0,
+        -24,
+        48,
+        6,
+        0.8,
+        wallMat
+      );
+
+      addBox(
+        0,
+        3.0,
+        24,
+        48,
+        6,
+        0.8,
+        wallMat
+      );
+
+      addBox(
+        -24,
+        3.0,
+        0,
+        0.8,
+        6,
+        48,
+        wallMat
+      );
+
+      addBox(
+        24,
+        3.0,
+        0,
+        0.8,
+        6,
+        48,
+        wallMat
+      );
+
+
+      addBox(
+        -8,
+        1.2,
+        -8,
+        5,
+        2.4,
+        5,
+        crateMat
+      );
+
+      addBox(
+        8,
+        1.2,
+        -8,
+        5,
+        2.4,
+        5,
+        crateMat
+      );
+
+      addBox(
+        -8,
+        1.2,
+        8,
+        5,
+        2.4,
+        5,
+        crateMat
+      );
+
+      addBox(
+        8,
+        1.2,
+        8,
+        5,
+        2.4,
+        5,
+        crateMat
+      );
+
+
+      addBox(
+        0,
+        1.5,
+        0,
+        3.5,
+        3,
+        7,
+        metalMat
+      );
+
+      addBox(
+        -14,
+        0.9,
+        0,
+        3,
+        1.8,
+        10,
+        metalMat
+      );
+
+      addBox(
+        14,
+        0.9,
+        0,
+        3,
+        1.8,
+        10,
+        metalMat
+      );
+
+      addBox(
+        0,
+        0.9,
+        -14,
+        10,
+        1.8,
+        3,
+        metalMat
+      );
+
+      addBox(
+        0,
+        0.9,
+        14,
+        10,
+        1.8,
+        3,
+        metalMat
+      );
+
+
+      /*
+       * 追加の低い足場。
+       * 既存の高い足場へジャンプ→GRAB→登る
+       * というルートを作れるようにしている。
+       */
+
+      addBox(
+        -13,
+        0.45,
+        -8,
+        3.2,
+        0.9,
+        3.2,
+        platformMat
+      );
+
+      addBox(
+        -13,
+        1.35,
+        -8,
+        3.2,
+        0.9,
+        3.2,
+        platformMat
+      );
+
+      addBox(
+        13,
+        0.45,
+        -8,
+        3.2,
+        0.9,
+        3.2,
+        platformMat
+      );
+
+      addBox(
+        13,
+        1.35,
+        -8,
+        3.2,
+        0.9,
+        3.2,
+        platformMat
+      );
+
+      addBox(
+        -13,
+        0.45,
+        8,
+        3.2,
+        0.9,
+        3.2,
+        platformMat
+      );
+
+      addBox(
+        -13,
+        1.35,
+        8,
+        3.2,
+        0.9,
+        3.2,
+        platformMat
+      );
+
+      addBox(
+        13,
+        0.45,
+        8,
+        3.2,
+        0.9,
+        3.2,
+        platformMat
+      );
+
+      addBox(
+        13,
+        1.35,
+        8,
+        3.2,
+        0.9,
+        3.2,
+        platformMat
+      );
+
+
+      addBox(
+        -4.5,
+        0.45,
+        -17,
+        3.5,
+        0.9,
+        3.5,
+        platformMat
+      );
+
+      addBox(
+        -4.5,
+        1.35,
+        -17,
+        3.5,
+        0.9,
+        3.5,
+        platformMat
+      );
+
+      addBox(
+        4.5,
+        0.45,
+        17,
+        3.5,
+        0.9,
+        3.5,
+        platformMat
+      );
+
+      addBox(
+        4.5,
+        1.35,
+        17,
+        3.5,
+        0.9,
+        3.5,
+        platformMat
+      );
+
+
+      controls =
+        new PointerLockControls(
+          camera,
+          renderer.domElement
+        );
+
+
+      renderer.domElement.addEventListener(
+        "click",
+        () => {
+          if (
+            started &&
+            innerWidth > 700
+          ) {
+            controls.lock();
+          }
+        }
+      );
+
+
+      addEventListener(
+        "keydown",
+        e => {
+          keys.add(e.code);
+
+          if (
+            started &&
+            (
+              e.code === "KeyW" ||
+              e.code === "KeyA" ||
+              e.code === "KeyS" ||
+              e.code === "KeyD" ||
+              e.code === "Space"
+            )
+          ) {
+            markActivity();
+          }
+
+          if (
+            e.code === "Space" &&
+            started
+          ) {
+            e.preventDefault();
+            jumpOrGrab();
+          }
+        }
+      );
+
+
+      addEventListener(
+        "keyup",
+        e => {
+          keys.delete(e.code);
+        }
+      );
+
+
+      addEventListener(
+        "mousedown",
+        e => {
+          if (
+            e.button === 0 &&
+            started
+          ) {
+            markActivity();
+            shoot();
+          }
+        }
+      );
+
+
+      addEventListener(
+        "resize",
+        onResize
+      );
+
+
+      setupMobileControls();
+
+      clock = new THREE.Clock();
+
+      animate();
+    }
+
+
+    function onResize() {
+      if (!camera || !renderer) return;
+
+      camera.aspect =
+        innerWidth / innerHeight;
+
+      camera.updateProjectionMatrix();
+
+      renderer.setSize(
+        innerWidth,
+        innerHeight
+      );
+    }
+
+
+    function makePlayerMesh(color) {
+      const g = new THREE.Group();
+
+
+      const body =
+        new THREE.Mesh(
+          new THREE.CapsuleGeometry(
+            0.42,
+            1.0,
+            4,
+            8
+          ),
+          new THREE.MeshStandardMaterial({
+            color,
+            roughness: 0.68
+          })
+        );
+
+      body.position.y = 0.86;
+
+      body.castShadow = true;
+
+      g.add(body);
+
+
+      const visor =
+        new THREE.Mesh(
+          new THREE.BoxGeometry(
+            0.52,
+            0.18,
+            0.08
+          ),
+          new THREE.MeshStandardMaterial({
+            color: 0x101820,
+            metalness: 0.7,
+            roughness: 0.2
+          })
+        );
+
+      visor.position.set(
+        0,
+        1.45,
+        -0.37
+      );
+
+      g.add(visor);
+
+
+      const gun =
+        new THREE.Mesh(
+          new THREE.BoxGeometry(
+            0.12,
+            0.12,
+            0.65
+          ),
+          new THREE.MeshStandardMaterial({
+            color: 0x222831,
+            metalness: 0.65,
+            roughness: 0.3
+          })
+        );
+
+      gun.position.set(
+        0.38,
+        1.02,
+        -0.25
+      );
+
+      gun.rotation.x = -0.1;
+
+      g.add(gun);
+
+
+      return g;
+    }
+
+
+    function colorFromId(id) {
+      let h = 0;
+
+      for (
+        let i = 0;
+        i < id.length;
+        i++
+      ) {
+        h =
+          (h * 31 +
+            id.charCodeAt(i)) >>> 0;
+      }
+
+      const color =
+        new THREE.Color();
+
+      color.setHSL(
+        (h % 360) / 360,
+        0.72,
+        0.55
+      );
+
+      return color;
+    }
+
+
+    function updateRemotePlayers() {
+      for (const [id, state] of remoteState) {
+        if (id === playerId) continue;
+
+        if (
+          !state ||
+          state.alive === false
+        ) {
+          if (
+            remotePlayers.has(id)
+          ) {
+            remotePlayers.get(id).visible =
+              false;
+          }
+
+          continue;
+        }
+
+
+        let mesh =
+          remotePlayers.get(id);
+
+
+        if (!mesh) {
+          mesh =
+            makePlayerMesh(
+              colorFromId(id)
+            );
+
+          arenaGroup.add(mesh);
+
+          remotePlayers.set(
+            id,
+            mesh
+          );
+        }
+
+
+        mesh.visible = true;
+
+
+        const target =
+          new THREE.Vector3(
+            state.x || 0,
+            state.y || EYE_HEIGHT,
+            state.z || 0
+          );
+
+
+        mesh.userData.target =
+          target;
+
+
+        mesh.position.lerp(
+          target,
+          0.35
+        );
+
+        mesh.rotation.y =
+          state.yaw || 0;
+
+
+        if (
+          timestampMs(state.invulnerableUntil) >
+          Date.now()
+        ) {
+          mesh.traverse(obj => {
+            if (
+              obj.material &&
+              obj.material.emissive
+            ) {
+              obj.material.emissive.setHex(
+                0x225577
+              );
+            }
+          });
+        }
+      }
+
+
+      for (
+        const [id, mesh]
+        of remotePlayers
+      ) {
+        if (
+          !remoteState.has(id)
+        ) {
+          arenaGroup.remove(mesh);
+          remotePlayers.delete(id);
+        }
+      }
+    }
+
+
+    function isInsidePlatformXZ(
+      p,
+      x,
+      z,
+      extra = 0
+    ) {
+      return (
+        Math.abs(
+          x - p.x
+        ) <=
+          p.w / 2 + extra &&
+        Math.abs(
+          z - p.z
+        ) <=
+          p.d / 2 + extra
+      );
+    }
+
+
+    function isBlocked(
+      x,
+      z
+    ) {
+      const r =
+        PLAYER_RADIUS;
+
+
+      if (
+        Math.abs(x) >
+          22.8 - r ||
+        Math.abs(z) >
+          22.8 - r
+      ) {
+        return true;
+      }
+
+
+      for (const p of platforms) {
+        /*
+         * 床はここでは除外。
+         * プレイヤーは床の上を歩けるので、
+         * 水平方向の「壁・足場側面」としてのみ
+         * 判定する。
+         */
+
+        if (
+          p.h <= 0.6
+        ) {
+          continue;
+        }
+
+
+        if (
+          isInsidePlatformXZ(
+            p,
+            x,
+            z,
+            r
+          )
+        ) {
+          return true;
+        }
+      }
+
+
+      return false;
+    }
+
+
+    function horizontalBlockedByTallPlatform(
+      x,
+      z
+    ) {
+      const r =
+        PLAYER_RADIUS;
+
+
+      for (const p of platforms) {
+        if (
+          p.h <= 0.6
+        ) {
+          continue;
+        }
+
+        if (
+          isInsidePlatformXZ(
+            p,
+            x,
+            z,
+            r
+          )
+        ) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+
+    function getGroundTop(
+      x,
+      z,
+      feetY,
+      verticalVelocity
+    ) {
+      let best = 0;
+
+
+      for (const p of platforms) {
+        if (
+          !isInsidePlatformXZ(
+            p,
+            x,
+            z,
+            PLAYER_RADIUS * 0.35
+          )
+        ) {
+          continue;
+        }
+
+
+        const top = p.top;
+
+
+        /*
+         * 上から降りてきて、
+         * 足が足場の上面を通過した場合だけ着地。
+         */
+
+        if (
+          feetY >= top - 0.35 &&
+          feetY <= top + 1.0 &&
+          verticalVelocity <= 0
+        ) {
+          best =
+            Math.max(
+              best,
+              top
+            );
+        }
+      }
+
+
+      return best;
+    }
+
+
+    function spawnPosition(index = 0) {
+      const pts = [
+        [-18,-18],
+        [18,-18],
+        [-18,18],
+        [18,18],
+        [0,-18],
+        [0,18],
+        [-18,0],
+        [18,0]
+      ];
+
+      return pts[
+        index % pts.length
+      ];
+    }
+
+
+    function shuffledSpawnPositions(
+      count
+    ) {
+      const indices =
+        Array.from(
+          {
+            length: 8
+          },
+          (_, i) => i
+        );
+
+
+      for (
+        let i = indices.length - 1;
+        i > 0;
+        i--
+      ) {
+        const j =
+          Math.floor(
+            Math.random() *
+              (i + 1)
+          );
+
+        [
+          indices[i],
+          indices[j]
+        ] =
+          [
+            indices[j],
+            indices[i]
+          ];
+      }
+
+
+      return indices
+        .slice(0, count)
+        .map(i =>
+          spawnPosition(i)
+        );
+    }
+
+
+    function resetLocalForStart(
+      x,
+      z,
+      yaw = 0
+    ) {
+      local.x = x;
+      local.z = z;
+
+      local.y = EYE_HEIGHT;
+
+      local.yaw = yaw;
+      local.pitch = 0;
+
+      local.hp = MAX_HP;
+
+      local.kills = 0;
+      local.deaths = 0;
+
+      local.respawnAt = 0;
+
+      local.vx = 0;
+      local.vy = 0;
+      local.vz = 0;
+
+      local.grounded = true;
+
+      local.climbing = false;
+
+      local.invulnerableUntil =
+        Date.now() +
+        START_INVINCIBILITY;
+
+      local.nextFireAt =
+        performance.now();
+
+
+      camera.position.set(
+        x,
+        local.y,
+        z
+      );
+
+      camera.rotation.set(
+        0,
+        0,
+        0
+      );
+
+
+      if (
+        controls &&
+        controls.isLocked
+      ) {
+        controls.unlock();
+      }
+    }
+
+
+    async function createOrJoinRoom() {
+      if (!authUser) {
+        setStatus(
+          "まだFirebaseに接続中。少し待ってからもう一度やってね。"
+        );
+
+        return;
+      }
+
+
+      initThree();
+
+      playerName =
+        sanitizeName(
+          nameInput.value
+        );
+
+
+      const entered =
+        roomInput.value
+          .trim()
+          .toUpperCase();
+
+
+      if (entered) {
+        await joinOrCreateRoom(
+          entered
+        );
+
+        return;
+      }
+
+
+      let newRoomId = null;
+
+
+      for (let i = 0; i < 10; i++) {
+        const candidate =
+          randomRoomId();
+
+        const snap =
+          await getDoc(
+            doc(
+              db,
+              "matches",
+              candidate
+            )
+          );
+
+
+        if (!snap.exists()) {
+          newRoomId =
+            candidate;
+
+          break;
+        }
+      }
+
+
+      if (!newRoomId) {
+        setStatus(
+          "空いている部屋コードを作れなかった。もう一度試してね。"
+        );
+
+        return;
+      }
+
+
+      await createRoom(
+        newRoomId
+      );
+    }
+
+
+    async function joinOrCreateRoom(
+      requestedRoomId
+    ) {
+      const existing =
+        await getDoc(
+          doc(
+            db,
+            "matches",
+            requestedRoomId
+          )
+        );
+
+
+      if (!existing.exists()) {
+        await createRoom(
+          requestedRoomId
+        );
+
+        return;
+      }
+
+
+      const data =
+        existing.data();
+
+
+      if (
+        data.status !==
+        "lobby"
+      ) {
+        setStatus(
+          "その試合はすでに開始済み。"
+        );
+
+        return;
+      }
+
+
+      await joinRoom(
+        requestedRoomId
+      );
+    }
+
+
+    async function createRoom(
+      newRoomId
+    ) {
+      if (!authUser) {
+        setStatus(
+          "Firebaseに接続していない。"
+        );
+
+        return;
+      }
+
+
+      roomId = newRoomId;
+
+      playerId =
+        authUser.uid;
+
+      isHost = true;
+
+
+      try {
+        const roomRef =
+          doc(
+            db,
+            "matches",
+            roomId
+          );
+
+
+        await setDoc(
+          roomRef,
+          {
+            status: "lobby",
+
+            hostUid:
+              playerId,
+
+            createdAt:
+              serverTimestamp(),
+
+            createdAtMs:
+              Date.now(),
+
+            startedAt: null,
+
+            endAt: null,
+
+            winnerUid: null
+          }
+        );
+
+
+        await setDoc(
+          doc(
+            db,
+            "matches",
+            roomId,
+            "players",
+            playerId
+          ),
+          {
+            uid:
+              playerId,
+
+            name:
+              playerName,
+
+            x: 0,
+            y: EYE_HEIGHT,
+            z: 0,
+
+            yaw: 0,
+            pitch: 0,
+
+            hp:
+              MAX_HP,
+
+            kills: 0,
+            deaths: 0,
+
+            alive: true,
+
+            invulnerableUntil: 0,
+
+            joinedAt:
+              serverTimestamp(),
+
+            updatedAt:
+              serverTimestamp(),
+
+            lastActivityAt:
+              serverTimestamp(),
+
+            lastActivityMs:
+              Date.now()
+          }
+        );
+
+
+        enterLobby();
+
+      } catch (e) {
+        console.error(e);
+
+        roomId = null;
+
+        setStatus(
+          "部屋作成に失敗。\n" +
+          e.message
+        );
+      }
+    }
+
+
+    async function joinRoom(
+      inputRoom
+    ) {
+      if (!authUser) {
+        setStatus(
+          "まだFirebaseに接続中。少し待ってからもう一度やってね。"
+        );
+
+        return;
+      }
+
+
+      roomId =
+        inputRoom;
+
+      playerId =
+        authUser.uid;
+
+      isHost = false;
+
+
+      try {
+        const roomSnap =
+          await getDoc(
+            doc(
+              db,
+              "matches",
+              roomId
+            )
+          );
+
+
+        if (!roomSnap.exists()) {
+          /*
+           * ここには通常来ない。
+           * 「作成/参加」は存在しない場合に
+           * createRoomへ回すため。
+           */
+
+          await createRoom(
+            roomId
+          );
+
+          return;
+        }
+
+
+        const data =
+          roomSnap.data();
+
+
+        if (
+          data.status !==
+          "lobby"
+        ) {
+          throw new Error(
+            "その試合はすでに開始済み。"
+          );
+        }
+
+
+        const players =
+          await getPlayersOnce(
+            roomId
+          );
+
+
+        const already =
+          players.some(
+            p =>
+              p.id ===
+              playerId
+          );
+
+
+        if (
+          !already &&
+          players.length >=
+            MAX_PLAYERS
+        ) {
+          throw new Error(
+            "満員。"
+          );
+        }
+
+
+        await setDoc(
+          doc(
+            db,
+            "matches",
+            roomId,
+            "players",
+            playerId
+          ),
+          {
+            uid:
+              playerId,
+
+            name:
+              playerName,
+
+            x: 0,
+            y: EYE_HEIGHT,
+            z: 0,
+
+            yaw: 0,
+            pitch: 0,
+
+            hp:
+              MAX_HP,
+
+            kills: 0,
+            deaths: 0,
+
+            alive: true,
+
+            invulnerableUntil: 0,
+
+            joinedAt:
+              serverTimestamp(),
+
+            updatedAt:
+              serverTimestamp(),
+
+            lastActivityAt:
+              serverTimestamp(),
+
+            lastActivityMs:
+              Date.now()
+          },
+          {
+            merge: true
+          }
+        );
+
+
+        enterLobby();
+
+      } catch (e) {
+        console.error(e);
+
+        roomId = null;
+
+        setStatus(
+          "参加できなかった。\n" +
+          e.message
+        );
+      }
+    }
+
+
+    async function getPlayersOnce(
+      rid
+    ) {
+      const snap =
+        await getDocs(
+          collection(
+            db,
+            "matches",
+            rid,
+            "players"
+          )
+        );
+
+      return snap.docs.map(
+        d => ({
+          id: d.id,
+          ...d.data()
+        })
+      );
+    }
+
+
+    function enterLobby() {
+      menu.style.display =
+        "none";
+
+      endScreen.style.display =
+        "none";
+
+      hud.style.display =
+        "none";
+
+      lobby.style.display =
+        "flex";
+
+      roomIdLabel.textContent =
+        roomId;
+
+
+      startBtn.style.display =
+        isHost
+          ? "block"
+          : "none";
+
+
+      startBtn.style.setProperty(
+        "--progress",
+        "0"
+      );
+
+
+      subscribeRoom();
+      subscribePlayers();
+    }
+
+
+    function subscribeRoom() {
+      roomUnsub?.();
+
+
+      roomUnsub =
+        onSnapshot(
+          doc(
+            db,
+            "matches",
+            roomId
+          ),
+          snap => {
+            if (
+              !snap.exists()
+            ) {
+              handleRoomDeleted(
+                "この部屋は削除された。"
+              );
+
+              return;
+            }
+
+
+            const data =
+              snap.data();
+
+            roomDataCache =
+              data;
+
+
+            if (
+              data.status ===
+                "running" &&
+              !started
+            ) {
+              startMatchClient(
+                data
+              );
+            }
+
+
+            if (
+              data.status ===
+                "finished" &&
+              !ending
+            ) {
+              finishMatchClient(
+                data
+              );
+            }
+          },
+          err => {
+            console.error(
+              "room snapshot",
+              err
+            );
+          }
+        );
+    }
+
+
+    function subscribePlayers() {
+      playersUnsub?.();
+
+
+      playersUnsub =
+        onSnapshot(
+          collection(
+            db,
+            "matches",
+            roomId,
+            "players"
+          ),
+          snap => {
+            const arr = [];
+
+
+            remoteState.clear();
+
+
+            snap.docs.forEach(
+              d => {
+                const data =
+                  d.data();
+
+
+                arr.push({
+                  id:
+                    d.id,
+                  ...data
+                });
+
+
+                remoteState.set(
+                  d.id,
+                  data
+                );
+
+
+                if (
+                  d.id ===
+                  playerId
+                ) {
+                  local.hp =
+                    typeof data.hp ===
+                    "number"
+                      ? data.hp
+                      : local.hp;
+
+                  local.kills =
+                    typeof data.kills ===
+                    "number"
+                      ? data.kills
+                      : local.kills;
+
+                  local.deaths =
+                    typeof data.deaths ===
+                    "number"
+                      ? data.deaths
+                      : local.deaths;
+                }
+              }
+            );
+
+
+            playerCount.textContent =
+              String(
+                arr.length
+              );
+
+
+            playersList.innerHTML =
+              arr
+                .sort(
+                  (a,b) =>
+                    (b.kills || 0) -
+                    (a.kills || 0)
+                )
+                .map(
+                  p =>
+                    `<li>
+                      <span>
+                        ${escapeHtml(
+                          p.name ||
+                          "Player"
+                        )}
+                        ${
+                          p.uid ===
+                          playerId
+                            ? "（自分）"
+                            : ""
+                        }
+                      </span>
+                      <span>
+                        ${p.kills || 0} K
+                      </span>
+                    </li>`
+                )
+                .join("");
+
+
+            updateRemotePlayers();
+
+
+            if (started) {
+              const self =
+                arr.find(
+                  p =>
+                    p.uid ===
+                    playerId
+                );
+
+
+              if (
+                self &&
+                self.hp <= 0 &&
+                local.respawnAt === 0
+              ) {
+                local.respawnAt =
+                  performance.now() +
+                  1800;
+              }
+            }
+          },
+          err => {
+            console.error(
+              "players snapshot",
+              err
+            );
+          }
+        );
+    }
+
+
+    function escapeHtml(s) {
+      return String(s).replace(
+        /[&<>'"]/g,
+        c =>
+          ({
+            "&":
+              "&amp;",
+            "<":
+              "&lt;",
+            ">":
+              "&gt;",
+            "'":
+              "&#39;",
+            "\"":
+              "&quot;"
+          }[c])
+      );
+    }
+
+
+    let startHoldTimer = null;
+    let startHoldStartedAt = 0;
+
+
+    function updateStartProgress() {
+      if (
+        !startHoldStartedAt
+      ) {
+        startBtn.style.setProperty(
+          "--progress",
+          "0"
+        );
+
+        return;
+      }
+
+
+      const progress =
+        clamp(
+          (
+            performance.now() -
+            startHoldStartedAt
+          ) /
+          START_HOLD_TIME,
+          0,
+          1
+        );
+
+
+      startBtn.style.setProperty(
+        "--progress",
+        String(progress)
+      );
+
+
+      if (
+        progress >= 1
+      ) {
+        clearStartHold();
+
+        startMatchHost();
+      }
+    }
+
+
+    function clearStartHold() {
+      if (
+        startHoldTimer
+      ) {
+        clearInterval(
+          startHoldTimer
+        );
+
+        startHoldTimer = null;
+      }
+
+      startHoldStartedAt = 0;
+
+      startBtn.style.setProperty(
+        "--progress",
+        "0"
+      );
+    }
+
+
+    function beginStartHold(e) {
+      if (
+        e &&
+        e.button !== undefined &&
+        e.button !== 0
+      ) {
+        return;
+      }
+
+
+      if (
+        !isHost ||
+        started ||
+        ending
+      ) {
+        return;
+      }
+
+
+      e?.preventDefault();
+
+
+      if (
+        startHoldTimer
+      ) {
+        return;
+      }
+
+
+      markActivity();
+
+      startHoldStartedAt =
+        performance.now();
+
+
+      startHoldTimer =
+        setInterval(
+          updateStartProgress,
+          16
+        );
+    }
+
+
+    function endStartHold(e) {
+      e?.preventDefault();
+
+      clearStartHold();
+    }
+
+
+    async function startMatchHost() {
+      if (
+        !roomId ||
+        !isHost ||
+        started
+      ) {
+        return;
+      }
+
+
+      try {
+        const players =
+          await getPlayersOnce(
+            roomId
+          );
+
+
+        if (
+          players.length < 2
+        ) {
+          alert(
+            "2人以上で試合開始にしてね。"
+          );
+
+          return;
+        }
+
+
+        const roomSnap =
+          await getDoc(
+            doc(
+              db,
+              "matches",
+              roomId
+            )
+          );
+
+
+        if (
+          !roomSnap.exists()
+        ) {
+          return;
+        }
+
+
+        if (
+          roomSnap.data()
+            .status !==
+          "lobby"
+        ) {
+          return;
+        }
+
+
+        const endMs =
+          Date.now() +
+          MATCH_DURATION *
+            1000;
+
+
+        await updateDoc(
+          doc(
+            db,
+            "matches",
+            roomId
+          ),
+          {
+            status:
+              "running",
+
+            startedAt:
+              serverTimestamp(),
+
+            endAt:
+              endMs,
+
+            winnerUid:
+              null
+          }
+        );
+
+
+        /*
+         * プレイヤー数ぶんだけ
+         * 重ならないスポーン地点を
+         * ランダムに割り当てる。
+         */
+
+        const spawnList =
+          shuffledSpawnPositions(
+            players.length
+          );
+
+
+        const batch =
+          writeBatch(db);
+
+
+        players.forEach(
+          (p, i) => {
+            const [
+              x,
+              z
+            ] =
+              spawnList[i];
+
+
+            const yaw =
+              Math.atan2(
+                -x,
+                -z
+              );
+
+
+            batch.update(
+              doc(
+                db,
+                "matches",
+                roomId,
+                "players",
+                p.id
+              ),
+              {
+                x,
+                y:
+                  EYE_HEIGHT,
+                z,
+
+                yaw,
+                pitch: 0,
+
+                hp:
+                  MAX_HP,
+
+                kills: 0,
+                deaths: 0,
+
+                alive: true,
+
+                invulnerableUntil:
+                  Date.now() +
+                  START_INVINCIBILITY,
+
+                updatedAt:
+                  serverTimestamp(),
+
+                lastActivityAt:
+                  serverTimestamp(),
+
+                lastActivityMs:
+                  Date.now()
+              }
+            );
+          }
+        );
+
+
+        await batch.commit();
+
+      } catch (e) {
+        console.error(e);
+
+        alert(
+          "試合開始に失敗した。\n" +
+          e.message
+        );
+      }
+    }
+
+
+    function startMatchClient(
+      data
+    ) {
+      started = true;
+      ending = false;
+
+
+      lobby.style.display =
+        "none";
+
+      hud.style.display =
+        "block";
+
+      endScreen.style.display =
+        "none";
+
+
+      matchEndAt =
+        typeof data.endAt ===
+        "number"
+          ? data.endAt
+          : timestampMs(
+              data.endAt
+            );
+
+
+      if (
+        !matchEndAt
+      ) {
+        matchEndAt =
+          Date.now() +
+          MATCH_DURATION *
+            1000;
+      }
+
+
+      getPlayersOnce(
+        roomId
+      ).then(
+        players => {
+          const me =
+            players.find(
+              p =>
+                p.id ===
+                playerId
+            );
+
+
+          if (me) {
+            resetLocalForStart(
+              me.x || 0,
+              me.z || 0,
+              me.yaw || 0
+            );
+          } else {
+            const [
+              x,
+              z
+            ] =
+              spawnPosition(0);
+
+            resetLocalForStart(
+              x,
+              z
+            );
+          }
+
+
+          local.lastWrite = 0;
+
+          syncLocalState(
+            true
+          );
+        }
+      );
+
+
+      showMessage(
+        "MATCH START",
+        900
+      );
+    }
+
+
+    async function syncLocalState(
+      force = false
+    ) {
+      if (
+        !roomId ||
+        !playerId
+      ) {
+        return;
+      }
+
+
+      const now =
+        performance.now();
+
+
+      if (
+        !force &&
+        now -
+          local.lastWrite <
+          1000 /
+            TICK_RATE
+      ) {
+        return;
+      }
+
+
+      local.lastWrite =
+        now;
+
+
+      try {
+        const payload = {
+          x:
+            Number(
+              local.x.toFixed(3)
+            ),
+
+          y:
+            Number(
+              local.y.toFixed(3)
+            ),
+
+          z:
+            Number(
+              local.z.toFixed(3)
+            ),
+
+          yaw:
+            Number(
+              local.yaw.toFixed(4)
+            ),
+
+          pitch:
+            Number(
+              local.pitch.toFixed(4)
+            ),
+
+          hp:
+            Math.max(
+              0,
+              Math.round(
+                local.hp
+              )
+            ),
+
+          kills:
+            Math.max(
+              0,
+              Math.round(
+                local.kills
+              )
+            ),
+
+          deaths:
+            Math.max(
+              0,
+              Math.round(
+                local.deaths
+              )
+            ),
+
+          alive:
+            local.hp > 0,
+
+          invulnerableUntil:
+            local.invulnerableUntil
+        };
+
+
+        /*
+         * 「操作していない」を
+         * 毎フレームの同期で更新しない。
+         */
+
+        if (
+          Date.now() -
+            local.lastActivitySent >
+          1000
+        ) {
+          payload.lastActivityMs =
+            local.lastActivityAt;
+
+          payload.lastActivityAt =
+            serverTimestamp();
+
+          local.lastActivitySent =
+            Date.now();
+        }
+
+
+        payload.updatedAt =
+          serverTimestamp();
+
+
+        await updateDoc(
+          doc(
+            db,
+            "matches",
+            roomId,
+            "players",
+            playerId
+          ),
+          payload
+        );
+
+      } catch (e) {
+        console.warn(
+          "sync failed",
+          e
+        );
+      }
+    }
+
+
+    function tryMoveHorizontal(
+      dx,
+      dz
+    ) {
+      const nx =
+        local.x + dx;
+
+
+      if (
+        !horizontalBlockedByTallPlatform(
+          nx,
+          local.z
+        )
+      ) {
+        local.x =
+          nx;
+      }
+
+
+      const nz =
+        local.z + dz;
+
+
+      if (
+        !horizontalBlockedByTallPlatform(
+          local.x,
+          nz
+        )
+      ) {
+        local.z =
+          nz;
+      }
+    }
+
+
+    function movePlayer(dt) {
+      if (
+        !started ||
+        ending
+      ) {
+        return;
+      }
+
+
+      if (
+        innerWidth > 700 &&
+        controls?.isLocked
+      ) {
+        local.yaw =
+          camera.rotation.y;
+
+        local.pitch =
+          camera.rotation.x;
+      }
+
+
+      if (
+        local.hp <= 0
+      ) {
+        return;
+      }
+
+
+      if (
+        local.climbing
+      ) {
+        updateClimb();
+
+        camera.position.set(
+          local.x,
+          local.y,
+          local.z
+        );
+
+        camera.rotation.set(
+          local.pitch,
+          local.yaw,
+          0,
+          "YXZ"
+        );
+
+        return;
+      }
+
+
+      let forward = 0;
+      let strafe = 0;
+
+
+      if (
+        keys.has("KeyW")
+      ) {
+        forward += 1;
+      }
+
+      if (
+        keys.has("KeyS")
+      ) {
+        forward -= 1;
+      }
+
+      if (
+        keys.has("KeyD")
+      ) {
+        strafe += 1;
+      }
+
+      if (
+        keys.has("KeyA")
+      ) {
+        strafe -= 1;
+      }
+
+
+      const len =
+        Math.hypot(
+          forward,
+          strafe
+        ) || 1;
+
+
+      forward /= len;
+      strafe /= len;
+
+
+      const sin =
+        Math.sin(
+          local.yaw
+        );
+
+      const cos =
+        Math.cos(
+          local.yaw
+        );
+
+
+      const dx =
+        (
+          strafe * cos +
+          forward * sin
+        ) *
+        PLAYER_SPEED *
+        dt;
+
+
+      const dz =
+        (
+          forward * cos -
+          strafe * sin
+        ) *
+        PLAYER_SPEED *
+        dt;
+
+
+      if (
+        dx !== 0 ||
+        dz !== 0
+      ) {
+        markActivity();
+      }
+
+
+      tryMoveHorizontal(
+        dx,
+        dz
+      );
+
+
+      const previousFeetY =
+        local.y -
+        EYE_HEIGHT;
+
+
+      local.vy -=
+        GRAVITY * dt;
+
+
+      const nextFeetY =
+        previousFeetY +
+        local.vy * dt;
+
+
+      let landedTop =
+        getGroundTop(
+          local.x,
+          local.z,
+          nextFeetY,
+          local.vy
+        );
+
+
+      if (
+        landedTop > 0 &&
+        local.vy <= 0 &&
+        previousFeetY >=
+          landedTop - 0.45 &&
+        nextFeetY <=
+          landedTop + 0.2
+      ) {
+        local.y =
+          landedTop +
+          EYE_HEIGHT;
+
+        local.vy = 0;
+
+        local.grounded =
+          true;
+      } else if (
+        nextFeetY <= 0
+      ) {
+        local.y =
+          EYE_HEIGHT;
+
+        local.vy = 0;
+
+        local.grounded =
+          true;
+      } else {
+        local.y =
+          nextFeetY +
+          EYE_HEIGHT;
+
+        local.grounded =
+          false;
+      }
+
+
+      camera.position.set(
+        local.x,
+        local.y,
+        local.z
+      );
+
+      camera.rotation.set(
+        local.pitch,
+        local.yaw,
+        0,
+        "YXZ"
+      );
+    }
+
+
+    function jumpOrGrab() {
+      if (
+        !started ||
+        ending ||
+        local.hp <= 0
+      ) {
+        return;
+      }
+
+
+      markActivity();
+
+
+      if (
+        local.climbing
+      ) {
+        return;
+      }
+
+
+      if (
+        !local.grounded
+      ) {
+        if (
+          canGrabPlatform()
+        ) {
+          startClimb();
+
+          return;
+        }
+
+
+        return;
+      }
+
+
+      local.vy =
+        JUMP_SPEED;
+
+      local.grounded =
+        false;
+
+      showMessage(
+        "JUMP",
+        250
+      );
+    }
+
+
+    function findGrabPlatform() {
+      const feetY =
+        local.y -
+        EYE_HEIGHT;
+
+      const headY =
+        feetY +
+        PLAYER_HEAD_HEIGHT;
+
+
+      let best =
+        null;
+
+      let bestDistance =
+        Infinity;
+
+
+      for (const p of platforms) {
+        /*
+         * 足場の上面が頭より下。
+         * かつ現在の足元より上側にある
+         * 足場をGRAB候補にする。
+         */
+
+        if (
+          p.top >=
+          headY
+        ) {
+          continue;
+        }
+
+
+        if (
+          p.top <=
+          feetY - 0.15
+        ) {
+          continue;
+        }
+
+
+        const closestX =
+          clamp(
+            local.x,
+            p.x -
+              p.w / 2,
+            p.x +
+              p.w / 2
+          );
+
+        const closestZ =
+          clamp(
+            local.z,
+            p.z -
+              p.d / 2,
+            p.z +
+              p.d / 2
+          );
+
+
+        const dx =
+          local.x -
+          closestX;
+
+        const dz =
+          local.z -
+          closestZ;
+
+
+        const distance =
+          Math.hypot(
+            dx,
+            dz
+          );
+
+
+        if (
+          distance >
+          GRAB_DISTANCE
+        ) {
+          continue;
+        }
+
+
+        /*
+         * 「ほぼ0距離」を
+         * プレイヤー半径を考慮した
+         * 近接判定として扱う。
+         */
+
+        if (
+          distance <
+          bestDistance
+        ) {
+          best =
+            p;
+
+          bestDistance =
+            distance;
+        }
+      }
+
+
+      return best;
+    }
+
+
+    function canGrabPlatform() {
+      return !!findGrabPlatform();
+    }
+
+
+    function startClimb() {
+      const p =
+        findGrabPlatform();
+
+
+      if (!p) {
+        return;
+      }
+
+
+      const targetX =
+        clamp(
+          local.x,
+          p.x -
+            p.w / 2 +
+            PLAYER_RADIUS,
+          p.x +
+            p.w / 2 -
+            PLAYER_RADIUS
+        );
+
+
+      const targetZ =
+        clamp(
+          local.z,
+          p.z -
+            p.d / 2 +
+            PLAYER_RADIUS,
+          p.z +
+            p.d / 2 -
+            PLAYER_RADIUS
+        );
+
+
+      local.climbing =
+        true;
+
+      local.climbStart =
+        performance.now();
+
+      local.climbEnd =
+        local.climbStart +
+        CLIMB_TIME;
+
+      local.climbFromY =
+        local.y;
+
+      local.climbToY =
+        p.top +
+        EYE_HEIGHT;
+
+
+      local.x =
+        targetX;
+
+      local.z =
+        targetZ;
+
+      local.vy = 0;
+
+
+      showMessage(
+        "GRAB",
+        600
+      );
+    }
+
+
+    function updateClimb() {
+      if (
+        !local.climbing
+      ) {
+        return;
+      }
+
+
+      const now =
+        performance.now();
+
+
+      const progress =
+        clamp(
+          (
+            now -
+            local.climbStart
+          ) /
+          CLIMB_TIME,
+          0,
+          1
+        );
+
+
+      /*
+       * smoothstep
+       */
+
+      const eased =
+        progress *
+        progress *
+        (
+          3 -
+          2 * progress
+        );
+
+
+      local.y =
+        THREE.MathUtils.lerp(
+          local.climbFromY,
+          local.climbToY,
+          eased
+        );
+
+
+      if (
+        progress >= 1
+      ) {
+        local.climbing =
+          false;
+
+        local.grounded =
+          true;
+
+        local.y =
+          local.climbToY;
+
+        local.vy = 0;
+
+        markActivity();
+      }
+    }
+
+
+    function updateJumpButton() {
+      if (
+        innerWidth > 700 ||
+        !started
+      ) {
+        return;
+      }
+
+
+      const airborne =
+        !local.grounded &&
+        !local.climbing;
+
+
+      if (
+        airborne &&
+        canGrabPlatform()
+      ) {
+        jumpButton.classList.remove(
+          "grabUnavailable"
+        );
+
+        jumpButton.classList.add(
+          "grabAvailable"
+        );
+
+        jumpButton.querySelector(
+          "span"
+        ).textContent =
+          "GRAB";
+
+      } else if (
+        airborne
+      ) {
+        jumpButton.classList.remove(
+          "grabAvailable"
+        );
+
+        jumpButton.classList.add(
+          "grabUnavailable"
+        );
+
+        jumpButton.querySelector(
+          "span"
+        ).textContent =
+          "GRAB";
+
+      } else {
+        jumpButton.classList.remove(
+          "grabAvailable"
+        );
+
+        jumpButton.classList.add(
+          "grabUnavailable"
+        );
+
+        jumpButton.querySelector(
+          "span"
+        ).textContent =
+          "JUMP";
+      }
+    }
+
+
+    function createBullet() {
+      const geometry =
+        new THREE.SphereGeometry(
+          BULLET_RADIUS,
+          8,
+          8
+        );
+
+
+      const material =
+        new THREE.MeshBasicMaterial({
+          color: 0xffe082
+        });
+
+
+      const mesh =
+        new THREE.Mesh(
+          geometry,
+          material
+        );
+
+
+      const direction =
+        new THREE.Vector3();
+
+
+      camera.getWorldDirection(
+        direction
+      );
+
+
+      const start =
+        camera.position
+          .clone()
+          .add(
+            direction
+              .clone()
+              .multiplyScalar(0.65)
+          );
+
+
+      mesh.position.copy(
+        start
+      );
+
+
+      arenaGroup.add(
+        mesh
+      );
+
+
+      bullets.push({
+        mesh,
+        velocity:
+          direction
+            .multiplyScalar(
+              BULLET_SPEED
+            ),
+        createdAt:
+          performance.now(),
+        maxLife:
+          4000
+      });
+
+
+      showMessage(
+        "PEW",
+        90
+      );
+    }
+
+
+    function removeBullet(
+      bullet
+    ) {
+      arenaGroup.remove(
+        bullet.mesh
+      );
+
+
+      const index =
+        bullets.indexOf(
+          bullet
+        );
+
+
+      if (
+        index !== -1
+      ) {
+        bullets.splice(
+          index,
+          1
+        );
+      }
+    }
+
+
+    function bulletHitsRemote(
+      bullet
+    ) {
+      const point =
+        bullet.mesh.position;
+
+
+      for (
+        const [id, mesh]
+        of remotePlayers
+      ) {
+        const state =
+          remoteState.get(id);
+
+
+        if (
+          !state ||
+          state.alive === false
+        ) {
+          continue;
+        }
+
+
+        const target =
+          mesh.position.clone();
+
+
+        target.y +=
+          0;
+
+
+        const distance =
+          point.distanceTo(
+            target
+          );
+
+
+        if (
+          distance <
+          0.85
+        ) {
+          return id;
+        }
+      }
+
+
+      return null;
+    }
+
+
+    function bulletHitsSolid(
+      point
+    ) {
+      if (
+        Math.abs(point.x) >
+          23 ||
+        Math.abs(point.z) >
+          23
+      ) {
+        return true;
+      }
+
+
+      for (const p of platforms) {
+        if (
+          point.x >=
+            p.x -
+              p.w / 2 &&
+          point.x <=
+            p.x +
+              p.w / 2 &&
+          point.z >=
+            p.z -
+              p.d / 2 &&
+          point.z <=
+            p.z +
+              p.d / 2 &&
+          point.y >=
+            p.y -
+              p.h / 2 &&
+          point.y <=
+            p.y +
+              p.h / 2
+        ) {
+          return true;
+        }
+      }
+
+
+      return false;
+    }
+
+
+    function updateBullets(
+      dt
+    ) {
+      for (
+        let i =
+          bullets.length - 1;
+        i >= 0;
+        i--
+      ) {
+        const bullet =
+          bullets[i];
+
+
+        const oldPosition =
+          bullet.mesh.position
+            .clone();
+
+
+        bullet.mesh.position.add(
+          bullet.velocity
+            .clone()
+            .multiplyScalar(dt)
+        );
+
+
+        const newPosition =
+          bullet.mesh.position
+            .clone();
+
+
+        const segment =
+          newPosition
+            .clone()
+            .sub(
+              oldPosition
+            );
+
+
+        const length =
+          segment.length();
+
+
+        const steps =
+          Math.max(
+            1,
+            Math.ceil(
+              length / 0.3
+            )
+          );
+
+
+        let hitId =
+          null;
+
+        let hitSolid =
+          false;
+
+
+        for (
+          let s = 1;
+          s <= steps;
+          s++
+        ) {
+          const testPoint =
+            oldPosition
+              .clone()
+              .lerp(
+                newPosition,
+                s / steps
+              );
+
+
+          bullet.mesh.position.copy(
+            testPoint
+          );
+
+
+          hitId =
+            bulletHitsRemote(
+              bullet
+            );
+
+
+          if (
+            hitId
+          ) {
+            break;
+          }
+
+
+          if (
+            bulletHitsSolid(
+              testPoint
+            )
+          ) {
+            hitSolid = true;
+            break;
+          }
+        }
+
+
+        bullet.mesh.position.copy(
+          newPosition
+        );
+
+
+        if (
+          hitId
+        ) {
+          removeBullet(
+            bullet
+          );
+
+          applyDamage(
+            hitId
+          );
+
+          continue;
+        }
+
+
+        if (
+          hitSolid ||
+          performance.now() -
+            bullet.createdAt >
+            bullet.maxLife
+        ) {
+          removeBullet(
+            bullet
+          );
+        }
+      }
+    }
+
+
+    function updateFireProgress() {
+      if (
+        innerWidth > 700
+      ) {
+        return;
+      }
+
+
+      if (
+        !started
+      ) {
+        fireButton.style.setProperty(
+          "--progress",
+          "0"
+        );
+
+        return;
+      }
+
+
+      const now =
+        performance.now();
+
+
+      const remaining =
+        Math.max(
+          0,
+          local.nextFireAt -
+            now
+        );
+
+
+      const progress =
+        clamp(
+          1 -
+          remaining /
+            FIRE_COOLDOWN,
+          0,
+          1
+        );
+
+
+      fireButton.style.setProperty(
+        "--progress",
+        String(progress)
+      );
+    }
+
+
+    function shoot() {
+      if (
+        !started ||
+        ending ||
+        local.hp <= 0
+      ) {
+        return;
+      }
+
+
+      const now =
+        performance.now();
+
+
+      if (
+        now <
+        local.nextFireAt
+      ) {
+        return;
+      }
+
+
+      if (
+        Date.now() <
+        local.invulnerableUntil
+      ) {
+        /*
+         * スタート直後の3秒間は
+         * 銃撃そのものを禁止。
+         */
+        return;
+      }
+
+
+      local.nextFireAt =
+        now +
+        FIRE_COOLDOWN;
+
+
+      markActivity();
+
+      createBullet();
+    }
+
+
+    function remotePlayersHasMesh(
+      mesh
+    ) {
+      for (
+        const m
+        of remotePlayers.values()
+      ) {
+        if (
+          m === mesh
+        ) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+
+    async function applyDamage(
+      targetId
+    ) {
+      if (
+        !roomId ||
+        !playerId ||
+        targetId ===
+          playerId
+      ) {
+        return;
+      }
+
+
+      const targetRef =
+        doc(
+          db,
+          "matches",
+          roomId,
+          "players",
+          targetId
+        );
+
+
+      try {
+        const snap =
+          await getDoc(
+            targetRef
+          );
+
+
+        if (
+          !snap.exists()
+        ) {
+          return;
+        }
+
+
+        const target =
+          snap.data();
+
+
+        if (
+          !target.alive ||
+          (target.hp || 0) <= 0
+        ) {
+          return;
+        }
+
+
+        const protectedUntil =
+          Number(
+            target.invulnerableUntil ||
+            0
+          );
+
+
+        if (
+          protectedUntil >
+          Date.now()
+        ) {
+          return;
+        }
+
+
+        const newHp =
+          Math.max(
+            0,
+            (target.hp || 0) -
+              HIT_DAMAGE
+          );
+
+
+        const updates = {
+          hp:
+            newHp,
+
+          alive:
+            newHp > 0,
+
+          updatedAt:
+            serverTimestamp()
+        };
+
+
+        if (
+          newHp <= 0
+        ) {
+          updates.deaths =
+            (target.deaths || 0) +
+            1;
+
+
+          await updateDoc(
+            targetRef,
+            updates
+          );
+
+
+          const selfRef =
+            doc(
+              db,
+              "matches",
+              roomId,
+              "players",
+              playerId
+            );
+
+
+          const selfSnap =
+            await getDoc(
+              selfRef
+            );
+
+
+          if (
+            selfSnap.exists()
+          ) {
+            const selfData =
+              selfSnap.data();
+
+
+            const newKills =
+              (selfData.kills || 0) +
+              1;
+
+
+            await updateDoc(
+              selfRef,
+              {
+                kills:
+                  newKills,
+
+                updatedAt:
+                  serverTimestamp()
+              }
+            );
+
+
+            local.kills =
+              newKills;
+
+
+            showMessage(
+              "+1 KILL",
+              600
+            );
+
+
+            if (
+              newKills >=
+                MAX_SCORE
+            ) {
+              await tryFinishMatch(
+                "score"
+              );
+            }
+          }
+
+        } else {
+          await updateDoc(
+            targetRef,
+            updates
+          );
+        }
+
+      } catch (e) {
+        console.warn(
+          "damage failed",
+          e
+        );
+      }
+    }
+
+
+    async function respawnIfNeeded() {
+      if (
+        local.hp > 0 ||
+        local.respawnAt === 0
+      ) {
+        return;
+      }
+
+
+      if (
+        performance.now() <
+        local.respawnAt
+      ) {
+        return;
+      }
+
+
+      local.respawnAt = 0;
+
+
+      const candidates =
+        shuffledSpawnPositions(
+          1
+        );
+
+
+      const [
+        x,
+        z
+      ] =
+        candidates[0];
+
+
+      local.x = x;
+      local.z = z;
+
+      local.y =
+        EYE_HEIGHT;
+
+      local.vy = 0;
+
+      local.grounded =
+        true;
+
+      local.hp =
+        MAX_HP;
+
+      local.invulnerableUntil =
+        Date.now() +
+        1500;
+
+
+      markActivity();
+
+      await syncLocalState(
+        true
+      );
+
+
+      showMessage(
+        "RESPAWN",
+        650
+      );
+    }
+
+
+    async function tryFinishMatch(
+      reason
+    ) {
+      if (
+        !isHost ||
+        !roomId ||
+        ending
+      ) {
+        return;
+      }
+
+
+      try {
+        const snap =
+          await getDoc(
+            doc(
+              db,
+              "matches",
+              roomId
+            )
+          );
+
+
+        if (
+          !snap.exists() ||
+          snap.data().status !==
+            "running"
+        ) {
+          return;
+        }
+
+
+        const players =
+          await getPlayersOnce(
+            roomId
+          );
+
+
+        players.sort(
+          (a,b) => {
+            const s =
+              (b.kills || 0) -
+              (a.kills || 0);
+
+
+            if (
+              s !== 0
+            ) {
+              return s;
+            }
+
+
+            return (
+              (a.deaths || 0) -
+              (b.deaths || 0)
+            );
+          }
+        );
+
+
+        const winner =
+          players[0];
+
+
+        await updateDoc(
+          doc(
+            db,
+            "matches",
+            roomId
+          ),
+          {
+            status:
+              "finished",
+
+            winnerUid:
+              winner?.id ||
+              null,
+
+            finishedAt:
+              serverTimestamp(),
+
+            finishReason:
+              reason
+          }
+        );
+
+      } catch (e) {
+        console.warn(
+          "finish failed",
+          e
+        );
+      }
+    }
+
+
+    async function finishMatchClient(
+      roomData
+    ) {
+      if (
+        ending
+      ) {
+        return;
+      }
+
+
+      ending = true;
+      started = false;
+
+
+      if (
+        controls?.isLocked
+      ) {
+        controls.unlock();
+      }
+
+
+      hud.style.display =
+        "none";
+
+      endScreen.style.display =
+        "flex";
+
+
+      for (
+        const bullet
+        of [...bullets]
+      ) {
+        removeBullet(
+          bullet
+        );
+      }
+
+
+      const players =
+        await getPlayersOnce(
+          roomId
+        ).catch(
+          () => []
+        );
+
+
+      players.sort(
+        (a,b) =>
+          (b.kills || 0) -
+          (a.kills || 0) ||
+          (a.deaths || 0) -
+          (b.deaths || 0)
+      );
+
+
+      const winner =
+        players[0];
+
+
+      $("winnerTitle")
+        .textContent =
+          winner
+            ? `${winner.name || "Player"} の勝ち！`
+            : "試合終了";
+
+
+      $("resultText")
+        .textContent =
+          winner
+            ? `勝者: ${winner.name} / ${winner.kills || 0} K - ${winner.deaths || 0} D`
+            : "勝者情報を取得できなかった。";
+
+
+      $("finalRanking")
+        .innerHTML =
+          players
+            .map(
+              (p,i) =>
+                `<div style="padding:8px 10px;margin:6px 0;background:rgba(255,255,255,.05);border-radius:10px">
+                  ${i+1}. ${escapeHtml(p.name || "Player")}
+                  — ${p.kills || 0} K / ${p.deaths || 0} D
+                </div>`
+            )
+            .join("");
+
+
+      /*
+       * 試合終了時はホストが
+       * matches/{roomId} と
+       * playersサブコレクションを削除。
+       */
+
+      if (
+        isHost
+      ) {
+        await deleteMatchCompletely()
+          .catch(
+            e =>
+              console.warn(
+                "delete match failed",
+                e
+              )
+          );
+      }
+    }
+
+
+    async function deleteMatchCompletely() {
+      if (
+        !roomId
+      ) {
+        return;
+      }
+
+
+      const players =
+        await getPlayersOnce(
+          roomId
+        ).catch(
+          () => []
+        );
+
+
+      const batch =
+        writeBatch(db);
+
+
+      players.forEach(
+        p => {
+          batch.delete(
+            doc(
+              db,
+              "matches",
+              roomId,
+              "players",
+              p.id
+            )
+          );
+        }
+      );
+
+
+      batch.delete(
+        doc(
+          db,
+          "matches",
+          roomId
+        )
+      );
+
+
+      await batch.commit();
+
+
+      handleRoomDeleted(
+        "試合が終了した。"
+      );
+    }
+
+
+    async function deleteRoomBecauseInactive(
+      reason
+    ) {
+      if (
+        !roomId
+      ) {
+        return;
+      }
+
+
+      try {
+        await deleteMatchCompletely();
+      } catch (e) {
+        console.warn(
+          reason,
+          e
+        );
+      }
+    }
+
+
+    async function checkRoomCleanup() {
+      if (
+        !roomId
+      ) {
+        return;
+      }
+
+
+      try {
+        const roomSnap =
+          await getDoc(
+            doc(
+              db,
+              "matches",
+              roomId
+            )
+          );
+
+
+        if (
+          !roomSnap.exists()
+        ) {
+          handleRoomDeleted(
+            "この部屋は削除された。"
+          );
+
+          return;
+        }
+
+
+        const data =
+          roomSnap.data();
+
+
+        const created =
+          Number(
+            data.createdAtMs
+          ) ||
+          timestampMs(
+            data.createdAt
+          );
+
+
+        /*
+         * バグや妨害行為などで
+         * 1日以上残った試合を削除。
+         */
+
+        if (
+          created &&
+          Date.now() -
+            created >=
+            STALE_MATCH_LIMIT
+        ) {
+          await deleteRoomBecauseInactive(
+            "stale match cleanup"
+          );
+
+          return;
+        }
+
+
+        const players =
+          await getPlayersOnce(
+            roomId
+          );
+
+
+        if (
+          players.length === 0
+        ) {
+          return;
+        }
+
+
+        /*
+         * 全プレイヤーの
+         * lastActivityMs が1分以上前なら
+         * 部屋そのものを削除。
+         */
+
+        const allInactive =
+          players.every(
+            p => {
+              const activity =
+                Number(
+                  p.lastActivityMs
+                ) ||
+                timestampMs(
+                  p.lastActivityAt
+                );
+
+              return (
+                activity > 0 &&
+                Date.now() -
+                  activity >=
+                  INACTIVITY_LIMIT
+              );
+            }
+          );
+
+
+        if (
+          allInactive
+        ) {
+          await deleteRoomBecauseInactive(
+            "all players inactive"
+          );
+        }
+
+      } catch (e) {
+        console.warn(
+          "room cleanup failed",
+          e
+        );
+      }
+    }
+
+
+    function handleRoomDeleted(
+      reason =
+        "部屋が削除された。"
+    ) {
+      roomUnsub?.();
+      playersUnsub?.();
+
+
+      roomUnsub = null;
+      playersUnsub = null;
+
+
+      roomId = null;
+
+      isHost = false;
+
+      started = false;
+
+      ending = false;
+
+
+      roomDataCache = null;
+
+
+      remoteState.clear();
+
+
+      for (
+        const mesh
+        of remotePlayers.values()
+      ) {
+        arenaGroup?.remove(
+          mesh
+        );
+      }
+
+
+      remotePlayers.clear();
+
+
+      for (
+        const bullet
+        of [...bullets]
+      ) {
+        removeBullet(
+          bullet
+        );
+      }
+
+
+      clearStartHold();
+
+
+      lobby.style.display =
+        "none";
+
+      hud.style.display =
+        "none";
+
+      endScreen.style.display =
+        "none";
+
+      menu.style.display =
+        "flex";
+
+
+      if (
+        reason
+      ) {
+        setStatus(
+          reason
+        );
+      }
+    }
+
+
+    async function leaveRoom() {
+      if (
+        !roomId ||
+        !playerId
+      ) {
+        return;
+      }
+
+
+      const leavingRoom =
+        roomId;
+
+
+      try {
+        await deleteDoc(
+          doc(
+            db,
+            "matches",
+            leavingRoom,
+            "players",
+            playerId
+          )
+        );
+
+
+        /*
+         * 部屋主が抜けた場合、
+         * 残りのプレイヤーがいるなら
+         * 一番古いプレイヤーを新しい部屋主にする。
+         */
+
+        const roomRef =
+          doc(
+            db,
+            "matches",
+            leavingRoom
+          );
+
+
+        const roomSnap =
+          await getDoc(
+            roomRef
+          );
+
+
+        if (
+          roomSnap.exists()
+        ) {
+          const players =
+            await getPlayersOnce(
+              leavingRoom
+            );
+
+
+          if (
+            players.length === 0
+          ) {
+            await deleteDoc(
+              roomRef
+            );
+          } else if (
+            roomSnap.data()
+              .hostUid ===
+            playerId &&
+            roomSnap.data()
+              .status ===
+            "lobby"
+          ) {
+            players.sort(
+              (a,b) =>
+                timestampMs(
+                  a.joinedAt
+                ) -
+                timestampMs(
+                  b.joinedAt
+                )
+            );
+
+
+            await updateDoc(
+              roomRef,
+              {
+                hostUid:
+                  players[0].id
+              }
+            );
+          }
+        }
+
+      } catch (e) {
+        console.warn(
+          "leave failed",
+          e
+        );
+      }
+
+
+      handleRoomDeleted(
+        "退出したよ。"
+      );
+    }
+
+
+    async function copyRoomId() {
+      try {
+        await navigator.clipboard.writeText(
+          roomId || ""
+        );
+
+        showMessage(
+          "コピーした！",
+          700
+        );
+
+      } catch {
+        alert(
+          `部屋コード: ${roomId}`
+        );
+      }
+    }
+
+
+    function setupMobileControls() {
+      const moveStick =
+        $("moveStick");
+
+      const moveKnob =
+        $("moveKnob");
+
+      const lookArea =
+        $("lookArea");
+
+
+      let movePointer =
+        null;
+
+      let lookPointer =
+        null;
+
+
+      const moveVector = {
+        x: 0,
+        y: 0
+      };
+
+
+      let lastLookX = 0;
+      let lastLookY = 0;
+
+
+      function setKnob(
+        clientX,
+        clientY
+      ) {
+        const r =
+          moveStick.getBoundingClientRect();
+
+
+        const cx =
+          r.left +
+          r.width / 2;
+
+        const cy =
+          r.top +
+          r.height / 2;
+
+
+        const dx =
+          clientX - cx;
+
+        const dy =
+          clientY - cy;
+
+
+        const max = 45;
+
+
+        const len =
+          Math.hypot(
+            dx,
+            dy
+          ) || 1;
+
+
+        const nx =
+          len > max
+            ? dx / len * max
+            : dx;
+
+        const ny =
+          len > max
+            ? dy / len * max
+            : dy;
+
+
+        moveKnob.style.transform =
+          `translate(calc(-50% + ${nx}px), calc(-50% + ${ny}px))`;
+
+
+        moveVector.x =
+          nx / max;
+
+        moveVector.y =
+          ny / max;
+
+
+        if (
+          Math.abs(nx) > 2 ||
+          Math.abs(ny) > 2
+        ) {
+          markActivity();
+        }
+      }
+
+
+      function resetKnob() {
+        moveKnob.style.transform =
+          "translate(-50%,-50%)";
+
+        moveVector.x = 0;
+        moveVector.y = 0;
+      }
+
+
+      moveStick.addEventListener(
+        "pointerdown",
+        e => {
+          e.preventDefault();
+
+          movePointer =
+            e.pointerId;
+
+          moveStick.setPointerCapture(
+            e.pointerId
+          );
+
+          setKnob(
+            e.clientX,
+            e.clientY
+          );
+        }
+      );
+
+
+      moveStick.addEventListener(
+        "pointermove",
+        e => {
+          if (
+            e.pointerId ===
+            movePointer
+          ) {
+            setKnob(
+              e.clientX,
+              e.clientY
+            );
+          }
+        }
+      );
+
+
+      moveStick.addEventListener(
+        "pointerup",
+        e => {
+          if (
+            e.pointerId ===
+            movePointer
+          ) {
+            movePointer = null;
+
+            resetKnob();
+          }
+        }
+      );
+
+
+      moveStick.addEventListener(
+        "pointercancel",
+        e => {
+          if (
+            e.pointerId ===
+            movePointer
+          ) {
+            movePointer = null;
+
+            resetKnob();
+          }
+        }
+      );
+
+
+      lookArea.addEventListener(
+        "pointerdown",
+        e => {
+          e.preventDefault();
+
+          lookPointer =
+            e.pointerId;
+
+          lastLookX =
+            e.clientX;
+
+          lastLookY =
+            e.clientY;
+
+
+          lookArea.setPointerCapture(
+            e.pointerId
+          );
+
+          markActivity();
+        }
+      );
+
+
+      lookArea.addEventListener(
+        "pointermove",
+        e => {
+          if (
+            e.pointerId !==
+              lookPointer ||
+            !started ||
+            local.hp <= 0
+          ) {
+            return;
+          }
+
+
+          const dx =
+            e.clientX -
+            lastLookX;
+
+          const dy =
+            e.clientY -
+            lastLookY;
+
+
+          lastLookX =
+            e.clientX;
+
+          lastLookY =
+            e.clientY;
+
+
+          local.yaw -=
+            dx *
+            LOOK_SPEED *
+            1.7;
+
+
+          local.pitch =
+            clamp(
+              local.pitch -
+                dy *
+                LOOK_SPEED *
+                1.7,
+              -1.45,
+              1.45
+            );
+
+
+          markActivity();
+        }
+      );
+
+
+      lookArea.addEventListener(
+        "pointerup",
+        e => {
+          if (
+            e.pointerId ===
+            lookPointer
+          ) {
+            lookPointer = null;
+          }
+        }
+      );
+
+
+      lookArea.addEventListener(
+        "pointercancel",
+        e => {
+          if (
+            e.pointerId ===
+            lookPointer
+          ) {
+            lookPointer = null;
+          }
+        }
+      );
+
+
+      fireButton.addEventListener(
+        "pointerdown",
+        e => {
+          e.preventDefault();
+
+          markActivity();
+
+          shoot();
+        }
+      );
+
+
+      jumpButton.addEventListener(
+        "pointerdown",
+        e => {
+          e.preventDefault();
+
+          markActivity();
+
+          jumpOrGrab();
+        }
+      );
+
+
+      /*
+       * スマホではダッシュなし。
+       * 左スティックのみで通常速度移動。
+       */
+
+      window.mobileMoveVector =
+        moveVector;
+    }
+
+
+    function updateMobileMovement(
+      dt
+    ) {
+      if (
+        innerWidth > 700 ||
+        !started ||
+        local.hp <= 0 ||
+        local.climbing
+      ) {
+        return;
+      }
+
+
+      const moveVector =
+        window.mobileMoveVector ||
+        {
+          x: 0,
+          y: 0
+        };
+
+
+      const forward =
+        -moveVector.y;
+
+      const strafe =
+        moveVector.x;
+
+
+      const len =
+        Math.hypot(
+          forward,
+          strafe
+        );
+
+
+      if (
+        len < 0.001
+      ) {
+        return;
+      }
+
+
+      const normalized =
+        Math.min(
+          1,
+          len
+        );
+
+
+      const sin =
+        Math.sin(
+          local.yaw
+        );
+
+      const cos =
+        Math.cos(
+          local.yaw
+        );
+
+
+      const dx =
+        (
+          strafe * cos +
+          forward * sin
+        ) *
+        PLAYER_SPEED *
+        normalized *
+        dt;
+
+
+      const dz =
+        (
+          forward * cos -
+          strafe * sin
+        ) *
+        PLAYER_SPEED *
+        normalized *
+        dt;
+
+
+      tryMoveHorizontal(
+        dx,
+        dz
+      );
+
+
+      markActivity();
+
+
+      camera.position.set(
+        local.x,
+        local.y,
+        local.z
+      );
+
+
+      camera.rotation.set(
+        local.pitch,
+        local.yaw,
+        0,
+        "YXZ"
+      );
+    }
+
+
+    async function checkMatchTimer() {
+      if (
+        !started ||
+        ending
+      ) {
+        return;
+      }
+
+
+      const left =
+        Math.max(
+          0,
+          matchEndAt -
+            Date.now()
+        );
+
+
+      $("timeText")
+        .textContent =
+          formatTime(
+            left / 1000
+          );
+
+
+      if (
+        left <= 0
+      ) {
+        if (
+          isHost
+        ) {
+          await tryFinishMatch(
+            "time"
+          );
+        }
+
+        return;
+      }
+
+
+      if (
+        local.kills >=
+          MAX_SCORE &&
+        isHost
+      ) {
+        await tryFinishMatch(
+          "score"
+        );
+      }
+    }
+
+
+    function updateHud() {
+      $("healthText")
+        .textContent =
+          String(
+            Math.max(
+              0,
+              Math.round(
+                local.hp
+              )
+            )
+          );
+
+
+      $("healthBar")
+        .style.width =
+          `${clamp(
+            local.hp /
+              MAX_HP *
+              100,
+            0,
+            100
+          )}%`;
+
+
+      $("scoreText")
+        .textContent =
+          `${local.kills} / ${local.deaths}`;
+
+
+      updateMobileMovement(
+        0
+      );
+    }
+
+
+    function animate() {
+      requestAnimationFrame(
+        animate
+      );
+
+
+      const now =
+        performance.now();
+
+
+      let dt =
+        Math.min(
+          0.05,
+          (
+            now -
+            lastFrame
+          ) / 1000
+        );
+
+
+      lastFrame = now;
+
+
+      if (!clock) {
+        dt = 0;
+      }
+
+
+      movePlayer(
+        dt
+      );
+
+
+      /*
+       * PC移動とスマホ移動を分離。
+       * スマホではダッシュ処理を一切行わない。
+       */
+
+      updateMobileMovement(
+        dt
+      );
+
+
+      respawnIfNeeded();
+
+      updateBullets(
+        dt
+      );
+
+      updateRemotePlayers();
+
+      updateJumpButton();
+
+      updateFireProgress();
+
+      updateHud();
+
+
+      if (
+        started &&
+        !ending
+      ) {
+        syncLocalState(
+          false
+        );
+
+        checkMatchTimer();
+      }
+
+
+      if (
+        renderer &&
+        scene &&
+        camera
+      ) {
+        renderer.render(
+          scene,
+          camera
+        );
+      }
+    }
+
+
+    roomActionBtn.addEventListener(
+      "click",
+      createOrJoinRoom
+    );
+
+
+    startBtn.addEventListener(
+      "pointerdown",
+      beginStartHold
+    );
+
+
+    startBtn.addEventListener(
+      "pointerup",
+      endStartHold
+    );
+
+
+    startBtn.addEventListener(
+      "pointercancel",
+      endStartHold
+    );
+
+
+    startBtn.addEventListener(
+      "pointerleave",
+      endStartHold
+    );
+
+
+    copyRoomBtn.addEventListener(
+      "click",
+      copyRoomId
+    );
+
+
+    leaveLobbyBtn.addEventListener(
+      "click",
+      leaveRoom
+    );
+
+
+    backToMenuBtn.addEventListener(
+      "click",
+      () => {
+        handleRoomDeleted(
+          "ロビーへ戻ったよ。"
+        );
+      }
+    );
+
+
+    /*
+     * 部屋の定期クリーンアップ。
+     *
+     * 1. 全プレイヤーが1分以上操作していない
+     * 2. 部屋作成から1日以上経過
+     *
+     * のどちらかを満たした場合、
+     * 部屋とplayersサブコレクションを削除する。
+     */
+
+    setInterval(
+      () => {
+        if (
+          roomId
+        ) {
+          checkRoomCleanup();
+        }
+      },
+      10000
+    );
+
+
+    /*
+     * 試合終了タイマーの安全弁。
+     */
+
+    setInterval(
+      () => {
+        if (
+          started &&
+          isHost &&
+          !ending
+        ) {
+          checkMatchTimer();
+        }
+      },
+      5000
+    );
+
+
+    /*
+     * ページを閉じた瞬間の削除は
+     * ブラウザから保証されないため、
+     * lastActivityMs と1日制限による
+     * 自動クリーンアップを併用する。
+     */
+
+    window.addEventListener(
+      "beforeunload",
+      () => {
+      }
+    );
+
+
+    bootAuth();
+  </script>
+
+  <!--
+    Firestoreルール例
+
+    rules_version = '2';
+
+    service cloud.firestore {
+      match /databases/{database}/documents {
+
+        match /matches/{matchId} {
+
+          allow read, write:
+            if request.auth != null;
+
+          match /players/{playerId} {
+
+            allow read:
+              if request.auth != null;
+
+            allow create:
+              if request.auth != null
+              && request.auth.uid == playerId;
+
+            allow update:
+              if request.auth != null
+              && (
+                request.auth.uid == playerId
+                ||
+                (
+                  request.resource.data.keys()
+                    .hasAny([
+                      'hp',
+                      'alive',
+                      'deaths'
+                    ])
+                  &&
+                  request.auth.uid != playerId
+                )
+              );
+
+            allow delete:
+              if request.auth != null
+              && request.auth.uid == playerId;
+          }
+        }
+      }
+    }
+
+    注意:
+
+    - Firebase Authenticationで「匿名」を有効化すること。
+    - このゲームはクライアント権限で状態を共有するデモ。
+    - 本格的な競技用FPSとしてのチート耐性はない。
+    - 試合終了時はmatches/{matchId}とplayersサブコレクションを削除する。
+    - 全プレイヤーが1分以上操作していない部屋も削除する。
+    - 作成から1日以上経過した部屋も削除する。
+    - Firestoreは親ドキュメントを削除してもサブコレクションを自動削除しないため、
+      playersを個別に削除してから親を削除している。
+  -->
 </body>
 </html>
