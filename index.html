@@ -1,5645 +1,5474 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Firebase Online 3D FPS</title>
-  <style>
-    :root {
-      --ui-bg: rgba(10, 15, 25, 0.78);
-      --ui-border: rgba(255,255,255,0.16);
-      --accent: #66d9ff;
-      --danger: #ff5e6c;
-      --ok: #72f28b;
-      --text: #f4f7fb;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<title>Firebase 3D FPS</title>
 
-    * {
-      box-sizing: border-box;
-    }
+<style>
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+}
 
-    html, body {
-      width: 100%;
-      height: 100%;
-      margin: 0;
-      overflow: hidden;
-      background: #000;
-      color: var(--text);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      touch-action: none;
-    }
+html,body{
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:#000;
+  font-family:Arial,Helvetica,sans-serif;
+}
 
-    canvas {
-      display: block;
-    }
+body{
+  touch-action:none;
+}
 
-    button, input {
-      font: inherit;
-    }
+canvas{
+  display:block;
+}
 
-    button {
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-    }
+#menu{
+  position:fixed;
+  inset:0;
+  z-index:100;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:
+    radial-gradient(circle at 50% 30%,#26384f 0%,#111822 40%,#05070a 100%);
+  color:white;
+}
 
-    #game {
-      position: fixed;
-      inset: 0;
-    }
+.menuBox{
+  width:min(92vw,480px);
+  padding:28px;
+  border-radius:22px;
+  background:rgba(15,20,28,.88);
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 20px 80px rgba(0,0,0,.45);
+  backdrop-filter:blur(18px);
+}
 
-    #menu, #lobby, #endScreen {
-      position: fixed;
-      inset: 0;
-      z-index: 20;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: radial-gradient(circle at 50% 45%, rgba(35,50,80,.92), rgba(5,8,14,.98));
-    }
+.title{
+  margin:0 0 8px;
+  font-size:34px;
+  font-weight:800;
+  text-align:center;
+}
 
-    .panel {
-      width: min(92vw, 520px);
-      padding: 24px;
-      border: 1px solid var(--ui-border);
-      border-radius: 20px;
-      background: var(--ui-bg);
-      backdrop-filter: blur(16px);
-      box-shadow: 0 20px 70px rgba(0,0,0,.45);
-    }
+.subtitle{
+  text-align:center;
+  opacity:.72;
+  margin-bottom:24px;
+}
 
-    h1 {
-      margin: 0 0 8px;
-      font-size: 32px;
-    }
+.input{
+  width:100%;
+  height:48px;
+  padding:0 16px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:12px;
+  background:rgba(255,255,255,.07);
+  color:#fff;
+  font-size:18px;
+  outline:none;
+  text-transform:uppercase;
+  margin-bottom:12px;
+}
 
-    h2 {
-      margin: 0 0 12px;
-    }
+.button{
+  width:100%;
+  height:48px;
+  border:0;
+  border-radius:12px;
+  color:#fff;
+  background:#1976ff;
+  font-size:17px;
+  font-weight:700;
+  margin-top:8px;
+  cursor:pointer;
+}
 
-    p {
-      color: #b9c2d0;
-      line-height: 1.55;
-    }
+.button.secondary{
+  background:#2a3039;
+}
 
-    .row {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
+.button:active{
+  transform:scale(.98);
+}
 
-    input {
-      width: 100%;
-      padding: 12px 14px;
-      border-radius: 12px;
-      border: 1px solid var(--ui-border);
-      outline: none;
-      color: white;
-      background: rgba(255,255,255,.06);
-    }
+.info{
+  margin-top:18px;
+  font-size:13px;
+  line-height:1.6;
+  color:#c5ccd5;
+}
 
-    input:focus {
-      border-color: var(--accent);
-    }
+#status{
+  min-height:22px;
+  margin-top:12px;
+  text-align:center;
+  color:#ffce66;
+  font-size:14px;
+}
 
-    button {
-      border: 0;
-      border-radius: 12px;
-      padding: 12px 16px;
-      background: var(--accent);
-      color: #041018;
-      font-weight: 700;
-    }
+#gameUI{
+  position:fixed;
+  inset:0;
+  z-index:20;
+  pointer-events:none;
+  display:none;
+  color:#fff;
+}
 
-    button.secondary {
-      background: rgba(255,255,255,.1);
-      color: white;
-      border: 1px solid var(--ui-border);
-    }
+#topBar{
+  position:absolute;
+  top:12px;
+  left:12px;
+  right:12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:8px;
+}
 
-    button.danger {
-      background: var(--danger);
-      color: white;
-    }
+#healthBox,#matchBox{
+  padding:9px 12px;
+  border-radius:12px;
+  background:rgba(0,0,0,.45);
+  backdrop-filter:blur(8px);
+  font-size:14px;
+}
 
-    button:disabled {
-      opacity: .5;
-      cursor: default;
-    }
+#health{
+  margin-top:5px;
+  width:170px;
+  height:10px;
+  overflow:hidden;
+  border-radius:99px;
+  background:#252525;
+}
 
-    #status {
-      min-height: 24px;
-      color: #b9c2d0;
-      margin-top: 12px;
-      white-space: pre-wrap;
-    }
+#healthBar{
+  width:100%;
+  height:100%;
+  background:#48e27d;
+  transition:width .15s;
+}
 
-    #lobby {
-      display: none;
-    }
+#crosshair{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:18px;
+  height:18px;
+  margin-left:-9px;
+  margin-top:-9px;
+}
 
-    #endScreen {
-      display: none;
-    }
+#crosshair::before,
+#crosshair::after{
+  content:"";
+  position:absolute;
+  background:#fff;
+  box-shadow:0 0 3px #000;
+}
 
-    #hud {
-      position: fixed;
-      inset: 0;
-      z-index: 10;
-      pointer-events: none;
-      display: none;
-    }
+#crosshair::before{
+  width:2px;
+  height:18px;
+  left:8px;
+  top:0;
+}
 
-    #topbar {
-      position: absolute;
-      top: 16px;
-      left: 16px;
-      right: 16px;
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-    }
+#crosshair::after{
+  width:18px;
+  height:2px;
+  left:0;
+  top:8px;
+}
 
-    .hudBox {
-      background: rgba(7,11,18,.63);
-      border: 1px solid var(--ui-border);
-      backdrop-filter: blur(10px);
-      border-radius: 12px;
-      padding: 10px 12px;
-    }
+#killMessage{
+  position:absolute;
+  left:50%;
+  top:42%;
+  transform:translate(-50%,-50%);
+  font-size:28px;
+  font-weight:900;
+  text-shadow:0 3px 15px #000;
+  opacity:0;
+  transition:opacity .15s;
+}
 
-    #healthBarOuter {
-      width: 240px;
-      height: 16px;
-      border-radius: 99px;
-      overflow: hidden;
-      background: rgba(255,255,255,.12);
-      margin-top: 4px;
-    }
+#scoreBoard{
+  position:absolute;
+  right:12px;
+  top:70px;
+  min-width:150px;
+  max-width:220px;
+  padding:10px;
+  border-radius:12px;
+  background:rgba(0,0,0,.45);
+  backdrop-filter:blur(8px);
+  font-size:12px;
+}
 
-    #healthBar {
-      height: 100%;
-      width: 100%;
-      background: var(--ok);
-      transition: width .08s linear;
-    }
+.scoreRow{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  margin:3px 0;
+}
 
-    #crosshair {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      width: 18px;
-      height: 18px;
-      transform: translate(-50%,-50%);
-    }
+.scoreAlive{
+  color:#6dff8f;
+}
 
-    #crosshair::before,
-    #crosshair::after {
-      content: "";
-      position: absolute;
-      background: rgba(255,255,255,.92);
-      box-shadow: 0 0 4px rgba(0,0,0,.8);
-    }
+.scoreDead{
+  color:#ff7070;
+}
 
-    #crosshair::before {
-      left: 8px;
-      top: 0;
-      width: 2px;
-      height: 18px;
-    }
+#preStart{
+  position:absolute;
+  left:50%;
+  top:58%;
+  transform:translate(-50%,-50%);
+  display:none;
+  pointer-events:auto;
+  text-align:center;
+}
 
-    #crosshair::after {
-      left: 0;
-      top: 8px;
-      width: 18px;
-      height: 2px;
-    }
+#preStartText{
+  margin-bottom:12px;
+  font-weight:800;
+  font-size:16px;
+}
 
-    #message {
-      position: absolute;
-      left: 50%;
-      bottom: 12%;
-      transform: translateX(-50%);
-      padding: 10px 14px;
-      border-radius: 999px;
-      background: rgba(0,0,0,.55);
-      border: 1px solid var(--ui-border);
-      opacity: 0;
-      transition: opacity .15s;
-    }
+#startButton{
+  position:relative;
+  width:105px;
+  height:105px;
+  border-radius:50%;
+  border:2px solid rgba(255,255,255,.35);
+  background:rgba(0,0,0,.42);
+  color:#fff;
+  font-size:18px;
+  font-weight:900;
+  overflow:hidden;
+}
 
-    #help {
-      position: absolute;
-      left: 16px;
-      bottom: 16px;
-      max-width: 500px;
-      font-size: 13px;
-      color: #d5dbe6;
-      background: rgba(7,11,18,.55);
-      border: 1px solid var(--ui-border);
-      border-radius: 12px;
-      padding: 9px 11px;
-    }
+#startButton::before{
+  content:"";
+  position:absolute;
+  inset:5px;
+  border-radius:50%;
+  background:
+    conic-gradient(
+      #36a3ff var(--progress,0%),
+      rgba(255,255,255,.10) var(--progress,0%)
+    );
+  z-index:0;
+}
 
-    #mobileControls {
-      display: none;
-    }
+#startButton::after{
+  content:"";
+  position:absolute;
+  inset:13px;
+  border-radius:50%;
+  background:rgba(12,17,23,.94);
+  z-index:1;
+}
 
-    .small {
-      font-size: 12px;
-      color: #96a2b5;
-    }
+#startButton span{
+  position:relative;
+  z-index:2;
+}
 
-    code {
-      color: #cceeff;
-    }
+#gameOver{
+  position:fixed;
+  inset:0;
+  z-index:50;
+  display:none;
+  justify-content:center;
+  align-items:center;
+  background:rgba(0,0,0,.68);
+  backdrop-filter:blur(10px);
+  color:white;
+}
 
-    #playersList {
-      margin: 12px 0 0;
-      padding: 0;
-      list-style: none;
-      display: grid;
-      gap: 8px;
-      max-height: 220px;
-      overflow: auto;
-    }
+.gameOverBox{
+  width:min(88vw,430px);
+  padding:28px;
+  border-radius:22px;
+  text-align:center;
+  background:rgba(18,22,29,.94);
+}
 
-    #playersList li {
-      padding: 9px 11px;
-      border-radius: 10px;
-      background: rgba(255,255,255,.05);
-      display: flex;
-      justify-content: space-between;
-    }
+.gameOverTitle{
+  font-size:38px;
+  font-weight:900;
+  margin-bottom:8px;
+}
 
-    .mono {
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    }
+.gameOverText{
+  font-size:18px;
+  opacity:.85;
+  margin-bottom:20px;
+}
 
-    .holdButton {
-      position: relative;
-      overflow: hidden;
-    }
+#mobileControls{
+  display:none;
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
 
-    .holdButton::before {
-      content: "";
-      position: absolute;
-      inset: 3px;
-      border-radius: 10px;
-      background: conic-gradient(
-        var(--accent) calc(var(--progress, 0) * 1turn),
-        rgba(255,255,255,.12) 0
-      );
-      opacity: .9;
-      pointer-events: none;
-    }
+#joystickZone{
+  position:absolute;
+  left:18px;
+  bottom:20px;
+  width:150px;
+  height:150px;
+  border-radius:50%;
+  pointer-events:auto;
+}
 
-    .holdButton::after {
-      content: "";
-      position: absolute;
-      inset: 6px;
-      border-radius: 8px;
-      background: var(--accent);
-      pointer-events: none;
-    }
+#joystickBase{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:118px;
+  height:118px;
+  margin-left:-59px;
+  margin-top:-59px;
+  border-radius:50%;
+  border:2px solid rgba(255,255,255,.23);
+  background:rgba(255,255,255,.06);
+}
 
-    .holdButton > span {
-      position: relative;
-      z-index: 2;
-    }
+#joystickKnob{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:54px;
+  height:54px;
+  margin-left:-27px;
+  margin-top:-27px;
+  border-radius:50%;
+  border:2px solid rgba(255,255,255,.35);
+  background:rgba(255,255,255,.16);
+}
 
-    #fireButton,
-    #jumpButton {
-      position: relative;
-      overflow: hidden;
-    }
+#lookZone{
+  position:absolute;
+  right:0;
+  top:0;
+  width:55%;
+  height:70%;
+  pointer-events:auto;
+}
 
-    #fireButton::before,
-    #jumpButton::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      background: conic-gradient(
-        rgba(255,255,255,.72) calc(var(--progress, 0) * 1turn),
-        rgba(255,255,255,.10) 0
-      );
-      opacity: .7;
-      pointer-events: none;
-    }
+.mobileButton{
+  position:absolute;
+  border:1px solid rgba(255,255,255,.25);
+  background:rgba(20,20,20,.45);
+  color:#fff;
+  border-radius:50%;
+  backdrop-filter:blur(8px);
+  pointer-events:auto;
+  font-weight:800;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
 
-    #fireButton > span,
-    #jumpButton > span {
-      position: relative;
-      z-index: 2;
-    }
+#fireButton{
+  width:88px;
+  height:88px;
+  right:24px;
+  bottom:32px;
+  background:rgba(220,50,50,.28);
+  overflow:hidden;
+}
 
-    #jumpButton.grabAvailable {
-      background: rgba(102,217,255,.92);
-      color: #041018;
-    }
+#fireButton::before{
+  content:"";
+  position:absolute;
+  inset:4px;
+  border-radius:50%;
+  background:
+    conic-gradient(
+      rgba(255,80,80,.9) var(--fireProgress,100%),
+      rgba(255,255,255,.08) var(--fireProgress,100%)
+    );
+  z-index:0;
+}
 
-    #jumpButton.grabUnavailable {
-      background: rgba(255,255,255,.08);
-      color: rgba(255,255,255,.35);
-      border: 1px solid rgba(255,255,255,.08);
-    }
+#fireButton::after{
+  content:"";
+  position:absolute;
+  inset:12px;
+  border-radius:50%;
+  background:rgba(25,20,20,.9);
+  z-index:1;
+}
 
-    #startBtn {
-      --progress: 0;
-    }
+#fireButton span{
+  position:relative;
+  z-index:2;
+}
 
-    @media (max-width: 700px) {
-      #healthBarOuter {
-        width: 150px;
-      }
+#jumpButton{
+  width:64px;
+  height:64px;
+  right:125px;
+  bottom:44px;
+}
 
-      #help {
-        display: none;
-      }
+#grabButton{
+  width:64px;
+  height:64px;
+  right:125px;
+  bottom:120px;
+  transition:
+    opacity .12s,
+    background .12s;
+}
 
-      #mobileControls {
-        display: block;
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-      }
+#grabButton.inactive{
+  opacity:.28;
+  background:rgba(20,20,20,.25);
+}
 
-      .stickArea {
-        position: absolute;
-        bottom: 26px;
-        width: 150px;
-        height: 150px;
-        border-radius: 50%;
-        background: rgba(255,255,255,.06);
-        border: 1px solid rgba(255,255,255,.12);
-        pointer-events: auto;
-        touch-action: none;
-      }
+#grabButton.active{
+  opacity:1;
+  background:rgba(35,130,255,.55);
+}
 
-      #moveStick {
-        left: 18px;
-      }
+#desktopHint{
+  position:absolute;
+  bottom:14px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:7px 11px;
+  border-radius:8px;
+  background:rgba(0,0,0,.38);
+  font-size:12px;
+  opacity:.65;
+}
 
-      #lookArea {
-        right: 18px;
-        width: 190px;
-        border-radius: 24px;
-      }
+.hidden{
+  display:none !important;
+}
 
-      .stickKnob {
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        width: 54px;
-        height: 54px;
-        transform: translate(-50%,-50%);
-        border-radius: 50%;
-        background: rgba(255,255,255,.2);
-      }
+@media (pointer:coarse){
 
-      #fireButton {
-        position: absolute;
-        right: 42px;
-        bottom: 205px;
-        width: 74px;
-        height: 74px;
-        border-radius: 50%;
-        pointer-events: auto;
-        background: rgba(255,94,108,.78);
-        color: white;
-        border: 1px solid rgba(255,255,255,.18);
-      }
+  #mobileControls{
+    display:block;
+  }
 
-      #jumpButton {
-        position: absolute;
-        right: 42px;
-        bottom: 110px;
-        width: 74px;
-        height: 74px;
-        border-radius: 50%;
-        pointer-events: auto;
-      }
+  #desktopHint{
+    display:none;
+  }
 
-      #startBtn {
-        width: 150px;
-      }
-    }
-  </style>
+}
+</style>
 </head>
 
 <body>
-  <div id="game"></div>
 
-  <div id="menu">
-    <div class="panel">
-      <h1>Firebase 3D FPS</h1>
-      <p>オンラインで同じアリーナに入り、相手を撃ってスコアを競うシンプルな対戦FPS。</p>
+<div id="menu">
 
-      <input id="nameInput" maxlength="16" placeholder="プレイヤー名" value="Player" />
+  <div class="menuBox">
 
-      <div style="height:10px"></div>
+    <h1 class="title">3D FPS</h1>
 
-      <input id="roomInput" maxlength="20" placeholder="部屋コード（空欄なら自動作成）" />
-
-      <div style="height:10px"></div>
-
-      <div class="row">
-        <button id="roomActionBtn">試合を作成/参加</button>
-      </div>
-
-      <div id="status"></div>
-
-      <div class="small" style="margin-top:12px">
-        PC: WASD移動 / マウス視点 / 左クリック射撃 / Spaceジャンプ・GRAB
-      </div>
-
-      <div class="small" style="margin-top:4px">
-        スマホ: 左スティック移動 / 右側ドラッグで視点 / FIRE / JUMP・GRAB
-      </div>
+    <div class="subtitle">
+      Firebase Online Battle
     </div>
+
+    <input
+      id="matchCodeInput"
+      class="input"
+      maxlength="8"
+      placeholder="試合コード"
+      autocomplete="off"
+      spellcheck="false"
+    >
+
+    <button
+      id="matchButton"
+      class="button"
+    >
+      試合を作成/参加
+    </button>
+
+    <div id="status"></div>
+
+    <div class="info">
+      PC：WASDで移動、マウスで視点、クリックで射撃、Spaceでジャンプ<br>
+      スマホ：左スティックで移動、右側スワイプで視点、FIRE・JUMP・GRAB
+    </div>
+
   </div>
 
-  <div id="lobby">
-    <div class="panel">
-      <h2>待機中</h2>
+</div>
 
-      <p>
-        部屋コード:
-        <span id="roomIdLabel" class="mono"></span>
-      </p>
+<div id="gameUI">
 
-      <p>
-        参加者
-        <span id="playerCount">0</span> / 8
-      </p>
+  <div id="topBar">
 
-      <ul id="playersList"></ul>
+    <div id="healthBox">
 
-      <div class="row" style="margin-top:14px">
-        <button id="startBtn" class="holdButton">
-          <span>START</span>
-        </button>
-
-        <button id="copyRoomBtn" class="secondary">
-          部屋コードをコピー
-        </button>
-
-        <button id="leaveLobbyBtn" class="danger">
-          退出
-        </button>
+      <div id="healthText">
+        HP 100
       </div>
 
-      <div class="small" style="margin-top:10px">
-        部屋主だけSTARTを長押しすると試合開始。
+      <div id="health">
+
+        <div id="healthBar"></div>
+
       </div>
+
     </div>
+
+    <div id="matchBox">
+
+      <div>
+        ROOM:
+        <span id="roomText">----</span>
+      </div>
+
+      <div>
+        PLAYER:
+        <span id="playerCountText">0</span>
+      </div>
+
+      <div>
+        KILLS:
+        <span id="killsText">0</span>
+      </div>
+
+    </div>
+
   </div>
 
-  <div id="hud">
-    <div id="topbar">
-      <div class="hudBox">
-        <div>HP <span id="healthText">100</span></div>
-        <div id="healthBarOuter">
-          <div id="healthBar"></div>
-        </div>
-      </div>
+  <div id="scoreBoard"></div>
 
-      <div class="hudBox">
-        K/D: <span id="scoreText">0 / 0</span>
-        <br>
-        <span class="small">
-          残り時間 <span id="timeText">03:00</span>
-        </span>
-      </div>
+  <div id="crosshair"></div>
+
+  <div id="killMessage"></div>
+
+  <div id="preStart">
+
+    <div id="preStartText">
+      部屋主がSTARTを長押しして開始
     </div>
 
-    <div id="crosshair"></div>
-    <div id="message"></div>
+    <button id="startButton">
+      <span>START</span>
+    </button>
 
-    <div id="help">
-      WASDで移動 / マウスで視点 / クリックで射撃 / Spaceでジャンプ・GRAB<br>
-      銃弾には速度があり、FIREには連射間隔がある。
-    </div>
-
-    <div id="mobileControls">
-      <div id="moveStick" class="stickArea">
-        <div id="moveKnob" class="stickKnob"></div>
-      </div>
-
-      <div id="lookArea" class="stickArea"></div>
-
-      <button id="fireButton">
-        <span>FIRE</span>
-      </button>
-
-      <button id="jumpButton" class="grabUnavailable">
-        <span>JUMP</span>
-      </button>
-    </div>
   </div>
 
-  <div id="endScreen">
-    <div class="panel">
-      <h2 id="winnerTitle">試合終了</h2>
-
-      <p id="resultText"></p>
-
-      <div id="finalRanking"></div>
-
-      <div class="row" style="margin-top:14px">
-        <button id="backToMenuBtn">
-          ロビーへ戻る
-        </button>
-      </div>
-
-      <div class="small" style="margin-top:10px">
-        試合終了時、この試合用のFirestoreデータを削除する。
-      </div>
-    </div>
+  <div id="desktopHint">
+    WASD / Mouse / Click / Space
   </div>
 
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
-      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
-    }
+  <div id="mobileControls">
+
+    <div id="joystickZone">
+
+      <div id="joystickBase">
+
+        <div id="joystickKnob"></div>
+
+      </div>
+
+    </div>
+
+    <div id="lookZone"></div>
+
+    <div
+      id="grabButton"
+      class="mobileButton inactive"
+    >
+      GRAB
+    </div>
+
+    <div
+      id="jumpButton"
+      class="mobileButton"
+    >
+      JUMP
+    </div>
+
+    <div
+      id="fireButton"
+      class="mobileButton"
+    >
+      <span>FIRE</span>
+    </div>
+
+  </div>
+
+</div>
+
+<div id="gameOver">
+
+  <div class="gameOverBox">
+
+    <div
+      id="gameOverTitle"
+      class="gameOverTitle"
+    >
+      試合終了
+    </div>
+
+    <div
+      id="gameOverText"
+      class="gameOverText"
+    >
+      ---
+    </div>
+
+    <button
+      id="returnButton"
+      class="button"
+    >
+      メニューへ戻る
+    </button>
+
+  </div>
+
+</div>
+
+<script type="module">
+
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+
+import {
+  getAuth,
+  signInAnonymously,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  updateDoc,
+  deleteDoc,
+  onSnapshot,
+  runTransaction,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
+import * as THREE from
+  "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
+
+
+const firebaseConfig = {
+
+  apiKey:
+    "AIzaSyD5cTt3b1IeiGIOgJcC0sSFgO-Ce78JyIw",
+
+  authDomain:
+    "dfps-4aa92.firebaseapp.com",
+
+  projectId:
+    "dfps-4aa92",
+
+  storageBucket:
+    "dfps-4aa92.firebasestorage.app",
+
+  messagingSenderId:
+    "379021412536",
+
+  appId:
+    "1:379021412536:web:003efdb33f6d6bb77d8c4d",
+
+  measurementId:
+    "G-BG2KFTL9ZC"
+
+};
+
+
+const app =
+  initializeApp(firebaseConfig);
+
+const auth =
+  getAuth(app);
+
+const db =
+  getFirestore(app);
+
+
+let currentUser = null;
+
+let currentMatchId = null;
+
+let matchRef = null;
+
+let unsubscribeMatch = null;
+
+let isHost = false;
+
+let gameStarted = false;
+
+let gameEnded = false;
+
+let matchHasStarted = false;
+
+let localPlayer = null;
+
+let localKills = 0;
+
+let lastNetworkUpdate = 0;
+
+let lastFrameTime =
+  performance.now();
+
+let gameLoopStarted = false;
+
+let startHoldStart = null;
+
+let startHolding = false;
+
+let fireHolding = false;
+
+let grabHolding = false;
+
+let grabAnimation = null;
+
+let spawnProtectionUntil = 0;
+
+let fireCooldownEnd = 0;
+
+let bulletIdCounter = 0;
+
+
+const START_HOLD_TIME = 1800;
+
+const START_PROTECTION_TIME = 3000;
+
+const FIRE_INTERVAL = 320;
+
+const BULLET_SPEED = 42;
+
+const BULLET_LIFETIME = 2200;
+
+const BULLET_DAMAGE = 34;
+
+const GRAB_DISTANCE = 1.15;
+
+const GRAB_TIME = 500;
+
+const ARENA_SIZE = 70;
+
+const PLAYER_HEIGHT = 1.6;
+
+const MAX_HP = 100;
+
+
+const keys = {
+
+  w:false,
+  a:false,
+  s:false,
+  d:false
+
+};
+
+
+const mobileInput = {
+
+  x:0,
+  y:0,
+  firing:false
+
+};
+
+
+const cameraState = {
+
+  yaw:0,
+  pitch:0
+
+};
+
+
+const physics = {
+
+  gravity:-25,
+  jumpPower:9,
+  moveSpeed:6
+
+};
+
+
+let velocityY = 0;
+
+let grounded = true;
+
+
+let scene;
+
+let camera;
+
+let renderer;
+
+let raycaster;
+
+
+const colliders = [];
+
+const playerMeshes =
+  new Map();
+
+const bullets = new Map();
+
+
+const menu =
+  document.getElementById("menu");
+
+const gameUI =
+  document.getElementById("gameUI");
+
+const gameOver =
+  document.getElementById("gameOver");
+
+const statusEl =
+  document.getElementById("status");
+
+const matchCodeInput =
+  document.getElementById("matchCodeInput");
+
+const matchButton =
+  document.getElementById("matchButton");
+
+const roomText =
+  document.getElementById("roomText");
+
+const playerCountText =
+  document.getElementById("playerCountText");
+
+const killsText =
+  document.getElementById("killsText");
+
+const healthText =
+  document.getElementById("healthText");
+
+const healthBar =
+  document.getElementById("healthBar");
+
+const scoreBoard =
+  document.getElementById("scoreBoard");
+
+const killMessage =
+  document.getElementById("killMessage");
+
+const preStart =
+  document.getElementById("preStart");
+
+const preStartText =
+  document.getElementById("preStartText");
+
+const startButton =
+  document.getElementById("startButton");
+
+const fireButton =
+  document.getElementById("fireButton");
+
+const jumpButton =
+  document.getElementById("jumpButton");
+
+const grabButton =
+  document.getElementById("grabButton");
+
+const joystickZone =
+  document.getElementById("joystickZone");
+
+const joystickKnob =
+  document.getElementById("joystickKnob");
+
+const lookZone =
+  document.getElementById("lookZone");
+
+const returnButton =
+  document.getElementById("returnButton");
+
+
+function randomCode(length = 6){
+
+  const chars =
+    "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+  let result = "";
+
+  for(
+    let i = 0;
+    i < length;
+    i++
+  ){
+
+    result +=
+      chars[
+        Math.floor(
+          Math.random() *
+          chars.length
+        )
+      ];
+
   }
-  </script>
 
-  <script type="module">
-    import * as THREE from "three";
-    import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
+  return result;
 
-    import {
-      initializeApp
-    } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+}
 
-    import {
-      getFirestore,
-      collection,
-      doc,
-      setDoc,
-      getDoc,
-      getDocs,
-      updateDoc,
-      deleteDoc,
-      onSnapshot,
-      serverTimestamp,
-      writeBatch
-    } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
-    import {
-      getAuth,
-      signInAnonymously,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+function randomSpawn(){
 
+  const margin = 7;
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyD5cTt3b1IeiGIOgJcC0sSFgO-Ce78JyIw",
-      authDomain: "dfps-4aa92.firebaseapp.com",
-      projectId: "dfps-4aa92",
-      storageBucket: "dfps-4aa92.firebasestorage.app",
-      messagingSenderId: "379021412536",
-      appId: "1:379021412536:web:003efdb33f6d6bb77d8c4d",
-      measurementId: "G-BG2KFTL9ZC"
-    };
+  return {
 
+    x:
+      Math.random() *
+      (ARENA_SIZE - margin * 2) -
+      (ARENA_SIZE / 2 - margin),
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
+    y:
+      PLAYER_HEIGHT,
 
+    z:
+      Math.random() *
+      (ARENA_SIZE - margin * 2) -
+      (ARENA_SIZE / 2 - margin)
 
-    const $ = (id) => document.getElementById(id);
+  };
 
-    const menu = $("menu");
-    const lobby = $("lobby");
-    const hud = $("hud");
-    const endScreen = $("endScreen");
+}
 
-    const statusEl = $("status");
-    const nameInput = $("nameInput");
-    const roomInput = $("roomInput");
 
-    const roomIdLabel = $("roomIdLabel");
-    const playerCount = $("playerCount");
-    const playersList = $("playersList");
+function playerColor(uid){
 
-    const roomActionBtn = $("roomActionBtn");
-    const startBtn = $("startBtn");
-    const copyRoomBtn = $("copyRoomBtn");
-    const leaveLobbyBtn = $("leaveLobbyBtn");
+  let hash = 0;
 
-    const backToMenuBtn = $("backToMenuBtn");
+  for(
+    let i = 0;
+    i < uid.length;
+    i++
+  ){
 
-    const jumpButton = $("jumpButton");
-    const fireButton = $("fireButton");
+    hash =
+      (
+        (hash << 5) -
+        hash
+      ) +
+      uid.charCodeAt(i);
 
+    hash |= 0;
 
-    let authUser = null;
+  }
 
-    let roomId = null;
-    let playerId = null;
-    let playerName = "Player";
+  const hue =
+    Math.abs(hash) % 360;
 
-    let isHost = false;
+  return new THREE.Color(
+    `hsl(${hue},70%,58%)`
+  );
 
-    let roomUnsub = null;
-    let playersUnsub = null;
+}
 
-    let started = false;
-    let ending = false;
 
-    let roomDataCache = null;
+function createPlayerMesh(uid){
 
+  const group =
+    new THREE.Group();
 
-    const MATCH_DURATION = 180;
-    const MAX_PLAYERS = 8;
+  const bodyGeometry =
+    new THREE.CapsuleGeometry(
+      .45,
+      .8,
+      6,
+      12
+    );
 
-    const TICK_RATE = 12;
+  const bodyMaterial =
+    new THREE.MeshStandardMaterial({
 
-    const PLAYER_SPEED = 7.0;
+      color:
+        playerColor(uid),
 
-    const LOOK_SPEED = 0.0022;
+      roughness:.8
 
-    const PLAYER_RADIUS = 0.55;
+    });
 
-    const MAX_HP = 100;
+  const body =
+    new THREE.Mesh(
+      bodyGeometry,
+      bodyMaterial
+    );
 
-    const HIT_DAMAGE = 25;
+  body.position.y =
+    .8;
 
-    const MAX_SCORE = 10;
+  group.add(body);
 
-    const JUMP_SPEED = 8.5;
-    const GRAVITY = 22;
 
-    const EYE_HEIGHT = 1.15;
-    const PLAYER_HEAD_HEIGHT = 1.75;
+  const headGeometry =
+    new THREE.SphereGeometry(
+      .32,
+      16,
+      12
+    );
 
-    const GRAB_DISTANCE = 0.9;
-    const CLIMB_TIME = 500;
+  const headMaterial =
+    new THREE.MeshStandardMaterial({
 
-    const BULLET_SPEED = 32;
-    const BULLET_RADIUS = 0.075;
-    const FIRE_COOLDOWN = 300;
+      color:
+        0xe7c5a5
 
-    const START_HOLD_TIME = 1200;
+    });
 
-    const START_INVINCIBILITY = 3000;
+  const head =
+    new THREE.Mesh(
+      headGeometry,
+      headMaterial
+    );
 
-    const INACTIVITY_LIMIT = 60 * 1000;
-    const STALE_MATCH_LIMIT = 24 * 60 * 60 * 1000;
+  head.position.y =
+    1.55;
 
+  group.add(head);
 
-    let scene;
-    let camera;
-    let renderer;
-    let controls;
-    let clock;
 
-    let arenaGroup;
+  const gunGeometry =
+    new THREE.BoxGeometry(
+      .12,
+      .12,
+      .75
+    );
 
+  const gunMaterial =
+    new THREE.MeshStandardMaterial({
 
-    const remotePlayers = new Map();
-    const remoteState = new Map();
+      color:
+        0x202020,
 
-    const bullets = [];
+      metalness:.8,
 
-    const keys = new Set();
+      roughness:.3
 
+    });
 
-    let local = {
-      x: 0,
-      y: EYE_HEIGHT,
-      z: 0,
+  const gun =
+    new THREE.Mesh(
+      gunGeometry,
+      gunMaterial
+    );
 
-      yaw: 0,
-      pitch: 0,
+  gun.position.set(
+    .35,
+    1.15,
+    -.42
+  );
 
-      hp: MAX_HP,
-      kills: 0,
-      deaths: 0,
+  group.add(gun);
 
-      lastWrite: 0,
 
-      lastActivityAt: Date.now(),
-      lastActivitySent: 0,
+  group.userData.uid =
+    uid;
 
-      respawnAt: 0,
+  scene.add(group);
 
-      vx: 0,
-      vy: 0,
-      vz: 0,
+  return group;
 
-      grounded: true,
+}
 
-      invulnerableUntil: 0,
 
-      climbing: false,
-      climbStart: 0,
-      climbEnd: 0,
-      climbFromY: EYE_HEIGHT,
-      climbToY: EYE_HEIGHT,
+function removeRemoteMesh(uid){
 
-      nextFireAt: 0
-    };
+  const mesh =
+    playerMeshes.get(uid);
 
+  if(!mesh){
+    return;
+  }
 
-    let matchEndAt = 0;
+  scene.remove(mesh);
 
-    let lastFrame = performance.now();
+  mesh.traverse(
+    object => {
 
-    let raycaster = new THREE.Raycaster();
+      if(object.geometry){
 
+        object.geometry.dispose();
 
-    const platforms = [];
-
-
-    function setStatus(text) {
-      statusEl.textContent = text;
-    }
-
-
-    function sanitizeName(v) {
-      const s = String(v || "Player")
-        .replace(/[<>"']/g, "")
-        .trim()
-        .slice(0, 16);
-
-      return s || "Player";
-    }
-
-
-    function randomRoomId() {
-      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-
-      let out = "";
-
-      for (let i = 0; i < 6; i++) {
-        out += chars[Math.floor(Math.random() * chars.length)];
       }
 
-      return out;
-    }
+      if(object.material){
 
+        if(
+          Array.isArray(
+            object.material
+          )
+        ){
 
-    function clamp(v, a, b) {
-      return Math.max(a, Math.min(b, v));
-    }
+          object.material.forEach(
+            material =>
+              material.dispose()
+          );
 
+        }else{
 
-    function formatTime(sec) {
-      sec = Math.max(0, Math.ceil(sec));
+          object.material.dispose();
 
-      const m = Math.floor(sec / 60)
-        .toString()
-        .padStart(2, "0");
+        }
 
-      const s = (sec % 60)
-        .toString()
-        .padStart(2, "0");
-
-      return `${m}:${s}`;
-    }
-
-
-    function showMessage(text, ms = 1000) {
-      const el = $("message");
-
-      el.textContent = text;
-      el.style.opacity = "1";
-
-      clearTimeout(showMessage._t);
-
-      showMessage._t = setTimeout(() => {
-        el.style.opacity = "0";
-      }, ms);
-    }
-
-
-    function markActivity() {
-      local.lastActivityAt = Date.now();
-    }
-
-
-    function timestampMs(value) {
-      if (!value) return 0;
-
-      if (typeof value === "number") {
-        return value;
       }
 
-      if (typeof value.toMillis === "function") {
-        return value.toMillis();
-      }
-
-      if (value.seconds != null) {
-        return value.seconds * 1000 +
-          Math.floor((value.nanoseconds || 0) / 1000000);
-      }
-
-      return 0;
     }
+  );
+
+  playerMeshes.delete(uid);
+
+}
 
 
-    async function bootAuth() {
-      setStatus("Firebaseへ接続中…");
+function setupScene(){
 
-      try {
-        await signInAnonymously(auth);
-      } catch (e) {
-        console.error(e);
+  scene =
+    new THREE.Scene();
 
-        setStatus(
-          "Firebase Authenticationに接続できなかった。\n" +
-          "Firebaseコンソールで匿名ログインを有効にしてね。"
-        );
-      }
-    }
+  scene.background =
+    new THREE.Color(
+      0x8eb3d9
+    );
+
+  scene.fog =
+    new THREE.Fog(
+      0x8eb3d9,
+      55,
+      140
+    );
 
 
-    onAuthStateChanged(auth, (user) => {
-      authUser = user;
+  camera =
+    new THREE.PerspectiveCamera(
+      75,
+      window.innerWidth /
+      window.innerHeight,
+      .05,
+      300
+    );
 
-      if (user && !roomId) {
-        setStatus(
-          "接続OK。部屋コードを入力するか、空欄のまま試合を作成/参加してね。"
-        );
-      }
+
+  renderer =
+    new THREE.WebGLRenderer({
+
+      antialias:true,
+
+      powerPreference:
+        "high-performance"
+
     });
 
 
-    function initThree() {
-      if (renderer) return;
+  renderer.setPixelRatio(
+    Math.min(
+      window.devicePixelRatio,
+      2
+    )
+  );
 
-      scene = new THREE.Scene();
+  renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+  );
 
-      scene.background = new THREE.Color(0x87a0b8);
+  renderer.shadowMap.enabled =
+    true;
 
-      scene.fog = new THREE.Fog(
-        0x87a0b8,
-        20,
-        80
-      );
+  renderer.shadowMap.type =
+    THREE.PCFSoftShadowMap;
 
 
-      camera = new THREE.PerspectiveCamera(
-        75,
-        innerWidth / innerHeight,
-        0.05,
-        120
-      );
+  document.body.insertBefore(
+    renderer.domElement,
+    document.body.firstChild
+  );
 
-      camera.position.set(
-        0,
-        EYE_HEIGHT,
-        8
-      );
 
+  raycaster =
+    new THREE.Raycaster();
 
-      renderer = new THREE.WebGLRenderer({
-        antialias: true,
-        powerPreference: "high-performance"
-      });
 
-      renderer.setPixelRatio(
-        Math.min(devicePixelRatio, 1.75)
-      );
+  const ambient =
+    new THREE.HemisphereLight(
+      0xffffff,
+      0x3c4550,
+      1.5
+    );
 
-      renderer.setSize(
-        innerWidth,
-        innerHeight
-      );
+  scene.add(ambient);
 
-      renderer.shadowMap.enabled = true;
 
-      $("game").appendChild(
-        renderer.domElement
-      );
+  const sun =
+    new THREE.DirectionalLight(
+      0xffffff,
+      2.2
+    );
 
+  sun.position.set(
+    20,
+    40,
+    15
+  );
 
-      const hemi =
-        new THREE.HemisphereLight(
-          0xcfe5ff,
-          0x2c3340,
-          2.0
-        );
+  sun.castShadow =
+    true;
 
-      scene.add(hemi);
-
+  sun.shadow.mapSize.width =
+    2048;
 
-      const sun =
-        new THREE.DirectionalLight(
-          0xffffff,
-          2.0
-        );
+  sun.shadow.mapSize.height =
+    2048;
 
-      sun.position.set(
-        10,
-        20,
-        6
-      );
-
-      sun.castShadow = true;
-
-      scene.add(sun);
-
-
-      arenaGroup = new THREE.Group();
+  scene.add(sun);
 
-      scene.add(arenaGroup);
 
+  createArena();
 
-      const floor = new THREE.Mesh(
-        new THREE.BoxGeometry(
-          48,
-          0.5,
-          48
-        ),
-        new THREE.MeshStandardMaterial({
-          color: 0x313b48,
-          roughness: 0.92
-        })
-      );
-
-      floor.position.y = -0.3;
-
-      floor.receiveShadow = true;
-
-      arenaGroup.add(floor);
-
-
-      const wallMat =
-        new THREE.MeshStandardMaterial({
-          color: 0x596579,
-          roughness: 0.82
-        });
-
-      const crateMat =
-        new THREE.MeshStandardMaterial({
-          color: 0x9e7b55,
-          roughness: 0.95
-        });
-
-      const metalMat =
-        new THREE.MeshStandardMaterial({
-          color: 0x78879a,
-          roughness: 0.52,
-          metalness: 0.55
-        });
-
-      const platformMat =
-        new THREE.MeshStandardMaterial({
-          color: 0x4c89b8,
-          roughness: 0.7,
-          metalness: 0.1
-        });
-
-
-      platforms.length = 0;
-
-
-      const addBox = (
-        x,
-        y,
-        z,
-        w,
-        h,
-        d,
-        mat,
-        collision = true
-      ) => {
-        const m = new THREE.Mesh(
-          new THREE.BoxGeometry(
-            w,
-            h,
-            d
-          ),
-          mat
-        );
-
-        m.position.set(
-          x,
-          y,
-          z
-        );
-
-        m.castShadow = true;
-        m.receiveShadow = true;
-
-        arenaGroup.add(m);
-
-
-        if (collision) {
-          platforms.push({
-            x,
-            y,
-            z,
-            w,
-            h,
-            d,
-            top: y + h / 2
-          });
-        }
-
-        return m;
-      };
-
-
-      addBox(
-        0,
-        3.0,
-        -24,
-        48,
-        6,
-        0.8,
-        wallMat
-      );
-
-      addBox(
-        0,
-        3.0,
-        24,
-        48,
-        6,
-        0.8,
-        wallMat
-      );
-
-      addBox(
-        -24,
-        3.0,
-        0,
-        0.8,
-        6,
-        48,
-        wallMat
-      );
-
-      addBox(
-        24,
-        3.0,
-        0,
-        0.8,
-        6,
-        48,
-        wallMat
-      );
-
-
-      addBox(
-        -8,
-        1.2,
-        -8,
-        5,
-        2.4,
-        5,
-        crateMat
-      );
-
-      addBox(
-        8,
-        1.2,
-        -8,
-        5,
-        2.4,
-        5,
-        crateMat
-      );
-
-      addBox(
-        -8,
-        1.2,
-        8,
-        5,
-        2.4,
-        5,
-        crateMat
-      );
-
-      addBox(
-        8,
-        1.2,
-        8,
-        5,
-        2.4,
-        5,
-        crateMat
-      );
-
-
-      addBox(
-        0,
-        1.5,
-        0,
-        3.5,
-        3,
-        7,
-        metalMat
-      );
-
-      addBox(
-        -14,
-        0.9,
-        0,
-        3,
-        1.8,
-        10,
-        metalMat
-      );
-
-      addBox(
-        14,
-        0.9,
-        0,
-        3,
-        1.8,
-        10,
-        metalMat
-      );
-
-      addBox(
-        0,
-        0.9,
-        -14,
-        10,
-        1.8,
-        3,
-        metalMat
-      );
-
-      addBox(
-        0,
-        0.9,
-        14,
-        10,
-        1.8,
-        3,
-        metalMat
-      );
-
-
-      /*
-       * 追加の低い足場。
-       * 既存の高い足場へジャンプ→GRAB→登る
-       * というルートを作れるようにしている。
-       */
-
-      addBox(
-        -13,
-        0.45,
-        -8,
-        3.2,
-        0.9,
-        3.2,
-        platformMat
-      );
-
-      addBox(
-        -13,
-        1.35,
-        -8,
-        3.2,
-        0.9,
-        3.2,
-        platformMat
-      );
-
-      addBox(
-        13,
-        0.45,
-        -8,
-        3.2,
-        0.9,
-        3.2,
-        platformMat
-      );
-
-      addBox(
-        13,
-        1.35,
-        -8,
-        3.2,
-        0.9,
-        3.2,
-        platformMat
-      );
-
-      addBox(
-        -13,
-        0.45,
-        8,
-        3.2,
-        0.9,
-        3.2,
-        platformMat
-      );
-
-      addBox(
-        -13,
-        1.35,
-        8,
-        3.2,
-        0.9,
-        3.2,
-        platformMat
-      );
-
-      addBox(
-        13,
-        0.45,
-        8,
-        3.2,
-        0.9,
-        3.2,
-        platformMat
-      );
-
-      addBox(
-        13,
-        1.35,
-        8,
-        3.2,
-        0.9,
-        3.2,
-        platformMat
-      );
-
-
-      addBox(
-        -4.5,
-        0.45,
-        -17,
-        3.5,
-        0.9,
-        3.5,
-        platformMat
-      );
-
-      addBox(
-        -4.5,
-        1.35,
-        -17,
-        3.5,
-        0.9,
-        3.5,
-        platformMat
-      );
-
-      addBox(
-        4.5,
-        0.45,
-        17,
-        3.5,
-        0.9,
-        3.5,
-        platformMat
-      );
-
-      addBox(
-        4.5,
-        1.35,
-        17,
-        3.5,
-        0.9,
-        3.5,
-        platformMat
-      );
-
-
-      controls =
-        new PointerLockControls(
-          camera,
-          renderer.domElement
-        );
-
-
-      renderer.domElement.addEventListener(
-        "click",
-        () => {
-          if (
-            started &&
-            innerWidth > 700
-          ) {
-            controls.lock();
-          }
-        }
-      );
-
-
-      addEventListener(
-        "keydown",
-        e => {
-          keys.add(e.code);
-
-          if (
-            started &&
-            (
-              e.code === "KeyW" ||
-              e.code === "KeyA" ||
-              e.code === "KeyS" ||
-              e.code === "KeyD" ||
-              e.code === "Space"
-            )
-          ) {
-            markActivity();
-          }
-
-          if (
-            e.code === "Space" &&
-            started
-          ) {
-            e.preventDefault();
-            jumpOrGrab();
-          }
-        }
-      );
-
-
-      addEventListener(
-        "keyup",
-        e => {
-          keys.delete(e.code);
-        }
-      );
-
-
-      addEventListener(
-        "mousedown",
-        e => {
-          if (
-            e.button === 0 &&
-            started
-          ) {
-            markActivity();
-            shoot();
-          }
-        }
-      );
-
-
-      addEventListener(
-        "resize",
-        onResize
-      );
-
-
-      setupMobileControls();
-
-      clock = new THREE.Clock();
-
-      animate();
-    }
-
-
-    function onResize() {
-      if (!camera || !renderer) return;
-
-      camera.aspect =
-        innerWidth / innerHeight;
-
-      camera.updateProjectionMatrix();
-
-      renderer.setSize(
-        innerWidth,
-        innerHeight
-      );
-    }
-
-
-    function makePlayerMesh(color) {
-      const g = new THREE.Group();
-
-
-      const body =
-        new THREE.Mesh(
-          new THREE.CapsuleGeometry(
-            0.42,
-            1.0,
-            4,
-            8
-          ),
-          new THREE.MeshStandardMaterial({
-            color,
-            roughness: 0.68
-          })
-        );
-
-      body.position.y = 0.86;
-
-      body.castShadow = true;
-
-      g.add(body);
-
-
-      const visor =
-        new THREE.Mesh(
-          new THREE.BoxGeometry(
-            0.52,
-            0.18,
-            0.08
-          ),
-          new THREE.MeshStandardMaterial({
-            color: 0x101820,
-            metalness: 0.7,
-            roughness: 0.2
-          })
-        );
-
-      visor.position.set(
-        0,
-        1.45,
-        -0.37
-      );
-
-      g.add(visor);
-
-
-      const gun =
-        new THREE.Mesh(
-          new THREE.BoxGeometry(
-            0.12,
-            0.12,
-            0.65
-          ),
-          new THREE.MeshStandardMaterial({
-            color: 0x222831,
-            metalness: 0.65,
-            roughness: 0.3
-          })
-        );
-
-      gun.position.set(
-        0.38,
-        1.02,
-        -0.25
-      );
-
-      gun.rotation.x = -0.1;
-
-      g.add(gun);
-
-
-      return g;
-    }
-
-
-    function colorFromId(id) {
-      let h = 0;
-
-      for (
-        let i = 0;
-        i < id.length;
-        i++
-      ) {
-        h =
-          (h * 31 +
-            id.charCodeAt(i)) >>> 0;
-      }
-
-      const color =
-        new THREE.Color();
-
-      color.setHSL(
-        (h % 360) / 360,
-        0.72,
-        0.55
-      );
-
-      return color;
-    }
-
-
-    function updateRemotePlayers() {
-      for (const [id, state] of remoteState) {
-        if (id === playerId) continue;
-
-        if (
-          !state ||
-          state.alive === false
-        ) {
-          if (
-            remotePlayers.has(id)
-          ) {
-            remotePlayers.get(id).visible =
-              false;
-          }
-
-          continue;
-        }
-
-
-        let mesh =
-          remotePlayers.get(id);
-
-
-        if (!mesh) {
-          mesh =
-            makePlayerMesh(
-              colorFromId(id)
-            );
-
-          arenaGroup.add(mesh);
-
-          remotePlayers.set(
-            id,
-            mesh
-          );
-        }
-
-
-        mesh.visible = true;
-
-
-        const target =
-          new THREE.Vector3(
-            state.x || 0,
-            state.y || EYE_HEIGHT,
-            state.z || 0
-          );
-
-
-        mesh.userData.target =
-          target;
-
-
-        mesh.position.lerp(
-          target,
-          0.35
-        );
-
-        mesh.rotation.y =
-          state.yaw || 0;
-
-
-        if (
-          timestampMs(state.invulnerableUntil) >
-          Date.now()
-        ) {
-          mesh.traverse(obj => {
-            if (
-              obj.material &&
-              obj.material.emissive
-            ) {
-              obj.material.emissive.setHex(
-                0x225577
-              );
+
+  window.addEventListener(
+    "resize",
+    onResize
+  );
+
+}
+
+
+function createArena(){
+
+  const floorGeometry =
+    new THREE.BoxGeometry(
+      ARENA_SIZE,
+      1,
+      ARENA_SIZE
+    );
+
+  const floorMaterial =
+    new THREE.MeshStandardMaterial({
+
+      color:
+        0x41474d,
+
+      roughness:
+        .92
+
+    });
+
+  const floor =
+    new THREE.Mesh(
+      floorGeometry,
+      floorMaterial
+    );
+
+  floor.position.y =
+    -.5;
+
+  floor.receiveShadow =
+    true;
+
+  scene.add(floor);
+
+  colliders.push(floor);
+
+
+  const wallMaterial =
+    new THREE.MeshStandardMaterial({
+
+      color:
+        0x252b31
+
+    });
+
+
+  createBox(
+    ARENA_SIZE,
+    6,
+    1,
+    0,
+    3,
+    -ARENA_SIZE / 2,
+    wallMaterial
+  );
+
+  createBox(
+    ARENA_SIZE,
+    6,
+    1,
+    0,
+    3,
+    ARENA_SIZE / 2,
+    wallMaterial
+  );
+
+  createBox(
+    1,
+    6,
+    ARENA_SIZE,
+    -ARENA_SIZE / 2,
+    3,
+    0,
+    wallMaterial
+  );
+
+  createBox(
+    1,
+    6,
+    ARENA_SIZE,
+    ARENA_SIZE / 2,
+    3,
+    0,
+    wallMaterial
+  );
+
+
+  const obstacleMaterial =
+    new THREE.MeshStandardMaterial({
+
+      color:
+        0x69727b,
+
+      roughness:
+        .7
+
+    });
+
+
+  /*
+    低い足場
+  */
+
+  createBox(
+    8,
+    1.5,
+    8,
+    -15,
+    .75,
+    -10,
+    obstacleMaterial
+  );
+
+  createBox(
+    11,
+    2,
+    5,
+    13,
+    1,
+    -8,
+    obstacleMaterial
+  );
+
+  createBox(
+    6,
+    2.5,
+    6,
+    17,
+    1.25,
+    14,
+    obstacleMaterial
+  );
+
+  createBox(
+    10,
+    1.5,
+    5,
+    -15,
+    .75,
+    15,
+    obstacleMaterial
+  );
+
+  createBox(
+    5,
+    2,
+    12,
+    0,
+    1,
+    17,
+    obstacleMaterial
+  );
+
+
+  /*
+    少し高い足場
+  */
+
+  createBox(
+    6,
+    3.5,
+    6,
+    -15,
+    1.75,
+    -1,
+    obstacleMaterial
+  );
+
+  createBox(
+    7,
+    4,
+    7,
+    4,
+    2,
+    -14,
+    obstacleMaterial
+  );
+
+  createBox(
+    7,
+    4.5,
+    7,
+    16,
+    2.25,
+    2,
+    obstacleMaterial
+  );
+
+
+  /*
+    さらに低いステップ。
+    グラブで登るための足場。
+  */
+
+  createBox(
+    5,
+    .9,
+    5,
+    -4,
+    .45,
+    -5,
+    obstacleMaterial
+  );
+
+  createBox(
+    5,
+    1.3,
+    5,
+    4,
+    .65,
+    -5,
+    obstacleMaterial
+  );
+
+  createBox(
+    5,
+    1.7,
+    5,
+    10,
+    .85,
+    -5,
+    obstacleMaterial
+  );
+
+
+  for(
+    let i = 0;
+    i < 10;
+    i++
+  ){
+
+    const x =
+      Math.random() *
+      42 -
+      21;
+
+    const z =
+      Math.random() *
+      42 -
+      21;
+
+    createBox(
+      2.5 +
+        Math.random() * 2,
+
+      1.3 +
+        Math.random() * 1.7,
+
+      2.5 +
+        Math.random() * 2,
+
+      x,
+
+      .65 +
+        Math.random() * .85,
+
+      z,
+
+      obstacleMaterial
+    );
+
+  }
+
+}
+
+
+function createBox(
+  width,
+  height,
+  depth,
+  x,
+  y,
+  z,
+  material
+){
+
+  const geometry =
+    new THREE.BoxGeometry(
+      width,
+      height,
+      depth
+    );
+
+  const mesh =
+    new THREE.Mesh(
+      geometry,
+      material
+    );
+
+  mesh.position.set(
+    x,
+    y,
+    z
+  );
+
+  mesh.castShadow =
+    true;
+
+  mesh.receiveShadow =
+    true;
+
+  scene.add(mesh);
+
+  colliders.push(mesh);
+
+  return mesh;
+
+}
+
+
+function onResize(){
+
+  if(
+    !camera ||
+    !renderer
+  ){
+    return;
+  }
+
+  camera.aspect =
+    window.innerWidth /
+    window.innerHeight;
+
+  camera.updateProjectionMatrix();
+
+  renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+  );
+
+}
+
+
+async function ensureAuth(){
+
+  if(currentUser){
+
+    return currentUser;
+
+  }
+
+  return new Promise(
+    (resolve,reject) => {
+
+      const unsubscribe =
+        onAuthStateChanged(
+          auth,
+          async user => {
+
+            if(user){
+
+              currentUser =
+                user;
+
+              unsubscribe();
+
+              resolve(user);
+
+              return;
+
             }
-          });
-        }
-      }
 
+            try{
 
-      for (
-        const [id, mesh]
-        of remotePlayers
-      ) {
-        if (
-          !remoteState.has(id)
-        ) {
-          arenaGroup.remove(mesh);
-          remotePlayers.delete(id);
-        }
-      }
-    }
+              await signInAnonymously(
+                auth
+              );
 
+            }catch(error){
 
-    function isInsidePlatformXZ(
-      p,
-      x,
-      z,
-      extra = 0
-    ) {
-      return (
-        Math.abs(
-          x - p.x
-        ) <=
-          p.w / 2 + extra &&
-        Math.abs(
-          z - p.z
-        ) <=
-          p.d / 2 + extra
-      );
-    }
+              unsubscribe();
 
+              reject(error);
 
-    function isBlocked(
-      x,
-      z
-    ) {
-      const r =
-        PLAYER_RADIUS;
+            }
 
-
-      if (
-        Math.abs(x) >
-          22.8 - r ||
-        Math.abs(z) >
-          22.8 - r
-      ) {
-        return true;
-      }
-
-
-      for (const p of platforms) {
-        /*
-         * 床はここでは除外。
-         * プレイヤーは床の上を歩けるので、
-         * 水平方向の「壁・足場側面」としてのみ
-         * 判定する。
-         */
-
-        if (
-          p.h <= 0.6
-        ) {
-          continue;
-        }
-
-
-        if (
-          isInsidePlatformXZ(
-            p,
-            x,
-            z,
-            r
-          )
-        ) {
-          return true;
-        }
-      }
-
-
-      return false;
-    }
-
-
-    function horizontalBlockedByTallPlatform(
-      x,
-      z
-    ) {
-      const r =
-        PLAYER_RADIUS;
-
-
-      for (const p of platforms) {
-        if (
-          p.h <= 0.6
-        ) {
-          continue;
-        }
-
-        if (
-          isInsidePlatformXZ(
-            p,
-            x,
-            z,
-            r
-          )
-        ) {
-          return true;
-        }
-      }
-
-      return false;
-    }
-
-
-    function getGroundTop(
-      x,
-      z,
-      feetY,
-      verticalVelocity
-    ) {
-      let best = 0;
-
-
-      for (const p of platforms) {
-        if (
-          !isInsidePlatformXZ(
-            p,
-            x,
-            z,
-            PLAYER_RADIUS * 0.35
-          )
-        ) {
-          continue;
-        }
-
-
-        const top = p.top;
-
-
-        /*
-         * 上から降りてきて、
-         * 足が足場の上面を通過した場合だけ着地。
-         */
-
-        if (
-          feetY >= top - 0.35 &&
-          feetY <= top + 1.0 &&
-          verticalVelocity <= 0
-        ) {
-          best =
-            Math.max(
-              best,
-              top
-            );
-        }
-      }
-
-
-      return best;
-    }
-
-
-    function spawnPosition(index = 0) {
-      const pts = [
-        [-18,-18],
-        [18,-18],
-        [-18,18],
-        [18,18],
-        [0,-18],
-        [0,18],
-        [-18,0],
-        [18,0]
-      ];
-
-      return pts[
-        index % pts.length
-      ];
-    }
-
-
-    function shuffledSpawnPositions(
-      count
-    ) {
-      const indices =
-        Array.from(
-          {
-            length: 8
           },
-          (_, i) => i
+
+          error => {
+
+            unsubscribe();
+
+            reject(error);
+
+          }
         );
 
-
-      for (
-        let i = indices.length - 1;
-        i > 0;
-        i--
-      ) {
-        const j =
-          Math.floor(
-            Math.random() *
-              (i + 1)
-          );
-
-        [
-          indices[i],
-          indices[j]
-        ] =
-          [
-            indices[j],
-            indices[i]
-          ];
-      }
-
-
-      return indices
-        .slice(0, count)
-        .map(i =>
-          spawnPosition(i)
-        );
     }
+  );
+
+}
 
 
-    function resetLocalForStart(
-      x,
-      z,
-      yaw = 0
-    ) {
-      local.x = x;
-      local.z = z;
+async function createMatch(
+  requestedCode = ""
+){
 
-      local.y = EYE_HEIGHT;
+  statusEl.textContent =
+    "試合を作成中…";
 
-      local.yaw = yaw;
-      local.pitch = 0;
+  try{
 
-      local.hp = MAX_HP;
+    const user =
+      await ensureAuth();
 
-      local.kills = 0;
-      local.deaths = 0;
-
-      local.respawnAt = 0;
-
-      local.vx = 0;
-      local.vy = 0;
-      local.vz = 0;
-
-      local.grounded = true;
-
-      local.climbing = false;
-
-      local.invulnerableUntil =
-        Date.now() +
-        START_INVINCIBILITY;
-
-      local.nextFireAt =
-        performance.now();
+    let code =
+      requestedCode
+        .trim()
+        .toUpperCase();
 
 
-      camera.position.set(
-        x,
-        local.y,
-        z
-      );
+    if(!code){
 
-      camera.rotation.set(
-        0,
-        0,
-        0
-      );
+      for(
+        let attempt = 0;
+        attempt < 20;
+        attempt++
+      ){
 
-
-      if (
-        controls &&
-        controls.isLocked
-      ) {
-        controls.unlock();
-      }
-    }
-
-
-    async function createOrJoinRoom() {
-      if (!authUser) {
-        setStatus(
-          "まだFirebaseに接続中。少し待ってからもう一度やってね。"
-        );
-
-        return;
-      }
-
-
-      initThree();
-
-      playerName =
-        sanitizeName(
-          nameInput.value
-        );
-
-
-      const entered =
-        roomInput.value
-          .trim()
-          .toUpperCase();
-
-
-      if (entered) {
-        await joinOrCreateRoom(
-          entered
-        );
-
-        return;
-      }
-
-
-      let newRoomId = null;
-
-
-      for (let i = 0; i < 10; i++) {
         const candidate =
-          randomRoomId();
+          randomCode();
 
-        const snap =
-          await getDoc(
-            doc(
-              db,
-              "matches",
-              candidate
-            )
+        const ref =
+          doc(
+            db,
+            "matches",
+            candidate
           );
 
+        const existing =
+          await getDoc(ref);
 
-        if (!snap.exists()) {
-          newRoomId =
+        if(
+          !existing.exists()
+        ){
+
+          code =
             candidate;
 
           break;
+
         }
+
       }
 
-
-      if (!newRoomId) {
-        setStatus(
-          "空いている部屋コードを作れなかった。もう一度試してね。"
-        );
-
-        return;
-      }
-
-
-      await createRoom(
-        newRoomId
-      );
     }
 
 
-    async function joinOrCreateRoom(
-      requestedRoomId
-    ) {
-      const existing =
-        await getDoc(
-          doc(
-            db,
-            "matches",
-            requestedRoomId
-          )
-        );
+    if(!code){
 
-
-      if (!existing.exists()) {
-        await createRoom(
-          requestedRoomId
-        );
-
-        return;
-      }
-
-
-      const data =
-        existing.data();
-
-
-      if (
-        data.status !==
-        "lobby"
-      ) {
-        setStatus(
-          "その試合はすでに開始済み。"
-        );
-
-        return;
-      }
-
-
-      await joinRoom(
-        requestedRoomId
+      throw new Error(
+        "試合コードを作成できませんでした。"
       );
+
     }
 
 
-    async function createRoom(
-      newRoomId
-    ) {
-      if (!authUser) {
-        setStatus(
-          "Firebaseに接続していない。"
-        );
-
-        return;
-      }
+    const spawn =
+      randomSpawn();
 
 
-      roomId = newRoomId;
+    const player = {
 
-      playerId =
-        authUser.uid;
+      uid:
+        user.uid,
 
-      isHost = true;
+      name:
+        "Player-" +
+        user.uid.slice(-4),
+
+      x:
+        spawn.x,
+
+      y:
+        spawn.y,
+
+      z:
+        spawn.z,
+
+      yaw:
+        0,
+
+      pitch:
+        0,
+
+      hp:
+        MAX_HP,
+
+      kills:
+        0,
+
+      alive:
+        true
+
+    };
 
 
-      try {
-        const roomRef =
-          doc(
-            db,
-            "matches",
-            roomId
+    const ref =
+      doc(
+        db,
+        "matches",
+        code
+      );
+
+
+    await runTransaction(
+      db,
+      async transaction => {
+
+        const snap =
+          await transaction.get(
+            ref
           );
 
+        if(
+          snap.exists()
+        ){
 
-        await setDoc(
-          roomRef,
+          throw new Error(
+            "ALREADY_EXISTS"
+          );
+
+        }
+
+
+        transaction.set(
+          ref,
           {
-            status: "lobby",
 
             hostUid:
-              playerId,
+              user.uid,
+
+            status:
+              "waiting",
+
+            winnerUid:
+              null,
 
             createdAt:
               serverTimestamp(),
 
-            createdAtMs:
-              Date.now(),
+            startedAt:
+              null,
 
-            startedAt: null,
+            players:{
 
-            endAt: null,
+              [user.uid]:
+                player
 
-            winnerUid: null
+            }
+
           }
         );
 
-
-        await setDoc(
-          doc(
-            db,
-            "matches",
-            roomId,
-            "players",
-            playerId
-          ),
-          {
-            uid:
-              playerId,
-
-            name:
-              playerName,
-
-            x: 0,
-            y: EYE_HEIGHT,
-            z: 0,
-
-            yaw: 0,
-            pitch: 0,
-
-            hp:
-              MAX_HP,
-
-            kills: 0,
-            deaths: 0,
-
-            alive: true,
-
-            invulnerableUntil: 0,
-
-            joinedAt:
-              serverTimestamp(),
-
-            updatedAt:
-              serverTimestamp(),
-
-            lastActivityAt:
-              serverTimestamp(),
-
-            lastActivityMs:
-              Date.now()
-          }
-        );
-
-
-        enterLobby();
-
-      } catch (e) {
-        console.error(e);
-
-        roomId = null;
-
-        setStatus(
-          "部屋作成に失敗。\n" +
-          e.message
-        );
       }
+    );
+
+
+    isHost =
+      true;
+
+
+    await startMatch(
+      code
+    );
+
+
+  }catch(error){
+
+    console.error(error);
+
+    if(
+      error?.message ===
+      "ALREADY_EXISTS"
+    ){
+
+      await joinMatch(
+        requestedCode
+      );
+
+      return;
+
+    }
+
+    statusEl.textContent =
+      "作成失敗：" +
+      getFriendlyError(error);
+
+  }
+
+}
+
+
+async function joinMatch(
+  codeOverride = ""
+){
+
+  const code =
+    (
+      codeOverride ||
+      matchCodeInput.value
+    )
+      .trim()
+      .toUpperCase();
+
+
+  if(!code){
+
+    await createMatch("");
+
+    return;
+
+  }
+
+
+  statusEl.textContent =
+    "試合を確認中…";
+
+
+  try{
+
+    const user =
+      await ensureAuth();
+
+
+    const ref =
+      doc(
+        db,
+        "matches",
+        code
+      );
+
+
+    const existing =
+      await getDoc(ref);
+
+
+    /*
+      ここが今回の重要部分。
+
+      部屋が存在しなければ、
+      参加失敗ではなく
+      「そのコードで作成」する。
+    */
+
+    if(
+      !existing.exists()
+    ){
+
+      await createMatch(
+        code
+      );
+
+      return;
+
     }
 
 
-    async function joinRoom(
-      inputRoom
-    ) {
-      if (!authUser) {
-        setStatus(
-          "まだFirebaseに接続中。少し待ってからもう一度やってね。"
-        );
+    await runTransaction(
+      db,
+      async transaction => {
 
-        return;
-      }
-
-
-      roomId =
-        inputRoom;
-
-      playerId =
-        authUser.uid;
-
-      isHost = false;
-
-
-      try {
-        const roomSnap =
-          await getDoc(
-            doc(
-              db,
-              "matches",
-              roomId
-            )
+        const snap =
+          await transaction.get(
+            ref
           );
 
 
-        if (!roomSnap.exists()) {
-          /*
-           * ここには通常来ない。
-           * 「作成/参加」は存在しない場合に
-           * createRoomへ回すため。
-           */
+        if(!snap.exists()){
 
-          await createRoom(
-            roomId
+          throw new Error(
+            "NOT_FOUND"
           );
 
-          return;
         }
 
 
         const data =
-          roomSnap.data();
-
-
-        if (
-          data.status !==
-          "lobby"
-        ) {
-          throw new Error(
-            "その試合はすでに開始済み。"
-          );
-        }
-
-
-        const players =
-          await getPlayersOnce(
-            roomId
-          );
-
-
-        const already =
-          players.some(
-            p =>
-              p.id ===
-              playerId
-          );
-
-
-        if (
-          !already &&
-          players.length >=
-            MAX_PLAYERS
-        ) {
-          throw new Error(
-            "満員。"
-          );
-        }
-
-
-        await setDoc(
-          doc(
-            db,
-            "matches",
-            roomId,
-            "players",
-            playerId
-          ),
-          {
-            uid:
-              playerId,
-
-            name:
-              playerName,
-
-            x: 0,
-            y: EYE_HEIGHT,
-            z: 0,
-
-            yaw: 0,
-            pitch: 0,
-
-            hp:
-              MAX_HP,
-
-            kills: 0,
-            deaths: 0,
-
-            alive: true,
-
-            invulnerableUntil: 0,
-
-            joinedAt:
-              serverTimestamp(),
-
-            updatedAt:
-              serverTimestamp(),
-
-            lastActivityAt:
-              serverTimestamp(),
-
-            lastActivityMs:
-              Date.now()
-          },
-          {
-            merge: true
-          }
-        );
-
-
-        enterLobby();
-
-      } catch (e) {
-        console.error(e);
-
-        roomId = null;
-
-        setStatus(
-          "参加できなかった。\n" +
-          e.message
-        );
-      }
-    }
-
-
-    async function getPlayersOnce(
-      rid
-    ) {
-      const snap =
-        await getDocs(
-          collection(
-            db,
-            "matches",
-            rid,
-            "players"
-          )
-        );
-
-      return snap.docs.map(
-        d => ({
-          id: d.id,
-          ...d.data()
-        })
-      );
-    }
-
-
-    function enterLobby() {
-      menu.style.display =
-        "none";
-
-      endScreen.style.display =
-        "none";
-
-      hud.style.display =
-        "none";
-
-      lobby.style.display =
-        "flex";
-
-      roomIdLabel.textContent =
-        roomId;
-
-
-      startBtn.style.display =
-        isHost
-          ? "block"
-          : "none";
-
-
-      startBtn.style.setProperty(
-        "--progress",
-        "0"
-      );
-
-
-      subscribeRoom();
-      subscribePlayers();
-    }
-
-
-    function subscribeRoom() {
-      roomUnsub?.();
-
-
-      roomUnsub =
-        onSnapshot(
-          doc(
-            db,
-            "matches",
-            roomId
-          ),
-          snap => {
-            if (
-              !snap.exists()
-            ) {
-              handleRoomDeleted(
-                "この部屋は削除された。"
-              );
-
-              return;
-            }
-
-
-            const data =
-              snap.data();
-
-            roomDataCache =
-              data;
-
-
-            if (
-              data.status ===
-                "running" &&
-              !started
-            ) {
-              startMatchClient(
-                data
-              );
-            }
-
-
-            if (
-              data.status ===
-                "finished" &&
-              !ending
-            ) {
-              finishMatchClient(
-                data
-              );
-            }
-          },
-          err => {
-            console.error(
-              "room snapshot",
-              err
-            );
-          }
-        );
-    }
-
-
-    function subscribePlayers() {
-      playersUnsub?.();
-
-
-      playersUnsub =
-        onSnapshot(
-          collection(
-            db,
-            "matches",
-            roomId,
-            "players"
-          ),
-          snap => {
-            const arr = [];
-
-
-            remoteState.clear();
-
-
-            snap.docs.forEach(
-              d => {
-                const data =
-                  d.data();
-
-
-                arr.push({
-                  id:
-                    d.id,
-                  ...data
-                });
-
-
-                remoteState.set(
-                  d.id,
-                  data
-                );
-
-
-                if (
-                  d.id ===
-                  playerId
-                ) {
-                  local.hp =
-                    typeof data.hp ===
-                    "number"
-                      ? data.hp
-                      : local.hp;
-
-                  local.kills =
-                    typeof data.kills ===
-                    "number"
-                      ? data.kills
-                      : local.kills;
-
-                  local.deaths =
-                    typeof data.deaths ===
-                    "number"
-                      ? data.deaths
-                      : local.deaths;
-                }
-              }
-            );
-
-
-            playerCount.textContent =
-              String(
-                arr.length
-              );
-
-
-            playersList.innerHTML =
-              arr
-                .sort(
-                  (a,b) =>
-                    (b.kills || 0) -
-                    (a.kills || 0)
-                )
-                .map(
-                  p =>
-                    `<li>
-                      <span>
-                        ${escapeHtml(
-                          p.name ||
-                          "Player"
-                        )}
-                        ${
-                          p.uid ===
-                          playerId
-                            ? "（自分）"
-                            : ""
-                        }
-                      </span>
-                      <span>
-                        ${p.kills || 0} K
-                      </span>
-                    </li>`
-                )
-                .join("");
-
-
-            updateRemotePlayers();
-
-
-            if (started) {
-              const self =
-                arr.find(
-                  p =>
-                    p.uid ===
-                    playerId
-                );
-
-
-              if (
-                self &&
-                self.hp <= 0 &&
-                local.respawnAt === 0
-              ) {
-                local.respawnAt =
-                  performance.now() +
-                  1800;
-              }
-            }
-          },
-          err => {
-            console.error(
-              "players snapshot",
-              err
-            );
-          }
-        );
-    }
-
-
-    function escapeHtml(s) {
-      return String(s).replace(
-        /[&<>'"]/g,
-        c =>
-          ({
-            "&":
-              "&amp;",
-            "<":
-              "&lt;",
-            ">":
-              "&gt;",
-            "'":
-              "&#39;",
-            "\"":
-              "&quot;"
-          }[c])
-      );
-    }
-
-
-    let startHoldTimer = null;
-    let startHoldStartedAt = 0;
-
-
-    function updateStartProgress() {
-      if (
-        !startHoldStartedAt
-      ) {
-        startBtn.style.setProperty(
-          "--progress",
-          "0"
-        );
-
-        return;
-      }
-
-
-      const progress =
-        clamp(
-          (
-            performance.now() -
-            startHoldStartedAt
-          ) /
-          START_HOLD_TIME,
-          0,
-          1
-        );
-
-
-      startBtn.style.setProperty(
-        "--progress",
-        String(progress)
-      );
-
-
-      if (
-        progress >= 1
-      ) {
-        clearStartHold();
-
-        startMatchHost();
-      }
-    }
-
-
-    function clearStartHold() {
-      if (
-        startHoldTimer
-      ) {
-        clearInterval(
-          startHoldTimer
-        );
-
-        startHoldTimer = null;
-      }
-
-      startHoldStartedAt = 0;
-
-      startBtn.style.setProperty(
-        "--progress",
-        "0"
-      );
-    }
-
-
-    function beginStartHold(e) {
-      if (
-        e &&
-        e.button !== undefined &&
-        e.button !== 0
-      ) {
-        return;
-      }
-
-
-      if (
-        !isHost ||
-        started ||
-        ending
-      ) {
-        return;
-      }
-
-
-      e?.preventDefault();
-
-
-      if (
-        startHoldTimer
-      ) {
-        return;
-      }
-
-
-      markActivity();
-
-      startHoldStartedAt =
-        performance.now();
-
-
-      startHoldTimer =
-        setInterval(
-          updateStartProgress,
-          16
-        );
-    }
-
-
-    function endStartHold(e) {
-      e?.preventDefault();
-
-      clearStartHold();
-    }
-
-
-    async function startMatchHost() {
-      if (
-        !roomId ||
-        !isHost ||
-        started
-      ) {
-        return;
-      }
-
-
-      try {
-        const players =
-          await getPlayersOnce(
-            roomId
-          );
-
-
-        if (
-          players.length < 2
-        ) {
-          alert(
-            "2人以上で試合開始にしてね。"
-          );
-
-          return;
-        }
-
-
-        const roomSnap =
-          await getDoc(
-            doc(
-              db,
-              "matches",
-              roomId
-            )
-          );
-
-
-        if (
-          !roomSnap.exists()
-        ) {
-          return;
-        }
-
-
-        if (
-          roomSnap.data()
-            .status !==
-          "lobby"
-        ) {
-          return;
-        }
-
-
-        const endMs =
-          Date.now() +
-          MATCH_DURATION *
-            1000;
-
-
-        await updateDoc(
-          doc(
-            db,
-            "matches",
-            roomId
-          ),
-          {
-            status:
-              "running",
-
-            startedAt:
-              serverTimestamp(),
-
-            endAt:
-              endMs,
-
-            winnerUid:
-              null
-          }
-        );
-
-
-        /*
-         * プレイヤー数ぶんだけ
-         * 重ならないスポーン地点を
-         * ランダムに割り当てる。
-         */
-
-        const spawnList =
-          shuffledSpawnPositions(
-            players.length
-          );
-
-
-        const batch =
-          writeBatch(db);
-
-
-        players.forEach(
-          (p, i) => {
-            const [
-              x,
-              z
-            ] =
-              spawnList[i];
-
-
-            const yaw =
-              Math.atan2(
-                -x,
-                -z
-              );
-
-
-            batch.update(
-              doc(
-                db,
-                "matches",
-                roomId,
-                "players",
-                p.id
-              ),
-              {
-                x,
-                y:
-                  EYE_HEIGHT,
-                z,
-
-                yaw,
-                pitch: 0,
-
-                hp:
-                  MAX_HP,
-
-                kills: 0,
-                deaths: 0,
-
-                alive: true,
-
-                invulnerableUntil:
-                  Date.now() +
-                  START_INVINCIBILITY,
-
-                updatedAt:
-                  serverTimestamp(),
-
-                lastActivityAt:
-                  serverTimestamp(),
-
-                lastActivityMs:
-                  Date.now()
-              }
-            );
-          }
-        );
-
-
-        await batch.commit();
-
-      } catch (e) {
-        console.error(e);
-
-        alert(
-          "試合開始に失敗した。\n" +
-          e.message
-        );
-      }
-    }
-
-
-    function startMatchClient(
-      data
-    ) {
-      started = true;
-      ending = false;
-
-
-      lobby.style.display =
-        "none";
-
-      hud.style.display =
-        "block";
-
-      endScreen.style.display =
-        "none";
-
-
-      matchEndAt =
-        typeof data.endAt ===
-        "number"
-          ? data.endAt
-          : timestampMs(
-              data.endAt
-            );
-
-
-      if (
-        !matchEndAt
-      ) {
-        matchEndAt =
-          Date.now() +
-          MATCH_DURATION *
-            1000;
-      }
-
-
-      getPlayersOnce(
-        roomId
-      ).then(
-        players => {
-          const me =
-            players.find(
-              p =>
-                p.id ===
-                playerId
-            );
-
-
-          if (me) {
-            resetLocalForStart(
-              me.x || 0,
-              me.z || 0,
-              me.yaw || 0
-            );
-          } else {
-            const [
-              x,
-              z
-            ] =
-              spawnPosition(0);
-
-            resetLocalForStart(
-              x,
-              z
-            );
-          }
-
-
-          local.lastWrite = 0;
-
-          syncLocalState(
-            true
-          );
-        }
-      );
-
-
-      showMessage(
-        "MATCH START",
-        900
-      );
-    }
-
-
-    async function syncLocalState(
-      force = false
-    ) {
-      if (
-        !roomId ||
-        !playerId
-      ) {
-        return;
-      }
-
-
-      const now =
-        performance.now();
-
-
-      if (
-        !force &&
-        now -
-          local.lastWrite <
-          1000 /
-            TICK_RATE
-      ) {
-        return;
-      }
-
-
-      local.lastWrite =
-        now;
-
-
-      try {
-        const payload = {
-          x:
-            Number(
-              local.x.toFixed(3)
-            ),
-
-          y:
-            Number(
-              local.y.toFixed(3)
-            ),
-
-          z:
-            Number(
-              local.z.toFixed(3)
-            ),
-
-          yaw:
-            Number(
-              local.yaw.toFixed(4)
-            ),
-
-          pitch:
-            Number(
-              local.pitch.toFixed(4)
-            ),
-
-          hp:
-            Math.max(
-              0,
-              Math.round(
-                local.hp
-              )
-            ),
-
-          kills:
-            Math.max(
-              0,
-              Math.round(
-                local.kills
-              )
-            ),
-
-          deaths:
-            Math.max(
-              0,
-              Math.round(
-                local.deaths
-              )
-            ),
-
-          alive:
-            local.hp > 0,
-
-          invulnerableUntil:
-            local.invulnerableUntil
-        };
-
-
-        /*
-         * 「操作していない」を
-         * 毎フレームの同期で更新しない。
-         */
-
-        if (
-          Date.now() -
-            local.lastActivitySent >
-          1000
-        ) {
-          payload.lastActivityMs =
-            local.lastActivityAt;
-
-          payload.lastActivityAt =
-            serverTimestamp();
-
-          local.lastActivitySent =
-            Date.now();
-        }
-
-
-        payload.updatedAt =
-          serverTimestamp();
-
-
-        await updateDoc(
-          doc(
-            db,
-            "matches",
-            roomId,
-            "players",
-            playerId
-          ),
-          payload
-        );
-
-      } catch (e) {
-        console.warn(
-          "sync failed",
-          e
-        );
-      }
-    }
-
-
-    function tryMoveHorizontal(
-      dx,
-      dz
-    ) {
-      const nx =
-        local.x + dx;
-
-
-      if (
-        !horizontalBlockedByTallPlatform(
-          nx,
-          local.z
-        )
-      ) {
-        local.x =
-          nx;
-      }
-
-
-      const nz =
-        local.z + dz;
-
-
-      if (
-        !horizontalBlockedByTallPlatform(
-          local.x,
-          nz
-        )
-      ) {
-        local.z =
-          nz;
-      }
-    }
-
-
-    function movePlayer(dt) {
-      if (
-        !started ||
-        ending
-      ) {
-        return;
-      }
-
-
-      if (
-        innerWidth > 700 &&
-        controls?.isLocked
-      ) {
-        local.yaw =
-          camera.rotation.y;
-
-        local.pitch =
-          camera.rotation.x;
-      }
-
-
-      if (
-        local.hp <= 0
-      ) {
-        return;
-      }
-
-
-      if (
-        local.climbing
-      ) {
-        updateClimb();
-
-        camera.position.set(
-          local.x,
-          local.y,
-          local.z
-        );
-
-        camera.rotation.set(
-          local.pitch,
-          local.yaw,
-          0,
-          "YXZ"
-        );
-
-        return;
-      }
-
-
-      let forward = 0;
-      let strafe = 0;
-
-
-      if (
-        keys.has("KeyW")
-      ) {
-        forward += 1;
-      }
-
-      if (
-        keys.has("KeyS")
-      ) {
-        forward -= 1;
-      }
-
-      if (
-        keys.has("KeyD")
-      ) {
-        strafe += 1;
-      }
-
-      if (
-        keys.has("KeyA")
-      ) {
-        strafe -= 1;
-      }
-
-
-      const len =
-        Math.hypot(
-          forward,
-          strafe
-        ) || 1;
-
-
-      forward /= len;
-      strafe /= len;
-
-
-      const sin =
-        Math.sin(
-          local.yaw
-        );
-
-      const cos =
-        Math.cos(
-          local.yaw
-        );
-
-
-      const dx =
-        (
-          strafe * cos +
-          forward * sin
-        ) *
-        PLAYER_SPEED *
-        dt;
-
-
-      const dz =
-        (
-          forward * cos -
-          strafe * sin
-        ) *
-        PLAYER_SPEED *
-        dt;
-
-
-      if (
-        dx !== 0 ||
-        dz !== 0
-      ) {
-        markActivity();
-      }
-
-
-      tryMoveHorizontal(
-        dx,
-        dz
-      );
-
-
-      const previousFeetY =
-        local.y -
-        EYE_HEIGHT;
-
-
-      local.vy -=
-        GRAVITY * dt;
-
-
-      const nextFeetY =
-        previousFeetY +
-        local.vy * dt;
-
-
-      let landedTop =
-        getGroundTop(
-          local.x,
-          local.z,
-          nextFeetY,
-          local.vy
-        );
-
-
-      if (
-        landedTop > 0 &&
-        local.vy <= 0 &&
-        previousFeetY >=
-          landedTop - 0.45 &&
-        nextFeetY <=
-          landedTop + 0.2
-      ) {
-        local.y =
-          landedTop +
-          EYE_HEIGHT;
-
-        local.vy = 0;
-
-        local.grounded =
-          true;
-      } else if (
-        nextFeetY <= 0
-      ) {
-        local.y =
-          EYE_HEIGHT;
-
-        local.vy = 0;
-
-        local.grounded =
-          true;
-      } else {
-        local.y =
-          nextFeetY +
-          EYE_HEIGHT;
-
-        local.grounded =
-          false;
-      }
-
-
-      camera.position.set(
-        local.x,
-        local.y,
-        local.z
-      );
-
-      camera.rotation.set(
-        local.pitch,
-        local.yaw,
-        0,
-        "YXZ"
-      );
-    }
-
-
-    function jumpOrGrab() {
-      if (
-        !started ||
-        ending ||
-        local.hp <= 0
-      ) {
-        return;
-      }
-
-
-      markActivity();
-
-
-      if (
-        local.climbing
-      ) {
-        return;
-      }
-
-
-      if (
-        !local.grounded
-      ) {
-        if (
-          canGrabPlatform()
-        ) {
-          startClimb();
-
-          return;
-        }
-
-
-        return;
-      }
-
-
-      local.vy =
-        JUMP_SPEED;
-
-      local.grounded =
-        false;
-
-      showMessage(
-        "JUMP",
-        250
-      );
-    }
-
-
-    function findGrabPlatform() {
-      const feetY =
-        local.y -
-        EYE_HEIGHT;
-
-      const headY =
-        feetY +
-        PLAYER_HEAD_HEIGHT;
-
-
-      let best =
-        null;
-
-      let bestDistance =
-        Infinity;
-
-
-      for (const p of platforms) {
-        /*
-         * 足場の上面が頭より下。
-         * かつ現在の足元より上側にある
-         * 足場をGRAB候補にする。
-         */
-
-        if (
-          p.top >=
-          headY
-        ) {
-          continue;
-        }
-
-
-        if (
-          p.top <=
-          feetY - 0.15
-        ) {
-          continue;
-        }
-
-
-        const closestX =
-          clamp(
-            local.x,
-            p.x -
-              p.w / 2,
-            p.x +
-              p.w / 2
-          );
-
-        const closestZ =
-          clamp(
-            local.z,
-            p.z -
-              p.d / 2,
-            p.z +
-              p.d / 2
-          );
-
-
-        const dx =
-          local.x -
-          closestX;
-
-        const dz =
-          local.z -
-          closestZ;
-
-
-        const distance =
-          Math.hypot(
-            dx,
-            dz
-          );
-
-
-        if (
-          distance >
-          GRAB_DISTANCE
-        ) {
-          continue;
-        }
-
-
-        /*
-         * 「ほぼ0距離」を
-         * プレイヤー半径を考慮した
-         * 近接判定として扱う。
-         */
-
-        if (
-          distance <
-          bestDistance
-        ) {
-          best =
-            p;
-
-          bestDistance =
-            distance;
-        }
-      }
-
-
-      return best;
-    }
-
-
-    function canGrabPlatform() {
-      return !!findGrabPlatform();
-    }
-
-
-    function startClimb() {
-      const p =
-        findGrabPlatform();
-
-
-      if (!p) {
-        return;
-      }
-
-
-      const targetX =
-        clamp(
-          local.x,
-          p.x -
-            p.w / 2 +
-            PLAYER_RADIUS,
-          p.x +
-            p.w / 2 -
-            PLAYER_RADIUS
-        );
-
-
-      const targetZ =
-        clamp(
-          local.z,
-          p.z -
-            p.d / 2 +
-            PLAYER_RADIUS,
-          p.z +
-            p.d / 2 -
-            PLAYER_RADIUS
-        );
-
-
-      local.climbing =
-        true;
-
-      local.climbStart =
-        performance.now();
-
-      local.climbEnd =
-        local.climbStart +
-        CLIMB_TIME;
-
-      local.climbFromY =
-        local.y;
-
-      local.climbToY =
-        p.top +
-        EYE_HEIGHT;
-
-
-      local.x =
-        targetX;
-
-      local.z =
-        targetZ;
-
-      local.vy = 0;
-
-
-      showMessage(
-        "GRAB",
-        600
-      );
-    }
-
-
-    function updateClimb() {
-      if (
-        !local.climbing
-      ) {
-        return;
-      }
-
-
-      const now =
-        performance.now();
-
-
-      const progress =
-        clamp(
-          (
-            now -
-            local.climbStart
-          ) /
-          CLIMB_TIME,
-          0,
-          1
-        );
-
-
-      /*
-       * smoothstep
-       */
-
-      const eased =
-        progress *
-        progress *
-        (
-          3 -
-          2 * progress
-        );
-
-
-      local.y =
-        THREE.MathUtils.lerp(
-          local.climbFromY,
-          local.climbToY,
-          eased
-        );
-
-
-      if (
-        progress >= 1
-      ) {
-        local.climbing =
-          false;
-
-        local.grounded =
-          true;
-
-        local.y =
-          local.climbToY;
-
-        local.vy = 0;
-
-        markActivity();
-      }
-    }
-
-
-    function updateJumpButton() {
-      if (
-        innerWidth > 700 ||
-        !started
-      ) {
-        return;
-      }
-
-
-      const airborne =
-        !local.grounded &&
-        !local.climbing;
-
-
-      if (
-        airborne &&
-        canGrabPlatform()
-      ) {
-        jumpButton.classList.remove(
-          "grabUnavailable"
-        );
-
-        jumpButton.classList.add(
-          "grabAvailable"
-        );
-
-        jumpButton.querySelector(
-          "span"
-        ).textContent =
-          "GRAB";
-
-      } else if (
-        airborne
-      ) {
-        jumpButton.classList.remove(
-          "grabAvailable"
-        );
-
-        jumpButton.classList.add(
-          "grabUnavailable"
-        );
-
-        jumpButton.querySelector(
-          "span"
-        ).textContent =
-          "GRAB";
-
-      } else {
-        jumpButton.classList.remove(
-          "grabAvailable"
-        );
-
-        jumpButton.classList.add(
-          "grabUnavailable"
-        );
-
-        jumpButton.querySelector(
-          "span"
-        ).textContent =
-          "JUMP";
-      }
-    }
-
-
-    function createBullet() {
-      const geometry =
-        new THREE.SphereGeometry(
-          BULLET_RADIUS,
-          8,
-          8
-        );
-
-
-      const material =
-        new THREE.MeshBasicMaterial({
-          color: 0xffe082
-        });
-
-
-      const mesh =
-        new THREE.Mesh(
-          geometry,
-          material
-        );
-
-
-      const direction =
-        new THREE.Vector3();
-
-
-      camera.getWorldDirection(
-        direction
-      );
-
-
-      const start =
-        camera.position
-          .clone()
-          .add(
-            direction
-              .clone()
-              .multiplyScalar(0.65)
-          );
-
-
-      mesh.position.copy(
-        start
-      );
-
-
-      arenaGroup.add(
-        mesh
-      );
-
-
-      bullets.push({
-        mesh,
-        velocity:
-          direction
-            .multiplyScalar(
-              BULLET_SPEED
-            ),
-        createdAt:
-          performance.now(),
-        maxLife:
-          4000
-      });
-
-
-      showMessage(
-        "PEW",
-        90
-      );
-    }
-
-
-    function removeBullet(
-      bullet
-    ) {
-      arenaGroup.remove(
-        bullet.mesh
-      );
-
-
-      const index =
-        bullets.indexOf(
-          bullet
-        );
-
-
-      if (
-        index !== -1
-      ) {
-        bullets.splice(
-          index,
-          1
-        );
-      }
-    }
-
-
-    function bulletHitsRemote(
-      bullet
-    ) {
-      const point =
-        bullet.mesh.position;
-
-
-      for (
-        const [id, mesh]
-        of remotePlayers
-      ) {
-        const state =
-          remoteState.get(id);
-
-
-        if (
-          !state ||
-          state.alive === false
-        ) {
-          continue;
-        }
-
-
-        const target =
-          mesh.position.clone();
-
-
-        target.y +=
-          0;
-
-
-        const distance =
-          point.distanceTo(
-            target
-          );
-
-
-        if (
-          distance <
-          0.85
-        ) {
-          return id;
-        }
-      }
-
-
-      return null;
-    }
-
-
-    function bulletHitsSolid(
-      point
-    ) {
-      if (
-        Math.abs(point.x) >
-          23 ||
-        Math.abs(point.z) >
-          23
-      ) {
-        return true;
-      }
-
-
-      for (const p of platforms) {
-        if (
-          point.x >=
-            p.x -
-              p.w / 2 &&
-          point.x <=
-            p.x +
-              p.w / 2 &&
-          point.z >=
-            p.z -
-              p.d / 2 &&
-          point.z <=
-            p.z +
-              p.d / 2 &&
-          point.y >=
-            p.y -
-              p.h / 2 &&
-          point.y <=
-            p.y +
-              p.h / 2
-        ) {
-          return true;
-        }
-      }
-
-
-      return false;
-    }
-
-
-    function updateBullets(
-      dt
-    ) {
-      for (
-        let i =
-          bullets.length - 1;
-        i >= 0;
-        i--
-      ) {
-        const bullet =
-          bullets[i];
-
-
-        const oldPosition =
-          bullet.mesh.position
-            .clone();
-
-
-        bullet.mesh.position.add(
-          bullet.velocity
-            .clone()
-            .multiplyScalar(dt)
-        );
-
-
-        const newPosition =
-          bullet.mesh.position
-            .clone();
-
-
-        const segment =
-          newPosition
-            .clone()
-            .sub(
-              oldPosition
-            );
-
-
-        const length =
-          segment.length();
-
-
-        const steps =
-          Math.max(
-            1,
-            Math.ceil(
-              length / 0.3
-            )
-          );
-
-
-        let hitId =
-          null;
-
-        let hitSolid =
-          false;
-
-
-        for (
-          let s = 1;
-          s <= steps;
-          s++
-        ) {
-          const testPoint =
-            oldPosition
-              .clone()
-              .lerp(
-                newPosition,
-                s / steps
-              );
-
-
-          bullet.mesh.position.copy(
-            testPoint
-          );
-
-
-          hitId =
-            bulletHitsRemote(
-              bullet
-            );
-
-
-          if (
-            hitId
-          ) {
-            break;
-          }
-
-
-          if (
-            bulletHitsSolid(
-              testPoint
-            )
-          ) {
-            hitSolid = true;
-            break;
-          }
-        }
-
-
-        bullet.mesh.position.copy(
-          newPosition
-        );
-
-
-        if (
-          hitId
-        ) {
-          removeBullet(
-            bullet
-          );
-
-          applyDamage(
-            hitId
-          );
-
-          continue;
-        }
-
-
-        if (
-          hitSolid ||
-          performance.now() -
-            bullet.createdAt >
-            bullet.maxLife
-        ) {
-          removeBullet(
-            bullet
-          );
-        }
-      }
-    }
-
-
-    function updateFireProgress() {
-      if (
-        innerWidth > 700
-      ) {
-        return;
-      }
-
-
-      if (
-        !started
-      ) {
-        fireButton.style.setProperty(
-          "--progress",
-          "0"
-        );
-
-        return;
-      }
-
-
-      const now =
-        performance.now();
-
-
-      const remaining =
-        Math.max(
-          0,
-          local.nextFireAt -
-            now
-        );
-
-
-      const progress =
-        clamp(
-          1 -
-          remaining /
-            FIRE_COOLDOWN,
-          0,
-          1
-        );
-
-
-      fireButton.style.setProperty(
-        "--progress",
-        String(progress)
-      );
-    }
-
-
-    function shoot() {
-      if (
-        !started ||
-        ending ||
-        local.hp <= 0
-      ) {
-        return;
-      }
-
-
-      const now =
-        performance.now();
-
-
-      if (
-        now <
-        local.nextFireAt
-      ) {
-        return;
-      }
-
-
-      if (
-        Date.now() <
-        local.invulnerableUntil
-      ) {
-        /*
-         * スタート直後の3秒間は
-         * 銃撃そのものを禁止。
-         */
-        return;
-      }
-
-
-      local.nextFireAt =
-        now +
-        FIRE_COOLDOWN;
-
-
-      markActivity();
-
-      createBullet();
-    }
-
-
-    function remotePlayersHasMesh(
-      mesh
-    ) {
-      for (
-        const m
-        of remotePlayers.values()
-      ) {
-        if (
-          m === mesh
-        ) {
-          return true;
-        }
-      }
-
-      return false;
-    }
-
-
-    async function applyDamage(
-      targetId
-    ) {
-      if (
-        !roomId ||
-        !playerId ||
-        targetId ===
-          playerId
-      ) {
-        return;
-      }
-
-
-      const targetRef =
-        doc(
-          db,
-          "matches",
-          roomId,
-          "players",
-          targetId
-        );
-
-
-      try {
-        const snap =
-          await getDoc(
-            targetRef
-          );
-
-
-        if (
-          !snap.exists()
-        ) {
-          return;
-        }
-
-
-        const target =
           snap.data();
 
 
-        if (
-          !target.alive ||
-          (target.hp || 0) <= 0
-        ) {
-          return;
-        }
+        if(
+          data.status ===
+          "ended"
+        ){
 
-
-        const protectedUntil =
-          Number(
-            target.invulnerableUntil ||
-            0
+          throw new Error(
+            "ENDED"
           );
 
-
-        if (
-          protectedUntil >
-          Date.now()
-        ) {
-          return;
-        }
-
-
-        const newHp =
-          Math.max(
-            0,
-            (target.hp || 0) -
-              HIT_DAMAGE
-          );
-
-
-        const updates = {
-          hp:
-            newHp,
-
-          alive:
-            newHp > 0,
-
-          updatedAt:
-            serverTimestamp()
-        };
-
-
-        if (
-          newHp <= 0
-        ) {
-          updates.deaths =
-            (target.deaths || 0) +
-            1;
-
-
-          await updateDoc(
-            targetRef,
-            updates
-          );
-
-
-          const selfRef =
-            doc(
-              db,
-              "matches",
-              roomId,
-              "players",
-              playerId
-            );
-
-
-          const selfSnap =
-            await getDoc(
-              selfRef
-            );
-
-
-          if (
-            selfSnap.exists()
-          ) {
-            const selfData =
-              selfSnap.data();
-
-
-            const newKills =
-              (selfData.kills || 0) +
-              1;
-
-
-            await updateDoc(
-              selfRef,
-              {
-                kills:
-                  newKills,
-
-                updatedAt:
-                  serverTimestamp()
-              }
-            );
-
-
-            local.kills =
-              newKills;
-
-
-            showMessage(
-              "+1 KILL",
-              600
-            );
-
-
-            if (
-              newKills >=
-                MAX_SCORE
-            ) {
-              await tryFinishMatch(
-                "score"
-              );
-            }
-          }
-
-        } else {
-          await updateDoc(
-            targetRef,
-            updates
-          );
-        }
-
-      } catch (e) {
-        console.warn(
-          "damage failed",
-          e
-        );
-      }
-    }
-
-
-    async function respawnIfNeeded() {
-      if (
-        local.hp > 0 ||
-        local.respawnAt === 0
-      ) {
-        return;
-      }
-
-
-      if (
-        performance.now() <
-        local.respawnAt
-      ) {
-        return;
-      }
-
-
-      local.respawnAt = 0;
-
-
-      const candidates =
-        shuffledSpawnPositions(
-          1
-        );
-
-
-      const [
-        x,
-        z
-      ] =
-        candidates[0];
-
-
-      local.x = x;
-      local.z = z;
-
-      local.y =
-        EYE_HEIGHT;
-
-      local.vy = 0;
-
-      local.grounded =
-        true;
-
-      local.hp =
-        MAX_HP;
-
-      local.invulnerableUntil =
-        Date.now() +
-        1500;
-
-
-      markActivity();
-
-      await syncLocalState(
-        true
-      );
-
-
-      showMessage(
-        "RESPAWN",
-        650
-      );
-    }
-
-
-    async function tryFinishMatch(
-      reason
-    ) {
-      if (
-        !isHost ||
-        !roomId ||
-        ending
-      ) {
-        return;
-      }
-
-
-      try {
-        const snap =
-          await getDoc(
-            doc(
-              db,
-              "matches",
-              roomId
-            )
-          );
-
-
-        if (
-          !snap.exists() ||
-          snap.data().status !==
-            "running"
-        ) {
-          return;
         }
 
 
         const players =
-          await getPlayersOnce(
-            roomId
-          );
-
-
-        players.sort(
-          (a,b) => {
-            const s =
-              (b.kills || 0) -
-              (a.kills || 0);
-
-
-            if (
-              s !== 0
-            ) {
-              return s;
-            }
-
-
-            return (
-              (a.deaths || 0) -
-              (b.deaths || 0)
-            );
-          }
-        );
-
-
-        const winner =
-          players[0];
-
-
-        await updateDoc(
-          doc(
-            db,
-            "matches",
-            roomId
-          ),
           {
-            status:
-              "finished",
-
-            winnerUid:
-              winner?.id ||
-              null,
-
-            finishedAt:
-              serverTimestamp(),
-
-            finishReason:
-              reason
-          }
-        );
-
-      } catch (e) {
-        console.warn(
-          "finish failed",
-          e
-        );
-      }
-    }
+            ...(data.players || {})
+          };
 
 
-    async function finishMatchClient(
-      roomData
-    ) {
-      if (
-        ending
-      ) {
-        return;
-      }
-
-
-      ending = true;
-      started = false;
-
-
-      if (
-        controls?.isLocked
-      ) {
-        controls.unlock();
-      }
-
-
-      hud.style.display =
-        "none";
-
-      endScreen.style.display =
-        "flex";
-
-
-      for (
-        const bullet
-        of [...bullets]
-      ) {
-        removeBullet(
-          bullet
-        );
-      }
-
-
-      const players =
-        await getPlayersOnce(
-          roomId
-        ).catch(
-          () => []
-        );
-
-
-      players.sort(
-        (a,b) =>
-          (b.kills || 0) -
-          (a.kills || 0) ||
-          (a.deaths || 0) -
-          (b.deaths || 0)
-      );
-
-
-      const winner =
-        players[0];
-
-
-      $("winnerTitle")
-        .textContent =
-          winner
-            ? `${winner.name || "Player"} の勝ち！`
-            : "試合終了";
-
-
-      $("resultText")
-        .textContent =
-          winner
-            ? `勝者: ${winner.name} / ${winner.kills || 0} K - ${winner.deaths || 0} D`
-            : "勝者情報を取得できなかった。";
-
-
-      $("finalRanking")
-        .innerHTML =
-          players
-            .map(
-              (p,i) =>
-                `<div style="padding:8px 10px;margin:6px 0;background:rgba(255,255,255,.05);border-radius:10px">
-                  ${i+1}. ${escapeHtml(p.name || "Player")}
-                  — ${p.kills || 0} K / ${p.deaths || 0} D
-                </div>`
-            )
-            .join("");
-
-
-      /*
-       * 試合終了時はホストが
-       * matches/{roomId} と
-       * playersサブコレクションを削除。
-       */
-
-      if (
-        isHost
-      ) {
-        await deleteMatchCompletely()
-          .catch(
-            e =>
-              console.warn(
-                "delete match failed",
-                e
-              )
-          );
-      }
-    }
-
-
-    async function deleteMatchCompletely() {
-      if (
-        !roomId
-      ) {
-        return;
-      }
-
-
-      const players =
-        await getPlayersOnce(
-          roomId
-        ).catch(
-          () => []
-        );
-
-
-      const batch =
-        writeBatch(db);
-
-
-      players.forEach(
-        p => {
-          batch.delete(
-            doc(
-              db,
-              "matches",
-              roomId,
-              "players",
-              p.id
-            )
-          );
-        }
-      );
-
-
-      batch.delete(
-        doc(
-          db,
-          "matches",
-          roomId
-        )
-      );
-
-
-      await batch.commit();
-
-
-      handleRoomDeleted(
-        "試合が終了した。"
-      );
-    }
-
-
-    async function deleteRoomBecauseInactive(
-      reason
-    ) {
-      if (
-        !roomId
-      ) {
-        return;
-      }
-
-
-      try {
-        await deleteMatchCompletely();
-      } catch (e) {
-        console.warn(
-          reason,
-          e
-        );
-      }
-    }
-
-
-    async function checkRoomCleanup() {
-      if (
-        !roomId
-      ) {
-        return;
-      }
-
-
-      try {
-        const roomSnap =
-          await getDoc(
-            doc(
-              db,
-              "matches",
-              roomId
-            )
-          );
-
-
-        if (
-          !roomSnap.exists()
-        ) {
-          handleRoomDeleted(
-            "この部屋は削除された。"
-          );
+        if(
+          players[user.uid]
+        ){
 
           return;
+
+        }
+
+
+        const count =
+          Object.keys(
+            players
+          ).length;
+
+
+        if(count >= 8){
+
+          throw new Error(
+            "FULL"
+          );
+
+        }
+
+
+        const spawn =
+          randomSpawn();
+
+
+        players[user.uid] = {
+
+          uid:
+            user.uid,
+
+          name:
+            "Player-" +
+            user.uid.slice(-4),
+
+          x:
+            spawn.x,
+
+          y:
+            spawn.y,
+
+          z:
+            spawn.z,
+
+          yaw:
+            0,
+
+          pitch:
+            0,
+
+          hp:
+            MAX_HP,
+
+          kills:
+            0,
+
+          alive:
+            true
+
+        };
+
+
+        transaction.update(
+          ref,
+          {
+
+            players
+
+          }
+        );
+
+      }
+    );
+
+
+    isHost =
+      false;
+
+
+    await startMatch(
+      code
+    );
+
+
+  }catch(error){
+
+    console.error(error);
+
+    const message =
+      error?.message || "";
+
+
+    if(
+      message ===
+      "NOT_FOUND"
+    ){
+
+      await createMatch(
+        code
+      );
+
+    }else if(
+      message ===
+      "FULL"
+    ){
+
+      statusEl.textContent =
+        "その試合は満員だよ。";
+
+    }else if(
+      message ===
+      "ENDED"
+    ){
+
+      statusEl.textContent =
+        "その試合はもう終了してるよ。";
+
+    }else{
+
+      statusEl.textContent =
+        "参加/作成失敗：" +
+        getFriendlyError(error);
+
+    }
+
+  }
+
+}
+
+
+async function handleMatchButton(){
+
+  const code =
+    matchCodeInput.value
+      .trim()
+      .toUpperCase();
+
+
+  if(code){
+
+    await joinMatch(
+      code
+    );
+
+  }else{
+
+    await createMatch(
+      ""
+    );
+
+  }
+
+}
+
+
+function getFriendlyError(error){
+
+  if(!error){
+
+    return "不明なエラー";
+
+  }
+
+
+  if(
+    error.code ===
+    "permission-denied"
+  ){
+
+    return "Firestoreの権限設定を確認して！";
+
+  }
+
+
+  if(
+    error.code ===
+    "auth/operation-not-allowed"
+  ){
+
+    return "Firebaseで匿名ログインを有効にして！";
+
+  }
+
+
+  return (
+    error.message ||
+    String(error)
+  );
+
+}
+
+
+async function startMatch(
+  code
+){
+
+  currentMatchId =
+    code;
+
+  matchRef =
+    doc(
+      db,
+      "matches",
+      code
+    );
+
+
+  menu.style.display =
+    "none";
+
+  gameUI.style.display =
+    "block";
+
+  gameOver.style.display =
+    "none";
+
+
+  roomText.textContent =
+    code;
+
+
+  if(!scene){
+
+    setupScene();
+
+  }
+
+
+  gameEnded =
+    false;
+
+  gameStarted =
+    true;
+
+  matchHasStarted =
+    false;
+
+
+  velocityY =
+    0;
+
+
+  await loadLocalPlayer();
+
+
+  if(unsubscribeMatch){
+
+    unsubscribeMatch();
+
+    unsubscribeMatch =
+      null;
+
+  }
+
+
+  unsubscribeMatch =
+    onSnapshot(
+      matchRef,
+
+      async snapshot => {
+
+        if(
+          !snapshot.exists()
+        ){
+
+          if(gameStarted){
+
+            finishLocalGame(
+              "試合データが削除されました。"
+            );
+
+          }
+
+          return;
+
         }
 
 
         const data =
-          roomSnap.data();
+          snapshot.data();
 
 
-        const created =
-          Number(
-            data.createdAtMs
-          ) ||
-          timestampMs(
-            data.createdAt
+        const players =
+          data.players ||
+          {};
+
+
+        const count =
+          Object.keys(
+            players
+          ).length;
+
+
+        playerCountText.textContent =
+          String(count);
+
+
+        updateRemotePlayers(
+          players
+        );
+
+
+        updateScoreboard(
+          players
+        );
+
+
+        const me =
+          players[
+            currentUser.uid
+          ];
+
+
+        if(me){
+
+          localPlayer =
+            {
+
+              ...localPlayer,
+
+              ...me
+
+            };
+
+
+          localKills =
+            me.kills || 0;
+
+
+          updateLocalHUD();
+
+        }
+
+
+        const wasStarted =
+          matchHasStarted;
+
+
+        if(
+          data.status ===
+          "active"
+        ){
+
+          matchHasStarted =
+            true;
+
+        }
+
+
+        if(
+          data.status ===
+          "active" &&
+          !wasStarted
+        ){
+
+          const startedAt =
+            data.startedAt;
+
+
+          spawnProtectionUntil =
+            Date.now() +
+            START_PROTECTION_TIME;
+
+
+          if(startedAt){
+
+            const serverMillis =
+              startedAt.toMillis
+                ? startedAt.toMillis()
+                : Date.now();
+
+
+            spawnProtectionUntil =
+              serverMillis +
+              START_PROTECTION_TIME;
+
+          }
+
+        }
+
+
+        updateStartUI(
+          data
+        );
+
+
+        if(
+          data.status ===
+          "ended" &&
+          !gameEnded
+        ){
+
+          const winner =
+            data.winnerUid;
+
+
+          const winnerName =
+            winner &&
+            players[winner] &&
+            players[winner].name
+              ? players[winner].name
+              : "勝者";
+
+
+          finishLocalGame(
+
+            winner ===
+            currentUser.uid
+
+              ? "YOU WIN!"
+
+              : winnerName +
+                " の勝利！"
+
+          );
+
+        }
+
+      },
+
+      error => {
+
+        console.error(
+          error
+        );
+
+        if(gameStarted){
+
+          finishLocalGame(
+            "通信エラーが発生しました。"
+          );
+
+        }
+
+      }
+    );
+
+
+  if(!gameLoopStarted){
+
+    gameLoopStarted =
+      true;
+
+    requestAnimationFrame(
+      gameLoop
+    );
+
+  }
+
+}
+
+
+async function loadLocalPlayer(){
+
+  const snap =
+    await getDoc(
+      matchRef
+    );
+
+
+  if(
+    !snap.exists()
+  ){
+
+    throw new Error(
+      "試合が見つかりません。"
+    );
+
+  }
+
+
+  const data =
+    snap.data();
+
+
+  const player =
+    data.players?.[
+      currentUser.uid
+    ];
+
+
+  if(!player){
+
+    throw new Error(
+      "プレイヤーデータがありません。"
+    );
+
+  }
+
+
+  localPlayer =
+    {
+      ...player
+    };
+
+
+  localKills =
+    player.kills || 0;
+
+
+  cameraState.yaw =
+    Number(
+      player.yaw || 0
+    );
+
+
+  cameraState.pitch =
+    Number(
+      player.pitch || 0
+    );
+
+
+  setCameraFromPlayer();
+
+  updateLocalHUD();
+
+  updateStartUI(
+    data
+  );
+
+}
+
+
+function updateStartUI(data){
+
+  if(
+    data.status !==
+    "waiting"
+  ){
+
+    preStart.style.display =
+      "none";
+
+    return;
+
+  }
+
+
+  if(
+    isHost
+  ){
+
+    preStart.style.display =
+      "block";
+
+    preStartText.textContent =
+      "部屋主がSTARTを長押しして開始";
+
+  }else{
+
+    preStart.style.display =
+      "block";
+
+    preStartText.textContent =
+      "部屋主のSTART待ち";
+
+    startButton.style.opacity =
+      ".35";
+
+  }
+
+}
+
+
+function setCameraFromPlayer(){
+
+  if(!localPlayer){
+
+    return;
+
+  }
+
+
+  camera.position.set(
+
+    localPlayer.x,
+
+    localPlayer.y + .45,
+
+    localPlayer.z
+
+  );
+
+
+  camera.rotation.order =
+    "YXZ";
+
+
+  camera.rotation.y =
+    cameraState.yaw;
+
+
+  camera.rotation.x =
+    cameraState.pitch;
+
+}
+
+
+function updateRemotePlayers(
+  players
+){
+
+  const seen =
+    new Set();
+
+
+  for(
+    const [
+      uid,
+      player
+    ]
+    of Object.entries(players)
+  ){
+
+    if(
+      uid ===
+      currentUser.uid
+    ){
+
+      continue;
+
+    }
+
+
+    seen.add(uid);
+
+
+    let mesh =
+      playerMeshes.get(uid);
+
+
+    if(!mesh){
+
+      mesh =
+        createPlayerMesh(
+          uid
+        );
+
+      playerMeshes.set(
+        uid,
+        mesh
+      );
+
+    }
+
+
+    mesh.position.set(
+
+      player.x,
+
+      Math.max(
+        0,
+        player.y -
+        PLAYER_HEIGHT
+      ),
+
+      player.z
+
+    );
+
+
+    mesh.rotation.y =
+      Number(
+        player.yaw || 0
+      );
+
+
+    mesh.visible =
+      Boolean(
+        player.alive
+      );
+
+  }
+
+
+  for(
+    const uid
+    of playerMeshes.keys()
+  ){
+
+    if(
+      !seen.has(uid)
+    ){
+
+      removeRemoteMesh(
+        uid
+      );
+
+    }
+
+  }
+
+}
+
+
+function updateScoreboard(
+  players
+){
+
+  const entries =
+    Object.entries(players)
+      .sort(
+        (a,b) =>
+          (b[1].kills || 0) -
+          (a[1].kills || 0)
+      );
+
+
+  scoreBoard.innerHTML =
+    "";
+
+
+  for(
+    const [
+      uid,
+      player
+    ]
+    of entries
+  ){
+
+    const row =
+      document.createElement(
+        "div"
+      );
+
+    row.className =
+      "scoreRow";
+
+
+    const name =
+      document.createElement(
+        "span"
+      );
+
+
+    name.textContent =
+      uid ===
+      currentUser.uid
+
+        ? "YOU"
+
+        : player.name ||
+          uid.slice(-4);
+
+
+    const state =
+      document.createElement(
+        "span"
+      );
+
+
+    state.textContent =
+      player.alive
+
+        ? `${player.kills || 0} K`
+
+        : "DEAD";
+
+
+    state.className =
+      player.alive
+
+        ? "scoreAlive"
+
+        : "scoreDead";
+
+
+    row.appendChild(name);
+
+    row.appendChild(state);
+
+    scoreBoard.appendChild(row);
+
+  }
+
+}
+
+
+function updateLocalHUD(){
+
+  if(!localPlayer){
+
+    return;
+
+  }
+
+
+  const hp =
+    Math.max(
+      0,
+      Math.round(
+        localPlayer.hp
+      )
+    );
+
+
+  healthText.textContent =
+    `HP ${hp}`;
+
+
+  healthBar.style.width =
+    `${hp}%`;
+
+
+  if(hp > 60){
+
+    healthBar.style.background =
+      "#48e27d";
+
+  }else if(hp > 30){
+
+    healthBar.style.background =
+      "#ffd84d";
+
+  }else{
+
+    healthBar.style.background =
+      "#ff5959";
+
+  }
+
+
+  killsText.textContent =
+    String(localKills);
+
+}
+
+
+function clamp(
+  value,
+  min,
+  max
+){
+
+  return Math.max(
+    min,
+    Math.min(
+      max,
+      value
+    )
+  );
+
+}
+
+
+function isPositionFree(
+  x,
+  y,
+  z
+){
+
+  const radius =
+    .38;
+
+
+  if(
+
+    x <
+      -ARENA_SIZE / 2 +
+      radius ||
+
+    x >
+      ARENA_SIZE / 2 -
+      radius ||
+
+    z <
+      -ARENA_SIZE / 2 +
+      radius ||
+
+    z >
+      ARENA_SIZE / 2 -
+      radius
+
+  ){
+
+    return false;
+
+  }
+
+
+  const playerBox =
+    new THREE.Box3(
+
+      new THREE.Vector3(
+
+        x - radius,
+
+        Math.max(
+          0,
+          y - 1.6
+        ),
+
+        z - radius
+
+      ),
+
+      new THREE.Vector3(
+
+        x + radius,
+
+        y + .4,
+
+        z + radius
+
+      )
+
+    );
+
+
+  for(
+    const collider
+    of colliders
+  ){
+
+    if(
+      !collider ||
+      !collider.geometry
+    ){
+
+      continue;
+
+    }
+
+
+    if(
+      collider ===
+      colliders[0]
+    ){
+
+      continue;
+
+    }
+
+
+    const box =
+      new THREE.Box3()
+        .setFromObject(
+          collider
+        );
+
+
+    if(
+      box.intersectsBox(
+        playerBox
+      )
+    ){
+
+      return false;
+
+    }
+
+  }
+
+
+  return true;
+
+}
+
+
+function tryMove(
+  dx,
+  dz
+){
+
+  if(
+    !localPlayer ||
+    !localPlayer.alive ||
+    !matchHasStarted
+  ){
+
+    return;
+
+  }
+
+
+  const nextX =
+    localPlayer.x +
+    dx;
+
+
+  const nextZ =
+    localPlayer.z +
+    dz;
+
+
+  if(
+    isPositionFree(
+      nextX,
+      localPlayer.y,
+      nextZ
+    )
+  ){
+
+    localPlayer.x =
+      nextX;
+
+    localPlayer.z =
+      nextZ;
+
+  }
+
+}
+
+
+function updateMovement(
+  delta
+){
+
+  if(
+    !localPlayer ||
+    !localPlayer.alive ||
+    !matchHasStarted
+  ){
+
+    return;
+
+  }
+
+
+  let inputX =
+    0;
+
+  let inputZ =
+    0;
+
+
+  if(keys.w)
+    inputZ -= 1;
+
+  if(keys.s)
+    inputZ += 1;
+
+  if(keys.a)
+    inputX -= 1;
+
+  if(keys.d)
+    inputX += 1;
+
+
+  inputX +=
+    mobileInput.x;
+
+  inputZ +=
+    mobileInput.y;
+
+
+  const length =
+    Math.hypot(
+      inputX,
+      inputZ
+    );
+
+
+  if(length > 1){
+
+    inputX /=
+      length;
+
+    inputZ /=
+      length;
+
+  }
+
+
+  const moving =
+    Math.abs(inputX) > .01 ||
+    Math.abs(inputZ) > .01;
+
+
+  if(moving){
+
+    const speed =
+      physics.moveSpeed;
+
+    const amount =
+      speed * delta;
+
+
+    const forwardX =
+      -Math.sin(
+        cameraState.yaw
+      );
+
+    const forwardZ =
+      -Math.cos(
+        cameraState.yaw
+      );
+
+
+    const rightX =
+      Math.cos(
+        cameraState.yaw
+      );
+
+    const rightZ =
+      -Math.sin(
+        cameraState.yaw
+      );
+
+
+    const moveX =
+      (
+        forwardX * -inputZ +
+        rightX * inputX
+      ) *
+      amount;
+
+
+    const moveZ =
+      (
+        forwardZ * -inputZ +
+        rightZ * inputX
+      ) *
+      amount;
+
+
+    tryMove(
+      moveX,
+      moveZ
+    );
+
+  }
+
+
+  velocityY +=
+    physics.gravity *
+    delta;
+
+
+  localPlayer.y +=
+    velocityY *
+    delta;
+
+
+  if(
+    localPlayer.y <=
+    PLAYER_HEIGHT
+  ){
+
+    localPlayer.y =
+      PLAYER_HEIGHT;
+
+    velocityY =
+      0;
+
+    grounded =
+      true;
+
+  }else{
+
+    grounded =
+      false;
+
+  }
+
+
+  camera.position.set(
+
+    localPlayer.x,
+
+    localPlayer.y + .45,
+
+    localPlayer.z
+
+  );
+
+
+  camera.rotation.order =
+    "YXZ";
+
+  camera.rotation.y =
+    cameraState.yaw;
+
+  camera.rotation.x =
+    cameraState.pitch;
+
+
+  updateGrabUI();
+
+}
+
+
+function jump(){
+
+  if(
+    !localPlayer ||
+    !localPlayer.alive ||
+    !matchHasStarted
+  ){
+
+    return;
+
+  }
+
+
+  /*
+    空中ならJUMPボタンがGRABになる。
+    条件を満たしていればそのまま掴む。
+  */
+
+  if(!grounded){
+
+    if(
+      canGrab()
+    ){
+
+      startGrab();
+
+    }
+
+    return;
+
+  }
+
+
+  velocityY =
+    physics.jumpPower;
+
+  grounded =
+    false;
+
+}
+
+
+function getGrabTarget(){
+
+  if(
+    !localPlayer ||
+    grounded
+  ){
+
+    return null;
+
+  }
+
+
+  const playerX =
+    localPlayer.x;
+
+  const playerY =
+    localPlayer.y;
+
+  const playerZ =
+    localPlayer.z;
+
+
+  let best =
+    null;
+
+  let bestDistance =
+    Infinity;
+
+
+  /*
+    足場の上面が
+    自分の足元より上、
+    しかし頭より下。
+  */
+
+  const feetY =
+    playerY -
+    PLAYER_HEIGHT;
+
+  const headY =
+    playerY;
+
+
+  for(
+    const collider
+    of colliders
+  ){
+
+    if(
+      collider ===
+      colliders[0]
+    ){
+
+      continue;
+
+    }
+
+
+    const box =
+      new THREE.Box3()
+        .setFromObject(
+          collider
+        );
+
+
+    const insideX =
+      playerX >=
+        box.min.x -
+        GRAB_DISTANCE &&
+
+      playerX <=
+        box.max.x +
+        GRAB_DISTANCE;
+
+
+    const insideZ =
+      playerZ >=
+        box.min.z -
+        GRAB_DISTANCE &&
+
+      playerZ <=
+        box.max.z +
+        GRAB_DISTANCE;
+
+
+    if(
+      !insideX ||
+      !insideZ
+    ){
+
+      continue;
+
+    }
+
+
+    const platformTop =
+      box.max.y;
+
+
+    if(
+      platformTop <=
+      feetY + .05
+    ){
+
+      continue;
+
+    }
+
+
+    if(
+      platformTop >=
+      headY
+    ){
+
+      continue;
+
+    }
+
+
+    const centerX =
+      clamp(
+        playerX,
+        box.min.x,
+        box.max.x
+      );
+
+
+    const centerZ =
+      clamp(
+        playerZ,
+        box.min.z,
+        box.max.z
+      );
+
+
+    const distance =
+      Math.hypot(
+
+        playerX -
+        centerX,
+
+        playerZ -
+        centerZ
+
+      );
+
+
+    if(
+      distance >
+      GRAB_DISTANCE
+    ){
+
+      continue;
+
+    }
+
+
+    if(
+      distance <
+      bestDistance
+    ){
+
+      bestDistance =
+        distance;
+
+      best = {
+
+        box,
+
+        top:
+          platformTop,
+
+        x:
+          centerX,
+
+        z:
+          centerZ
+
+      };
+
+    }
+
+  }
+
+
+  return best;
+
+}
+
+
+function canGrab(){
+
+  return Boolean(
+    getGrabTarget()
+  );
+
+}
+
+
+function updateGrabUI(){
+
+  if(
+    grounded ||
+    !localPlayer ||
+    !matchHasStarted
+  ){
+
+    grabButton.style.opacity =
+      "0";
+
+    return;
+
+  }
+
+
+  grabButton.style.opacity =
+    "";
+
+
+  if(
+    canGrab()
+  ){
+
+    grabButton.classList.remove(
+      "inactive"
+    );
+
+    grabButton.classList.add(
+      "active"
+    );
+
+  }else{
+
+    grabButton.classList.remove(
+      "active"
+    );
+
+    grabButton.classList.add(
+      "inactive"
+    );
+
+  }
+
+}
+
+
+function startGrab(){
+
+  if(
+    grabAnimation ||
+    grounded ||
+    !localPlayer
+  ){
+
+    return;
+
+  }
+
+
+  const target =
+    getGrabTarget();
+
+
+  if(!target){
+
+    return;
+
+  }
+
+
+  grabAnimation = {
+
+    start:
+      performance.now(),
+
+    target,
+
+    startX:
+      localPlayer.x,
+
+    startY:
+      localPlayer.y,
+
+    startZ:
+      localPlayer.z
+
+  };
+
+
+  velocityY =
+    0;
+
+}
+
+
+function updateGrabAnimation(
+  now
+){
+
+  if(!grabAnimation){
+
+    return;
+
+  }
+
+
+  const elapsed =
+    now -
+    grabAnimation.start;
+
+
+  const progress =
+    clamp(
+      elapsed /
+      GRAB_TIME,
+      0,
+      1
+    );
+
+
+  const smooth =
+    progress *
+    progress *
+    (
+      3 -
+      2 * progress
+    );
+
+
+  const target =
+    grabAnimation.target;
+
+
+  localPlayer.x =
+    grabAnimation.startX +
+    (
+      target.x -
+      grabAnimation.startX
+    ) *
+    smooth;
+
+
+  localPlayer.z =
+    grabAnimation.startZ +
+    (
+      target.z -
+      grabAnimation.startZ
+    ) *
+    smooth;
+
+
+  localPlayer.y =
+    target.top +
+    PLAYER_HEIGHT +
+    .02;
+
+
+  camera.position.set(
+
+    localPlayer.x,
+
+    localPlayer.y + .45,
+
+    localPlayer.z
+
+  );
+
+
+  if(
+    progress >= 1
+  ){
+
+    grabAnimation =
+      null;
+
+    grounded =
+      true;
+
+    velocityY =
+      0;
+
+  }
+
+}
+
+
+function showKillMessage(
+  text
+){
+
+  killMessage.textContent =
+    text;
+
+  killMessage.style.opacity =
+    "1";
+
+
+  setTimeout(
+    () => {
+
+      killMessage.style.opacity =
+        "0";
+
+    },
+    900
+  );
+
+}
+
+
+function createBullet(
+  origin,
+  direction,
+  ownerUid
+){
+
+  const geometry =
+    new THREE.SphereGeometry(
+      .09,
+      8,
+      8
+    );
+
+
+  const material =
+    new THREE.MeshBasicMaterial({
+
+      color:
+        0xffe36e
+
+    });
+
+
+  const mesh =
+    new THREE.Mesh(
+      geometry,
+      material
+    );
+
+
+  mesh.position.copy(
+    origin
+  );
+
+
+  scene.add(mesh);
+
+
+  const id =
+    ++bulletIdCounter;
+
+
+  bullets.set(
+    id,
+    {
+
+      mesh,
+
+      direction:
+        direction.clone()
+          .normalize(),
+
+      ownerUid,
+
+      created:
+        performance.now(),
+
+      lastPosition:
+        origin.clone()
+
+    }
+  );
+
+}
+
+
+function removeBullet(
+  id
+){
+
+  const bullet =
+    bullets.get(id);
+
+
+  if(!bullet){
+
+    return;
+
+  }
+
+
+  scene.remove(
+    bullet.mesh
+  );
+
+
+  bullet.mesh.geometry.dispose();
+
+  bullet.mesh.material.dispose();
+
+
+  bullets.delete(
+    id
+  );
+
+}
+
+
+function updateBullets(
+  delta,
+  now
+){
+
+  for(
+    const [
+      id,
+      bullet
+    ]
+    of bullets
+  ){
+
+    const previous =
+      bullet.mesh.position.clone();
+
+
+    const distance =
+      BULLET_SPEED *
+      delta;
+
+
+    bullet.mesh.position.add(
+
+      bullet.direction
+        .clone()
+        .multiplyScalar(
+          distance
+        )
+
+    );
+
+
+    bullet.lastPosition =
+      previous;
+
+
+    if(
+      now -
+      bullet.created >
+      BULLET_LIFETIME
+    ){
+
+      removeBullet(
+        id
+      );
+
+      continue;
+
+    }
+
+
+    const bulletLine =
+      new THREE.Line3(
+
+        previous,
+
+        bullet.mesh.position
+
+      );
+
+
+    let hitSomething =
+      false;
+
+
+    /*
+      壁・足場との衝突
+    */
+
+    for(
+      const collider
+      of colliders
+    ){
+
+      const box =
+        new THREE.Box3()
+          .setFromObject(
+            collider
           );
 
 
-        /*
-         * バグや妨害行為などで
-         * 1日以上残った試合を削除。
-         */
+      const closest =
+        new THREE.Vector3();
 
-        if (
-          created &&
-          Date.now() -
-            created >=
-            STALE_MATCH_LIMIT
-        ) {
-          await deleteRoomBecauseInactive(
-            "stale match cleanup"
+
+      box.clampPoint(
+        bullet.mesh.position,
+        closest
+      );
+
+
+      if(
+        closest.distanceTo(
+          bullet.mesh.position
+        ) < .18
+      ){
+
+        hitSomething =
+          true;
+
+        break;
+
+      }
+
+    }
+
+
+    if(hitSomething){
+
+      removeBullet(
+        id
+      );
+
+      continue;
+
+    }
+
+
+    /*
+      プレイヤーとの衝突
+    */
+
+    for(
+      const [
+        uid,
+        mesh
+      ]
+      of playerMeshes
+    ){
+
+      if(
+        uid ===
+        bullet.ownerUid ||
+        !mesh.visible
+      ){
+
+        continue;
+
+      }
+
+
+      const box =
+        new THREE.Box3()
+          .setFromObject(
+            mesh
           );
+
+
+      if(
+        box.distanceToPoint(
+          bullet.mesh.position
+        ) < .15
+      ){
+
+        hitSomething =
+          true;
+
+
+        if(
+          Date.now() >=
+          spawnProtectionUntil
+        ){
+
+          applyBulletDamage(
+            uid,
+            bullet.ownerUid
+          );
+
+        }
+
+
+        break;
+
+      }
+
+    }
+
+
+    if(hitSomething){
+
+      removeBullet(
+        id
+      );
+
+    }
+
+  }
+
+}
+
+
+async function applyBulletDamage(
+  targetUid,
+  shooterUid
+){
+
+  if(
+    !matchRef ||
+    gameEnded
+  ){
+
+    return;
+
+  }
+
+
+  try{
+
+    let wasKill =
+      false;
+
+
+    await runTransaction(
+      db,
+      async transaction => {
+
+        const snap =
+          await transaction.get(
+            matchRef
+          );
+
+
+        if(
+          !snap.exists()
+        ){
 
           return;
+
+        }
+
+
+        const data =
+          snap.data();
+
+
+        if(
+          data.status !==
+          "active"
+        ){
+
+          return;
+
         }
 
 
         const players =
-          await getPlayersOnce(
-            roomId
-          );
+          {
+            ...(data.players || {})
+          };
 
 
-        if (
-          players.length === 0
-        ) {
+        const shooter =
+          players[shooterUid];
+
+
+        const target =
+          players[targetUid];
+
+
+        if(
+          !shooter ||
+          !target
+        ){
+
           return;
+
         }
 
 
-        /*
-         * 全プレイヤーの
-         * lastActivityMs が1分以上前なら
-         * 部屋そのものを削除。
-         */
+        if(
+          !shooter.alive ||
+          !target.alive
+        ){
 
-        const allInactive =
-          players.every(
-            p => {
-              const activity =
-                Number(
-                  p.lastActivityMs
-                ) ||
-                timestampMs(
-                  p.lastActivityAt
-                );
+          return;
 
-              return (
-                activity > 0 &&
-                Date.now() -
-                  activity >=
-                  INACTIVITY_LIMIT
-              );
-            }
-          );
-
-
-        if (
-          allInactive
-        ) {
-          await deleteRoomBecauseInactive(
-            "all players inactive"
-          );
         }
 
-      } catch (e) {
-        console.warn(
-          "room cleanup failed",
-          e
-        );
-      }
-    }
 
-
-    function handleRoomDeleted(
-      reason =
-        "部屋が削除された。"
-    ) {
-      roomUnsub?.();
-      playersUnsub?.();
-
-
-      roomUnsub = null;
-      playersUnsub = null;
-
-
-      roomId = null;
-
-      isHost = false;
-
-      started = false;
-
-      ending = false;
-
-
-      roomDataCache = null;
-
-
-      remoteState.clear();
-
-
-      for (
-        const mesh
-        of remotePlayers.values()
-      ) {
-        arenaGroup?.remove(
-          mesh
-        );
-      }
-
-
-      remotePlayers.clear();
-
-
-      for (
-        const bullet
-        of [...bullets]
-      ) {
-        removeBullet(
-          bullet
-        );
-      }
-
-
-      clearStartHold();
-
-
-      lobby.style.display =
-        "none";
-
-      hud.style.display =
-        "none";
-
-      endScreen.style.display =
-        "none";
-
-      menu.style.display =
-        "flex";
-
-
-      if (
-        reason
-      ) {
-        setStatus(
-          reason
-        );
-      }
-    }
-
-
-    async function leaveRoom() {
-      if (
-        !roomId ||
-        !playerId
-      ) {
-        return;
-      }
-
-
-      const leavingRoom =
-        roomId;
-
-
-      try {
-        await deleteDoc(
-          doc(
-            db,
-            "matches",
-            leavingRoom,
-            "players",
-            playerId
+        if(
+          Date.now() <
+          Number(
+            data.startedProtectionUntil ||
+            0
           )
-        );
+        ){
+
+          return;
+
+        }
 
 
-        /*
-         * 部屋主が抜けた場合、
-         * 残りのプレイヤーがいるなら
-         * 一番古いプレイヤーを新しい部屋主にする。
-         */
+        target.hp =
+          Math.max(
 
-        const roomRef =
-          doc(
-            db,
-            "matches",
-            leavingRoom
+            0,
+
+            Number(
+              target.hp || 0
+            ) -
+            BULLET_DAMAGE
+
           );
 
 
-        const roomSnap =
-          await getDoc(
-            roomRef
-          );
+        if(
+          target.hp <= 0
+        ){
+
+          target.hp =
+            0;
+
+          target.alive =
+            false;
 
 
-        if (
-          roomSnap.exists()
-        ) {
-          const players =
-            await getPlayersOnce(
-              leavingRoom
+          shooter.kills =
+            Number(
+              shooter.kills || 0
+            ) + 1;
+
+
+          wasKill =
+            shooterUid ===
+            currentUser.uid;
+
+
+          const alivePlayers =
+            Object.values(
+              players
+            ).filter(
+              player =>
+                player.alive
             );
 
 
-          if (
-            players.length === 0
-          ) {
-            await deleteDoc(
-              roomRef
-            );
-          } else if (
-            roomSnap.data()
-              .hostUid ===
-            playerId &&
-            roomSnap.data()
-              .status ===
-            "lobby"
-          ) {
-            players.sort(
-              (a,b) =>
-                timestampMs(
-                  a.joinedAt
-                ) -
-                timestampMs(
-                  b.joinedAt
-                )
-            );
+          if(
+            alivePlayers.length <= 1
+          ){
 
-
-            await updateDoc(
-              roomRef,
+            transaction.update(
+              matchRef,
               {
-                hostUid:
-                  players[0].id
+
+                players,
+
+                status:
+                  "ended",
+
+                winnerUid:
+                  alivePlayers.length === 1
+                    ? alivePlayers[0].uid
+                    : null
+
               }
             );
-          }
-        }
 
-      } catch (e) {
-        console.warn(
-          "leave failed",
-          e
-        );
-      }
-
-
-      handleRoomDeleted(
-        "退出したよ。"
-      );
-    }
-
-
-    async function copyRoomId() {
-      try {
-        await navigator.clipboard.writeText(
-          roomId || ""
-        );
-
-        showMessage(
-          "コピーした！",
-          700
-        );
-
-      } catch {
-        alert(
-          `部屋コード: ${roomId}`
-        );
-      }
-    }
-
-
-    function setupMobileControls() {
-      const moveStick =
-        $("moveStick");
-
-      const moveKnob =
-        $("moveKnob");
-
-      const lookArea =
-        $("lookArea");
-
-
-      let movePointer =
-        null;
-
-      let lookPointer =
-        null;
-
-
-      const moveVector = {
-        x: 0,
-        y: 0
-      };
-
-
-      let lastLookX = 0;
-      let lastLookY = 0;
-
-
-      function setKnob(
-        clientX,
-        clientY
-      ) {
-        const r =
-          moveStick.getBoundingClientRect();
-
-
-        const cx =
-          r.left +
-          r.width / 2;
-
-        const cy =
-          r.top +
-          r.height / 2;
-
-
-        const dx =
-          clientX - cx;
-
-        const dy =
-          clientY - cy;
-
-
-        const max = 45;
-
-
-        const len =
-          Math.hypot(
-            dx,
-            dy
-          ) || 1;
-
-
-        const nx =
-          len > max
-            ? dx / len * max
-            : dx;
-
-        const ny =
-          len > max
-            ? dy / len * max
-            : dy;
-
-
-        moveKnob.style.transform =
-          `translate(calc(-50% + ${nx}px), calc(-50% + ${ny}px))`;
-
-
-        moveVector.x =
-          nx / max;
-
-        moveVector.y =
-          ny / max;
-
-
-        if (
-          Math.abs(nx) > 2 ||
-          Math.abs(ny) > 2
-        ) {
-          markActivity();
-        }
-      }
-
-
-      function resetKnob() {
-        moveKnob.style.transform =
-          "translate(-50%,-50%)";
-
-        moveVector.x = 0;
-        moveVector.y = 0;
-      }
-
-
-      moveStick.addEventListener(
-        "pointerdown",
-        e => {
-          e.preventDefault();
-
-          movePointer =
-            e.pointerId;
-
-          moveStick.setPointerCapture(
-            e.pointerId
-          );
-
-          setKnob(
-            e.clientX,
-            e.clientY
-          );
-        }
-      );
-
-
-      moveStick.addEventListener(
-        "pointermove",
-        e => {
-          if (
-            e.pointerId ===
-            movePointer
-          ) {
-            setKnob(
-              e.clientX,
-              e.clientY
-            );
-          }
-        }
-      );
-
-
-      moveStick.addEventListener(
-        "pointerup",
-        e => {
-          if (
-            e.pointerId ===
-            movePointer
-          ) {
-            movePointer = null;
-
-            resetKnob();
-          }
-        }
-      );
-
-
-      moveStick.addEventListener(
-        "pointercancel",
-        e => {
-          if (
-            e.pointerId ===
-            movePointer
-          ) {
-            movePointer = null;
-
-            resetKnob();
-          }
-        }
-      );
-
-
-      lookArea.addEventListener(
-        "pointerdown",
-        e => {
-          e.preventDefault();
-
-          lookPointer =
-            e.pointerId;
-
-          lastLookX =
-            e.clientX;
-
-          lastLookY =
-            e.clientY;
-
-
-          lookArea.setPointerCapture(
-            e.pointerId
-          );
-
-          markActivity();
-        }
-      );
-
-
-      lookArea.addEventListener(
-        "pointermove",
-        e => {
-          if (
-            e.pointerId !==
-              lookPointer ||
-            !started ||
-            local.hp <= 0
-          ) {
             return;
+
           }
 
-
-          const dx =
-            e.clientX -
-            lastLookX;
-
-          const dy =
-            e.clientY -
-            lastLookY;
-
-
-          lastLookX =
-            e.clientX;
-
-          lastLookY =
-            e.clientY;
-
-
-          local.yaw -=
-            dx *
-            LOOK_SPEED *
-            1.7;
-
-
-          local.pitch =
-            clamp(
-              local.pitch -
-                dy *
-                LOOK_SPEED *
-                1.7,
-              -1.45,
-              1.45
-            );
-
-
-          markActivity();
         }
-      );
 
 
-      lookArea.addEventListener(
-        "pointerup",
-        e => {
-          if (
-            e.pointerId ===
-            lookPointer
-          ) {
-            lookPointer = null;
+        transaction.update(
+          matchRef,
+          {
+
+            players
+
           }
-        }
+        );
+
+      }
+    );
+
+
+    if(wasKill){
+
+      localKills++;
+
+      showKillMessage(
+        "ELIMINATED"
       );
 
-
-      lookArea.addEventListener(
-        "pointercancel",
-        e => {
-          if (
-            e.pointerId ===
-            lookPointer
-          ) {
-            lookPointer = null;
-          }
-        }
-      );
-
-
-      fireButton.addEventListener(
-        "pointerdown",
-        e => {
-          e.preventDefault();
-
-          markActivity();
-
-          shoot();
-        }
-      );
-
-
-      jumpButton.addEventListener(
-        "pointerdown",
-        e => {
-          e.preventDefault();
-
-          markActivity();
-
-          jumpOrGrab();
-        }
-      );
-
-
-      /*
-       * スマホではダッシュなし。
-       * 左スティックのみで通常速度移動。
-       */
-
-      window.mobileMoveVector =
-        moveVector;
     }
 
 
-    function updateMobileMovement(
-      dt
-    ) {
-      if (
-        innerWidth > 700 ||
-        !started ||
-        local.hp <= 0 ||
-        local.climbing
-      ) {
+  }catch(error){
+
+    console.error(
+      "bullet damage error",
+      error
+    );
+
+  }
+
+}
+
+
+function getFireProgress(){
+
+  const now =
+    performance.now();
+
+
+  if(
+    now >=
+    fireCooldownEnd
+  ){
+
+    return 100;
+
+  }
+
+
+  const remaining =
+    fireCooldownEnd -
+    now;
+
+
+  return clamp(
+
+    100 -
+      (
+        remaining /
+        FIRE_INTERVAL
+      ) *
+      100,
+
+    0,
+
+    100
+
+  );
+
+}
+
+
+function updateFireUI(){
+
+  const progress =
+    getFireProgress();
+
+
+  fireButton.style.setProperty(
+    "--fireProgress",
+    `${progress}%`
+  );
+
+}
+
+
+function shoot(){
+
+  if(
+    !localPlayer ||
+    !localPlayer.alive ||
+    !matchHasStarted ||
+    gameEnded
+  ){
+
+    return;
+
+  }
+
+
+  if(
+    Date.now() <
+    spawnProtectionUntil
+  ){
+
+    return;
+
+  }
+
+
+  const now =
+    performance.now();
+
+
+  if(
+    now <
+    fireCooldownEnd
+  ){
+
+    return;
+
+  }
+
+
+  fireCooldownEnd =
+    now +
+    FIRE_INTERVAL;
+
+
+  raycaster.setFromCamera(
+
+    new THREE.Vector2(
+      0,
+      0
+    ),
+
+    camera
+
+  );
+
+
+  const origin =
+    camera.position.clone();
+
+
+  const direction =
+    raycaster.ray.direction
+      .clone()
+      .normalize();
+
+
+  createBullet(
+    origin,
+    direction,
+    currentUser.uid
+  );
+
+
+  updateFireUI();
+
+}
+
+
+function startMatchByHost(){
+
+  if(
+    !isHost ||
+    !matchRef ||
+    matchHasStarted
+  ){
+
+    return;
+
+  }
+
+
+  runTransaction(
+    db,
+    async transaction => {
+
+      const snap =
+        await transaction.get(
+          matchRef
+        );
+
+
+      if(
+        !snap.exists()
+      ){
+
         return;
+
       }
 
 
-      const moveVector =
-        window.mobileMoveVector ||
+      const data =
+        snap.data();
+
+
+      if(
+        data.status !==
+        "waiting"
+      ){
+
+        return;
+
+      }
+
+
+      const players =
         {
-          x: 0,
-          y: 0
+          ...(data.players || {})
         };
 
 
-      const forward =
-        -moveVector.y;
+      for(
+        const player
+        of Object.values(players)
+      ){
 
-      const strafe =
-        moveVector.x;
-
-
-      const len =
-        Math.hypot(
-          forward,
-          strafe
-        );
+        const spawn =
+          randomSpawn();
 
 
-      if (
-        len < 0.001
-      ) {
-        return;
+        player.x =
+          spawn.x;
+
+        player.y =
+          spawn.y;
+
+        player.z =
+          spawn.z;
+
+        player.hp =
+          MAX_HP;
+
+        player.alive =
+          true;
+
+        player.kills =
+          0;
+
       }
 
 
-      const normalized =
-        Math.min(
-          1,
-          len
-        );
+      transaction.update(
+        matchRef,
+        {
+
+          players,
+
+          status:
+            "active",
+
+          winnerUid:
+            null,
+
+          startedAt:
+            serverTimestamp(),
+
+          startedProtectionUntil:
+            Date.now() +
+            START_PROTECTION_TIME
+
+        }
+      );
+
+    }
+  ).catch(
+    error => {
+
+      console.error(
+        "start error",
+        error
+      );
+
+    }
+  );
+
+}
 
 
-      const sin =
-        Math.sin(
-          local.yaw
+function updateStartProgress(){
+
+  if(
+    !startHolding ||
+    !isHost ||
+    matchHasStarted
+  ){
+
+    if(
+      !startHolding
+    ){
+
+      startButton.style.setProperty(
+        "--progress",
+        "0%"
+      );
+
+    }
+
+    return;
+
+  }
+
+
+  const elapsed =
+    performance.now() -
+    startHoldStart;
+
+
+  const progress =
+    clamp(
+      elapsed /
+      START_HOLD_TIME,
+      0,
+      1
+    );
+
+
+  startButton.style.setProperty(
+
+    "--progress",
+
+    `${progress * 100}%`
+
+  );
+
+
+  if(
+    progress >= 1
+  ){
+
+    startHolding =
+      false;
+
+    startButton.style.setProperty(
+      "--progress",
+      "100%"
+    );
+
+
+    startMatchByHost();
+
+  }
+
+}
+
+
+function finishLocalGame(
+  text
+){
+
+  if(gameEnded){
+
+    return;
+
+  }
+
+
+  gameEnded =
+    true;
+
+  gameStarted =
+    false;
+
+
+  gameOverText.textContent =
+    text;
+
+
+  gameOver.style.display =
+    "flex";
+
+
+  preStart.style.display =
+    "none";
+
+}
+
+
+async function deleteMatch(){
+
+  if(!matchRef){
+
+    return;
+
+  }
+
+
+  const ref =
+    matchRef;
+
+
+  try{
+
+    await deleteDoc(
+      ref
+    );
+
+  }catch(error){
+
+    console.error(
+      "match delete error",
+      error
+    );
+
+  }
+
+}
+
+
+function leaveCurrentMatch(){
+
+  if(unsubscribeMatch){
+
+    unsubscribeMatch();
+
+    unsubscribeMatch =
+      null;
+
+  }
+
+
+  for(
+    const uid
+    of playerMeshes.keys()
+  ){
+
+    removeRemoteMesh(
+      uid
+    );
+
+  }
+
+
+  for(
+    const id
+    of bullets.keys()
+  ){
+
+    removeBullet(
+      id
+    );
+
+  }
+
+
+  currentMatchId =
+    null;
+
+  matchRef =
+    null;
+
+  localPlayer =
+    null;
+
+  gameStarted =
+    false;
+
+  gameEnded =
+    false;
+
+  matchHasStarted =
+    false;
+
+  isHost =
+    false;
+
+  grabAnimation =
+    null;
+
+  spawnProtectionUntil =
+    0;
+
+  fireCooldownEnd =
+    0;
+
+
+  gameUI.style.display =
+    "none";
+
+  gameOver.style.display =
+    "none";
+
+  menu.style.display =
+    "flex";
+
+  preStart.style.display =
+    "none";
+
+  statusEl.textContent =
+    "";
+
+  matchCodeInput.value =
+    "";
+
+}
+
+
+async function handleReturn(){
+
+  const wasHost =
+    isHost;
+
+  const ref =
+    matchRef;
+
+
+  leaveCurrentMatch();
+
+
+  if(
+    wasHost &&
+    ref
+  ){
+
+    try{
+
+      await deleteDoc(
+        ref
+      );
+
+    }catch(error){
+
+      console.error(
+        error
+      );
+
+    }
+
+  }
+
+}
+
+
+function handleMouseMove(
+  event
+){
+
+  if(
+    !gameStarted ||
+    gameEnded ||
+    matchMedia(
+      "(pointer:coarse)"
+    ).matches
+  ){
+
+    return;
+
+  }
+
+
+  if(
+    document.pointerLockElement !==
+    renderer.domElement
+  ){
+
+    return;
+
+  }
+
+
+  cameraState.yaw -=
+    event.movementX *
+    .0023;
+
+
+  cameraState.pitch -=
+    event.movementY *
+    .0023;
+
+
+  cameraState.pitch =
+    clamp(
+      cameraState.pitch,
+      -1.45,
+      1.45
+    );
+
+}
+
+
+function requestPointerLock(){
+
+  if(
+    matchMedia(
+      "(pointer:coarse)"
+    ).matches
+  ){
+
+    return;
+
+  }
+
+
+  if(
+    renderer &&
+    renderer.domElement
+      .requestPointerLock
+  ){
+
+    renderer.domElement
+      .requestPointerLock();
+
+  }
+
+}
+
+
+function setupDesktopInput(){
+
+  window.addEventListener(
+    "keydown",
+    event => {
+
+      if(
+        event.code ===
+        "KeyW"
+      )
+        keys.w = true;
+
+      if(
+        event.code ===
+        "KeyA"
+      )
+        keys.a = true;
+
+      if(
+        event.code ===
+        "KeyS"
+      )
+        keys.s = true;
+
+      if(
+        event.code ===
+        "KeyD"
+      )
+        keys.d = true;
+
+
+      if(
+        event.code ===
+        "Space"
+      ){
+
+        event.preventDefault();
+
+        jump();
+
+      }
+
+    }
+  );
+
+
+  window.addEventListener(
+    "keyup",
+    event => {
+
+      if(
+        event.code ===
+        "KeyW"
+      )
+        keys.w = false;
+
+      if(
+        event.code ===
+        "KeyA"
+      )
+        keys.a = false;
+
+      if(
+        event.code ===
+        "KeyS"
+      )
+        keys.s = false;
+
+      if(
+        event.code ===
+        "KeyD"
+      )
+        keys.d = false;
+
+    }
+  );
+
+
+  document.addEventListener(
+    "mousemove",
+    handleMouseMove
+  );
+
+}
+
+
+function setupMobileInput(){
+
+  let joystickPointerId =
+    null;
+
+
+  function updateJoystick(
+    clientX,
+    clientY
+  ){
+
+    const rect =
+      joystickZone
+        .getBoundingClientRect();
+
+
+    const centerX =
+      rect.left +
+      rect.width / 2;
+
+
+    const centerY =
+      rect.top +
+      rect.height / 2;
+
+
+    let dx =
+      clientX -
+      centerX;
+
+
+    let dy =
+      clientY -
+      centerY;
+
+
+    const max =
+      53;
+
+
+    const distance =
+      Math.hypot(
+        dx,
+        dy
+      );
+
+
+    if(
+      distance >
+      max
+    ){
+
+      dx =
+        dx /
+        distance *
+        max;
+
+      dy =
+        dy /
+        distance *
+        max;
+
+    }
+
+
+    mobileInput.x =
+      dx / max;
+
+
+    mobileInput.y =
+      dy / max;
+
+
+    joystickKnob.style.transform =
+      `translate(${dx}px,${dy}px)`;
+
+  }
+
+
+  joystickZone.addEventListener(
+    "pointerdown",
+    event => {
+
+      joystickPointerId =
+        event.pointerId;
+
+
+      joystickZone.setPointerCapture(
+        event.pointerId
+      );
+
+
+      updateJoystick(
+        event.clientX,
+        event.clientY
+      );
+
+    }
+  );
+
+
+  joystickZone.addEventListener(
+    "pointermove",
+    event => {
+
+      if(
+        event.pointerId ===
+        joystickPointerId
+      ){
+
+        updateJoystick(
+          event.clientX,
+          event.clientY
         );
 
-      const cos =
-        Math.cos(
-          local.yaw
-        );
+      }
+
+    }
+  );
+
+
+  const endJoystick =
+    event => {
+
+      if(
+        event.pointerId !==
+        joystickPointerId
+      ){
+
+        return;
+
+      }
+
+
+      joystickPointerId =
+        null;
+
+
+      mobileInput.x =
+        0;
+
+      mobileInput.y =
+        0;
+
+
+      joystickKnob.style.transform =
+        "translate(0,0)";
+
+    };
+
+
+  joystickZone.addEventListener(
+    "pointerup",
+    endJoystick
+  );
+
+
+  joystickZone.addEventListener(
+    "pointercancel",
+    endJoystick
+  );
+
+
+  let lookPointerId =
+    null;
+
+  let lastLookX =
+    0;
+
+  let lastLookY =
+    0;
+
+
+  lookZone.addEventListener(
+    "pointerdown",
+    event => {
+
+      lookPointerId =
+        event.pointerId;
+
+
+      lastLookX =
+        event.clientX;
+
+
+      lastLookY =
+        event.clientY;
+
+
+      lookZone.setPointerCapture(
+        event.pointerId
+      );
+
+    }
+  );
+
+
+  lookZone.addEventListener(
+    "pointermove",
+    event => {
+
+      if(
+        event.pointerId !==
+        lookPointerId
+      ){
+
+        return;
+
+      }
 
 
       const dx =
-        (
-          strafe * cos +
-          forward * sin
-        ) *
-        PLAYER_SPEED *
-        normalized *
-        dt;
+        event.clientX -
+        lastLookX;
 
 
-      const dz =
-        (
-          forward * cos -
-          strafe * sin
-        ) *
-        PLAYER_SPEED *
-        normalized *
-        dt;
+      const dy =
+        event.clientY -
+        lastLookY;
 
 
-      tryMoveHorizontal(
-        dx,
-        dz
-      );
+      lastLookX =
+        event.clientX;
 
 
-      markActivity();
+      lastLookY =
+        event.clientY;
 
 
-      camera.position.set(
-        local.x,
-        local.y,
-        local.z
-      );
+      cameraState.yaw -=
+        dx * .006;
 
 
-      camera.rotation.set(
-        local.pitch,
-        local.yaw,
-        0,
-        "YXZ"
-      );
-    }
+      cameraState.pitch -=
+        dy * .006;
 
 
-    async function checkMatchTimer() {
-      if (
-        !started ||
-        ending
-      ) {
-        return;
-      }
-
-
-      const left =
-        Math.max(
-          0,
-          matchEndAt -
-            Date.now()
+      cameraState.pitch =
+        clamp(
+          cameraState.pitch,
+          -1.45,
+          1.45
         );
 
-
-      $("timeText")
-        .textContent =
-          formatTime(
-            left / 1000
-          );
+    }
+  );
 
 
-      if (
-        left <= 0
-      ) {
-        if (
-          isHost
-        ) {
-          await tryFinishMatch(
-            "time"
-          );
-        }
+  const endLook =
+    event => {
+
+      if(
+        event.pointerId ===
+        lookPointerId
+      ){
+
+        lookPointerId =
+          null;
+
+      }
+
+    };
+
+
+  lookZone.addEventListener(
+    "pointerup",
+    endLook
+  );
+
+
+  lookZone.addEventListener(
+    "pointercancel",
+    endLook
+  );
+
+
+  fireButton.addEventListener(
+    "pointerdown",
+    event => {
+
+      event.preventDefault();
+
+      fireHolding =
+        true;
+
+      mobileInput.firing =
+        true;
+
+      shoot();
+
+    }
+  );
+
+
+  fireButton.addEventListener(
+    "pointerup",
+    event => {
+
+      event.preventDefault();
+
+      fireHolding =
+        false;
+
+      mobileInput.firing =
+        false;
+
+    }
+  );
+
+
+  fireButton.addEventListener(
+    "pointercancel",
+    () => {
+
+      fireHolding =
+        false;
+
+      mobileInput.firing =
+        false;
+
+    }
+  );
+
+
+  jumpButton.addEventListener(
+    "pointerdown",
+    event => {
+
+      event.preventDefault();
+
+      jump();
+
+    }
+  );
+
+
+  grabButton.addEventListener(
+    "pointerdown",
+    event => {
+
+      event.preventDefault();
+
+      if(
+        canGrab()
+      ){
+
+        startGrab();
+
+      }
+
+    }
+  );
+
+}
+
+
+function setupStartButton(){
+
+  const startDown =
+    event => {
+
+      event.preventDefault();
+
+
+      if(
+        !isHost ||
+        matchHasStarted
+      ){
 
         return;
+
       }
 
 
-      if (
-        local.kills >=
-          MAX_SCORE &&
-        isHost
-      ) {
-        await tryFinishMatch(
-          "score"
-        );
-      }
-    }
+      startHolding =
+        true;
 
-
-    function updateHud() {
-      $("healthText")
-        .textContent =
-          String(
-            Math.max(
-              0,
-              Math.round(
-                local.hp
-              )
-            )
-          );
-
-
-      $("healthBar")
-        .style.width =
-          `${clamp(
-            local.hp /
-              MAX_HP *
-              100,
-            0,
-            100
-          )}%`;
-
-
-      $("scoreText")
-        .textContent =
-          `${local.kills} / ${local.deaths}`;
-
-
-      updateMobileMovement(
-        0
-      );
-    }
-
-
-    function animate() {
-      requestAnimationFrame(
-        animate
-      );
-
-
-      const now =
+      startHoldStart =
         performance.now();
 
-
-      let dt =
-        Math.min(
-          0.05,
-          (
-            now -
-            lastFrame
-          ) / 1000
-        );
+    };
 
 
-      lastFrame = now;
+  const startUp =
+    event => {
 
+      event.preventDefault();
 
-      if (!clock) {
-        dt = 0;
-      }
+      startHolding =
+        false;
 
-
-      movePlayer(
-        dt
+      startButton.style.setProperty(
+        "--progress",
+        "0%"
       );
 
-
-      /*
-       * PC移動とスマホ移動を分離。
-       * スマホではダッシュ処理を一切行わない。
-       */
-
-      updateMobileMovement(
-        dt
-      );
+    };
 
 
-      respawnIfNeeded();
-
-      updateBullets(
-        dt
-      );
-
-      updateRemotePlayers();
-
-      updateJumpButton();
-
-      updateFireProgress();
-
-      updateHud();
+  startButton.addEventListener(
+    "pointerdown",
+    startDown
+  );
 
 
-      if (
-        started &&
-        !ending
-      ) {
-        syncLocalState(
-          false
-        );
+  startButton.addEventListener(
+    "pointerup",
+    startUp
+  );
 
-        checkMatchTimer();
+
+  startButton.addEventListener(
+    "pointercancel",
+    startUp
+  );
+
+}
+
+
+function setupRendererInput(){
+
+  if(!renderer){
+
+    return;
+
+  }
+
+
+  renderer.domElement.addEventListener(
+    "mousedown",
+    event => {
+
+      if(
+        event.button ===
+        0
+      ){
+
+        requestPointerLock();
+
+        shoot();
+
       }
 
+    }
+  );
 
-      if (
-        renderer &&
-        scene &&
-        camera
-      ) {
-        renderer.render(
-          scene,
-          camera
-        );
-      }
+}
+
+
+function gameLoop(
+  time
+){
+
+  const delta =
+    Math.min(
+
+      (
+        time -
+        lastFrameTime
+      ) / 1000,
+
+      .05
+
+    );
+
+
+  lastFrameTime =
+    time;
+
+
+  updateStartProgress();
+
+
+  updateFireUI();
+
+
+  if(
+    gameStarted &&
+    !gameEnded
+  ){
+
+    updateMovement(
+      delta
+    );
+
+
+    updateGrabAnimation(
+      time
+    );
+
+
+    if(
+      mobileInput.firing
+    ){
+
+      shoot();
+
     }
 
 
-    roomActionBtn.addEventListener(
-      "click",
-      createOrJoinRoom
+    updateBullets(
+      delta,
+      time
     );
 
 
-    startBtn.addEventListener(
-      "pointerdown",
-      beginStartHold
+    syncLocalPlayer();
+
+  }
+
+
+  if(
+    renderer &&
+    scene &&
+    camera
+  ){
+
+    renderer.render(
+      scene,
+      camera
     );
 
-
-    startBtn.addEventListener(
-      "pointerup",
-      endStartHold
-    );
+  }
 
 
-    startBtn.addEventListener(
-      "pointercancel",
-      endStartHold
-    );
+  requestAnimationFrame(
+    gameLoop
+  );
+
+}
 
 
-    startBtn.addEventListener(
-      "pointerleave",
-      endStartHold
-    );
+async function syncLocalPlayer(){
+
+  if(
+    !matchRef ||
+    !localPlayer ||
+    gameEnded ||
+    !matchHasStarted
+  ){
+
+    return;
+
+  }
 
 
-    copyRoomBtn.addEventListener(
-      "click",
-      copyRoomId
-    );
+  const now =
+    performance.now();
 
 
-    leaveLobbyBtn.addEventListener(
-      "click",
-      leaveRoom
-    );
+  if(
+    now -
+    lastNetworkUpdate <
+    80
+  ){
+
+    return;
+
+  }
 
 
-    backToMenuBtn.addEventListener(
-      "click",
-      () => {
-        handleRoomDeleted(
-          "ロビーへ戻ったよ。"
-        );
-      }
-    );
+  lastNetworkUpdate =
+    now;
 
 
-    /*
-     * 部屋の定期クリーンアップ。
-     *
-     * 1. 全プレイヤーが1分以上操作していない
-     * 2. 部屋作成から1日以上経過
-     *
-     * のどちらかを満たした場合、
-     * 部屋とplayersサブコレクションを削除する。
-     */
+  try{
 
-    setInterval(
-      () => {
-        if (
-          roomId
-        ) {
-          checkRoomCleanup();
+    await updateDoc(
+
+      matchRef,
+
+      {
+
+        [`players.${currentUser.uid}`]:{
+
+          uid:
+            currentUser.uid,
+
+          name:
+            localPlayer.name,
+
+          x:
+            localPlayer.x,
+
+          y:
+            localPlayer.y,
+
+          z:
+            localPlayer.z,
+
+          yaw:
+            cameraState.yaw,
+
+          pitch:
+            cameraState.pitch,
+
+          hp:
+            localPlayer.hp,
+
+          kills:
+            localKills,
+
+          alive:
+            localPlayer.alive
+
         }
-      },
-      10000
-    );
 
-
-    /*
-     * 試合終了タイマーの安全弁。
-     */
-
-    setInterval(
-      () => {
-        if (
-          started &&
-          isHost &&
-          !ending
-        ) {
-          checkMatchTimer();
-        }
-      },
-      5000
-    );
-
-
-    /*
-     * ページを閉じた瞬間の削除は
-     * ブラウザから保証されないため、
-     * lastActivityMs と1日制限による
-     * 自動クリーンアップを併用する。
-     */
-
-    window.addEventListener(
-      "beforeunload",
-      () => {
       }
+
     );
 
+  }catch(error){
 
-    bootAuth();
-  </script>
+    console.error(
+      "sync error",
+      error
+    );
 
-  <!--
-    Firestoreルール例
+  }
 
-    rules_version = '2';
+}
 
-    service cloud.firestore {
-      match /databases/{database}/documents {
 
-        match /matches/{matchId} {
+matchButton.addEventListener(
+  "click",
+  handleMatchButton
+);
 
-          allow read, write:
-            if request.auth != null;
 
-          match /players/{playerId} {
+returnButton.addEventListener(
+  "click",
+  handleReturn
+);
 
-            allow read:
-              if request.auth != null;
 
-            allow create:
-              if request.auth != null
-              && request.auth.uid == playerId;
+matchCodeInput.addEventListener(
+  "input",
+  () => {
 
-            allow update:
-              if request.auth != null
-              && (
-                request.auth.uid == playerId
-                ||
-                (
-                  request.resource.data.keys()
-                    .hasAny([
-                      'hp',
-                      'alive',
-                      'deaths'
-                    ])
-                  &&
-                  request.auth.uid != playerId
-                )
-              );
+    matchCodeInput.value =
+      matchCodeInput.value
+        .replace(
+          /[^A-Za-z0-9]/g,
+          ""
+        )
+        .toUpperCase();
 
-            allow delete:
-              if request.auth != null
-              && request.auth.uid == playerId;
-          }
-        }
-      }
+  }
+);
+
+
+matchCodeInput.addEventListener(
+  "keydown",
+  event => {
+
+    if(
+      event.key ===
+      "Enter"
+    ){
+
+      handleMatchButton();
+
     }
 
-    注意:
+  }
+);
 
-    - Firebase Authenticationで「匿名」を有効化すること。
-    - このゲームはクライアント権限で状態を共有するデモ。
-    - 本格的な競技用FPSとしてのチート耐性はない。
-    - 試合終了時はmatches/{matchId}とplayersサブコレクションを削除する。
-    - 全プレイヤーが1分以上操作していない部屋も削除する。
-    - 作成から1日以上経過した部屋も削除する。
-    - Firestoreは親ドキュメントを削除してもサブコレクションを自動削除しないため、
-      playersを個別に削除してから親を削除している。
-  -->
+
+setupDesktopInput();
+
+setupMobileInput();
+
+setupStartButton();
+
+
+window.addEventListener(
+  "beforeunload",
+  () => {
+
+    if(
+      isHost &&
+      matchRef
+    ){
+
+      deleteDoc(
+        matchRef
+      ).catch(
+        () => {}
+      );
+
+    }
+
+  }
+);
+
+
+try{
+
+  await ensureAuth();
+
+  statusEl.textContent =
+    "接続準備OK";
+
+}catch(error){
+
+  console.error(
+    error
+  );
+
+  statusEl.textContent =
+    "Firebase接続失敗：" +
+    getFriendlyError(error);
+
+}
+
+</script>
+
 </body>
 </html>
