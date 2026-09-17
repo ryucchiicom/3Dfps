@@ -10,6 +10,8 @@
   box-sizing:border-box;
   -webkit-tap-highlight-color:transparent;
   user-select:none;
+  -webkit-user-select:none;
+  -webkit-touch-callout:none;
 }
 
 html,body{
@@ -426,24 +428,17 @@ canvas{
   height:64px;
   right:125px;
   bottom:44px;
-}
-
-#grabButton{
-  width:64px;
-  height:64px;
-  right:125px;
-  bottom:120px;
   transition:
     opacity .12s,
     background .12s;
 }
 
-#grabButton.inactive{
+#jumpButton.inactive{
   opacity:.28;
   background:rgba(20,20,20,.25);
 }
 
-#grabButton.active{
+#jumpButton.active{
   opacity:1;
   background:rgba(35,130,255,.55);
 }
@@ -510,7 +505,7 @@ canvas{
 
     <div class="info">
       PC：WASDで移動、マウスで視点、クリックで射撃、Spaceでジャンプ<br>
-      スマホ：左スティックで移動、右側スワイプで視点、FIRE・JUMP・GRAB
+      スマホ：左スティックで移動、右側スワイプで視点、FIRE・JUMP（空中ではGRAB）
     </div>
 
   </div>
@@ -591,13 +586,6 @@ canvas{
     </div>
 
     <div id="lookZone"></div>
-
-    <div
-      id="grabButton"
-      class="mobileButton inactive"
-    >
-      GRAB
-    </div>
 
     <div
       id="jumpButton"
@@ -753,6 +741,10 @@ let fireCooldownEnd = 0;
 
 let bulletIdCounter = 0;
 
+let lastActivityAt = Date.now();
+
+let lastCleanupCheck = 0;
+
 
 const START_HOLD_TIME = 1800;
 
@@ -775,6 +767,14 @@ const ARENA_SIZE = 70;
 const PLAYER_HEIGHT = 1.6;
 
 const MAX_HP = 100;
+
+const MATCH_IDLE_TIMEOUT = 60000;
+
+const MATCH_MAX_AGE = 86400000;
+
+const MATCH_CLEANUP_INTERVAL = 10000;
+
+const MIN_SPAWN_DISTANCE = 3.2;
 
 
 const keys = {
@@ -832,7 +832,8 @@ const colliders = [];
 const playerMeshes =
   new Map();
 
-const bullets = new Map();
+const bullets =
+  new Map();
 
 
 const menu =
@@ -888,9 +889,6 @@ const fireButton =
 
 const jumpButton =
   document.getElementById("jumpButton");
-
-const grabButton =
-  document.getElementById("grabButton");
 
 const joystickZone =
   document.getElementById("joystickZone");
@@ -1193,6 +1191,7 @@ function setupScene(){
     window.innerWidth,
     window.innerHeight
   );
+
 
   renderer.shadowMap.enabled =
     true;
@@ -1603,6 +1602,7 @@ async function ensureAuth(){
       const unsubscribe =
         onAuthStateChanged(
           auth,
+
           async user => {
 
             if(user){
@@ -1748,7 +1748,10 @@ async function createMatch(
         0,
 
       alive:
-        true
+        true,
+
+      lastActiveAt:
+        Date.now()
 
     };
 
@@ -1801,10 +1804,8 @@ async function createMatch(
               null,
 
             players:{
-
               [user.uid]:
                 player
-
             }
 
           }
@@ -2014,7 +2015,10 @@ async function joinMatch(
             0,
 
           alive:
-            true
+            true,
+
+          lastActiveAt:
+            Date.now()
 
         };
 
@@ -2149,6 +2153,219 @@ function getFriendlyError(error){
 }
 
 
+function getTimestampMillis(value){
+
+  if(!value){
+    return 0;
+  }
+
+  if(
+    typeof value.toMillis ===
+    "function"
+  ){
+    return value.toMillis();
+  }
+
+  const numeric =
+    Number(value);
+
+  return Number.isFinite(numeric)
+    ? numeric
+    : 0;
+
+}
+
+
+function getStartSpawn(existingSpawns){
+
+  const attempts = 150;
+
+  for(
+    let attempt = 0;
+    attempt < attempts;
+    attempt++
+  ){
+
+    const spawn =
+      randomSpawn();
+
+    if(
+      !isPositionFree(
+        spawn.x,
+        spawn.y,
+        spawn.z
+      )
+    ){
+      continue;
+    }
+
+    let farEnough =
+      true;
+
+    for(
+      const other
+      of existingSpawns
+    ){
+
+      if(
+        Math.hypot(
+          spawn.x - other.x,
+          spawn.z - other.z
+        ) <
+        MIN_SPAWN_DISTANCE
+      ){
+
+        farEnough =
+          false;
+
+        break;
+
+      }
+
+    }
+
+    if(farEnough){
+      return spawn;
+    }
+
+  }
+
+  for(
+    let x = -ARENA_SIZE / 2 + 8;
+    x <= ARENA_SIZE / 2 - 8;
+    x += 5
+  ){
+
+    for(
+      let z = -ARENA_SIZE / 2 + 8;
+      z <= ARENA_SIZE / 2 - 8;
+      z += 5
+    ){
+
+      if(
+        !isPositionFree(
+          x,
+          PLAYER_HEIGHT,
+          z
+        )
+      ){
+        continue;
+      }
+
+      let farEnough =
+        true;
+
+      for(
+        const other
+        of existingSpawns
+      ){
+
+        if(
+          Math.hypot(
+            x - other.x,
+            z - other.z
+          ) <
+          MIN_SPAWN_DISTANCE
+        ){
+
+          farEnough =
+            false;
+
+          break;
+
+        }
+
+      }
+
+      if(farEnough){
+        return {
+          x,
+          y:
+            PLAYER_HEIGHT,
+          z
+        };
+      }
+
+    }
+
+  }
+
+  return randomSpawn();
+
+}
+
+
+async function checkMatchCleanup(
+  data
+){
+
+  const now =
+    Date.now();
+
+  if(
+    now -
+    lastCleanupCheck <
+    MATCH_CLEANUP_INTERVAL
+  ){
+    return;
+  }
+
+  lastCleanupCheck =
+    now;
+
+  const createdMillis =
+    getTimestampMillis(
+      data.createdAt
+    );
+
+  if(
+    createdMillis > 0 &&
+    now - createdMillis >=
+    MATCH_MAX_AGE
+  ){
+
+    await deleteMatch();
+
+    return;
+  }
+
+  const players =
+    data.players ||
+    {};
+
+  const playerEntries =
+    Object.values(players);
+
+  if(
+    playerEntries.length === 0
+  ){
+    return;
+  }
+
+  const allInactive =
+    playerEntries.every(
+      player =>
+        Number.isFinite(
+          Number(
+            player.lastActiveAt
+          )
+        ) &&
+        now -
+          Number(
+            player.lastActiveAt
+          ) >=
+          MATCH_IDLE_TIMEOUT
+    );
+
+  if(allInactive){
+
+    await deleteMatch();
+
+  }
+
+}
+
+
 async function startMatch(
   code
 ){
@@ -2191,6 +2408,12 @@ async function startMatch(
   gameStarted =
     true;
 
+  lastActivityAt =
+    Date.now();
+
+  lastCleanupCheck =
+    0;
+
   matchHasStarted =
     false;
 
@@ -2224,9 +2447,7 @@ async function startMatch(
 
           if(gameStarted){
 
-            finishLocalGame(
-              "試合データが削除されました。"
-            );
+            leaveCurrentMatch();
 
           }
 
@@ -2237,6 +2458,16 @@ async function startMatch(
 
         const data =
           snapshot.data();
+
+        checkMatchCleanup(
+          data
+        ).catch(
+          error =>
+            console.error(
+              "match cleanup error",
+              error
+            )
+        );
 
 
         const players =
@@ -2505,6 +2736,12 @@ function updateStartUI(data){
     preStartText.textContent =
       "部屋主がSTARTを長押しして開始";
 
+    startButton.style.display =
+      "inline-flex";
+
+    startButton.style.opacity =
+      "1";
+
   }else{
 
     preStart.style.display =
@@ -2513,8 +2750,8 @@ function updateStartUI(data){
     preStartText.textContent =
       "部屋主のSTART待ち";
 
-    startButton.style.opacity =
-      ".35";
+    startButton.style.display =
+      "none";
 
   }
 
@@ -2897,8 +3134,14 @@ function isPositionFree(
           collider
         );
 
+    const verticalOverlap =
+      box.max.y >
+        playerBox.min.y + .02 &&
+      box.min.y <
+        playerBox.max.y - .02;
 
     if(
+      verticalOverlap &&
       box.intersectsBox(
         playerBox
       )
@@ -2968,7 +3211,8 @@ function updateMovement(
   if(
     !localPlayer ||
     !localPlayer.alive ||
-    !matchHasStarted
+    !matchHasStarted ||
+    grabAnimation
   ){
 
     return;
@@ -3028,6 +3272,9 @@ function updateMovement(
 
   if(moving){
 
+    lastActivityAt =
+      Date.now();
+
     const speed =
       physics.moveSpeed;
 
@@ -3081,34 +3328,126 @@ function updateMovement(
   }
 
 
+  const previousY =
+    localPlayer.y;
+
   velocityY +=
     physics.gravity *
     delta;
 
 
-  localPlayer.y +=
+  const nextY =
+    localPlayer.y +
     velocityY *
     delta;
 
 
+  let landed =
+    false;
+
   if(
-    localPlayer.y <=
-    PLAYER_HEIGHT
+    velocityY <= 0
   ){
 
-    localPlayer.y =
+    const previousFeetY =
+      previousY -
       PLAYER_HEIGHT;
 
-    velocityY =
-      0;
+    const nextFeetY =
+      nextY -
+      PLAYER_HEIGHT;
 
-    grounded =
-      true;
+    const radius =
+      .38;
 
-  }else{
+    for(
+      const collider
+      of colliders
+    ){
 
-    grounded =
-      false;
+      if(
+        collider ===
+        colliders[0] ||
+        !collider ||
+        !collider.geometry
+      ){
+        continue;
+      }
+
+      const box =
+        new THREE.Box3()
+          .setFromObject(
+            collider
+          );
+
+      const horizontalOverlap =
+        localPlayer.x + radius >
+          box.min.x &&
+        localPlayer.x - radius <
+          box.max.x &&
+        localPlayer.z + radius >
+          box.min.z &&
+        localPlayer.z - radius <
+          box.max.z;
+
+      const platformTop =
+        box.max.y;
+
+      if(
+        horizontalOverlap &&
+        previousFeetY >=
+          platformTop - .08 &&
+        nextFeetY <=
+          platformTop
+      ){
+
+        localPlayer.y =
+          platformTop +
+          PLAYER_HEIGHT;
+
+        velocityY =
+          0;
+
+        grounded =
+          true;
+
+        landed =
+          true;
+
+        break;
+
+      }
+
+    }
+
+  }
+
+
+  if(!landed){
+
+    if(
+      nextY <=
+      PLAYER_HEIGHT
+    ){
+
+      localPlayer.y =
+        PLAYER_HEIGHT;
+
+      velocityY =
+        0;
+
+      grounded =
+        true;
+
+    }else{
+
+      localPlayer.y =
+        nextY;
+
+      grounded =
+        false;
+
+    }
 
   }
 
@@ -3171,6 +3510,9 @@ function jump(){
 
   }
 
+
+  lastActivityAt =
+    Date.now();
 
   velocityY =
     physics.jumpPower;
@@ -3383,42 +3725,70 @@ function canGrab(){
 function updateGrabUI(){
 
   if(
-    grounded ||
     !localPlayer ||
     !matchHasStarted
   ){
 
-    grabButton.style.opacity =
-      "0";
+    jumpButton.textContent =
+      "JUMP";
+
+    jumpButton.style.opacity =
+      "1";
+
+    jumpButton.classList.remove(
+      "active",
+      "inactive"
+    );
 
     return;
 
   }
 
 
-  grabButton.style.opacity =
-    "";
+  if(grounded){
+
+    jumpButton.textContent =
+      "JUMP";
+
+    jumpButton.style.opacity =
+      "1";
+
+    jumpButton.classList.remove(
+      "active",
+      "inactive"
+    );
+
+    return;
+
+  }
+
+
+  jumpButton.textContent =
+    "GRAB";
+
+  jumpButton.style.opacity =
+    "1";
 
 
   if(
     canGrab()
   ){
 
-    grabButton.classList.remove(
+    jumpButton.classList.remove(
       "inactive"
     );
 
-    grabButton.classList.add(
+    jumpButton.classList.add(
       "active"
     );
 
   }else{
 
-    grabButton.classList.remove(
+    jumpButton.classList.remove(
       "active"
     );
 
-    grabButton.classList.add(
+    jumpButton.classList.add(
       "inactive"
     );
 
@@ -3532,10 +3902,18 @@ function updateGrabAnimation(
     smooth;
 
 
-  localPlayer.y =
+  const targetY =
     target.top +
     PLAYER_HEIGHT +
     .02;
+
+  localPlayer.y =
+    grabAnimation.startY +
+    (
+      targetY -
+      grabAnimation.startY
+    ) *
+    smooth;
 
 
   camera.position.set(
@@ -3944,7 +4322,6 @@ async function applyBulletDamage(
         const shooter =
           players[shooterUid];
 
-
         const target =
           players[targetUid];
 
@@ -4121,7 +4498,6 @@ function getFireProgress(){
       100,
 
     0,
-
     100
 
   );
@@ -4169,6 +4545,9 @@ function shoot(){
 
   const now =
     performance.now();
+
+  lastActivityAt =
+    Date.now();
 
 
   if(
@@ -4272,13 +4651,21 @@ function startMatchByHost(){
         };
 
 
+      const usedSpawns = [];
+
       for(
         const player
         of Object.values(players)
       ){
 
         const spawn =
-          randomSpawn();
+          getStartSpawn(
+            usedSpawns
+          );
+
+        usedSpawns.push(
+          spawn
+        );
 
 
         player.x =
@@ -4298,6 +4685,9 @@ function startMatchByHost(){
 
         player.kills =
           0;
+
+        player.lastActiveAt =
+          Date.now();
 
       }
 
@@ -4535,6 +4925,12 @@ function leaveCurrentMatch(){
   fireCooldownEnd =
     0;
 
+  lastActivityAt =
+    Date.now();
+
+  lastCleanupCheck =
+    0;
+
 
   gameUI.style.display =
     "none";
@@ -4547,6 +4943,9 @@ function leaveCurrentMatch(){
 
   preStart.style.display =
     "none";
+
+  startButton.style.display =
+    "inline-flex";
 
   statusEl.textContent =
     "";
@@ -4619,6 +5018,9 @@ function handleMouseMove(
 
   }
 
+
+  lastActivityAt =
+    Date.now();
 
   cameraState.yaw -=
     event.movementX *
@@ -4821,7 +5223,6 @@ function setupMobileInput(){
     mobileInput.x =
       dx / max;
 
-
     mobileInput.y =
       dy / max;
 
@@ -4937,7 +5338,6 @@ function setupMobileInput(){
       lastLookX =
         event.clientX;
 
-
       lastLookY =
         event.clientY;
 
@@ -4977,10 +5377,19 @@ function setupMobileInput(){
       lastLookX =
         event.clientX;
 
-
       lastLookY =
         event.clientY;
 
+
+      if(
+        Math.abs(dx) > 0 ||
+        Math.abs(dy) > 0
+      ){
+
+        lastActivityAt =
+          Date.now();
+
+      }
 
       cameraState.yaw -=
         dx * .006;
@@ -5088,24 +5497,6 @@ function setupMobileInput(){
     }
   );
 
-
-  grabButton.addEventListener(
-    "pointerdown",
-    event => {
-
-      event.preventDefault();
-
-      if(
-        canGrab()
-      ){
-
-        startGrab();
-
-      }
-
-    }
-  );
-
 }
 
 
@@ -5126,6 +5517,9 @@ function setupStartButton(){
 
       }
 
+
+      lastActivityAt =
+        Date.now();
 
       startHolding =
         true;
@@ -5265,6 +5659,43 @@ function gameLoop(
 
 
   if(
+    matchRef &&
+    gameStarted &&
+    time -
+      lastCleanupCheck >=
+      MATCH_CLEANUP_INTERVAL
+  ){
+
+    getDoc(
+      matchRef
+    ).then(
+      snapshot => {
+
+        if(
+          snapshot.exists()
+        ){
+
+          checkMatchCleanup(
+            snapshot.data()
+          ).catch(
+            error =>
+              console.error(
+                "match cleanup error",
+                error
+              )
+          );
+
+        }
+
+      }
+    ).catch(
+      () => {}
+    );
+
+  }
+
+
+  if(
     renderer &&
     scene &&
     camera
@@ -5321,9 +5752,7 @@ async function syncLocalPlayer(){
   try{
 
     await updateDoc(
-
       matchRef,
-
       {
 
         [`players.${currentUser.uid}`]:{
@@ -5356,12 +5785,14 @@ async function syncLocalPlayer(){
             localKills,
 
           alive:
-            localPlayer.alive
+            localPlayer.alive,
+
+          lastActiveAt:
+            lastActivityAt
 
         }
 
       }
-
     );
 
   }catch(error){
