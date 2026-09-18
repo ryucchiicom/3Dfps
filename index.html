@@ -241,6 +241,44 @@ canvas{
   display:none;
   pointer-events:auto;
   text-align:center;
+  width:min(92vw,520px);
+}
+
+.preStartButtons{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+
+.preStartSmallButton{
+  min-width:105px;
+  height:40px;
+  padding:0 13px;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:10px;
+  background:rgba(0,0,0,.48);
+  color:#fff;
+  font-size:13px;
+  font-weight:800;
+  pointer-events:auto;
+  touch-action:none;
+}
+
+.preStartSmallButton:active{
+  transform:scale(.97);
+}
+
+#startButton{
+  touch-action:none;
+  pointer-events:auto;
+}
+
+#startButton::before,
+#startButton::after{
+  pointer-events:none;
 }
 
 #preStartText{
@@ -251,6 +289,8 @@ canvas{
 
 #startButton{
   position:relative;
+  display:block;
+  margin:0 auto;
   width:105px;
   height:105px;
   border-radius:50%;
@@ -287,6 +327,127 @@ canvas{
 #startButton span{
   position:relative;
   z-index:2;
+}
+
+#protectionIndicator{
+  position:absolute;
+  left:50%;
+  top:78px;
+  transform:translateX(-50%);
+  padding:8px 14px;
+  border-radius:999px;
+  background:rgba(30,130,255,.25);
+  border:1px solid rgba(100,190,255,.65);
+  box-shadow:0 0 22px rgba(50,150,255,.32);
+  color:#dff5ff;
+  font-size:14px;
+  font-weight:900;
+  letter-spacing:.2px;
+  opacity:0;
+  transition:opacity .12s;
+  pointer-events:none;
+  z-index:4;
+}
+
+#settingsModal{
+  position:absolute;
+  inset:0;
+  display:none;
+  justify-content:center;
+  align-items:center;
+  padding:18px;
+  background:rgba(0,0,0,.62);
+  backdrop-filter:blur(8px);
+  pointer-events:auto;
+  z-index:30;
+}
+
+.settingsBox{
+  width:min(92vw,500px);
+  max-height:88vh;
+  overflow:auto;
+  padding:20px;
+  border-radius:18px;
+  background:rgba(15,20,28,.96);
+  border:1px solid rgba(255,255,255,.13);
+  box-shadow:0 20px 80px rgba(0,0,0,.5);
+}
+
+.settingsTitle{
+  margin:0 0 14px;
+  text-align:center;
+  font-size:22px;
+  font-weight:900;
+}
+
+.settingRow{
+  margin:12px 0;
+}
+
+.settingLabel{
+  display:block;
+  margin-bottom:7px;
+  font-size:13px;
+  font-weight:800;
+}
+
+.settingOptions{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:6px;
+}
+
+.settingOption{
+  min-height:40px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:9px;
+  background:rgba(255,255,255,.06);
+  color:#fff;
+  font-size:12px;
+  font-weight:800;
+  pointer-events:auto;
+}
+
+.settingOption.selected{
+  background:#1976ff;
+  border-color:#5ba7ff;
+}
+
+.settingRow.disabled{
+  opacity:.27;
+}
+
+.settingRow.disabled .settingOption,
+.settingRow.disabled input{
+  pointer-events:none;
+}
+
+.settingNumber{
+  width:100%;
+  height:42px;
+  padding:0 12px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:9px;
+  background:rgba(255,255,255,.06);
+  color:#fff;
+  font-size:16px;
+  outline:none;
+}
+
+.settingsHint{
+  margin-top:4px;
+  font-size:11px;
+  opacity:.55;
+}
+
+.settingsButtons{
+  display:flex;
+  gap:8px;
+  margin-top:16px;
+}
+
+.settingsButtons .button{
+  margin-top:0;
 }
 
 #gameOver{
@@ -527,7 +688,9 @@ canvas{
       </div>
 
       <div id="health">
+
         <div id="healthBar"></div>
+
       </div>
 
     </div>
@@ -569,6 +732,75 @@ canvas{
       <span>START</span>
     </button>
 
+    <div class="preStartButtons">
+      <button id="shareCodeButton" class="preStartSmallButton">コードを共有</button>
+      <button id="leaveRoomButton" class="preStartSmallButton">部屋から退出</button>
+      <button id="settingsButton" class="preStartSmallButton">設定</button>
+    </div>
+
+  </div>
+
+  <div id="protectionIndicator">🛡 無敵 3.0秒</div>
+
+  <div id="settingsModal">
+    <div class="settingsBox">
+      <h2 class="settingsTitle">設定</h2>
+
+      <div class="settingRow" id="terrainAmountRow">
+        <span class="settingLabel">地形の量</span>
+        <div class="settingOptions" data-setting="terrainAmount">
+          <button class="settingOption" data-value="many">多</button>
+          <button class="settingOption selected" data-value="medium">⭐ 中</button>
+          <button class="settingOption" data-value="few">少</button>
+          <button class="settingOption" data-value="none">なし</button>
+        </div>
+      </div>
+
+      <div class="settingRow" id="terrainHeightRow">
+        <span class="settingLabel">地形の高低差</span>
+        <div class="settingOptions" data-setting="terrainHeight">
+          <button class="settingOption" data-value="high">高</button>
+          <button class="settingOption selected" data-value="medium">⭐ 中</button>
+          <button class="settingOption" data-value="low">低</button>
+        </div>
+      </div>
+
+      <div class="settingRow">
+        <span class="settingLabel">弾速</span>
+        <div class="settingOptions" data-setting="bulletSpeed">
+          <button class="settingOption" data-value="infinite">∞</button>
+          <button class="settingOption" data-value="fast">速</button>
+          <button class="settingOption selected" data-value="medium">⭐ 中</button>
+          <button class="settingOption" data-value="slow">遅</button>
+        </div>
+      </div>
+
+      <div class="settingRow">
+        <label class="settingLabel" for="maxHpInput">HP最大値</label>
+        <input id="maxHpInput" class="settingNumber" type="number" min="1" max="9999" step="1" value="100">
+      </div>
+
+      <div class="settingRow" id="regenRow">
+        <span class="settingLabel">HP自然回復</span>
+        <div class="settingOptions" data-setting="hpRegen">
+          <button class="settingOption" data-value="fast">速</button>
+          <button class="settingOption" data-value="medium">中</button>
+          <button class="settingOption" data-value="slow">遅</button>
+          <button class="settingOption selected" data-value="none">⭐ なし</button>
+        </div>
+      </div>
+
+      <div class="settingRow" id="regenLockRow">
+        <label class="settingLabel" for="regenLockInput">ダメージからの自然回復ロック</label>
+        <input id="regenLockInput" class="settingNumber" type="number" min="0" max="9999" step="0.1" value="0">
+        <div class="settingsHint">秒</div>
+      </div>
+
+      <div class="settingsButtons">
+        <button id="closeSettingsButton" class="button secondary">閉じる</button>
+        <button id="saveSettingsButton" class="button">保存</button>
+      </div>
+    </div>
   </div>
 
   <div id="desktopHint">
@@ -740,15 +972,16 @@ let grabAnimation = null;
 let spawnProtectionUntil = 0;
 
 let fireCooldownEnd = 0;
-
 let lastActivityAt = Date.now();
-
 let lastCleanupCheck = 0;
+let lastRegenTick = 0;
+let currentSettings = null;
+let settingsModalOpen = false;
 
 let bulletIdCounter = 0;
 
 
-const START_HOLD_TIME = 1800;
+const START_HOLD_TIME = 1000;
 
 const START_PROTECTION_TIME = 3000;
 
@@ -763,15 +996,9 @@ const BULLET_DAMAGE = 34;
 const GRAB_DISTANCE = 1.15;
 
 const GRAB_TIME = 500;
-
-const INACTIVE_MATCH_TIME =
-  60 * 1000;
-
-const MAX_MATCH_AGE =
-  24 * 60 * 60 * 1000;
-
-const CLEANUP_INTERVAL =
-  10000;
+const INACTIVE_MATCH_TIME = 60 * 1000;
+const MAX_MATCH_AGE = 24 * 60 * 60 * 1000;
+const CLEANUP_INTERVAL = 10000;
 
 const ARENA_SIZE = 70;
 
@@ -779,15 +1006,21 @@ const PLAYER_HEIGHT = 1.6;
 
 const MAX_HP = 100;
 
+const DEFAULT_SETTINGS = {
+  terrainAmount: "medium",
+  terrainHeight: "medium",
+  bulletSpeed: "medium",
+  maxHp: 100,
+  hpRegen: "none",
+  regenLock: 0
+};
+
 
 const keys = {
 
   w:false,
-
   a:false,
-
   s:false,
-
   d:false
 
 };
@@ -796,9 +1029,7 @@ const keys = {
 const mobileInput = {
 
   x:0,
-
   y:0,
-
   firing:false
 
 };
@@ -807,7 +1038,6 @@ const mobileInput = {
 const cameraState = {
 
   yaw:0,
-
   pitch:0
 
 };
@@ -816,9 +1046,7 @@ const cameraState = {
 const physics = {
 
   gravity:-25,
-
   jumpPower:9,
-
   moveSpeed:6
 
 };
@@ -843,8 +1071,7 @@ const colliders = [];
 const playerMeshes =
   new Map();
 
-const bullets =
-  new Map();
+const bullets = new Map();
 
 
 const menu =
@@ -913,6 +1140,325 @@ const lookZone =
 const returnButton =
   document.getElementById("returnButton");
 
+const shareCodeButton =
+  document.getElementById("shareCodeButton");
+
+const leaveRoomButton =
+  document.getElementById("leaveRoomButton");
+
+const settingsButton =
+  document.getElementById("settingsButton");
+
+const protectionIndicator =
+  document.getElementById("protectionIndicator");
+
+const settingsModal =
+  document.getElementById("settingsModal");
+
+const closeSettingsButton =
+  document.getElementById("closeSettingsButton");
+
+const saveSettingsButton =
+  document.getElementById("saveSettingsButton");
+
+const maxHpInput =
+  document.getElementById("maxHpInput");
+
+const regenLockInput =
+  document.getElementById("regenLockInput");
+
+const terrainHeightRow =
+  document.getElementById("terrainHeightRow");
+
+const regenRow =
+  document.getElementById("regenRow");
+
+const regenLockRow =
+  document.getElementById("regenLockRow");
+
+
+function normalizeSettings(settings){
+
+  const source =
+    settings && typeof settings === "object"
+      ? settings
+      : {};
+
+  const maxHp =
+    clamp(
+      Number(source.maxHp) || DEFAULT_SETTINGS.maxHp,
+      1,
+      9999
+    );
+
+  const regenLock =
+    clamp(
+      Number(source.regenLock) || 0,
+      0,
+      9999
+    );
+
+  return {
+    terrainAmount:
+      ["many","medium","few","none"].includes(source.terrainAmount)
+        ? source.terrainAmount
+        : DEFAULT_SETTINGS.terrainAmount,
+    terrainHeight:
+      ["high","medium","low"].includes(source.terrainHeight)
+        ? source.terrainHeight
+        : DEFAULT_SETTINGS.terrainHeight,
+    bulletSpeed:
+      ["infinite","fast","medium","slow"].includes(source.bulletSpeed)
+        ? source.bulletSpeed
+        : DEFAULT_SETTINGS.bulletSpeed,
+    maxHp,
+    hpRegen:
+      ["fast","medium","slow","none"].includes(source.hpRegen)
+        ? source.hpRegen
+        : DEFAULT_SETTINGS.hpRegen,
+    regenLock
+  };
+}
+
+function getBulletSpeed(){
+
+  const setting =
+    normalizeSettings(currentSettings).bulletSpeed;
+
+  if(setting === "infinite") return Infinity;
+  if(setting === "fast") return 70;
+  if(setting === "slow") return 24;
+  return BULLET_SPEED;
+}
+
+function getRegenRate(){
+
+  const setting =
+    normalizeSettings(currentSettings).hpRegen;
+
+  if(setting === "fast") return 3;
+  if(setting === "medium") return 1.5;
+  if(setting === "slow") return .6;
+  return 0;
+}
+
+function updateSettingsUI(settings){
+
+  const normalized =
+    normalizeSettings(settings);
+
+  document
+    .querySelectorAll(".settingOptions")
+    .forEach(group => {
+
+      const key =
+        group.dataset.setting;
+
+      const value =
+        normalized[key];
+
+      group
+        .querySelectorAll(".settingOption")
+        .forEach(button => {
+          button.classList.toggle(
+            "selected",
+            button.dataset.value === value
+          );
+        });
+
+    });
+
+  maxHpInput.value =
+    String(normalized.maxHp);
+
+  regenLockInput.value =
+    String(normalized.regenLock);
+
+  const terrainDisabled =
+    normalized.terrainAmount === "none";
+
+  terrainHeightRow.classList.toggle(
+    "disabled",
+    terrainDisabled
+  );
+
+  const regenDisabled =
+    normalized.hpRegen === "none";
+
+  regenLockRow.classList.toggle(
+    "disabled",
+    regenDisabled
+  );
+}
+
+function readSettingsUI(){
+
+  const result =
+    normalizeSettings(currentSettings);
+
+  document
+    .querySelectorAll(".settingOptions")
+    .forEach(group => {
+
+      const key =
+        group.dataset.setting;
+
+      const selected =
+        group.querySelector(".settingOption.selected");
+
+      if(selected){
+        result[key] =
+          selected.dataset.value;
+      }
+
+    });
+
+  result.maxHp =
+    clamp(
+      Number(maxHpInput.value) || 100,
+      1,
+      9999
+    );
+
+  result.regenLock =
+    clamp(
+      Number(regenLockInput.value) || 0,
+      0,
+      9999
+    );
+
+  return normalizeSettings(result);
+}
+
+function openSettings(){
+
+  if(
+    !matchRef ||
+    !isHost ||
+    matchHasStarted
+  ){
+    return;
+  }
+
+  updateSettingsUI(
+    currentSettings
+  );
+
+  settingsModalOpen = true;
+  settingsModal.style.display = "flex";
+}
+
+function closeSettings(){
+
+  settingsModalOpen = false;
+  settingsModal.style.display = "none";
+  updateSettingsUI(currentSettings);
+}
+
+async function saveSettings(){
+
+  if(
+    !matchRef ||
+    !isHost ||
+    matchHasStarted
+  ){
+    return;
+  }
+
+  const settings =
+    readSettingsUI();
+
+  try{
+    await updateDoc(
+      matchRef,
+      { settings }
+    );
+
+    currentSettings = settings;
+    rebuildArena(settings);
+    closeSettings();
+    statusEl.textContent = "設定を保存したよ！";
+    setTimeout(() => {
+      if(statusEl.textContent === "設定を保存したよ！")
+        statusEl.textContent = "";
+    }, 1200);
+  }catch(error){
+    console.error("settings save error", error);
+    statusEl.textContent =
+      "設定保存失敗：" +
+      getFriendlyError(error);
+  }
+}
+
+async function shareMatchCode(){
+
+  if(!currentMatchId) return;
+
+  const text = String(currentMatchId);
+
+  try{
+    if(navigator.share){
+      await navigator.share({ text });
+      return;
+    }
+  }catch(error){
+    if(error?.name === "AbortError") return;
+  }
+
+  try{
+    await navigator.clipboard.writeText(text);
+    statusEl.textContent = "試合コードをコピーしたよ！";
+  }catch(error){
+    console.error("share/copy error", error);
+    statusEl.textContent = text;
+  }
+}
+
+function updateProtectionIndicator(){
+
+  if(
+    !matchHasStarted ||
+    !localPlayer ||
+    gameEnded
+  ){
+    protectionIndicator.style.opacity = "0";
+    return;
+  }
+
+  const remaining =
+    Math.max(0, spawnProtectionUntil - Date.now());
+
+  if(remaining <= 0){
+    protectionIndicator.style.opacity = "0";
+    return;
+  }
+
+  protectionIndicator.textContent =
+    `🛡 無敵 ${(remaining / 1000).toFixed(1)}秒`;
+  protectionIndicator.style.opacity = "1";
+}
+
+function rebuildArena(settings){
+
+  if(!scene) return;
+
+  for(const collider of colliders){
+    scene.remove(collider);
+    collider.traverse?.(object => {
+      if(object.geometry) object.geometry.dispose();
+      if(object.material){
+        if(Array.isArray(object.material)){
+          object.material.forEach(material => material.dispose());
+        }else{
+          object.material.dispose();
+        }
+      }
+    });
+  }
+
+  colliders.length = 0;
+  createArena(settings);
+}
 
 function randomCode(length = 6){
 
@@ -1265,7 +1811,10 @@ function setupScene(){
 }
 
 
-function createArena(){
+function createArena(settings = DEFAULT_SETTINGS){
+
+  const normalized =
+    normalizeSettings(settings);
 
   const floorGeometry =
     new THREE.BoxGeometry(
@@ -1296,6 +1845,8 @@ function createArena(){
 
   floor.receiveShadow =
     true;
+
+  floor.userData.isArena = true;
 
   scene.add(floor);
 
@@ -1352,6 +1903,11 @@ function createArena(){
   );
 
 
+  if(normalized.terrainAmount === "none"){
+    return;
+  }
+
+
   const obstacleMaterial =
     new THREE.MeshStandardMaterial({
 
@@ -1364,212 +1920,66 @@ function createArena(){
     });
 
 
-  /*
-    低い足場
-  */
+  const platforms = [
+    [8,1.5,8,-15,.75,-10],
+    [11,2,5,13,1,-8],
+    [6,2.5,6,17,1.25,14],
+    [10,1.5,5,-15,.75,15],
+    [5,2,12,0,1,17],
+    [6,3.5,6,-15,1.75,-1],
+    [7,4,7,4,2,-14],
+    [7,4.5,7,16,2.25,2],
+    [5,.9,5,-4,.45,-5],
+    [5,1.3,5,4,.65,-5],
+    [5,1.7,5,10,.85,-5],
+    [4,.7,4,-10,.35,-18],
+    [4,1.1,4,-4,.55,-18],
+    [4,1.5,4,2,.75,-18],
+    [4,1.9,4,8,.95,-18],
+    [5,2.2,5,-18,1.1,8],
+    [6,2.8,5,5,1.4,8],
+    [5,3.8,5,12,1.9,-17],
+    [5,4.4,5,-5,2.2,18],
+    [4,5,4,12,2.5,18],
+    [5,2.6,5,-20,1.3,-18],
+    [5,3.2,5,20,1.6,-18],
+    [6,2.2,4,-21,1.1,0],
+    [6,3.8,4,21,1.9,0]
+  ];
 
-  createBox(
-    8,
-    1.5,
-    8,
-    -15,
-    .75,
-    -10,
-    obstacleMaterial
-  );
+  const amountCount =
+    normalized.terrainAmount === "many"
+      ? platforms.length
+      : normalized.terrainAmount === "few"
+        ? 7
+        : 14;
 
-  createBox(
-    11,
-    2,
-    5,
-    13,
-    1,
-    -8,
-    obstacleMaterial
-  );
+  const heightScale =
+    normalized.terrainHeight === "high"
+      ? 1.45
+      : normalized.terrainHeight === "low"
+        ? .65
+        : 1;
 
-  createBox(
-    6,
-    2.5,
-    6,
-    17,
-    1.25,
-    14,
-    obstacleMaterial
-  );
+  for(let i = 0; i < Math.min(amountCount, platforms.length); i++){
 
-  createBox(
-    10,
-    1.5,
-    5,
-    -15,
-    .75,
-    15,
-    obstacleMaterial
-  );
+    const [width, baseHeight, depth, x, baseY, z] = platforms[i];
 
-  createBox(
-    5,
-    2,
-    12,
-    0,
-    1,
-    17,
-    obstacleMaterial
-  );
-
-
-  /*
-    少し高い足場
-  */
-
-  createBox(
-    6,
-    3.5,
-    6,
-    -15,
-    1.75,
-    -1,
-    obstacleMaterial
-  );
-
-  createBox(
-    7,
-    4,
-    7,
-    4,
-    2,
-    -14,
-    obstacleMaterial
-  );
-
-  createBox(
-    7,
-    4.5,
-    7,
-    16,
-    2.25,
-    2,
-    obstacleMaterial
-  );
-
-
-  /*
-    さらに低いステップ。
-    グラブで登るための足場。
-  */
-
-  createBox(
-    5,
-    .9,
-    5,
-    -4,
-    .45,
-    -5,
-    obstacleMaterial
-  );
-
-  createBox(
-    5,
-    1.3,
-    5,
-    4,
-    .65,
-    -5,
-    obstacleMaterial
-  );
-
-  createBox(
-    5,
-    1.7,
-    5,
-    10,
-    .85,
-    -5,
-    obstacleMaterial
-  );
-
-  createBox(
-    4,
-    .7,
-    4,
-    -10,
-    .35,
-    -18,
-    obstacleMaterial
-  );
-
-  createBox(
-    4,
-    1.1,
-    4,
-    -4,
-    .55,
-    -18,
-    obstacleMaterial
-  );
-
-  createBox(
-    4,
-    1.5,
-    4,
-    2,
-    .75,
-    -18,
-    obstacleMaterial
-  );
-
-  createBox(
-    4,
-    1.9,
-    4,
-    8,
-    .95,
-    -18,
-    obstacleMaterial
-  );
-
-
-  for(
-    let i = 0;
-    i < 10;
-    i++
-  ){
-
-    const x =
-      Math.random() *
-      42 -
-      21;
-
-    const z =
-      Math.random() *
-      42 -
-      21;
+    const height =
+      Math.max(.45, baseHeight * heightScale);
 
     createBox(
-      2.5 +
-        Math.random() * 2,
-
-      1.3 +
-        Math.random() * 1.7,
-
-      2.5 +
-        Math.random() * 2,
-
+      width,
+      height,
+      depth,
       x,
-
-      .65 +
-        Math.random() * .85,
-
+      height / 2,
       z,
-
       obstacleMaterial
     );
-
   }
 
 }
-
 
 function createBox(
   width,
@@ -1606,6 +2016,8 @@ function createBox(
   mesh.receiveShadow =
     true;
 
+  mesh.userData.isArena = true;
+
   scene.add(mesh);
 
   colliders.push(mesh);
@@ -1641,7 +2053,9 @@ function onResize(){
 async function ensureAuth(){
 
   if(currentUser){
+
     return currentUser;
+
   }
 
   return new Promise(
@@ -1789,7 +2203,7 @@ async function createMatch(
         0,
 
       hp:
-        MAX_HP,
+        normalizeSettings(currentSettings).maxHp,
 
       kills:
         0,
@@ -1798,7 +2212,13 @@ async function createMatch(
         true,
 
       lastActiveAt:
-        Date.now()
+        Date.now(),
+
+      lastDamageAt:
+        0,
+
+      joinOrder:
+        0
 
     };
 
@@ -1849,6 +2269,13 @@ async function createMatch(
 
             startedAt:
               null,
+
+            settings:
+              { ...DEFAULT_SETTINGS },
+
+            playerOrder:[
+              user.uid
+            ],
 
             players:{
 
@@ -1944,9 +2371,11 @@ async function joinMatch(
 
 
     /*
+      ここが今回の重要部分。
+
       部屋が存在しなければ、
       参加失敗ではなく
-      そのコードで作成する。
+      「そのコードで作成」する。
     */
 
     if(
@@ -2017,6 +2446,11 @@ async function joinMatch(
             players
           ).length;
 
+        const playerOrder =
+          Array.isArray(data.playerOrder)
+            ? [...data.playerOrder]
+            : Object.keys(players);
+
 
         if(count >= 8){
 
@@ -2056,7 +2490,7 @@ async function joinMatch(
             0,
 
           hp:
-            MAX_HP,
+            normalizeSettings(data.settings).maxHp,
 
           kills:
             0,
@@ -2065,16 +2499,28 @@ async function joinMatch(
             true,
 
           lastActiveAt:
-            Date.now()
+            Date.now(),
+
+          lastDamageAt:
+            0,
+
+          joinOrder:
+            (data.playerOrder || []).length
 
         };
 
+
+        playerOrder.push(user.uid);
+        players[user.uid].joinOrder =
+          playerOrder.length - 1;
 
         transaction.update(
           ref,
           {
 
-            players
+            players,
+
+            playerOrder
 
           }
         );
@@ -2229,6 +2675,9 @@ async function startMatch(
     code;
 
 
+  currentSettings =
+    normalizeSettings(currentSettings || DEFAULT_SETTINGS);
+
   if(!scene){
 
     setupScene();
@@ -2247,12 +2696,6 @@ async function startMatch(
 
 
   velocityY =
-    0;
-
-  lastActivityAt =
-    Date.now();
-
-  lastCleanupCheck =
     0;
 
 
@@ -2293,6 +2736,26 @@ async function startMatch(
         const data =
           snapshot.data();
 
+        isHost =
+          data.hostUid === currentUser.uid;
+
+        const incomingSettings =
+          normalizeSettings(data.settings);
+
+        if(
+          JSON.stringify(currentSettings) !==
+          JSON.stringify(incomingSettings)
+        ){
+          currentSettings =
+            incomingSettings;
+
+          if(scene){
+            rebuildArena(currentSettings);
+          }
+
+          updateSettingsUI(currentSettings);
+        }
+
         checkMatchCleanup(
           data
         );
@@ -2319,7 +2782,8 @@ async function startMatch(
 
 
         updateScoreboard(
-          players
+          players,
+          data.playerOrder
         );
 
 
@@ -2401,6 +2865,8 @@ async function startMatch(
           data
         );
 
+        updateProtectionIndicator();
+
 
         if(
           data.status ===
@@ -2432,18 +2898,13 @@ async function startMatch(
 
           );
 
-
           setTimeout(
             () => {
-
               if(
                 matchRef
               ){
-
                 deleteMatch();
-
               }
-
             },
             1200
           );
@@ -2506,6 +2967,8 @@ async function loadLocalPlayer(){
   const data =
     snap.data();
 
+  currentSettings =
+    normalizeSettings(data.settings);
 
   const player =
     data.players?.[
@@ -2522,9 +2985,18 @@ async function loadLocalPlayer(){
   }
 
 
+  const playerOrder =
+    Array.isArray(data.playerOrder)
+      ? data.playerOrder
+      : [];
+
   localPlayer =
     {
       ...player,
+      joinOrder:
+        Number.isFinite(player.joinOrder)
+          ? player.joinOrder
+          : playerOrder.indexOf(currentUser.uid),
       lastActiveAt:
         Number(
           player.lastActiveAt ||
@@ -2574,36 +3046,40 @@ function updateStartUI(data){
     preStart.style.display =
       "none";
 
+    settingsModal.style.display =
+      "none";
+
+    settingsModalOpen =
+      false;
+
     return;
 
   }
 
 
-  if(
+  preStart.style.display =
+    "block";
+
+  preStartText.textContent =
     isHost
-  ){
+      ? "部屋主がSTARTを長押しして開始"
+      : "部屋主のSTART待ち";
 
-    preStart.style.display =
-      "block";
+  startButton.style.opacity =
+    isHost ? "1" : ".35";
 
-    preStartText.textContent =
-      "部屋主がSTARTを長押しして開始";
+  startButton.style.pointerEvents =
+    isHost ? "auto" : "none";
 
-    startButton.style.opacity =
-      "1";
+  settingsButton.style.opacity =
+    isHost ? "1" : ".35";
 
-  }else{
+  settingsButton.style.pointerEvents =
+    isHost ? "auto" : "none";
 
-    preStart.style.display =
-      "block";
-
-    preStartText.textContent =
-      "部屋主のSTART待ち";
-
-    startButton.style.opacity =
-      ".35";
-
-  }
+  updateSettingsUI(
+    currentSettings
+  );
 
 }
 
@@ -2740,15 +3216,29 @@ function updateRemotePlayers(
 
 
 function updateScoreboard(
-  players
+  players,
+  playerOrder = []
 ){
+
+  const order =
+    Array.isArray(playerOrder)
+      ? playerOrder
+      : [];
 
   const entries =
     Object.entries(players)
       .sort(
-        (a,b) =>
-          (b[1].kills || 0) -
-          (a[1].kills || 0)
+        (a,b) => {
+          const ao =
+            order.indexOf(a[0]);
+          const bo =
+            order.indexOf(b[0]);
+          const safeA =
+            ao < 0 ? 999999 : ao;
+          const safeB =
+            bo < 0 ? 999999 : bo;
+          return safeA - safeB || a[0].localeCompare(b[0]);
+        }
       );
 
 
@@ -2821,7 +3311,6 @@ function updateScoreboard(
 
 }
 
-
 function updateLocalHUD(){
 
   if(!localPlayer){
@@ -2844,16 +3333,22 @@ function updateLocalHUD(){
     `HP ${hp}`;
 
 
+  const maxHp =
+    normalizeSettings(currentSettings).maxHp;
+
   healthBar.style.width =
-    `${hp}%`;
+    `${clamp(hp / maxHp * 100, 0, 100)}%`;
 
 
-  if(hp > 60){
+  const hpRatio =
+    hp / maxHp;
+
+  if(hpRatio > .6){
 
     healthBar.style.background =
       "#48e27d";
 
-  }else if(hp > 30){
+  }else if(hpRatio > .3){
 
     healthBar.style.background =
       "#ffd84d";
@@ -2897,17 +3392,13 @@ function markActivity(){
   if(
     localPlayer
   ){
-
     localPlayer.lastActiveAt =
       lastActivityAt;
-
   }
-
 }
 
 
 function getColliderBoxes(){
-
   return colliders
     .filter(
       collider =>
@@ -2919,7 +3410,6 @@ function getColliderBoxes(){
         new THREE.Box3()
           .setFromObject(collider)
     );
-
 }
 
 
@@ -2929,23 +3419,12 @@ function horizontalOverlaps(
   z,
   radius = .38
 ){
-
   return (
-
-    x + radius >
-      box.min.x &&
-
-    x - radius <
-      box.max.x &&
-
-    z + radius >
-      box.min.z &&
-
-    z - radius <
-      box.max.z
-
+    x + radius > box.min.x &&
+    x - radius < box.max.x &&
+    z + radius > box.min.z &&
+    z - radius < box.max.z
   );
-
 }
 
 
@@ -2958,40 +3437,20 @@ function isPositionFree(
   const radius =
     .38;
 
-
   if(
-
-    x <
-      -ARENA_SIZE / 2 +
-      radius ||
-
-    x >
-      ARENA_SIZE / 2 -
-      radius ||
-
-    z <
-      -ARENA_SIZE / 2 +
-      radius ||
-
-    z >
-      ARENA_SIZE / 2 -
-      radius
-
+    x < -ARENA_SIZE / 2 + radius ||
+    x > ARENA_SIZE / 2 - radius ||
+    z < -ARENA_SIZE / 2 + radius ||
+    z > ARENA_SIZE / 2 - radius
   ){
-
     return false;
-
   }
 
-
   const feetY =
-    y -
-    PLAYER_HEIGHT;
+    y - PLAYER_HEIGHT;
 
   const headY =
-    y +
-    .35;
-
+    y + .35;
 
   for(
     const collider
@@ -3001,21 +3460,16 @@ function isPositionFree(
     if(
       !collider ||
       !collider.geometry ||
-      collider ===
-        colliders[0]
+      collider === colliders[0]
     ){
-
       continue;
-
     }
-
 
     const box =
       new THREE.Box3()
         .setFromObject(
           collider
         );
-
 
     if(
       !horizontalOverlaps(
@@ -3025,44 +3479,31 @@ function isPositionFree(
         radius
       )
     ){
-
       continue;
-
     }
-
 
     /*
       足場の上に立っている場合は、
       足場そのものを横移動の障害物にしない。
     */
-
     if(
       box.max.y <=
       feetY + .06
     ){
-
       continue;
-
     }
-
 
     if(
       box.min.y >=
       headY - .06
     ){
-
       continue;
-
     }
 
-
     return false;
-
   }
 
-
   return true;
-
 }
 
 
@@ -3076,21 +3517,15 @@ function getLandingTop(
   let bestTop =
     null;
 
-
   /*
     床の上面は y=0。
   */
-
   if(
     previousFeetY >= -.05 &&
     nextFeetY <= .05
   ){
-
-    bestTop =
-      0;
-
+    bestTop = 0;
   }
-
 
   for(
     const collider
@@ -3100,21 +3535,16 @@ function getLandingTop(
     if(
       !collider ||
       !collider.geometry ||
-      collider ===
-        colliders[0]
+      collider === colliders[0]
     ){
-
       continue;
-
     }
-
 
     const box =
       new THREE.Box3()
         .setFromObject(
           collider
         );
-
 
     if(
       !horizontalOverlaps(
@@ -3124,41 +3554,29 @@ function getLandingTop(
         .36
       )
     ){
-
       continue;
-
     }
-
 
     const top =
       box.max.y;
 
-
     if(
-      previousFeetY >=
-        top - .08 &&
-
-      nextFeetY <=
-        top + .08
+      previousFeetY >= top - .08 &&
+      nextFeetY <= top + .08
     ){
 
       if(
         bestTop === null ||
         top > bestTop
       ){
-
         bestTop =
           top;
-
       }
 
     }
-
   }
 
-
   return bestTop;
-
 }
 
 
@@ -3172,7 +3590,6 @@ function getCeilingBottom(
   let bestBottom =
     null;
 
-
   for(
     const collider
     of colliders
@@ -3181,21 +3598,16 @@ function getCeilingBottom(
     if(
       !collider ||
       !collider.geometry ||
-      collider ===
-        colliders[0]
+      collider === colliders[0]
     ){
-
       continue;
-
     }
-
 
     const box =
       new THREE.Box3()
         .setFromObject(
           collider
         );
-
 
     if(
       !horizontalOverlaps(
@@ -3205,41 +3617,29 @@ function getCeilingBottom(
         .36
       )
     ){
-
       continue;
-
     }
-
 
     const bottom =
       box.min.y;
 
-
     if(
-      previousHeadY <=
-        bottom + .08 &&
-
-      nextHeadY >=
-        bottom - .08
+      previousHeadY <= bottom + .08 &&
+      nextHeadY >= bottom - .08
     ){
 
       if(
         bestBottom === null ||
         bottom < bestBottom
       ){
-
         bestBottom =
           bottom;
-
       }
 
     }
-
   }
 
-
   return bestBottom;
-
 }
 
 
@@ -3253,27 +3653,21 @@ function tryMove(
     !localPlayer.alive ||
     !matchHasStarted
   ){
-
     return;
-
   }
-
 
   const nextX =
     localPlayer.x +
     dx;
 
-
   const nextZ =
     localPlayer.z +
     dz;
-
 
   /*
     X/Zを分離して判定することで、
     足場の端で壁に引っかかりにくくする。
   */
-
   if(
     isPositionFree(
       nextX,
@@ -3281,12 +3675,9 @@ function tryMove(
       localPlayer.z
     )
   ){
-
     localPlayer.x =
       nextX;
-
   }
-
 
   if(
     isPositionFree(
@@ -3295,12 +3686,9 @@ function tryMove(
       nextZ
     )
   ){
-
     localPlayer.z =
       nextZ;
-
   }
-
 }
 
 
@@ -3314,18 +3702,14 @@ function updateMovement(
     !matchHasStarted ||
     grabAnimation
   ){
-
     return;
-
   }
-
 
   let inputX =
     0;
 
   let inputZ =
     0;
-
 
   if(keys.w)
     inputZ -= 1;
@@ -3339,13 +3723,11 @@ function updateMovement(
   if(keys.d)
     inputX += 1;
 
-
   inputX +=
     mobileInput.x;
 
   inputZ +=
     mobileInput.y;
-
 
   const length =
     Math.hypot(
@@ -3353,59 +3735,47 @@ function updateMovement(
       inputZ
     );
 
-
   if(length > 1){
-
     inputX /=
       length;
 
     inputZ /=
       length;
-
   }
-
 
   const moving =
     Math.abs(inputX) > .01 ||
     Math.abs(inputZ) > .01;
 
-
   if(moving){
 
     markActivity();
 
-
     const speed =
       physics.moveSpeed;
 
-
     const amount =
       speed * delta;
-
 
     const forwardX =
       -Math.sin(
         cameraState.yaw
       );
 
-
     const forwardZ =
       -Math.cos(
         cameraState.yaw
       );
-
 
     const rightX =
       Math.cos(
         cameraState.yaw
       );
 
-
     const rightZ =
       -Math.sin(
         cameraState.yaw
       );
-
 
     const moveX =
       (
@@ -3414,7 +3784,6 @@ function updateMovement(
       ) *
       amount;
 
-
     const moveZ =
       (
         forwardZ * -inputZ +
@@ -3422,45 +3791,35 @@ function updateMovement(
       ) *
       amount;
 
-
     tryMove(
       moveX,
       moveZ
     );
-
   }
-
 
   const previousFeetY =
     localPlayer.y -
     PLAYER_HEIGHT;
 
-
   const previousHeadY =
     localPlayer.y +
     .35;
-
 
   velocityY +=
     physics.gravity *
     delta;
 
-
   let nextY =
     localPlayer.y +
-    velocityY *
-    delta;
-
+    velocityY * delta;
 
   const nextFeetY =
     nextY -
     PLAYER_HEIGHT;
 
-
   const nextHeadY =
     nextY +
     .35;
-
 
   if(
     velocityY <= 0
@@ -3473,7 +3832,6 @@ function updateMovement(
         previousFeetY,
         nextFeetY
       );
-
 
     if(
       landingTop !== null
@@ -3509,7 +3867,6 @@ function updateMovement(
         nextHeadY
       );
 
-
     if(
       ceilingBottom !== null
     ){
@@ -3530,14 +3887,11 @@ function updateMovement(
 
     grounded =
       false;
-
   }
-
 
   /*
     落下しすぎた場合の安全処理。
   */
-
   if(
     localPlayer.y <
     -10
@@ -3551,20 +3905,13 @@ function updateMovement(
 
     grounded =
       true;
-
   }
 
-
   camera.position.set(
-
     localPlayer.x,
-
     localPlayer.y + .45,
-
     localPlayer.z
-
   );
-
 
   camera.rotation.order =
     "YXZ";
@@ -3575,9 +3922,7 @@ function updateMovement(
   camera.rotation.x =
     cameraState.pitch;
 
-
   updateGrabUI();
-
 }
 
 
@@ -3613,9 +3958,7 @@ function jump(){
 
   }
 
-
   markActivity();
-
 
   velocityY =
     physics.jumpPower;
@@ -3791,7 +4134,6 @@ function getGrabTarget(){
       bestDistance =
         distance;
 
-
       best = {
 
         box,
@@ -3837,13 +4179,10 @@ function updateGrabUI(){
       "0";
 
     return;
-
   }
-
 
   jumpButton.style.opacity =
     "";
-
 
   if(
     grounded
@@ -3861,10 +4200,8 @@ function updateGrabUI(){
 
   }
 
-
   jumpButton.textContent =
     "GRAB";
-
 
   if(
     canGrab()
@@ -3889,7 +4226,6 @@ function updateGrabUI(){
     );
 
   }
-
 }
 
 
@@ -3916,9 +4252,7 @@ function startGrab(){
 
   }
 
-
   markActivity();
-
 
   grabAnimation = {
 
@@ -3941,6 +4275,7 @@ function startGrab(){
 
   velocityY =
     0;
+
 
 }
 
@@ -4133,7 +4468,9 @@ function removeBullet(
 ){
 
   const bullet =
-    bullets.get(id);
+    bullets.get(
+      id
+    );
 
 
   if(!bullet){
@@ -4177,9 +4514,13 @@ function updateBullets(
       bullet.mesh.position.clone();
 
 
+    const bulletSpeed =
+      getBulletSpeed();
+
     const distance =
-      BULLET_SPEED *
-      delta;
+      bulletSpeed === Infinity
+        ? 10000
+        : bulletSpeed * delta;
 
 
     bullet.mesh.position.add(
@@ -4198,6 +4539,7 @@ function updateBullets(
 
 
     if(
+      bulletSpeed !== Infinity &&
       now -
       bullet.created >
       BULLET_LIFETIME
@@ -4345,6 +4687,14 @@ function updateBullets(
         id
       );
 
+    }else if(
+      bulletSpeed === Infinity
+    ){
+
+      removeBullet(
+        id
+      );
+
     }
 
   }
@@ -4459,11 +4809,14 @@ async function applyBulletDamage(
             0,
 
             Number(
-              target.hp || 0
+              target.hp ?? 0
             ) -
             BULLET_DAMAGE
 
           );
+
+        target.lastDamageAt =
+          Date.now();
 
 
         if(
@@ -4639,9 +4992,7 @@ function shoot(){
 
   }
 
-
   markActivity();
-
 
   const now =
     performance.now();
@@ -4747,6 +5098,12 @@ function startMatchByHost(){
           ...(data.players || {})
         };
 
+      const settings =
+        normalizeSettings(data.settings);
+
+      currentSettings =
+        settings;
+
 
       for(
         const player
@@ -4767,12 +5124,15 @@ function startMatchByHost(){
           spawn.z;
 
         player.hp =
-          MAX_HP;
+          settings.maxHp;
 
         player.alive =
           true;
 
         player.kills =
+          0;
+
+        player.lastDamageAt =
           0;
 
         player.lastActiveAt =
@@ -4786,6 +5146,8 @@ function startMatchByHost(){
         {
 
           players,
+
+          settings,
 
           status:
             "active",
@@ -4801,9 +5163,11 @@ function startMatchByHost(){
             START_PROTECTION_TIME
 
         }
+
       );
 
     }
+
   ).catch(
     error => {
 
@@ -4813,6 +5177,7 @@ function startMatchByHost(){
       );
 
     }
+
   );
 
 }
@@ -4872,7 +5237,6 @@ function updateStartProgress(){
     startHolding =
       false;
 
-
     startButton.style.setProperty(
       "--progress",
       "100%"
@@ -4894,96 +5258,71 @@ async function checkMatchCleanup(
     !matchRef ||
     !data
   ){
-
     return;
-
   }
-
 
   const now =
     Date.now();
-
 
   if(
     now -
     lastCleanupCheck <
     CLEANUP_INTERVAL
   ){
-
     return;
-
   }
-
 
   lastCleanupCheck =
     now;
 
-
   let createdMillis =
     0;
-
 
   if(
     data.createdAt &&
     typeof data.createdAt.toMillis ===
       "function"
   ){
-
     createdMillis =
       data.createdAt.toMillis();
-
   }else if(
     typeof data.createdAt ===
     "number"
   ){
-
     createdMillis =
       data.createdAt;
-
   }
-
 
   if(
     createdMillis > 0 &&
-    now -
-      createdMillis >=
+    now - createdMillis >=
       MAX_MATCH_AGE
   ){
 
     try{
-
       await deleteDoc(
         matchRef
       );
-
     }catch(error){
-
       console.error(
         "age cleanup error",
         error
       );
-
     }
 
     return;
-
   }
-
 
   const players =
     Object.values(
       data.players || {}
     );
 
-
   if(
     players.length === 0
   ){
-
     return;
-
   }
-
 
   const allInactive =
     players.every(
@@ -4992,47 +5331,33 @@ async function checkMatchCleanup(
         const last =
           typeof player.lastActiveAt ===
           "number"
-
             ? player.lastActiveAt
-
             : 0;
 
-
         return (
-
           last > 0 &&
-
-          now -
-            last >=
+          now - last >=
             INACTIVE_MATCH_TIME
-
         );
-
       }
     );
-
 
   if(
     allInactive
   ){
 
     try{
-
       await deleteDoc(
         matchRef
       );
-
     }catch(error){
-
       console.error(
         "inactive cleanup error",
         error
       );
-
     }
 
   }
-
 }
 
 
@@ -5098,6 +5423,82 @@ async function deleteMatch(){
 
 }
 
+
+async function leaveRoom(){
+
+  if(!matchRef || !currentUser){
+    leaveCurrentMatch();
+    return;
+  }
+
+  const ref = matchRef;
+  const uid = currentUser.uid;
+
+  try{
+    await runTransaction(
+      db,
+      async transaction => {
+
+        const snap =
+          await transaction.get(ref);
+
+        if(!snap.exists()){
+          return;
+        }
+
+        const data =
+          snap.data();
+
+        if(data.status !== "waiting"){
+          return;
+        }
+
+        const players =
+          { ...(data.players || {}) };
+
+        delete players[uid];
+
+        const oldOrder =
+          Array.isArray(data.playerOrder)
+            ? data.playerOrder
+            : Object.keys(players);
+
+        const playerOrder =
+          oldOrder.filter(id => id !== uid);
+
+        if(playerOrder.length === 0){
+          transaction.delete(ref);
+          return;
+        }
+
+        const nextHost =
+          data.hostUid === uid
+            ? playerOrder[0]
+            : data.hostUid;
+
+        Object.keys(players).forEach(id => {
+          players[id] = {
+            ...players[id],
+            joinOrder: playerOrder.indexOf(id)
+          };
+        });
+
+        transaction.update(
+          ref,
+          {
+            players,
+            playerOrder,
+            hostUid: nextHost
+          }
+        );
+      }
+    );
+  }catch(error){
+    console.error("leave room error", error);
+  }
+
+  leaveCurrentMatch();
+}
 
 function leaveCurrentMatch(){
 
@@ -5171,6 +5572,9 @@ function leaveCurrentMatch(){
   lastCleanupCheck =
     0;
 
+  lastRegenTick =
+    0;
+
 
   gameUI.style.display =
     "none";
@@ -5183,6 +5587,15 @@ function leaveCurrentMatch(){
 
   preStart.style.display =
     "none";
+
+  protectionIndicator.style.opacity =
+    "0";
+
+  settingsModal.style.display =
+    "none";
+
+  settingsModalOpen =
+    false;
 
   statusEl.textContent =
     "";
@@ -5260,11 +5673,8 @@ function handleMouseMove(
     Math.abs(event.movementX) > 0 ||
     Math.abs(event.movementY) > 0
   ){
-
     markActivity();
-
   }
-
 
   cameraState.yaw -=
     event.movementX *
@@ -5323,47 +5733,32 @@ function setupDesktopInput(){
         event.code ===
         "KeyW"
       ){
-
         keys.w = true;
-
         markActivity();
-
       }
-
 
       if(
         event.code ===
         "KeyA"
       ){
-
         keys.a = true;
-
         markActivity();
-
       }
-
 
       if(
         event.code ===
         "KeyS"
       ){
-
         keys.s = true;
-
         markActivity();
-
       }
-
 
       if(
         event.code ===
         "KeyD"
       ){
-
         keys.d = true;
-
         markActivity();
-
       }
 
 
@@ -5490,6 +5885,7 @@ function setupMobileInput(){
     mobileInput.x =
       dx / max;
 
+
     mobileInput.y =
       dy / max;
 
@@ -5503,11 +5899,6 @@ function setupMobileInput(){
   joystickZone.addEventListener(
     "pointerdown",
     event => {
-
-      event.preventDefault();
-
-      markActivity();
-
 
       joystickPointerId =
         event.pointerId;
@@ -5603,11 +5994,6 @@ function setupMobileInput(){
     "pointerdown",
     event => {
 
-      event.preventDefault();
-
-      markActivity();
-
-
       lookPointerId =
         event.pointerId;
 
@@ -5664,11 +6050,8 @@ function setupMobileInput(){
         dx !== 0 ||
         dy !== 0
       ){
-
         markActivity();
-
       }
-
 
       cameraState.yaw -=
         dx * .006;
@@ -5723,7 +6106,6 @@ function setupMobileInput(){
 
       event.preventDefault();
 
-
       fireHolding =
         true;
 
@@ -5741,7 +6123,6 @@ function setupMobileInput(){
     event => {
 
       event.preventDefault();
-
 
       fireHolding =
         false;
@@ -5772,7 +6153,6 @@ function setupMobileInput(){
     event => {
 
       event.preventDefault();
-
 
       if(
         !grounded &&
@@ -5815,7 +6195,6 @@ function setupStartButton(){
 
       markActivity();
 
-
       startHolding =
         true;
 
@@ -5830,10 +6209,8 @@ function setupStartButton(){
 
       event.preventDefault();
 
-
       startHolding =
         false;
-
 
       startButton.style.setProperty(
         "--progress",
@@ -5916,7 +6293,9 @@ function gameLoop(
 
   updateStartProgress();
 
+
   updateFireUI();
+  updateProtectionIndicator();
 
 
   if(
@@ -5948,6 +6327,9 @@ function gameLoop(
       time
     );
 
+    regenerateLocalPlayer();
+    updateProtectionIndicator();
+
 
     syncLocalPlayer();
 
@@ -5974,6 +6356,125 @@ function gameLoop(
 
 }
 
+
+async function regenerateLocalPlayer(){
+
+  if(
+    !matchRef ||
+    !localPlayer ||
+    !localPlayer.alive ||
+    !matchHasStarted ||
+    gameEnded
+  ){
+    return;
+  }
+
+  const settings =
+    normalizeSettings(currentSettings);
+
+  const rate =
+    getRegenRate();
+
+  if(rate <= 0){
+    return;
+  }
+
+  const now =
+    performance.now();
+
+  if(
+    now - lastRegenTick < 250
+  ){
+    return;
+  }
+
+  const elapsed =
+    lastRegenTick > 0
+      ? Math.min(.5, (now - lastRegenTick) / 1000)
+      : .25;
+
+  lastRegenTick = now;
+
+  if(
+    Date.now() -
+    Number(localPlayer.lastDamageAt || 0) <
+    settings.regenLock * 1000
+  ){
+    return;
+  }
+
+  try{
+    await runTransaction(
+      db,
+      async transaction => {
+
+        const snap =
+          await transaction.get(matchRef);
+
+        if(!snap.exists()) return;
+
+        const data =
+          snap.data();
+
+        if(data.status !== "active") return;
+
+        const players =
+          { ...(data.players || {}) };
+
+        const player =
+          players[currentUser.uid];
+
+        if(
+          !player ||
+          !player.alive
+        ){
+          return;
+        }
+
+        const latestSettings =
+          normalizeSettings(data.settings);
+
+        const latestRate =
+          getRegenRateFromSettings(latestSettings);
+
+        if(latestRate <= 0) return;
+
+        if(
+          Date.now() -
+          Number(player.lastDamageAt || 0) <
+          latestSettings.regenLock * 1000
+        ){
+          return;
+        }
+
+        const maxHp =
+          latestSettings.maxHp;
+
+        player.hp =
+          Math.min(
+            maxHp,
+            Number(player.hp || 0) + latestRate * elapsed
+          );
+
+        players[currentUser.uid] = player;
+
+        transaction.update(
+          matchRef,
+          { players }
+        );
+      }
+    );
+  }catch(error){
+    console.error("regen error", error);
+  }
+}
+
+function getRegenRateFromSettings(settings){
+  if(settings.hpRegen === "fast") return 3;
+  if(settings.hpRegen === "medium") return 1.5;
+  if(settings.hpRegen === "slow") return .6;
+  return 0;
+}
 
 async function syncLocalPlayer(){
 
@@ -6038,17 +6539,7 @@ async function syncLocalPlayer(){
           pitch:
             cameraState.pitch,
 
-          hp:
-            localPlayer.hp,
-
-          kills:
-            localKills,
-
-          alive:
-            localPlayer.alive,
-
           lastActiveAt:
-            localPlayer.lastActiveAt ||
             lastActivityAt
 
         }
@@ -6073,6 +6564,59 @@ matchButton.addEventListener(
   "click",
   handleMatchButton
 );
+
+shareCodeButton.addEventListener(
+  "click",
+  shareMatchCode
+);
+
+leaveRoomButton.addEventListener(
+  "click",
+  leaveRoom
+);
+
+settingsButton.addEventListener(
+  "click",
+  openSettings
+);
+
+closeSettingsButton.addEventListener(
+  "click",
+  closeSettings
+);
+
+saveSettingsButton.addEventListener(
+  "click",
+  saveSettings
+);
+
+settingsModal.addEventListener(
+  "pointerdown",
+  event => {
+    if(event.target === settingsModal){
+      closeSettings();
+    }
+  }
+);
+
+document
+  .querySelectorAll(".settingOptions")
+  .forEach(group => {
+    group
+      .querySelectorAll(".settingOption")
+      .forEach(button => {
+        button.addEventListener("click", () => {
+          if(group.parentElement.classList.contains("disabled")) return;
+          group
+            .querySelectorAll(".settingOption")
+            .forEach(item => item.classList.remove("selected"));
+          button.classList.add("selected");
+          const draft = readSettingsUI();
+          terrainHeightRow.classList.toggle("disabled", draft.terrainAmount === "none");
+          regenLockRow.classList.toggle("disabled", draft.hpRegen === "none");
+        });
+      });
+  });
 
 
 returnButton.addEventListener(
