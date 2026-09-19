@@ -1,4 +1,6167 @@
-<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover"><title>Firebase 3D FPS</title><style>*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;}html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000;font-family:Arial,Helvetica,sans-serif;}body{touch-action:none;}canvas{display:block;}#menu{position:fixed;inset:0;z-index:100;display:flex;justify-content:center;align-items:center;background:radial-gradient(circle at 50% 30%,#26384f 0%,#111822 40%,#05070a 100%);color:white;}.menuBox{width:min(92vw,480px);padding:28px;border-radius:22px;background:rgba(15,20,28,.88);border:1px solid rgba(255,255,255,.12);box-shadow:0 20px 80px rgba(0,0,0,.45);backdrop-filter:blur(18px);}.title{margin:0 0 8px;font-size:34px;font-weight:800;text-align:center;}.subtitle{text-align:center;opacity:.72;margin-bottom:24px;}.input{width:100%;height:48px;padding:0 16px;border:1px solid rgba(255,255,255,.14);border-radius:12px;background:rgba(255,255,255,.07);color:#fff;font-size:18px;outline:none;text-transform:uppercase;margin-bottom:12px;}.button{width:100%;height:48px;border:0;border-radius:12px;color:#fff;background:#1976ff;font-size:17px;font-weight:700;margin-top:8px;cursor:pointer;pointer-events:auto;touch-action:manipulation;}.button.secondary{background:#2a3039;}.button:active{transform:scale(.98);}.info{margin-top:18px;font-size:13px;line-height:1.6;color:#c5ccd5;}#status{min-height:22px;margin-top:12px;text-align:center;color:#ffce66;font-size:14px;}#gameUI{position:fixed;inset:0;z-index:20;pointer-events:none;display:none;color:#fff;}#topBar{position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}#healthBox,#matchBox{padding:9px 12px;border-radius:12px;background:rgba(0,0,0,.45);backdrop-filter:blur(8px);font-size:14px;}#health{margin-top:5px;width:170px;height:10px;overflow:hidden;border-radius:99px;background:#252525;}#healthBar{width:100%;height:100%;background:#48e27d;transition:width .15s;}#crosshair{position:absolute;left:50%;top:50%;width:18px;height:18px;margin-left:-9px;margin-top:-9px;}#crosshair::before,#crosshair::after{content:"";position:absolute;background:#fff;box-shadow:0 0 3px #000;}#crosshair::before{width:2px;height:18px;left:8px;top:0;}#crosshair::after{width:18px;height:2px;left:0;top:8px;}#killMessage{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);font-size:28px;font-weight:900;text-shadow:0 3px 15px #000;opacity:0;transition:opacity .15s;}#scoreBoard{position:absolute;right:12px;top:70px;min-width:150px;max-width:220px;padding:10px;border-radius:12px;background:rgba(0,0,0,.45);backdrop-filter:blur(8px);font-size:12px;}.scoreRow{display:flex;justify-content:space-between;gap:10px;margin:3px 0;}.scoreAlive{color:#6dff8f;}.scoreDead{color:#ff7070;}#preStart{position:absolute;left:50%;top:58%;transform:translate(-50%,-50%);display:none;pointer-events:auto;text-align:center;}#preStartText{margin-bottom:12px;font-weight:800;font-size:16px;}#preStartActions{display:flex;justify-content:center;flex-wrap:wrap;gap:7px;margin-top:12px;}.preStartAction{min-width:108px;height:38px;padding:0 12px;border:1px solid rgba(255,255,255,.18);border-radius:10px;background:rgba(255,255,255,.09);color:#fff;font-size:13px;font-weight:700;cursor:pointer;touch-action:manipulation;pointer-events:auto;}.preStartAction:active{transform:scale(.97);}.preStartAction.danger{background:rgba(220,55,55,.22);}#settingsPanel{display:none;position:absolute;left:50%;top:calc(100% + 12px);transform:translateX(-50%);width:min(88vw,430px);max-height:55vh;overflow:auto;padding:16px;border-radius:16px;background:rgba(12,17,23,.96);border:1px solid rgba(255,255,255,.14);box-shadow:0 18px 50px rgba(0,0,0,.5);text-align:left;}#settingsPanel.open{display:block;}.settingsTitle{text-align:center;font-size:18px;font-weight:900;margin-bottom:10px;}.settingRow{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;font-size:13px;color:#fff;}.settingRow.disabled{opacity:.28;}.settingRow select,.settingRow input{width:150px;height:36px;border:1px solid rgba(255,255,255,.16);border-radius:9px;background:#202730;color:#fff;padding:0 9px;font-size:14px;outline:none;}.settingRow input{text-align:right;}.settingsButtons{display:flex;gap:8px;margin-top:10px;}.settingsButtons .button{margin-top:0;}#settingsNote{min-height:18px;margin-top:5px;text-align:center;color:#ffce66;font-size:11px;}#startButton::before,#startButton::after{pointer-events:none;}#startButton{display:block;margin:0 auto;pointer-events:auto;touch-action:manipulation;-webkit-touch-callout:none;}#invincibleIndicator{position:absolute;left:50%;top:calc(50% + 30px);transform:translateX(-50%);padding:5px 10px;border-radius:999px;background:rgba(70,160,255,.28);border:1px solid rgba(150,210,255,.5);color:#dff3ff;font-size:13px;font-weight:900;text-shadow:0 1px 4px #000;opacity:0;transition:opacity .12s;}#startButton{position:relative;width:105px;height:105px;border-radius:50%;border:2px solid rgba(255,255,255,.35);background:rgba(0,0,0,.42);color:#fff;font-size:18px;font-weight:900;overflow:hidden;}#startButton::before{content:"";position:absolute;inset:5px;border-radius:50%;background:conic-gradient( #36a3ff var(--progress,0%),rgba(255,255,255,.10) var(--progress,0%) );z-index:0;}#startButton::after{content:"";position:absolute;inset:13px;border-radius:50%;background:rgba(12,17,23,.94);z-index:1;}#startButton span{position:relative;z-index:2;}#gameOver{position:fixed;inset:0;z-index:50;display:none;justify-content:center;align-items:center;background:rgba(0,0,0,.68);backdrop-filter:blur(10px);color:white;}.gameOverBox{width:min(88vw,430px);padding:28px;border-radius:22px;text-align:center;background:rgba(18,22,29,.94);}.gameOverTitle{font-size:38px;font-weight:900;margin-bottom:8px;}.gameOverText{font-size:18px;opacity:.85;margin-bottom:20px;}#mobileControls{display:none;position:absolute;inset:0;pointer-events:none;}#joystickZone{position:absolute;left:18px;bottom:20px;width:150px;height:150px;border-radius:50%;pointer-events:auto;}#joystickBase{position:absolute;left:50%;top:50%;width:118px;height:118px;margin-left:-59px;margin-top:-59px;border-radius:50%;border:2px solid rgba(255,255,255,.23);background:rgba(255,255,255,.06);}#joystickKnob{position:absolute;left:50%;top:50%;width:54px;height:54px;margin-left:-27px;margin-top:-27px;border-radius:50%;border:2px solid rgba(255,255,255,.35);background:rgba(255,255,255,.16);}#lookZone{position:absolute;right:0;top:0;width:55%;height:70%;pointer-events:auto;}.mobileButton{position:absolute;border:1px solid rgba(255,255,255,.25);background:rgba(20,20,20,.45);color:#fff;border-radius:50%;backdrop-filter:blur(8px);pointer-events:auto;font-weight:800;display:flex;justify-content:center;align-items:center;}#fireButton{width:88px;height:88px;right:24px;bottom:32px;background:rgba(220,50,50,.28);overflow:hidden;}#fireButton::before{content:"";position:absolute;inset:4px;border-radius:50%;background:conic-gradient( rgba(255,80,80,.9) var(--fireProgress,100%),rgba(255,255,255,.08) var(--fireProgress,100%) );z-index:0;}#fireButton::after{content:"";position:absolute;inset:12px;border-radius:50%;background:rgba(25,20,20,.9);z-index:1;}#fireButton span{position:relative;z-index:2;}#jumpButton{width:64px;height:64px;right:125px;bottom:44px;transition:opacity .12s,background .12s;}#jumpButton.grabInactive{opacity:.28;background:rgba(20,20,20,.25);}#jumpButton.grabActive{opacity:1;background:rgba(35,130,255,.55);}#grabButton{display:none !important;}#desktopHint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);padding:7px 11px;border-radius:8px;background:rgba(0,0,0,.38);font-size:12px;opacity:.65;}.hidden{display:none !important;}@media (pointer:coarse){#mobileControls{display:block;}#desktopHint{display:none;}}</style></head><body><div id="menu"><div class="menuBox"><h1 class="title">3D FPS</h1><div class="subtitle"> v1.0.0 </div><input id="matchCodeInput" class="input" maxlength="8" placeholder="試合コード" autocomplete="off" spellcheck="false" ><button id="matchButton" class="button" > 試合を作成/参加 </button><div id="status"></div><div class="info"> PC：WASDで移動、マウスで視点、クリックで射撃、Spaceでジャンプ<br> スマホ：左スティックで移動、右側スワイプで視点、FIRE・JUMP・GRAB </div></div></div><div id="gameUI"><div id="topBar"><div id="healthBox"><div id="healthText"> HP 100 </div><div id="health"><div id="healthBar"></div></div></div><div id="matchBox"><div> ROOM: <span id="roomText">----</span></div><div> PLAYER: <span id="playerCountText">0</span></div><div> KILLS: <span id="killsText">0</span></div></div></div><div id="scoreBoard"></div><div id="crosshair"></div><div id="invincibleIndicator"> 🛡️ 無敵 </div><div id="killMessage"></div><div id="preStart"><div id="preStartText"> 部屋主がSTARTを長押しして開始 </div><button id="startButton" type="button"><span>START</span></button><div id="preStartActions"><button id="shareCodeButton" class="preStartAction" type="button"> コードを共有 </button><button id="settingsButton" class="preStartAction" type="button"> 設定 </button><button id="leaveRoomButton" class="preStartAction danger" type="button"> 部屋から退出 </button></div><div id="settingsPanel"><div class="settingsTitle">設定</div><label class="settingRow"><span>地形の量</span><select id="terrainAmountSelect"><option value="many">多</option><option value="medium" selected>⭐︎中</option><option value="few">少</option><option value="none">なし</option></select></label><label class="settingRow terrainDependent"><span>地形の高低差</span><select id="terrainHeightSelect"><option value="high">高</option><option value="medium" selected>⭐︎中</option><option value="low">低</option></select></label><label class="settingRow"><span>弾速</span><select id="bulletSpeedSelect"><option value="infinite">∞</option><option value="fast">速</option><option value="medium" selected>⭐︎中</option><option value="slow">遅</option></select></label><label class="settingRow"><span>HP最大値</span><input id="maxHpInput" type="number" min="1" max="9999" step="1" value="100" inputmode="numeric"></label><label class="settingRow regenDependent"><span>HP自然回復</span><select id="hpRegenSelect"><option value="fast">速</option><option value="medium">中</option><option value="slow">遅</option><option value="none" selected>⭐︎なし</option></select></label><label class="settingRow regenDependent"><span>ダメージからの自然回復ロック</span><input id="regenLockInput" type="number" min="0" max="60000" step="100" value="0" inputmode="numeric"></label><div id="settingsNote"></div><div class="settingsButtons"><button id="settingsApplyButton" class="button" type="button">適用</button><button id="settingsCloseButton" class="button secondary" type="button">閉じる</button></div></div></div><div id="desktopHint"> WASD / Mouse / Click / Space </div><div id="mobileControls"><div id="joystickZone"><div id="joystickBase"><div id="joystickKnob"></div></div></div><div id="lookZone"></div><div id="jumpButton" class="mobileButton" > JUMP </div><div id="fireButton" class="mobileButton" ><span>FIRE</span></div></div></div><div id="gameOver"><div class="gameOverBox"><div id="gameOverTitle" class="gameOverTitle" > 試合終了 </div><div id="gameOverText" class="gameOverText" > --- </div><button id="returnButton" class="button" > メニューへ戻る </button></div></div> <script type="module">import{initializeApp}from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";import{getAuth,signInAnonymously,onAuthStateChanged}from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";import{getFirestore,doc,setDoc,getDoc,updateDoc,deleteDoc,onSnapshot,runTransaction,serverTimestamp}from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";import*as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";const firebaseConfig={apiKey:"AIzaSyD5cTt3b1IeiGIOgJcC0sSFgO-Ce78JyIw",authDomain:"dfps-4aa92.firebaseapp.com",projectId:"dfps-4aa92",storageBucket:"dfps-4aa92.firebasestorage.app",messagingSenderId:"379021412536",appId:"1:379021412536:web:003efdb33f6d6bb77d8c4d",measurementId:"G-BG2KFTL9ZC"};const app=initializeApp(firebaseConfig);const auth=getAuth(app);const db=getFirestore(app);let currentUser=null;let currentMatchId=null;let matchRef=null;let unsubscribeMatch=null;let isHost=false;let gameStarted=false;let gameEnded=false;let matchHasStarted=false;let localPlayer=null;let localKills=0;let lastNetworkUpdate=0;let lastFrameTime=performance.now();let gameLoopStarted=false;let startHoldStart=null;let startHolding=false;let fireHolding=false;let grabHolding=false;let grabAnimation=null;let spawnProtectionUntil=0;let fireCooldownEnd=0;let lastActivityAt=Date.now();let lastCleanupCheck=0;let currentSettings;let lastSettingsKey="";let lastRegenTime=0;let settingsOpen=false;let bulletIdCounter=0;const START_HOLD_TIME=1000;/*VERSION_TRACKING:GPT must update GAME_VERSION and the visible v1.0.0 on every game update. Increase the patch number for small fixes,the minor number for feature updates,and the major number for large incompatible changes.*/ const GAME_VERSION="1.0.0";const START_PROTECTION_TIME=3000;const FIRE_INTERVAL=320;const BULLET_SPEED=42;const BULLET_LIFETIME=2200;const DEFAULT_SETTINGS={terrainAmount:"medium",terrainHeight:"medium",bulletSpeed:"medium",maxHp:100,hpRegen:"none",regenLock:0};currentSettings={...DEFAULT_SETTINGS};const TERRAIN_SETTINGS={many:{count:20},medium:{count:10},few:{count:5},none:{count:0}};const TERRAIN_HEIGHT_SETTINGS={high:{min:1.0,max:4.8},medium:{min:0.6,max:3.2},low:{min:0.35,max:1.8}};const BULLET_SPEED_SETTINGS={infinite:Infinity,fast:70,medium:42,slow:22};const HP_REGEN_SETTINGS={fast:4,medium:2.5,slow:1.2,none:0};const BULLET_DAMAGE=34;const GRAB_DISTANCE=1.15;const GRAB_TIME=500;const INACTIVE_MATCH_TIME=60*1000;const MAX_MATCH_AGE=24*60*60*1000;const CLEANUP_INTERVAL=10000;const ARENA_SIZE=70;const PLAYER_HEIGHT=1.6;const MAX_HP=100;const keys={w:false,a:false,s:false,d:false};const mobileInput={x:0,y:0,firing:false};const cameraState={yaw:0,pitch:0};const physics={gravity:-25,jumpPower:9,moveSpeed:6};let velocityY=0;let grounded=true;let scene;let camera;let renderer;let raycaster;const colliders=[];const playerMeshes=new Map();const bullets=new Map();const menu=document.getElementById("menu");const gameUI=document.getElementById("gameUI");const gameOver=document.getElementById("gameOver");const statusEl=document.getElementById("status");const matchCodeInput=document.getElementById("matchCodeInput");const matchButton=document.getElementById("matchButton");const roomText=document.getElementById("roomText");const playerCountText=document.getElementById("playerCountText");const killsText=document.getElementById("killsText");const healthText=document.getElementById("healthText");const healthBar=document.getElementById("healthBar");const scoreBoard=document.getElementById("scoreBoard");const killMessage=document.getElementById("killMessage");const preStart=document.getElementById("preStart");const preStartText=document.getElementById("preStartText");const startButton=document.getElementById("startButton");const shareCodeButton=document.getElementById("shareCodeButton");const leaveRoomButton=document.getElementById("leaveRoomButton");const settingsButton=document.getElementById("settingsButton");const settingsPanel=document.getElementById("settingsPanel");const terrainAmountSelect=document.getElementById("terrainAmountSelect");const terrainHeightSelect=document.getElementById("terrainHeightSelect");const bulletSpeedSelect=document.getElementById("bulletSpeedSelect");const maxHpInput=document.getElementById("maxHpInput");const hpRegenSelect=document.getElementById("hpRegenSelect");const regenLockInput=document.getElementById("regenLockInput");const settingsApplyButton=document.getElementById("settingsApplyButton");const settingsCloseButton=document.getElementById("settingsCloseButton");const settingsNote=document.getElementById("settingsNote");const invincibleIndicator=document.getElementById("invincibleIndicator");const fireButton=document.getElementById("fireButton");const jumpButton=document.getElementById("jumpButton");const joystickZone=document.getElementById("joystickZone");const joystickKnob=document.getElementById("joystickKnob");const lookZone=document.getElementById("lookZone");const returnButton=document.getElementById("returnButton");function randomCode(length=6){const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let result="";for(let i=0;i<length;i++){result+=chars[Math.floor(Math.random()*chars.length)];}return result;}function randomSpawn(){const margin=7;return{x:Math.random()*(ARENA_SIZE-margin*2)-(ARENA_SIZE / 2-margin),y:PLAYER_HEIGHT,z:Math.random()*(ARENA_SIZE-margin*2)-(ARENA_SIZE / 2-margin)};}function playerColor(uid){let hash=0;for(let i=0;i<uid.length;i++){hash=((hash<<5)-hash)+uid.charCodeAt(i);hash |=0;}const hue=Math.abs(hash)%360;return new THREE.Color(`hsl(${hue},70%,58%)`);}function createPlayerMesh(uid){const group=new THREE.Group();const bodyGeometry=new THREE.CapsuleGeometry(.45,.8,6,12);const bodyMaterial=new THREE.MeshStandardMaterial({color:playerColor(uid),roughness:.8});const body=new THREE.Mesh(bodyGeometry,bodyMaterial);body.position.y=.8;group.add(body);const headGeometry=new THREE.SphereGeometry(.32,16,12);const headMaterial=new THREE.MeshStandardMaterial({color:0xe7c5a5});const head=new THREE.Mesh(headGeometry,headMaterial);head.position.y=1.55;group.add(head);const gunGeometry=new THREE.BoxGeometry(.12,.12,.75);const gunMaterial=new THREE.MeshStandardMaterial({color:0x202020,metalness:.8,roughness:.3});const gun=new THREE.Mesh(gunGeometry,gunMaterial);gun.position.set(.35,1.15,-.42);group.add(gun);group.userData.uid=uid;scene.add(group);return group;}function removeRemoteMesh(uid){const mesh=playerMeshes.get(uid);if(!mesh){return;}scene.remove(mesh);mesh.traverse(object=>{if(object.geometry){object.geometry.dispose();}if(object.material){if(Array.isArray(object.material)){object.material.forEach(material=>material.dispose());}else{object.material.dispose();}}});playerMeshes.delete(uid);}function setupScene(){scene=new THREE.Scene();scene.background=new THREE.Color(0x8eb3d9);scene.fog=new THREE.Fog(0x8eb3d9,55,140);camera=new THREE.PerspectiveCamera(75,window.innerWidth / window.innerHeight,.05,300);renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));renderer.setSize(window.innerWidth,window.innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;document.body.insertBefore(renderer.domElement,document.body.firstChild);raycaster=new THREE.Raycaster();const ambient=new THREE.HemisphereLight(0xffffff,0x3c4550,1.5);scene.add(ambient);const sun=new THREE.DirectionalLight(0xffffff,2.2);sun.position.set(20,40,15);sun.castShadow=true;sun.shadow.mapSize.width=2048;sun.shadow.mapSize.height=2048;scene.add(sun);createArena();window.addEventListener("resize",onResize);}function normalizeSettings(settings){const source=settings ||{};const terrainAmount=TERRAIN_SETTINGS[source.terrainAmount]?source.terrainAmount:DEFAULT_SETTINGS.terrainAmount;const terrainHeight=TERRAIN_HEIGHT_SETTINGS[source.terrainHeight]?source.terrainHeight:DEFAULT_SETTINGS.terrainHeight;const bulletSpeed=BULLET_SPEED_SETTINGS[source.bulletSpeed]!==undefined?source.bulletSpeed:DEFAULT_SETTINGS.bulletSpeed;let maxHp=Number(source.maxHp);if(!Number.isFinite(maxHp)){maxHp=DEFAULT_SETTINGS.maxHp;}maxHp=Math.round(clamp(maxHp,1,9999));const hpRegen=HP_REGEN_SETTINGS[source.hpRegen]!==undefined?source.hpRegen:DEFAULT_SETTINGS.hpRegen;let regenLock=Number(source.regenLock);if(!Number.isFinite(regenLock)){regenLock=DEFAULT_SETTINGS.regenLock;}regenLock=Math.round(clamp(regenLock,0,60000));return{terrainAmount,terrainHeight,bulletSpeed,maxHp,hpRegen,regenLock};}function settingsKey(settings){return JSON.stringify(normalizeSettings(settings));}function seededRandom(seed){let value=0;for(let i=0;i<seed.length;i++){value=(value*31+seed.charCodeAt(i))>>>0;}return function(){value=(value*1664525+1013904223)>>>0;return value / 4294967296;};}function clearArenaGeometry(){if(!scene){return;}for(const collider of colliders){scene.remove(collider);if(collider.geometry){collider.geometry.dispose();}if(collider.material){if(Array.isArray(collider.material)){collider.material.forEach(material=>material.dispose());}else{collider.material.dispose();}}}colliders.length=0;}function createArena(){clearArenaGeometry();const floorGeometry=new THREE.BoxGeometry(ARENA_SIZE,1,ARENA_SIZE);const floorMaterial=new THREE.MeshStandardMaterial({color:0x41474d,roughness:.92});const floor=new THREE.Mesh(floorGeometry,floorMaterial);floor.position.y=-.5;floor.receiveShadow=true;scene.add(floor);colliders.push(floor);const wallMaterial=new THREE.MeshStandardMaterial({color:0x252b31});createBox(ARENA_SIZE,6,1,0,3,-ARENA_SIZE / 2,wallMaterial);createBox(ARENA_SIZE,6,1,0,3,ARENA_SIZE / 2,wallMaterial);createBox(1,6,ARENA_SIZE,-ARENA_SIZE / 2,3,0,wallMaterial);createBox(1,6,ARENA_SIZE,ARENA_SIZE / 2,3,0,wallMaterial);if(currentSettings.terrainAmount==="none"){lastSettingsKey=settingsKey(currentSettings);return;}const obstacleMaterial=new THREE.MeshStandardMaterial({color:0x69727b,roughness:.7});const heightSettings=TERRAIN_HEIGHT_SETTINGS[currentSettings.terrainHeight];const fixedLayouts=[[8,1.5,8,-15,-10],[11,2,5,13,-8],[6,2.5,6,17,14],[10,1.5,5,-15,15],[5,2,12,0,17],[6,3.5,6,-15,-1],[7,4,7,4,-14],[7,4.5,7,16,2],[5,.9,5,-4,-5],[5,1.3,5,4,-5],[5,1.7,5,10,-5],[4,.7,4,-10,-18],[4,1.1,4,-4,-18],[4,1.5,4,2,-18],[4,1.9,4,8,-18]];const amount=TERRAIN_SETTINGS[currentSettings.terrainAmount];const fixedCount=Math.min(amount.count,fixedLayouts.length);const random=seededRandom(`${currentMatchId}|${settingsKey(currentSettings)}`);for(let i=0;i<fixedCount;i++){const layout=fixedLayouts[i];const width=layout[0];const depth=layout[2];const heightRatio=clamp(layout[1]/ 4.5,0,1);const height=Math.max(.35,heightSettings.min+(heightSettings.max-heightSettings.min)*heightRatio);createBox(width,height,depth,layout[3],height / 2,layout[4],obstacleMaterial);}const randomCount=amount.count-fixedCount;for(let i=0;i<randomCount;i++){const width=2.5+random()*2.5;const depth=2.5+random()*2.5;const height=heightSettings.min+random()*(heightSettings.max-heightSettings.min);const x=random()*42-21;const z=random()*42-21;createBox(width,height,depth,x,height / 2,z,obstacleMaterial);}lastSettingsKey=settingsKey(currentSettings);}function rebuildArenaForSettings(settings){const normalized=normalizeSettings(settings);const key=settingsKey(normalized);currentSettings=normalized;if(!scene){return;}if(key===lastSettingsKey){return;}createArena();}function createBox(width,height,depth,x,y,z,material){const geometry=new THREE.BoxGeometry(width,height,depth);const mesh=new THREE.Mesh(geometry,material);mesh.position.set(x,y,z);mesh.castShadow=true;mesh.receiveShadow=true;scene.add(mesh);colliders.push(mesh);return mesh;}function onResize(){if(!camera ||!renderer){return;}camera.aspect=window.innerWidth / window.innerHeight;camera.updateProjectionMatrix();renderer.setSize(window.innerWidth,window.innerHeight);}async function ensureAuth(){if(currentUser){return currentUser;}return new Promise((resolve,reject)=>{const unsubscribe=onAuthStateChanged(auth,async user=>{if(user){currentUser=user;unsubscribe();resolve(user);return;}try{await signInAnonymously(auth);}catch(error){unsubscribe();reject(error);}},error=>{unsubscribe();reject(error);});});}async function createMatch(requestedCode=""){statusEl.textContent="試合を作成中…";try{const user=await ensureAuth();let code=requestedCode .trim().toUpperCase();if(!code){for(let attempt=0;attempt<20;attempt++){const candidate=randomCode();const ref=doc(db,"matches",candidate);const existing=await getDoc(ref);if(!existing.exists()){code=candidate;break;}}}if(!code){throw new Error("試合コードを作成できませんでした。");}const spawn=randomSpawn();const player={uid:user.uid,name:"Player-"+user.uid.slice(-4),x:spawn.x,y:spawn.y,z:spawn.z,yaw:0,pitch:0,hp:DEFAULT_SETTINGS.maxHp,kills:0,alive:true,lastActiveAt:Date.now(),joinedAt:Date.now(),lastDamageAt:0};const ref=doc(db,"matches",code);await runTransaction(db,async transaction=>{const snap=await transaction.get(ref);if(snap.exists()){throw new Error("ALREADY_EXISTS");}transaction.set(ref,{hostUid:user.uid,status:"waiting",winnerUid:null,createdAt:serverTimestamp(),startedAt:null,settings:{...DEFAULT_SETTINGS},players:{[user.uid]:player}});});isHost=true;await startMatch(code);}catch(error){console.error(error);if(error?.message==="ALREADY_EXISTS"){await joinMatch(requestedCode);return;}statusEl.textContent="作成失敗："+getFriendlyError(error);}}async function joinMatch(codeOverride=""){const code=(codeOverride || matchCodeInput.value).trim().toUpperCase();if(!code){await createMatch("");return;}statusEl.textContent="試合を確認中…";try{const user=await ensureAuth();const ref=doc(db,"matches",code);const existing=await getDoc(ref);if(!existing.exists()){await createMatch(code);return;}await runTransaction(db,async transaction=>{const snap=await transaction.get(ref);if(!snap.exists()){throw new Error("NOT_FOUND");}const data=snap.data();if(data.status==="ended"){throw new Error("ENDED");}const players={...(data.players ||{})};if(players[user.uid]){return;}const count=Object.keys(players).length;if(count>=8){throw new Error("FULL");}const spawn=randomSpawn();players[user.uid]={uid:user.uid,name:"Player-"+user.uid.slice(-4),x:spawn.x,y:spawn.y,z:spawn.z,yaw:0,pitch:0,hp:DEFAULT_SETTINGS.maxHp,kills:0,alive:true,lastActiveAt:Date.now(),joinedAt:Date.now(),lastDamageAt:0};transaction.update(ref,{players});});isHost=false;await startMatch(code);}catch(error){console.error(error);const message=error?.message || "";if(message==="NOT_FOUND"){await createMatch(code);}else if(message==="FULL"){statusEl.textContent="その試合は満員だよ。";}else if(message==="ENDED"){statusEl.textContent="その試合はもう終了してるよ。";}else{statusEl.textContent="参加/作成失敗："+getFriendlyError(error);}}}async function handleMatchButton(){const code=matchCodeInput.value .trim().toUpperCase();if(code){await joinMatch(code);}else{await createMatch("");}}function getFriendlyError(error){if(!error){return"不明なエラー";}if(error.code==="permission-denied"){return"Firestoreの権限設定を確認して！";}if(error.code==="auth/operation-not-allowed"){return"Firebaseで匿名ログインを有効にして！";}return(error.message || String(error));}async function startMatch(code){currentMatchId=code;matchRef=doc(db,"matches",code);menu.style.display="none";gameUI.style.display="block";gameOver.style.display="none";roomText.textContent=code;if(!scene){setupScene();}gameEnded=false;gameStarted=true;matchHasStarted=false;velocityY=0;await loadLocalPlayer();if(unsubscribeMatch){unsubscribeMatch();unsubscribeMatch=null;}unsubscribeMatch=onSnapshot(matchRef,async snapshot=>{if(!snapshot.exists()){if(gameStarted){leaveCurrentMatch();}return;}const data=snapshot.data();const normalizedSettings=normalizeSettings(data.settings);if(settingsKey(normalizedSettings)!==lastSettingsKey){currentSettings=normalizedSettings;rebuildArenaForSettings(currentSettings);}checkMatchCleanup(data);const players=data.players ||{};const count=Object.keys(players).length;playerCountText.textContent=String(count);updateRemotePlayers(players);updateScoreboard(players);const me=players[currentUser.uid];if(me){localPlayer={...localPlayer,...me};localKills=me.kills || 0;updateLocalHUD();}const wasStarted=matchHasStarted;if(data.status==="active"){matchHasStarted=true;}if(data.status==="active" &&!wasStarted){const startedAt=data.startedAt;spawnProtectionUntil=Date.now()+START_PROTECTION_TIME;if(startedAt){const serverMillis=startedAt.toMillis?startedAt.toMillis():Date.now();spawnProtectionUntil=serverMillis+START_PROTECTION_TIME;}}updateStartUI(data);if(data.status==="ended" &&!gameEnded){const winner=data.winnerUid;const winnerName=winner && players[winner]&& players[winner].name?players[winner].name:"勝者";finishLocalGame(winner===currentUser.uid?"YOU WIN!":winnerName+" の勝利！");setTimeout(()=>{if(matchRef){deleteMatch();}},1200);}},error=>{console.error(error);if(gameStarted){finishLocalGame("通信エラーが発生しました。");}});if(!gameLoopStarted){gameLoopStarted=true;requestAnimationFrame(gameLoop);}}async function loadLocalPlayer(){const snap=await getDoc(matchRef);if(!snap.exists()){throw new Error("試合が見つかりません。");}const data=snap.data();currentSettings=normalizeSettings(data.settings);rebuildArenaForSettings(currentSettings);const player=data.players?.[currentUser.uid];if(!player){throw new Error("プレイヤーデータがありません。");}localPlayer={...player,lastActiveAt:Number(player.lastActiveAt || Date.now())};lastActivityAt=localPlayer.lastActiveAt;localKills=player.kills || 0;cameraState.yaw=Number(player.yaw || 0);cameraState.pitch=Number(player.pitch || 0);setCameraFromPlayer();updateLocalHUD();updateStartUI(data);}function updateStartUI(data){if(data.status!=="waiting"){preStart.style.display="none";closeSettingsPanel();return;}preStart.style.display="block";if(isHost){preStartText.textContent="部屋主がSTARTを1秒長押しして開始";startButton.style.opacity="1";settingsButton.disabled=false;settingsApplyButton.disabled=false;}else{preStartText.textContent="部屋主のSTART待ち";startButton.style.opacity=".35";settingsButton.disabled=false;settingsApplyButton.disabled=true;}syncSettingsUI(data.settings);}function setCameraFromPlayer(){if(!localPlayer){return;}camera.position.set(localPlayer.x,localPlayer.y+.45,localPlayer.z);camera.rotation.order="YXZ";camera.rotation.y=cameraState.yaw;camera.rotation.x=cameraState.pitch;}function updateRemotePlayers(players){const seen=new Set();for(const[uid,player]of Object.entries(players)){if(uid===currentUser.uid){continue;}seen.add(uid);let mesh=playerMeshes.get(uid);if(!mesh){mesh=createPlayerMesh(uid);playerMeshes.set(uid,mesh);}mesh.position.set(player.x,Math.max(0,player.y-PLAYER_HEIGHT),player.z);mesh.rotation.y=Number(player.yaw || 0);mesh.visible=Boolean(player.alive);}for(const uid of playerMeshes.keys()){if(!seen.has(uid)){removeRemoteMesh(uid);}}}function updateScoreboard(players){const entries=Object.entries(players).sort((a,b)=>{const aj=Number(a[1].joinedAt || 0);const bj=Number(b[1].joinedAt || 0);if(aj!==bj){return aj-bj;}return a[0].localeCompare(b[0]);});scoreBoard.innerHTML="";for(const[uid,player]of entries){const row=document.createElement("div");row.className="scoreRow";const name=document.createElement("span");name.textContent=uid===currentUser.uid?"YOU":player.name || uid.slice(-4);const state=document.createElement("span");state.textContent=player.alive?`${player.kills || 0}K`:"DEAD";state.className=player.alive?"scoreAlive":"scoreDead";row.appendChild(name);row.appendChild(state);scoreBoard.appendChild(row);}}function updateInvincibleIndicator(){const active=matchHasStarted && Date.now()<spawnProtectionUntil;invincibleIndicator.style.opacity=active?"1":"0";if(active){const remaining=Math.max(0,spawnProtectionUntil-Date.now());invincibleIndicator.textContent=`🛡️ 無敵 ${Math.ceil(remaining / 100)/ 10}s`;}}async function updateLocalRegen(){if(!matchRef ||!localPlayer ||!matchHasStarted || gameEnded ||!localPlayer.alive){return;}const rate=HP_REGEN_SETTINGS[currentSettings.hpRegen]|| 0;if(rate<=0){return;}const now=Date.now();if(now-lastRegenTime<250){return;}lastRegenTime=now;const maxHp=currentSettings.maxHp;const currentHp=Number(localPlayer.hp || 0);if(currentHp>=maxHp){return;}const lock=currentSettings.regenLock;const lastDamage=Number(localPlayer.lastDamageAt || 0);if(lastDamage>0 && now-lastDamage<lock){return;}const elapsed=250 / 1000;const nextHp=Math.min(maxHp,currentHp+rate*elapsed);if(nextHp<=currentHp){return;}localPlayer.hp=nextHp;updateLocalHUD();try{await runTransaction(db,async transaction=>{const snap=await transaction.get(matchRef);if(!snap.exists()){return;}const data=snap.data();if(data.status!=="active"){return;}const player=data.players?.[currentUser.uid];if(!player ||!player.alive){return;}const liveHp=Number(player.hp || 0);const liveLastDamage=Number(player.lastDamageAt || 0);if(liveLastDamage!==lastDamage){return;}if(Date.now()-liveLastDamage<currentSettings.regenLock){return;}const updatedHp=Math.min(currentSettings.maxHp,liveHp+rate*elapsed);transaction.update(matchRef,{[`players.${currentUser.uid}.hp`]:updatedHp});});}catch(error){console.error("regen error",error);}}function updateLocalHUD(){if(!localPlayer){return;}const hp=Math.max(0,Math.round(localPlayer.hp));healthText.textContent=`HP ${hp}`;const maxHp=Math.max(1,Number(currentSettings.maxHp || DEFAULT_SETTINGS.maxHp));healthBar.style.width=`${clamp(hp / maxHp*100,0,100)}%`;if(hp>60){healthBar.style.background="#48e27d";}else if(hp>30){healthBar.style.background="#ffd84d";}else{healthBar.style.background="#ff5959";}killsText.textContent=String(localKills);}function clamp(value,min,max){return Math.max(min,Math.min(max,value));}function markActivity(){lastActivityAt=Date.now();if(localPlayer){localPlayer.lastActiveAt=lastActivityAt;}}function getColliderBoxes(){return colliders .filter(collider=>collider && collider.geometry).map(collider=>new THREE.Box3().setFromObject(collider));}function horizontalOverlaps(box,x,z,radius=.38){return(x+radius>box.min.x && x-radius<box.max.x && z+radius>box.min.z && z-radius<box.max.z);}function isPositionFree(x,y,z){const radius=.38;if(x<-ARENA_SIZE / 2+radius || x>ARENA_SIZE / 2-radius || z<-ARENA_SIZE / 2+radius || z>ARENA_SIZE / 2-radius){return false;}const feetY=y-PLAYER_HEIGHT;const headY=y+.35;for(const collider of colliders){if(!collider ||!collider.geometry || collider===colliders[0]){continue;}const box=new THREE.Box3().setFromObject(collider);if(!horizontalOverlaps(box,x,z,radius)){continue;}if(box.max.y<=feetY+.06){continue;}if(box.min.y>=headY-.06){continue;}return false;}return true;}function getLandingTop(x,z,previousFeetY,nextFeetY){let bestTop=null;if(previousFeetY>=-.05 && nextFeetY<=.05){bestTop=0;}for(const collider of colliders){if(!collider ||!collider.geometry || collider===colliders[0]){continue;}const box=new THREE.Box3().setFromObject(collider);if(!horizontalOverlaps(box,x,z,.36)){continue;}const top=box.max.y;if(previousFeetY>=top-.08 && nextFeetY<=top+.08){if(bestTop===null || top>bestTop){bestTop=top;}}}return bestTop;}function getCeilingBottom(x,z,previousHeadY,nextHeadY){let bestBottom=null;for(const collider of colliders){if(!collider ||!collider.geometry || collider===colliders[0]){continue;}const box=new THREE.Box3().setFromObject(collider);if(!horizontalOverlaps(box,x,z,.36)){continue;}const bottom=box.min.y;if(previousHeadY<=bottom+.08 && nextHeadY>=bottom-.08){if(bestBottom===null || bottom<bestBottom){bestBottom=bottom;}}}return bestBottom;}function tryMove(dx,dz){if(!localPlayer ||!localPlayer.alive ||!matchHasStarted){return;}const nextX=localPlayer.x+dx;const nextZ=localPlayer.z+dz;if(isPositionFree(nextX,localPlayer.y,localPlayer.z)){localPlayer.x=nextX;}if(isPositionFree(localPlayer.x,localPlayer.y,nextZ)){localPlayer.z=nextZ;}}function updateMovement(delta){if(!localPlayer ||!localPlayer.alive ||!matchHasStarted || grabAnimation){return;}let inputX=0;let inputZ=0;if(keys.w)inputZ-=1;if(keys.s)inputZ+=1;if(keys.a)inputX-=1;if(keys.d)inputX+=1;inputX+=mobileInput.x;inputZ+=mobileInput.y;const length=Math.hypot(inputX,inputZ);if(length>1){inputX /=length;inputZ /=length;}const moving=Math.abs(inputX)>.01 || Math.abs(inputZ)>.01;if(moving){markActivity();const speed=physics.moveSpeed;const amount=speed*delta;const forwardX=-Math.sin(cameraState.yaw);const forwardZ=-Math.cos(cameraState.yaw);const rightX=Math.cos(cameraState.yaw);const rightZ=-Math.sin(cameraState.yaw);const moveX=(forwardX*-inputZ+rightX*inputX)*amount;const moveZ=(forwardZ*-inputZ+rightZ*inputX)*amount;tryMove(moveX,moveZ);}const previousFeetY=localPlayer.y-PLAYER_HEIGHT;const previousHeadY=localPlayer.y+.35;velocityY+=physics.gravity*delta;let nextY=localPlayer.y+velocityY*delta;const nextFeetY=nextY-PLAYER_HEIGHT;const nextHeadY=nextY+.35;if(velocityY<=0){const landingTop=getLandingTop(localPlayer.x,localPlayer.z,previousFeetY,nextFeetY);if(landingTop!==null){localPlayer.y=landingTop+PLAYER_HEIGHT;velocityY=0;grounded=true;}else{localPlayer.y=nextY;grounded=false;}}else{const ceilingBottom=getCeilingBottom(localPlayer.x,localPlayer.z,previousHeadY,nextHeadY);if(ceilingBottom!==null){localPlayer.y=ceilingBottom-.35;velocityY=0;}else{localPlayer.y=nextY;}grounded=false;}if(localPlayer.y<-10){localPlayer.y=PLAYER_HEIGHT;velocityY=0;grounded=true;}camera.position.set(localPlayer.x,localPlayer.y+.45,localPlayer.z);camera.rotation.order="YXZ";camera.rotation.y=cameraState.yaw;camera.rotation.x=cameraState.pitch;updateGrabUI();}function jump(){if(!localPlayer ||!localPlayer.alive ||!matchHasStarted){return;}if(!grounded){if(canGrab()){startGrab();}return;}markActivity();velocityY=physics.jumpPower;grounded=false;}function getGrabTarget(){if(!localPlayer || grounded){return null;}const playerX=localPlayer.x;const playerY=localPlayer.y;const playerZ=localPlayer.z;let best=null;let bestDistance=Infinity;const feetY=playerY-PLAYER_HEIGHT;const headY=playerY;for(const collider of colliders){if(collider===colliders[0]){continue;}const box=new THREE.Box3().setFromObject(collider);const insideX=playerX>=box.min.x-GRAB_DISTANCE && playerX<=box.max.x+GRAB_DISTANCE;const insideZ=playerZ>=box.min.z-GRAB_DISTANCE && playerZ<=box.max.z+GRAB_DISTANCE;if(!insideX ||!insideZ){continue;}const platformTop=box.max.y;if(platformTop<=feetY+.05){continue;}if(platformTop>=headY){continue;}const centerX=clamp(playerX,box.min.x,box.max.x);const centerZ=clamp(playerZ,box.min.z,box.max.z);const distance=Math.hypot(playerX-centerX,playerZ-centerZ);if(distance>GRAB_DISTANCE){continue;}if(distance<bestDistance){bestDistance=distance;best={box,top:platformTop,x:centerX,z:centerZ};}}return best;}function canGrab(){return Boolean(getGrabTarget());}function updateGrabUI(){if(!localPlayer ||!matchHasStarted){jumpButton.style.opacity="0";return;}jumpButton.style.opacity="";if(grounded){jumpButton.textContent="JUMP";jumpButton.classList.remove("grabInactive","grabActive");return;}jumpButton.textContent="GRAB";if(canGrab()){jumpButton.classList.remove("grabInactive");jumpButton.classList.add("grabActive");}else{jumpButton.classList.remove("grabActive");jumpButton.classList.add("grabInactive");}}function startGrab(){if(grabAnimation || grounded ||!localPlayer){return;}const target=getGrabTarget();if(!target){return;}markActivity();grabAnimation={start:performance.now(),target,startX:localPlayer.x,startY:localPlayer.y,startZ:localPlayer.z};velocityY=0;}function updateGrabAnimation(now){if(!grabAnimation){return;}const elapsed=now-grabAnimation.start;const progress=clamp(elapsed / GRAB_TIME,0,1);const smooth=progress*progress*(3-2*progress);const target=grabAnimation.target;localPlayer.x=grabAnimation.startX+(target.x-grabAnimation.startX)*smooth;localPlayer.z=grabAnimation.startZ+(target.z-grabAnimation.startZ)*smooth;localPlayer.y=target.top+PLAYER_HEIGHT+.02;camera.position.set(localPlayer.x,localPlayer.y+.45,localPlayer.z);if(progress>=1){grabAnimation=null;grounded=true;velocityY=0;updateGrabUI();}}function showKillMessage(text){killMessage.textContent=text;killMessage.style.opacity="1";setTimeout(()=>{killMessage.style.opacity="0";},900);}function createBullet(origin,direction,ownerUid){const geometry=new THREE.SphereGeometry(.09,8,8);const material=new THREE.MeshBasicMaterial({color:0xffe36e});const mesh=new THREE.Mesh(geometry,material);mesh.position.copy(origin);scene.add(mesh);const id=++bulletIdCounter;bullets.set(id,{mesh,direction:direction.clone().normalize(),ownerUid,created:performance.now(),lastPosition:origin.clone()});}function removeBullet(id){const bullet=bullets.get(id);if(!bullet){return;}scene.remove(bullet.mesh);bullet.mesh.geometry.dispose();bullet.mesh.material.dispose();bullets.delete(id);}function updateBullets(delta,now){for(const[id,bullet]of bullets){const previous=bullet.mesh.position.clone();if(!Number.isFinite(BULLET_SPEED_SETTINGS[currentSettings.bulletSpeed])){const ray=new THREE.Raycaster(previous,bullet.direction,0,1000);const targets=[];for(const[uid,mesh]of playerMeshes){if(uid===bullet.ownerUid ||!mesh.visible){continue;}targets.push(mesh);}const hits=ray.intersectObjects(targets,true);if(hits.length>0){const hitObject=hits[0].object;let hitUid=null;for(const[uid,mesh]of playerMeshes){if(mesh===hitObject || mesh.getObjectById(hitObject.id)|| hitObject.parent===mesh || hitObject.parent?.parent===mesh){hitUid=uid;break;}}if(hitUid && Date.now()>=spawnProtectionUntil){applyBulletDamage(hitUid,bullet.ownerUid);}removeBullet(id);continue;}}const bulletSpeed=BULLET_SPEED_SETTINGS[currentSettings.bulletSpeed];const distance=Number.isFinite(bulletSpeed)?bulletSpeed*delta:1000;bullet.mesh.position.add(bullet.direction .clone().multiplyScalar(distance));bullet.lastPosition=previous;if(now-bullet.created>BULLET_LIFETIME){removeBullet(id);continue;}const bulletLine=new THREE.Line3(previous,bullet.mesh.position);let hitSomething=false;for(const collider of colliders){const box=new THREE.Box3().setFromObject(collider);const closest=new THREE.Vector3();box.clampPoint(bullet.mesh.position,closest);if(closest.distanceTo(bullet.mesh.position)<.18){hitSomething=true;break;}}if(hitSomething){removeBullet(id);continue;}for(const[uid,mesh]of playerMeshes){if(uid===bullet.ownerUid ||!mesh.visible){continue;}const box=new THREE.Box3().setFromObject(mesh);if(box.distanceToPoint(bullet.mesh.position)<.15){hitSomething=true;if(Date.now()>=spawnProtectionUntil){applyBulletDamage(uid,bullet.ownerUid);}break;}}if(hitSomething){removeBullet(id);}}}async function applyBulletDamage(targetUid,shooterUid){if(!matchRef || gameEnded){return;}try{let wasKill=false;await runTransaction(db,async transaction=>{const snap=await transaction.get(matchRef);if(!snap.exists()){return;}const data=snap.data();if(data.status!=="active"){return;}const players={...(data.players ||{})};const shooter=players[shooterUid];const target=players[targetUid];if(!shooter ||!target){return;}if(!shooter.alive ||!target.alive){return;}if(Date.now()<Number(data.startedProtectionUntil || 0)){return;}target.hp=Math.max(0,Number(target.hp || 0)-BULLET_DAMAGE);target.lastDamageAt=Date.now();if(target.hp<=0){target.hp=0;target.alive=false;shooter.kills=Number(shooter.kills || 0)+1;wasKill=shooterUid===currentUser.uid;const alivePlayers=Object.values(players).filter(player=>player.alive);if(alivePlayers.length<=1){transaction.update(matchRef,{players,status:"ended",winnerUid:alivePlayers.length===1?alivePlayers[0].uid:null});return;}}transaction.update(matchRef,{players});});if(wasKill){localKills++;showKillMessage("ELIMINATED");}}catch(error){console.error("bullet damage error",error);}}function getFireProgress(){const now=performance.now();if(now>=fireCooldownEnd){return 100;}const remaining=fireCooldownEnd-now;return clamp(100-(remaining / FIRE_INTERVAL)*100,0,100);}function updateFireUI(){const progress=getFireProgress();fireButton.style.setProperty("--fireProgress",`${progress}%`);}function shoot(){if(!localPlayer ||!localPlayer.alive ||!matchHasStarted || gameEnded){return;}if(Date.now()<spawnProtectionUntil){markActivity();return;}markActivity();const now=performance.now();if(now<fireCooldownEnd){return;}fireCooldownEnd=now+FIRE_INTERVAL;raycaster.setFromCamera(new THREE.Vector2(0,0),camera);const origin=camera.position.clone();const direction=raycaster.ray.direction .clone().normalize();createBullet(origin,direction,currentUser.uid);updateFireUI();}function startMatchByHost(){if(!isHost ||!matchRef || matchHasStarted){return;}runTransaction(db,async transaction=>{const snap=await transaction.get(matchRef);if(!snap.exists()){return;}const data=snap.data();if(data.status!=="waiting"){return;}const players={...(data.players ||{})};for(const player of Object.values(players)){const spawn=randomSpawn();player.x=spawn.x;player.y=spawn.y;player.z=spawn.z;player.hp=currentSettings.maxHp;player.alive=true;player.kills=0;player.lastDamageAt=0;player.lastActiveAt=Date.now();}transaction.update(matchRef,{players,status:"active",winnerUid:null,startedAt:serverTimestamp(),startedProtectionUntil:Date.now()+START_PROTECTION_TIME});}).catch(error=>{console.error("start error",error);});}function updateStartProgress(){if(!startHolding ||!isHost || matchHasStarted){if(!startHolding){startButton.style.setProperty("--progress","0%");}return;}const elapsed=performance.now()-startHoldStart;const progress=clamp(elapsed / START_HOLD_TIME,0,1);startButton.style.setProperty("--progress",`${progress*100}%`);if(progress>=1){startHolding=false;startButton.style.setProperty("--progress","100%");startMatchByHost();}}async function checkMatchCleanup(data){if(!matchRef ||!data){return;}const now=Date.now();if(now-lastCleanupCheck<CLEANUP_INTERVAL){return;}lastCleanupCheck=now;let createdMillis=0;if(data.createdAt && typeof data.createdAt.toMillis==="function"){createdMillis=data.createdAt.toMillis();}else if(typeof data.createdAt==="number"){createdMillis=data.createdAt;}if(createdMillis>0 && now-createdMillis>=MAX_MATCH_AGE){try{await deleteDoc(matchRef);}catch(error){console.error("age cleanup error",error);}return;}const players=Object.values(data.players ||{});if(players.length===0){return;}const allInactive=players.every(player=>{const last=typeof player.lastActiveAt==="number"?player.lastActiveAt:0;return(last>0 && now-last>=INACTIVE_MATCH_TIME);});if(allInactive){try{await deleteDoc(matchRef);}catch(error){console.error("inactive cleanup error",error);}}}function finishLocalGame(text){if(gameEnded){return;}gameEnded=true;gameStarted=false;gameOverText.textContent=text;gameOver.style.display="flex";preStart.style.display="none";}async function deleteMatch(){if(!matchRef){return;}const ref=matchRef;try{await deleteDoc(ref);}catch(error){console.error("match delete error",error);}}function leaveCurrentMatch(){if(unsubscribeMatch){unsubscribeMatch();unsubscribeMatch=null;}for(const uid of playerMeshes.keys()){removeRemoteMesh(uid);}for(const id of bullets.keys()){removeBullet(id);}currentMatchId=null;matchRef=null;localPlayer=null;gameStarted=false;gameEnded=false;matchHasStarted=false;isHost=false;grabAnimation=null;spawnProtectionUntil=0;fireCooldownEnd=0;lastActivityAt=Date.now();lastCleanupCheck=0;currentSettings={...DEFAULT_SETTINGS};lastSettingsKey="";closeSettingsPanel();gameUI.style.display="none";gameOver.style.display="none";menu.style.display="flex";preStart.style.display="none";statusEl.textContent="";matchCodeInput.value="";}async function handleReturn(){const wasHost=isHost;const ref=matchRef;leaveCurrentMatch();if(wasHost && ref){try{await deleteDoc(ref);}catch(error){console.error(error);}}}function handleMouseMove(event){if(!gameStarted || gameEnded || matchMedia("(pointer:coarse)").matches){return;}if(document.pointerLockElement!==renderer.domElement){return;}if(Math.abs(event.movementX)>0 || Math.abs(event.movementY)>0){markActivity();}cameraState.yaw-=event.movementX*.0023;cameraState.pitch-=event.movementY*.0023;cameraState.pitch=clamp(cameraState.pitch,-1.45,1.45);}function requestPointerLock(){if(matchMedia("(pointer:coarse)").matches){return;}if(renderer && renderer.domElement .requestPointerLock){renderer.domElement .requestPointerLock();}}function setupDesktopInput(){window.addEventListener("keydown",event=>{if(event.code==="KeyW"){keys.w=true;markActivity();}if(event.code==="KeyA"){keys.a=true;markActivity();}if(event.code==="KeyS"){keys.s=true;markActivity();}if(event.code==="KeyD"){keys.d=true;markActivity();}if(event.code==="Space"){event.preventDefault();jump();}});window.addEventListener("keyup",event=>{if(event.code==="KeyW")keys.w=false;if(event.code==="KeyA")keys.a=false;if(event.code==="KeyS")keys.s=false;if(event.code==="KeyD")keys.d=false;});document.addEventListener("mousemove",handleMouseMove);}function setupMobileInput(){let joystickPointerId=null;function updateJoystick(clientX,clientY){const rect=joystickZone .getBoundingClientRect();const centerX=rect.left+rect.width / 2;const centerY=rect.top+rect.height / 2;let dx=clientX-centerX;let dy=clientY-centerY;const max=53;const distance=Math.hypot(dx,dy);if(distance>max){dx=dx / distance*max;dy=dy / distance*max;}mobileInput.x=dx / max;mobileInput.y=dy / max;joystickKnob.style.transform=`translate(${dx}px,${dy}px)`;}joystickZone.addEventListener("pointerdown",event=>{joystickPointerId=event.pointerId;joystickZone.setPointerCapture(event.pointerId);updateJoystick(event.clientX,event.clientY);});joystickZone.addEventListener("pointermove",event=>{if(event.pointerId===joystickPointerId){updateJoystick(event.clientX,event.clientY);}});const endJoystick=event=>{if(event.pointerId!==joystickPointerId){return;}joystickPointerId=null;mobileInput.x=0;mobileInput.y=0;joystickKnob.style.transform="translate(0,0)";};joystickZone.addEventListener("pointerup",endJoystick);joystickZone.addEventListener("pointercancel",endJoystick);let lookPointerId=null;let lastLookX=0;let lastLookY=0;lookZone.addEventListener("pointerdown",event=>{lookPointerId=event.pointerId;lastLookX=event.clientX;lastLookY=event.clientY;lookZone.setPointerCapture(event.pointerId);});lookZone.addEventListener("pointermove",event=>{if(event.pointerId!==lookPointerId){return;}const dx=event.clientX-lastLookX;const dy=event.clientY-lastLookY;lastLookX=event.clientX;lastLookY=event.clientY;if(dx!==0 || dy!==0){markActivity();}cameraState.yaw-=dx*.006;cameraState.pitch-=dy*.006;cameraState.pitch=clamp(cameraState.pitch,-1.45,1.45);});const endLook=event=>{if(event.pointerId===lookPointerId){lookPointerId=null;}};lookZone.addEventListener("pointerup",endLook);lookZone.addEventListener("pointercancel",endLook);fireButton.addEventListener("pointerdown",event=>{event.preventDefault();fireHolding=true;mobileInput.firing=true;shoot();});fireButton.addEventListener("pointerup",event=>{event.preventDefault();fireHolding=false;mobileInput.firing=false;});fireButton.addEventListener("pointercancel",()=>{fireHolding=false;mobileInput.firing=false;});jumpButton.addEventListener("pointerdown",event=>{event.preventDefault();if(!grounded && canGrab()){startGrab();}else if(grounded){jump();}});}function syncSettingsUI(settings){const normalized=normalizeSettings(settings);terrainAmountSelect.value=normalized.terrainAmount;terrainHeightSelect.value=normalized.terrainHeight;bulletSpeedSelect.value=normalized.bulletSpeed;maxHpInput.value=String(normalized.maxHp);hpRegenSelect.value=normalized.hpRegen;regenLockInput.value=String(normalized.regenLock);const terrainDisabled=normalized.terrainAmount==="none";terrainHeightSelect.disabled=terrainDisabled;terrainHeightSelect.parentElement .classList.toggle("disabled",terrainDisabled);const regenDisabled=normalized.hpRegen==="none";regenLockInput.disabled=regenDisabled;regenLockInput.parentElement .classList.toggle("disabled",regenDisabled);settingsApplyButton.disabled=!isHost;settingsNote.textContent=isHost?"":"設定の変更は部屋主のみできます。";}function openSettingsPanel(){settingsOpen=true;settingsPanel.classList.add("open");syncSettingsUI(currentSettings);}function closeSettingsPanel(){settingsOpen=false;settingsPanel.classList.remove("open");}async function applyRoomSettings(){if(!isHost ||!matchRef || matchHasStarted){return;}const next=normalizeSettings({terrainAmount:terrainAmountSelect.value,terrainHeight:terrainHeightSelect.value,bulletSpeed:bulletSpeedSelect.value,maxHp:maxHpInput.value,hpRegen:hpRegenSelect.value,regenLock:regenLockInput.value});try{await runTransaction(db,async transaction=>{const snap=await transaction.get(matchRef);if(!snap.exists()){return;}const data=snap.data();if(data.status!=="waiting"){return;}transaction.update(matchRef,{settings:next});});currentSettings=next;rebuildArenaForSettings(next);if(localPlayer){localPlayer.hp=Math.min(Number(localPlayer.hp || 0),next.maxHp);updateLocalHUD();}closeSettingsPanel();}catch(error){console.error("settings error",error);settingsNote.textContent="設定の変更に失敗しました。";}}function updateSettingsAvailability(){const terrainDisabled=terrainAmountSelect.value==="none";terrainHeightSelect.disabled=terrainDisabled;terrainHeightSelect.parentElement .classList.toggle("disabled",terrainDisabled);const regenDisabled=hpRegenSelect.value==="none";regenLockInput.disabled=regenDisabled;regenLockInput.parentElement .classList.toggle("disabled",regenDisabled);}async function shareMatchCode(){if(!currentMatchId){return;}const text=`試合コード:${currentMatchId}`;try{if(navigator.share){await navigator.share({text});return;}if(navigator.clipboard){await navigator.clipboard.writeText(text);statusEl.textContent="試合コードをコピーしたよ。";setTimeout(()=>{if(statusEl){statusEl.textContent="";}},1600);return;}throw new Error("share unavailable");}catch(error){if(error?.name==="AbortError"){return;}statusEl.textContent="コードの共有に失敗しました。";}}function setupSettingsUI(){settingsButton.addEventListener("click",event=>{event.preventDefault();event.stopPropagation();if(settingsOpen){closeSettingsPanel();}else{openSettingsPanel();}});settingsApplyButton.addEventListener("click",event=>{event.preventDefault();event.stopPropagation();applyRoomSettings();});settingsCloseButton.addEventListener("click",event=>{event.preventDefault();event.stopPropagation();closeSettingsPanel();});terrainAmountSelect.addEventListener("change",updateSettingsAvailability);hpRegenSelect.addEventListener("change",updateSettingsAvailability);shareCodeButton.addEventListener("click",event=>{event.preventDefault();shareMatchCode();});leaveRoomButton.addEventListener("click",event=>{event.preventDefault();handleReturn();});}function setupStartButton(){const startDown=event=>{event.preventDefault();if(!isHost || matchHasStarted){return;}markActivity();startHolding=true;startHoldStart=performance.now();};const startUp=event=>{event.preventDefault();startHolding=false;startButton.style.setProperty("--progress","0%");};startButton.addEventListener("pointerdown",startDown);startButton.addEventListener("pointerup",startUp);startButton.addEventListener("pointercancel",startUp);}function setupRendererInput(){if(!renderer){return;}renderer.domElement.addEventListener("mousedown",event=>{if(event.button===0){requestPointerLock();shoot();}});}function gameLoop(time){const delta=Math.min((time-lastFrameTime)/ 1000,.05);lastFrameTime=time;updateStartProgress();updateFireUI();updateInvincibleIndicator();if(gameStarted &&!gameEnded){updateMovement(delta);updateGrabAnimation(time);updateInvincibleIndicator();updateLocalRegen();if(mobileInput.firing){shoot();}updateBullets(delta,time);syncLocalPlayer();}if(renderer && scene && camera){renderer.render(scene,camera);}requestAnimationFrame(gameLoop);}async function syncLocalPlayer(){if(!matchRef ||!localPlayer || gameEnded){return;}const now=performance.now();if(now-lastNetworkUpdate<80){return;}lastNetworkUpdate=now;try{await updateDoc(matchRef,{[`players.${currentUser.uid}.uid`]:currentUser.uid,[`players.${currentUser.uid}.name`]:localPlayer.name,[`players.${currentUser.uid}.x`]:localPlayer.x,[`players.${currentUser.uid}.y`]:localPlayer.y,[`players.${currentUser.uid}.z`]:localPlayer.z,[`players.${currentUser.uid}.yaw`]:cameraState.yaw,[`players.${currentUser.uid}.pitch`]:cameraState.pitch,[`players.${currentUser.uid}.lastActiveAt`]:localPlayer.lastActiveAt || lastActivityAt,[`players.${currentUser.uid}.kills`]:localKills,[`players.${currentUser.uid}.alive`]:localPlayer.alive});}catch(error){console.error("sync error",error);}}setupSettingsUI();setupStartButton();matchButton.addEventListener("click",handleMatchButton);returnButton.addEventListener("click",handleReturn);matchCodeInput.addEventListener("input",()=>{matchCodeInput.value=matchCodeInput.value .replace(/[^A-Za-z0-9]/g,"").toUpperCase();});matchCodeInput.addEventListener("keydown",event=>{if(event.key==="Enter"){handleMatchButton();}});setupDesktopInput();setupMobileInput();window.addEventListener("beforeunload",()=>{if(isHost && matchRef){deleteDoc(matchRef).catch(()=>{});}});try{await ensureAuth();statusEl.textContent="接続準備OK";}catch(error){console.error(error);statusEl.textContent="Firebase接続失敗："+getFriendlyError(error);}</script>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<title>Firebase 3D FPS</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-touch-callout:none;
+}
+
+html,body{
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:#000;
+  font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+  touch-action:none;
+}
+
+canvas{
+  display:block;
+}
+
+#menu{
+  position:fixed;
+  inset:0;
+  z-index:100;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:
+    radial-gradient(circle at 50% 30%,#26384f 0%,#111822 40%,#05070a 100%);
+  color:white;
+}
+
+.menuBox{
+  width:min(92vw,480px);
+  padding:28px;
+  border-radius:22px;
+  background:rgba(15,20,28,.88);
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 20px 80px rgba(0,0,0,.45);
+  backdrop-filter:blur(18px);
+}
+
+.title{
+  margin:0 0 8px;
+  font-size:34px;
+  font-weight:800;
+  text-align:center;
+}
+
+.subtitle{
+  text-align:center;
+  opacity:.72;
+  margin-bottom:24px;
+}
+
+.input{
+  width:100%;
+  height:48px;
+  padding:0 16px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:12px;
+  background:rgba(255,255,255,.07);
+  color:#fff;
+  font-size:18px;
+  outline:none;
+  text-transform:uppercase;
+  margin-bottom:12px;
+}
+
+.button{
+  width:100%;
+  height:48px;
+  border:0;
+  border-radius:12px;
+  color:#fff;
+  background:#1976ff;
+  font-size:17px;
+  font-weight:700;
+  margin-top:8px;
+  cursor:pointer;
+}
+
+.button.secondary{
+  background:#2a3039;
+}
+
+.button:active{
+  transform:scale(.98);
+}
+
+.info{
+  margin-top:18px;
+  font-size:13px;
+  line-height:1.6;
+  color:#c5ccd5;
+}
+
+#status{
+  min-height:22px;
+  margin-top:12px;
+  text-align:center;
+  color:#ffce66;
+  font-size:14px;
+}
+
+#gameUI{
+  position:fixed;
+  inset:0;
+  z-index:20;
+  pointer-events:none;
+  display:none;
+  color:#fff;
+}
+
+#topBar{
+  position:absolute;
+  top:12px;
+  left:12px;
+  right:12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:8px;
+}
+
+#healthBox,#matchBox{
+  padding:9px 12px;
+  border-radius:12px;
+  background:rgba(0,0,0,.45);
+  backdrop-filter:blur(8px);
+  font-size:14px;
+}
+
+#health{
+  margin-top:5px;
+  width:170px;
+  height:10px;
+  overflow:hidden;
+  border-radius:99px;
+  background:#252525;
+}
+
+#healthBar{
+  width:100%;
+  height:100%;
+  background:#48e27d;
+  transition:width .15s;
+}
+
+#crosshair{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:18px;
+  height:18px;
+  margin-left:-9px;
+  margin-top:-9px;
+}
+
+#crosshair::before,
+#crosshair::after{
+  content:"";
+  position:absolute;
+  background:#fff;
+  box-shadow:0 0 3px #000;
+}
+
+#crosshair::before{
+  width:2px;
+  height:18px;
+  left:8px;
+  top:0;
+}
+
+#crosshair::after{
+  width:18px;
+  height:2px;
+  left:0;
+  top:8px;
+}
+
+#killMessage{
+  position:absolute;
+  left:50%;
+  top:42%;
+  transform:translate(-50%,-50%);
+  font-size:28px;
+  font-weight:900;
+  text-shadow:0 3px 15px #000;
+  opacity:0;
+  transition:opacity .15s;
+}
+
+#scoreBoard{
+  position:absolute;
+  right:12px;
+  top:70px;
+  min-width:150px;
+  max-width:220px;
+  padding:10px;
+  border-radius:12px;
+  background:rgba(0,0,0,.45);
+  backdrop-filter:blur(8px);
+  font-size:12px;
+}
+
+.scoreRow{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  margin:3px 0;
+}
+
+.scoreAlive{
+  color:#6dff8f;
+}
+
+.scoreDead{
+  color:#ff7070;
+}
+
+#preStart{
+  position:absolute;
+  left:50%;
+  top:58%;
+  transform:translate(-50%,-50%);
+  display:none;
+  pointer-events:auto;
+  text-align:center;
+}
+
+#preStartText{
+  margin-bottom:12px;
+  font-weight:800;
+  font-size:16px;
+}
+
+#startButton{
+  position:relative;
+  width:105px;
+  height:105px;
+  border-radius:50%;
+  border:2px solid rgba(255,255,255,.35);
+  background:rgba(0,0,0,.42);
+  color:#fff;
+  font-size:18px;
+  font-weight:900;
+  overflow:hidden;
+}
+
+#startButton::before{
+  content:"";
+  position:absolute;
+  inset:5px;
+  border-radius:50%;
+  background:
+    conic-gradient(
+      #36a3ff var(--progress,0%),
+      rgba(255,255,255,.10) var(--progress,0%)
+    );
+  z-index:0;
+}
+
+#startButton::after{
+  content:"";
+  position:absolute;
+  inset:13px;
+  border-radius:50%;
+  background:rgba(12,17,23,.94);
+  z-index:1;
+}
+
+#startButton span{
+  position:relative;
+  z-index:2;
+}
+
+#gameOver{
+  position:fixed;
+  inset:0;
+  z-index:50;
+  display:none;
+  justify-content:center;
+  align-items:center;
+  background:rgba(0,0,0,.68);
+  backdrop-filter:blur(10px);
+  color:white;
+}
+
+.gameOverBox{
+  width:min(88vw,430px);
+  padding:28px;
+  border-radius:22px;
+  text-align:center;
+  background:rgba(18,22,29,.94);
+}
+
+.gameOverTitle{
+  font-size:38px;
+  font-weight:900;
+  margin-bottom:8px;
+}
+
+.gameOverText{
+  font-size:18px;
+  opacity:.85;
+  margin-bottom:20px;
+}
+
+#mobileControls{
+  display:none;
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
+
+#joystickZone{
+  position:absolute;
+  left:18px;
+  bottom:20px;
+  width:150px;
+  height:150px;
+  border-radius:50%;
+  pointer-events:auto;
+}
+
+#joystickBase{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:118px;
+  height:118px;
+  margin-left:-59px;
+  margin-top:-59px;
+  border-radius:50%;
+  border:2px solid rgba(255,255,255,.23);
+  background:rgba(255,255,255,.06);
+}
+
+#joystickKnob{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:54px;
+  height:54px;
+  margin-left:-27px;
+  margin-top:-27px;
+  border-radius:50%;
+  border:2px solid rgba(255,255,255,.35);
+  background:rgba(255,255,255,.16);
+}
+
+#lookZone{
+  position:absolute;
+  right:0;
+  top:0;
+  width:55%;
+  height:70%;
+  pointer-events:auto;
+}
+
+.mobileButton{
+  position:absolute;
+  border:1px solid rgba(255,255,255,.25);
+  background:rgba(20,20,20,.45);
+  color:#fff;
+  border-radius:50%;
+  backdrop-filter:blur(8px);
+  pointer-events:auto;
+  font-weight:800;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+#fireButton{
+  width:88px;
+  height:88px;
+  right:24px;
+  bottom:32px;
+  background:rgba(220,50,50,.28);
+  overflow:hidden;
+}
+
+#fireButton::before{
+  content:"";
+  position:absolute;
+  inset:4px;
+  border-radius:50%;
+  background:
+    conic-gradient(
+      rgba(255,80,80,.9) var(--fireProgress,100%),
+      rgba(255,255,255,.08) var(--fireProgress,100%)
+    );
+  z-index:0;
+}
+
+#fireButton::after{
+  content:"";
+  position:absolute;
+  inset:12px;
+  border-radius:50%;
+  background:rgba(25,20,20,.9);
+  z-index:1;
+}
+
+#fireButton span{
+  position:relative;
+  z-index:2;
+}
+
+#jumpButton{
+  width:64px;
+  height:64px;
+  right:125px;
+  bottom:44px;
+  transition:
+    opacity .12s,
+    background .12s;
+}
+
+#jumpButton.grabInactive{
+  opacity:.28;
+  background:rgba(20,20,20,.25);
+}
+
+#jumpButton.grabActive{
+  opacity:1;
+  background:rgba(35,130,255,.55);
+}
+
+#grabButton{
+  display:none !important;
+}
+
+#desktopHint{
+  position:absolute;
+  bottom:14px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:7px 11px;
+  border-radius:8px;
+  background:rgba(0,0,0,.38);
+  font-size:12px;
+  opacity:.65;
+}
+
+.hidden{
+  display:none !important;
+}
+
+@media (pointer:coarse){
+
+  #mobileControls{
+    display:block;
+  }
+
+  #desktopHint{
+    display:none;
+  }
+
+}
+</style>
+</head>
+
+<body>
+
+<div id="menu">
+
+  <div class="menuBox">
+
+    <h1 class="title">3D FPS</h1>
+
+    <div class="subtitle">
+      Firebase Online Battle
+    </div>
+
+    <input
+      id="matchCodeInput"
+      class="input"
+      maxlength="8"
+      placeholder="試合コード"
+      autocomplete="off"
+      spellcheck="false"
+    >
+
+    <button
+      id="matchButton"
+      class="button"
+    >
+      試合を作成/参加
+    </button>
+
+    <div id="status"></div>
+
+    <div class="info">
+      PC：WASDで移動、マウスで視点、クリックで射撃、Spaceでジャンプ<br>
+      スマホ：左スティックで移動、右側スワイプで視点、FIRE・JUMP・GRAB
+    </div>
+
+  </div>
+
+</div>
+
+<div id="gameUI">
+
+  <div id="topBar">
+
+    <div id="healthBox">
+
+      <div id="healthText">
+        HP 100
+      </div>
+
+      <div id="health">
+        <div id="healthBar"></div>
+      </div>
+
+    </div>
+
+    <div id="matchBox">
+
+      <div>
+        ROOM:
+        <span id="roomText">----</span>
+      </div>
+
+      <div>
+        PLAYER:
+        <span id="playerCountText">0</span>
+      </div>
+
+      <div>
+        KILLS:
+        <span id="killsText">0</span>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div id="scoreBoard"></div>
+
+  <div id="crosshair"></div>
+
+  <div id="killMessage"></div>
+
+  <div id="preStart">
+
+    <div id="preStartText">
+      部屋主がSTARTを長押しして開始
+    </div>
+
+    <button id="startButton">
+      <span>START</span>
+    </button>
+
+  </div>
+
+  <div id="desktopHint">
+    WASD / Mouse / Click / Space
+  </div>
+
+  <div id="mobileControls">
+
+    <div id="joystickZone">
+
+      <div id="joystickBase">
+
+        <div id="joystickKnob"></div>
+
+      </div>
+
+    </div>
+
+    <div id="lookZone"></div>
+
+    <div
+      id="jumpButton"
+      class="mobileButton"
+    >
+      JUMP
+    </div>
+
+    <div
+      id="fireButton"
+      class="mobileButton"
+    >
+      <span>FIRE</span>
+    </div>
+
+  </div>
+
+</div>
+
+<div id="gameOver">
+
+  <div class="gameOverBox">
+
+    <div
+      id="gameOverTitle"
+      class="gameOverTitle"
+    >
+      試合終了
+    </div>
+
+    <div
+      id="gameOverText"
+      class="gameOverText"
+    >
+      ---
+    </div>
+
+    <button
+      id="returnButton"
+      class="button"
+    >
+      メニューへ戻る
+    </button>
+
+  </div>
+
+</div>
+
+<script type="module">
+
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+
+import {
+  getAuth,
+  signInAnonymously,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  updateDoc,
+  deleteDoc,
+  onSnapshot,
+  runTransaction,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
+import * as THREE from
+  "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
+
+
+const firebaseConfig = {
+
+  apiKey:
+    "AIzaSyD5cTt3b1IeiGIOgJcC0sSFgO-Ce78JyIw",
+
+  authDomain:
+    "dfps-4aa92.firebaseapp.com",
+
+  projectId:
+    "dfps-4aa92",
+
+  storageBucket:
+    "dfps-4aa92.firebasestorage.app",
+
+  messagingSenderId:
+    "379021412536",
+
+  appId:
+    "1:379021412536:web:003efdb33f6d6bb77d8c4d",
+
+  measurementId:
+    "G-BG2KFTL9ZC"
+
+};
+
+
+const app =
+  initializeApp(firebaseConfig);
+
+const auth =
+  getAuth(app);
+
+const db =
+  getFirestore(app);
+
+
+let currentUser = null;
+
+let currentMatchId = null;
+
+let matchRef = null;
+
+let unsubscribeMatch = null;
+
+let isHost = false;
+
+let gameStarted = false;
+
+let gameEnded = false;
+
+let matchHasStarted = false;
+
+let localPlayer = null;
+
+let localKills = 0;
+
+let lastNetworkUpdate = 0;
+
+let lastFrameTime =
+  performance.now();
+
+let gameLoopStarted = false;
+
+let startHoldStart = null;
+
+let startHolding = false;
+
+let fireHolding = false;
+
+let grabHolding = false;
+
+let grabAnimation = null;
+
+let spawnProtectionUntil = 0;
+
+let fireCooldownEnd = 0;
+
+let lastActivityAt = Date.now();
+
+let lastCleanupCheck = 0;
+
+let bulletIdCounter = 0;
+
+
+const START_HOLD_TIME = 1800;
+
+const START_PROTECTION_TIME = 3000;
+
+const FIRE_INTERVAL = 320;
+
+const BULLET_SPEED = 42;
+
+const BULLET_LIFETIME = 2200;
+
+const BULLET_DAMAGE = 34;
+
+const GRAB_DISTANCE = 1.15;
+
+const GRAB_TIME = 500;
+
+const INACTIVE_MATCH_TIME =
+  60 * 1000;
+
+const MAX_MATCH_AGE =
+  24 * 60 * 60 * 1000;
+
+const CLEANUP_INTERVAL =
+  10000;
+
+const ARENA_SIZE = 70;
+
+const PLAYER_HEIGHT = 1.6;
+
+const MAX_HP = 100;
+
+
+const keys = {
+
+  w:false,
+
+  a:false,
+
+  s:false,
+
+  d:false
+
+};
+
+
+const mobileInput = {
+
+  x:0,
+
+  y:0,
+
+  firing:false
+
+};
+
+
+const cameraState = {
+
+  yaw:0,
+
+  pitch:0
+
+};
+
+
+const physics = {
+
+  gravity:-25,
+
+  jumpPower:9,
+
+  moveSpeed:6
+
+};
+
+
+let velocityY = 0;
+
+let grounded = true;
+
+
+let scene;
+
+let camera;
+
+let renderer;
+
+let raycaster;
+
+
+const colliders = [];
+
+const playerMeshes =
+  new Map();
+
+const bullets =
+  new Map();
+
+
+const menu =
+  document.getElementById("menu");
+
+const gameUI =
+  document.getElementById("gameUI");
+
+const gameOver =
+  document.getElementById("gameOver");
+
+const statusEl =
+  document.getElementById("status");
+
+const matchCodeInput =
+  document.getElementById("matchCodeInput");
+
+const matchButton =
+  document.getElementById("matchButton");
+
+const roomText =
+  document.getElementById("roomText");
+
+const playerCountText =
+  document.getElementById("playerCountText");
+
+const killsText =
+  document.getElementById("killsText");
+
+const healthText =
+  document.getElementById("healthText");
+
+const healthBar =
+  document.getElementById("healthBar");
+
+const scoreBoard =
+  document.getElementById("scoreBoard");
+
+const killMessage =
+  document.getElementById("killMessage");
+
+const preStart =
+  document.getElementById("preStart");
+
+const preStartText =
+  document.getElementById("preStartText");
+
+const startButton =
+  document.getElementById("startButton");
+
+const fireButton =
+  document.getElementById("fireButton");
+
+const jumpButton =
+  document.getElementById("jumpButton");
+
+const joystickZone =
+  document.getElementById("joystickZone");
+
+const joystickKnob =
+  document.getElementById("joystickKnob");
+
+const lookZone =
+  document.getElementById("lookZone");
+
+const returnButton =
+  document.getElementById("returnButton");
+
+
+function randomCode(length = 6){
+
+  const chars =
+    "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+  let result = "";
+
+  for(
+    let i = 0;
+    i < length;
+    i++
+  ){
+
+    result +=
+      chars[
+        Math.floor(
+          Math.random() *
+          chars.length
+        )
+      ];
+
+  }
+
+  return result;
+
+}
+
+
+function randomSpawn(){
+
+  const margin = 7;
+
+  return {
+
+    x:
+      Math.random() *
+      (ARENA_SIZE - margin * 2) -
+      (ARENA_SIZE / 2 - margin),
+
+    y:
+      PLAYER_HEIGHT,
+
+    z:
+      Math.random() *
+      (ARENA_SIZE - margin * 2) -
+      (ARENA_SIZE / 2 - margin)
+
+  };
+
+}
+
+
+function playerColor(uid){
+
+  let hash = 0;
+
+  for(
+    let i = 0;
+    i < uid.length;
+    i++
+  ){
+
+    hash =
+      (
+        (hash << 5) -
+        hash
+      ) +
+      uid.charCodeAt(i);
+
+    hash |= 0;
+
+  }
+
+  const hue =
+    Math.abs(hash) % 360;
+
+  return new THREE.Color(
+    `hsl(${hue},70%,58%)`
+  );
+
+}
+
+
+function createPlayerMesh(uid){
+
+  const group =
+    new THREE.Group();
+
+  const bodyGeometry =
+    new THREE.CapsuleGeometry(
+      .45,
+      .8,
+      6,
+      12
+    );
+
+  const bodyMaterial =
+    new THREE.MeshStandardMaterial({
+
+      color:
+        playerColor(uid),
+
+      roughness:.8
+
+    });
+
+  const body =
+    new THREE.Mesh(
+      bodyGeometry,
+      bodyMaterial
+    );
+
+  body.position.y =
+    .8;
+
+  group.add(body);
+
+
+  const headGeometry =
+    new THREE.SphereGeometry(
+      .32,
+      16,
+      12
+    );
+
+  const headMaterial =
+    new THREE.MeshStandardMaterial({
+
+      color:
+        0xe7c5a5
+
+    });
+
+  const head =
+    new THREE.Mesh(
+      headGeometry,
+      headMaterial
+    );
+
+  head.position.y =
+    1.55;
+
+  group.add(head);
+
+
+  const gunGeometry =
+    new THREE.BoxGeometry(
+      .12,
+      .12,
+      .75
+    );
+
+  const gunMaterial =
+    new THREE.MeshStandardMaterial({
+
+      color:
+        0x202020,
+
+      metalness:.8,
+
+      roughness:.3
+
+    });
+
+  const gun =
+    new THREE.Mesh(
+      gunGeometry,
+      gunMaterial
+    );
+
+  gun.position.set(
+    .35,
+    1.15,
+    -.42
+  );
+
+  group.add(gun);
+
+
+  group.userData.uid =
+    uid;
+
+  scene.add(group);
+
+  return group;
+
+}
+
+
+function removeRemoteMesh(uid){
+
+  const mesh =
+    playerMeshes.get(uid);
+
+  if(!mesh){
+    return;
+  }
+
+  scene.remove(mesh);
+
+  mesh.traverse(
+    object => {
+
+      if(object.geometry){
+
+        object.geometry.dispose();
+
+      }
+
+      if(object.material){
+
+        if(
+          Array.isArray(
+            object.material
+          )
+        ){
+
+          object.material.forEach(
+            material =>
+              material.dispose()
+          );
+
+        }else{
+
+          object.material.dispose();
+
+        }
+
+      }
+
+    }
+  );
+
+  playerMeshes.delete(uid);
+
+}
+
+
+function setupScene(){
+
+  scene =
+    new THREE.Scene();
+
+  scene.background =
+    new THREE.Color(
+      0x8eb3d9
+    );
+
+  scene.fog =
+    new THREE.Fog(
+      0x8eb3d9,
+      55,
+      140
+    );
+
+
+  camera =
+    new THREE.PerspectiveCamera(
+      75,
+      window.innerWidth /
+      window.innerHeight,
+      .05,
+      300
+    );
+
+
+  renderer =
+    new THREE.WebGLRenderer({
+
+      antialias:true,
+
+      powerPreference:
+        "high-performance"
+
+    });
+
+
+  renderer.setPixelRatio(
+    Math.min(
+      window.devicePixelRatio,
+      2
+    )
+  );
+
+  renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+  );
+
+  renderer.shadowMap.enabled =
+    true;
+
+  renderer.shadowMap.type =
+    THREE.PCFSoftShadowMap;
+
+
+  document.body.insertBefore(
+    renderer.domElement,
+    document.body.firstChild
+  );
+
+
+  raycaster =
+    new THREE.Raycaster();
+
+
+  const ambient =
+    new THREE.HemisphereLight(
+      0xffffff,
+      0x3c4550,
+      1.5
+    );
+
+  scene.add(ambient);
+
+
+  const sun =
+    new THREE.DirectionalLight(
+      0xffffff,
+      2.2
+    );
+
+  sun.position.set(
+    20,
+    40,
+    15
+  );
+
+  sun.castShadow =
+    true;
+
+  sun.shadow.mapSize.width =
+    2048;
+
+  sun.shadow.mapSize.height =
+    2048;
+
+  scene.add(sun);
+
+
+  createArena();
+
+
+  window.addEventListener(
+    "resize",
+    onResize
+  );
+
+}
+
+
+function createArena(){
+
+  const floorGeometry =
+    new THREE.BoxGeometry(
+      ARENA_SIZE,
+      1,
+      ARENA_SIZE
+    );
+
+  const floorMaterial =
+    new THREE.MeshStandardMaterial({
+
+      color:
+        0x41474d,
+
+      roughness:
+        .92
+
+    });
+
+  const floor =
+    new THREE.Mesh(
+      floorGeometry,
+      floorMaterial
+    );
+
+  floor.position.y =
+    -.5;
+
+  floor.receiveShadow =
+    true;
+
+  scene.add(floor);
+
+  colliders.push(floor);
+
+
+  const wallMaterial =
+    new THREE.MeshStandardMaterial({
+
+      color:
+        0x252b31
+
+    });
+
+
+  createBox(
+    ARENA_SIZE,
+    6,
+    1,
+    0,
+    3,
+    -ARENA_SIZE / 2,
+    wallMaterial
+  );
+
+  createBox(
+    ARENA_SIZE,
+    6,
+    1,
+    0,
+    3,
+    ARENA_SIZE / 2,
+    wallMaterial
+  );
+
+  createBox(
+    1,
+    6,
+    ARENA_SIZE,
+    -ARENA_SIZE / 2,
+    3,
+    0,
+    wallMaterial
+  );
+
+  createBox(
+    1,
+    6,
+    ARENA_SIZE,
+    ARENA_SIZE / 2,
+    3,
+    0,
+    wallMaterial
+  );
+
+
+  const obstacleMaterial =
+    new THREE.MeshStandardMaterial({
+
+      color:
+        0x69727b,
+
+      roughness:
+        .7
+
+    });
+
+
+  /*
+    低い足場
+  */
+
+  createBox(
+    8,
+    1.5,
+    8,
+    -15,
+    .75,
+    -10,
+    obstacleMaterial
+  );
+
+  createBox(
+    11,
+    2,
+    5,
+    13,
+    1,
+    -8,
+    obstacleMaterial
+  );
+
+  createBox(
+    6,
+    2.5,
+    6,
+    17,
+    1.25,
+    14,
+    obstacleMaterial
+  );
+
+  createBox(
+    10,
+    1.5,
+    5,
+    -15,
+    .75,
+    15,
+    obstacleMaterial
+  );
+
+  createBox(
+    5,
+    2,
+    12,
+    0,
+    1,
+    17,
+    obstacleMaterial
+  );
+
+
+  /*
+    少し高い足場
+  */
+
+  createBox(
+    6,
+    3.5,
+    6,
+    -15,
+    1.75,
+    -1,
+    obstacleMaterial
+  );
+
+  createBox(
+    7,
+    4,
+    7,
+    4,
+    2,
+    -14,
+    obstacleMaterial
+  );
+
+  createBox(
+    7,
+    4.5,
+    7,
+    16,
+    2.25,
+    2,
+    obstacleMaterial
+  );
+
+
+  /*
+    さらに低いステップ。
+    グラブで登るための足場。
+  */
+
+  createBox(
+    5,
+    .9,
+    5,
+    -4,
+    .45,
+    -5,
+    obstacleMaterial
+  );
+
+  createBox(
+    5,
+    1.3,
+    5,
+    4,
+    .65,
+    -5,
+    obstacleMaterial
+  );
+
+  createBox(
+    5,
+    1.7,
+    5,
+    10,
+    .85,
+    -5,
+    obstacleMaterial
+  );
+
+  createBox(
+    4,
+    .7,
+    4,
+    -10,
+    .35,
+    -18,
+    obstacleMaterial
+  );
+
+  createBox(
+    4,
+    1.1,
+    4,
+    -4,
+    .55,
+    -18,
+    obstacleMaterial
+  );
+
+  createBox(
+    4,
+    1.5,
+    4,
+    2,
+    .75,
+    -18,
+    obstacleMaterial
+  );
+
+  createBox(
+    4,
+    1.9,
+    4,
+    8,
+    .95,
+    -18,
+    obstacleMaterial
+  );
+
+
+  for(
+    let i = 0;
+    i < 10;
+    i++
+  ){
+
+    const x =
+      Math.random() *
+      42 -
+      21;
+
+    const z =
+      Math.random() *
+      42 -
+      21;
+
+    createBox(
+      2.5 +
+        Math.random() * 2,
+
+      1.3 +
+        Math.random() * 1.7,
+
+      2.5 +
+        Math.random() * 2,
+
+      x,
+
+      .65 +
+        Math.random() * .85,
+
+      z,
+
+      obstacleMaterial
+    );
+
+  }
+
+}
+
+
+function createBox(
+  width,
+  height,
+  depth,
+  x,
+  y,
+  z,
+  material
+){
+
+  const geometry =
+    new THREE.BoxGeometry(
+      width,
+      height,
+      depth
+    );
+
+  const mesh =
+    new THREE.Mesh(
+      geometry,
+      material
+    );
+
+  mesh.position.set(
+    x,
+    y,
+    z
+  );
+
+  mesh.castShadow =
+    true;
+
+  mesh.receiveShadow =
+    true;
+
+  scene.add(mesh);
+
+  colliders.push(mesh);
+
+  return mesh;
+
+}
+
+
+function onResize(){
+
+  if(
+    !camera ||
+    !renderer
+  ){
+    return;
+  }
+
+  camera.aspect =
+    window.innerWidth /
+    window.innerHeight;
+
+  camera.updateProjectionMatrix();
+
+  renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+  );
+
+}
+
+
+async function ensureAuth(){
+
+  if(currentUser){
+    return currentUser;
+  }
+
+  return new Promise(
+    (resolve,reject) => {
+
+      const unsubscribe =
+        onAuthStateChanged(
+          auth,
+          async user => {
+
+            if(user){
+
+              currentUser =
+                user;
+
+              unsubscribe();
+
+              resolve(user);
+
+              return;
+
+            }
+
+            try{
+
+              await signInAnonymously(
+                auth
+              );
+
+            }catch(error){
+
+              unsubscribe();
+
+              reject(error);
+
+            }
+
+          },
+
+          error => {
+
+            unsubscribe();
+
+            reject(error);
+
+          }
+        );
+
+    }
+  );
+
+}
+
+
+async function createMatch(
+  requestedCode = ""
+){
+
+  statusEl.textContent =
+    "試合を作成中…";
+
+  try{
+
+    const user =
+      await ensureAuth();
+
+    let code =
+      requestedCode
+        .trim()
+        .toUpperCase();
+
+
+    if(!code){
+
+      for(
+        let attempt = 0;
+        attempt < 20;
+        attempt++
+      ){
+
+        const candidate =
+          randomCode();
+
+        const ref =
+          doc(
+            db,
+            "matches",
+            candidate
+          );
+
+        const existing =
+          await getDoc(ref);
+
+        if(
+          !existing.exists()
+        ){
+
+          code =
+            candidate;
+
+          break;
+
+        }
+
+      }
+
+    }
+
+
+    if(!code){
+
+      throw new Error(
+        "試合コードを作成できませんでした。"
+      );
+
+    }
+
+
+    const spawn =
+      randomSpawn();
+
+
+    const player = {
+
+      uid:
+        user.uid,
+
+      name:
+        "Player-" +
+        user.uid.slice(-4),
+
+      x:
+        spawn.x,
+
+      y:
+        spawn.y,
+
+      z:
+        spawn.z,
+
+      yaw:
+        0,
+
+      pitch:
+        0,
+
+      hp:
+        MAX_HP,
+
+      kills:
+        0,
+
+      alive:
+        true,
+
+      lastActiveAt:
+        Date.now()
+
+    };
+
+
+    const ref =
+      doc(
+        db,
+        "matches",
+        code
+      );
+
+
+    await runTransaction(
+      db,
+      async transaction => {
+
+        const snap =
+          await transaction.get(
+            ref
+          );
+
+        if(
+          snap.exists()
+        ){
+
+          throw new Error(
+            "ALREADY_EXISTS"
+          );
+
+        }
+
+
+        transaction.set(
+          ref,
+          {
+
+            hostUid:
+              user.uid,
+
+            status:
+              "waiting",
+
+            winnerUid:
+              null,
+
+            createdAt:
+              serverTimestamp(),
+
+            startedAt:
+              null,
+
+            players:{
+
+              [user.uid]:
+                player
+
+            }
+
+          }
+        );
+
+      }
+    );
+
+
+    isHost =
+      true;
+
+
+    await startMatch(
+      code
+    );
+
+
+  }catch(error){
+
+    console.error(error);
+
+    if(
+      error?.message ===
+      "ALREADY_EXISTS"
+    ){
+
+      await joinMatch(
+        requestedCode
+      );
+
+      return;
+
+    }
+
+    statusEl.textContent =
+      "作成失敗：" +
+      getFriendlyError(error);
+
+  }
+
+}
+
+
+async function joinMatch(
+  codeOverride = ""
+){
+
+  const code =
+    (
+      codeOverride ||
+      matchCodeInput.value
+    )
+      .trim()
+      .toUpperCase();
+
+
+  if(!code){
+
+    await createMatch("");
+
+    return;
+
+  }
+
+
+  statusEl.textContent =
+    "試合を確認中…";
+
+
+  try{
+
+    const user =
+      await ensureAuth();
+
+
+    const ref =
+      doc(
+        db,
+        "matches",
+        code
+      );
+
+
+    const existing =
+      await getDoc(ref);
+
+
+    /*
+      部屋が存在しなければ、
+      参加失敗ではなく
+      そのコードで作成する。
+    */
+
+    if(
+      !existing.exists()
+    ){
+
+      await createMatch(
+        code
+      );
+
+      return;
+
+    }
+
+
+    await runTransaction(
+      db,
+      async transaction => {
+
+        const snap =
+          await transaction.get(
+            ref
+          );
+
+
+        if(!snap.exists()){
+
+          throw new Error(
+            "NOT_FOUND"
+          );
+
+        }
+
+
+        const data =
+          snap.data();
+
+
+        if(
+          data.status ===
+          "ended"
+        ){
+
+          throw new Error(
+            "ENDED"
+          );
+
+        }
+
+
+        const players =
+          {
+            ...(data.players || {})
+          };
+
+
+        if(
+          players[user.uid]
+        ){
+
+          return;
+
+        }
+
+
+        const count =
+          Object.keys(
+            players
+          ).length;
+
+
+        if(count >= 8){
+
+          throw new Error(
+            "FULL"
+          );
+
+        }
+
+
+        const spawn =
+          randomSpawn();
+
+
+        players[user.uid] = {
+
+          uid:
+            user.uid,
+
+          name:
+            "Player-" +
+            user.uid.slice(-4),
+
+          x:
+            spawn.x,
+
+          y:
+            spawn.y,
+
+          z:
+            spawn.z,
+
+          yaw:
+            0,
+
+          pitch:
+            0,
+
+          hp:
+            MAX_HP,
+
+          kills:
+            0,
+
+          alive:
+            true,
+
+          lastActiveAt:
+            Date.now()
+
+        };
+
+
+        transaction.update(
+          ref,
+          {
+
+            players
+
+          }
+        );
+
+      }
+    );
+
+
+    isHost =
+      false;
+
+
+    await startMatch(
+      code
+    );
+
+
+  }catch(error){
+
+    console.error(error);
+
+    const message =
+      error?.message || "";
+
+
+    if(
+      message ===
+      "NOT_FOUND"
+    ){
+
+      await createMatch(
+        code
+      );
+
+    }else if(
+      message ===
+      "FULL"
+    ){
+
+      statusEl.textContent =
+        "その試合は満員だよ。";
+
+    }else if(
+      message ===
+      "ENDED"
+    ){
+
+      statusEl.textContent =
+        "その試合はもう終了してるよ。";
+
+    }else{
+
+      statusEl.textContent =
+        "参加/作成失敗：" +
+        getFriendlyError(error);
+
+    }
+
+  }
+
+}
+
+
+async function handleMatchButton(){
+
+  const code =
+    matchCodeInput.value
+      .trim()
+      .toUpperCase();
+
+
+  if(code){
+
+    await joinMatch(
+      code
+    );
+
+  }else{
+
+    await createMatch(
+      ""
+    );
+
+  }
+
+}
+
+
+function getFriendlyError(error){
+
+  if(!error){
+
+    return "不明なエラー";
+
+  }
+
+
+  if(
+    error.code ===
+    "permission-denied"
+  ){
+
+    return "Firestoreの権限設定を確認して！";
+
+  }
+
+
+  if(
+    error.code ===
+    "auth/operation-not-allowed"
+  ){
+
+    return "Firebaseで匿名ログインを有効にして！";
+
+  }
+
+
+  return (
+    error.message ||
+    String(error)
+  );
+
+}
+
+
+async function startMatch(
+  code
+){
+
+  currentMatchId =
+    code;
+
+  matchRef =
+    doc(
+      db,
+      "matches",
+      code
+    );
+
+
+  menu.style.display =
+    "none";
+
+  gameUI.style.display =
+    "block";
+
+  gameOver.style.display =
+    "none";
+
+
+  roomText.textContent =
+    code;
+
+
+  if(!scene){
+
+    setupScene();
+
+  }
+
+
+  gameEnded =
+    false;
+
+  gameStarted =
+    true;
+
+  matchHasStarted =
+    false;
+
+
+  velocityY =
+    0;
+
+  lastActivityAt =
+    Date.now();
+
+  lastCleanupCheck =
+    0;
+
+
+  await loadLocalPlayer();
+
+
+  if(unsubscribeMatch){
+
+    unsubscribeMatch();
+
+    unsubscribeMatch =
+      null;
+
+  }
+
+
+  unsubscribeMatch =
+    onSnapshot(
+      matchRef,
+
+      async snapshot => {
+
+        if(
+          !snapshot.exists()
+        ){
+
+          if(gameStarted){
+
+            leaveCurrentMatch();
+
+          }
+
+          return;
+
+        }
+
+
+        const data =
+          snapshot.data();
+
+        checkMatchCleanup(
+          data
+        );
+
+
+        const players =
+          data.players ||
+          {};
+
+
+        const count =
+          Object.keys(
+            players
+          ).length;
+
+
+        playerCountText.textContent =
+          String(count);
+
+
+        updateRemotePlayers(
+          players
+        );
+
+
+        updateScoreboard(
+          players
+        );
+
+
+        const me =
+          players[
+            currentUser.uid
+          ];
+
+
+        if(me){
+
+          localPlayer =
+            {
+
+              ...localPlayer,
+
+              ...me
+
+            };
+
+
+          localKills =
+            me.kills || 0;
+
+
+          updateLocalHUD();
+
+        }
+
+
+        const wasStarted =
+          matchHasStarted;
+
+
+        if(
+          data.status ===
+          "active"
+        ){
+
+          matchHasStarted =
+            true;
+
+        }
+
+
+        if(
+          data.status ===
+          "active" &&
+          !wasStarted
+        ){
+
+          const startedAt =
+            data.startedAt;
+
+
+          spawnProtectionUntil =
+            Date.now() +
+            START_PROTECTION_TIME;
+
+
+          if(startedAt){
+
+            const serverMillis =
+              startedAt.toMillis
+                ? startedAt.toMillis()
+                : Date.now();
+
+
+            spawnProtectionUntil =
+              serverMillis +
+              START_PROTECTION_TIME;
+
+          }
+
+        }
+
+
+        updateStartUI(
+          data
+        );
+
+
+        if(
+          data.status ===
+          "ended" &&
+          !gameEnded
+        ){
+
+          const winner =
+            data.winnerUid;
+
+
+          const winnerName =
+            winner &&
+            players[winner] &&
+            players[winner].name
+              ? players[winner].name
+              : "勝者";
+
+
+          finishLocalGame(
+
+            winner ===
+            currentUser.uid
+
+              ? "YOU WIN!"
+
+              : winnerName +
+                " の勝利！"
+
+          );
+
+
+          setTimeout(
+            () => {
+
+              if(
+                matchRef
+              ){
+
+                deleteMatch();
+
+              }
+
+            },
+            1200
+          );
+
+        }
+
+      },
+
+      error => {
+
+        console.error(
+          error
+        );
+
+        if(gameStarted){
+
+          finishLocalGame(
+            "通信エラーが発生しました。"
+          );
+
+        }
+
+      }
+    );
+
+
+  if(!gameLoopStarted){
+
+    gameLoopStarted =
+      true;
+
+    requestAnimationFrame(
+      gameLoop
+    );
+
+  }
+
+}
+
+
+async function loadLocalPlayer(){
+
+  const snap =
+    await getDoc(
+      matchRef
+    );
+
+
+  if(
+    !snap.exists()
+  ){
+
+    throw new Error(
+      "試合が見つかりません。"
+    );
+
+  }
+
+
+  const data =
+    snap.data();
+
+
+  const player =
+    data.players?.[
+      currentUser.uid
+    ];
+
+
+  if(!player){
+
+    throw new Error(
+      "プレイヤーデータがありません。"
+    );
+
+  }
+
+
+  localPlayer =
+    {
+      ...player,
+      lastActiveAt:
+        Number(
+          player.lastActiveAt ||
+          Date.now()
+        )
+    };
+
+
+  lastActivityAt =
+    localPlayer.lastActiveAt;
+
+
+  localKills =
+    player.kills || 0;
+
+
+  cameraState.yaw =
+    Number(
+      player.yaw || 0
+    );
+
+
+  cameraState.pitch =
+    Number(
+      player.pitch || 0
+    );
+
+
+  setCameraFromPlayer();
+
+  updateLocalHUD();
+
+  updateStartUI(
+    data
+  );
+
+}
+
+
+function updateStartUI(data){
+
+  if(
+    data.status !==
+    "waiting"
+  ){
+
+    preStart.style.display =
+      "none";
+
+    return;
+
+  }
+
+
+  if(
+    isHost
+  ){
+
+    preStart.style.display =
+      "block";
+
+    preStartText.textContent =
+      "部屋主がSTARTを長押しして開始";
+
+    startButton.style.opacity =
+      "1";
+
+  }else{
+
+    preStart.style.display =
+      "block";
+
+    preStartText.textContent =
+      "部屋主のSTART待ち";
+
+    startButton.style.opacity =
+      ".35";
+
+  }
+
+}
+
+
+function setCameraFromPlayer(){
+
+  if(!localPlayer){
+
+    return;
+
+  }
+
+
+  camera.position.set(
+
+    localPlayer.x,
+
+    localPlayer.y + .45,
+
+    localPlayer.z
+
+  );
+
+
+  camera.rotation.order =
+    "YXZ";
+
+
+  camera.rotation.y =
+    cameraState.yaw;
+
+
+  camera.rotation.x =
+    cameraState.pitch;
+
+}
+
+
+function updateRemotePlayers(
+  players
+){
+
+  const seen =
+    new Set();
+
+
+  for(
+    const [
+      uid,
+      player
+    ]
+    of Object.entries(players)
+  ){
+
+    if(
+      uid ===
+      currentUser.uid
+    ){
+
+      continue;
+
+    }
+
+
+    seen.add(uid);
+
+
+    let mesh =
+      playerMeshes.get(uid);
+
+
+    if(!mesh){
+
+      mesh =
+        createPlayerMesh(
+          uid
+        );
+
+      playerMeshes.set(
+        uid,
+        mesh
+      );
+
+    }
+
+
+    mesh.position.set(
+
+      player.x,
+
+      Math.max(
+        0,
+        player.y -
+        PLAYER_HEIGHT
+      ),
+
+      player.z
+
+    );
+
+
+    mesh.rotation.y =
+      Number(
+        player.yaw || 0
+      );
+
+
+    mesh.visible =
+      Boolean(
+        player.alive
+      );
+
+  }
+
+
+  for(
+    const uid
+    of playerMeshes.keys()
+  ){
+
+    if(
+      !seen.has(uid)
+    ){
+
+      removeRemoteMesh(
+        uid
+      );
+
+    }
+
+  }
+
+}
+
+
+function updateScoreboard(
+  players
+){
+
+  const entries =
+    Object.entries(players)
+      .sort(
+        (a,b) =>
+          (b[1].kills || 0) -
+          (a[1].kills || 0)
+      );
+
+
+  scoreBoard.innerHTML =
+    "";
+
+
+  for(
+    const [
+      uid,
+      player
+    ]
+    of entries
+  ){
+
+    const row =
+      document.createElement(
+        "div"
+      );
+
+    row.className =
+      "scoreRow";
+
+
+    const name =
+      document.createElement(
+        "span"
+      );
+
+
+    name.textContent =
+      uid ===
+      currentUser.uid
+
+        ? "YOU"
+
+        : player.name ||
+          uid.slice(-4);
+
+
+    const state =
+      document.createElement(
+        "span"
+      );
+
+
+    state.textContent =
+      player.alive
+
+        ? `${player.kills || 0} K`
+
+        : "DEAD";
+
+
+    state.className =
+      player.alive
+
+        ? "scoreAlive"
+
+        : "scoreDead";
+
+
+    row.appendChild(name);
+
+    row.appendChild(state);
+
+    scoreBoard.appendChild(row);
+
+  }
+
+}
+
+
+function updateLocalHUD(){
+
+  if(!localPlayer){
+
+    return;
+
+  }
+
+
+  const hp =
+    Math.max(
+      0,
+      Math.round(
+        localPlayer.hp
+      )
+    );
+
+
+  healthText.textContent =
+    `HP ${hp}`;
+
+
+  healthBar.style.width =
+    `${hp}%`;
+
+
+  if(hp > 60){
+
+    healthBar.style.background =
+      "#48e27d";
+
+  }else if(hp > 30){
+
+    healthBar.style.background =
+      "#ffd84d";
+
+  }else{
+
+    healthBar.style.background =
+      "#ff5959";
+
+  }
+
+
+  killsText.textContent =
+    String(localKills);
+
+}
+
+
+function clamp(
+  value,
+  min,
+  max
+){
+
+  return Math.max(
+    min,
+    Math.min(
+      max,
+      value
+    )
+  );
+
+}
+
+
+function markActivity(){
+
+  lastActivityAt =
+    Date.now();
+
+  if(
+    localPlayer
+  ){
+
+    localPlayer.lastActiveAt =
+      lastActivityAt;
+
+  }
+
+}
+
+
+function getColliderBoxes(){
+
+  return colliders
+    .filter(
+      collider =>
+        collider &&
+        collider.geometry
+    )
+    .map(
+      collider =>
+        new THREE.Box3()
+          .setFromObject(collider)
+    );
+
+}
+
+
+function horizontalOverlaps(
+  box,
+  x,
+  z,
+  radius = .38
+){
+
+  return (
+
+    x + radius >
+      box.min.x &&
+
+    x - radius <
+      box.max.x &&
+
+    z + radius >
+      box.min.z &&
+
+    z - radius <
+      box.max.z
+
+  );
+
+}
+
+
+function isPositionFree(
+  x,
+  y,
+  z
+){
+
+  const radius =
+    .38;
+
+
+  if(
+
+    x <
+      -ARENA_SIZE / 2 +
+      radius ||
+
+    x >
+      ARENA_SIZE / 2 -
+      radius ||
+
+    z <
+      -ARENA_SIZE / 2 +
+      radius ||
+
+    z >
+      ARENA_SIZE / 2 -
+      radius
+
+  ){
+
+    return false;
+
+  }
+
+
+  const feetY =
+    y -
+    PLAYER_HEIGHT;
+
+  const headY =
+    y +
+    .35;
+
+
+  for(
+    const collider
+    of colliders
+  ){
+
+    if(
+      !collider ||
+      !collider.geometry ||
+      collider ===
+        colliders[0]
+    ){
+
+      continue;
+
+    }
+
+
+    const box =
+      new THREE.Box3()
+        .setFromObject(
+          collider
+        );
+
+
+    if(
+      !horizontalOverlaps(
+        box,
+        x,
+        z,
+        radius
+      )
+    ){
+
+      continue;
+
+    }
+
+
+    /*
+      足場の上に立っている場合は、
+      足場そのものを横移動の障害物にしない。
+    */
+
+    if(
+      box.max.y <=
+      feetY + .06
+    ){
+
+      continue;
+
+    }
+
+
+    if(
+      box.min.y >=
+      headY - .06
+    ){
+
+      continue;
+
+    }
+
+
+    return false;
+
+  }
+
+
+  return true;
+
+}
+
+
+function getLandingTop(
+  x,
+  z,
+  previousFeetY,
+  nextFeetY
+){
+
+  let bestTop =
+    null;
+
+
+  /*
+    床の上面は y=0。
+  */
+
+  if(
+    previousFeetY >= -.05 &&
+    nextFeetY <= .05
+  ){
+
+    bestTop =
+      0;
+
+  }
+
+
+  for(
+    const collider
+    of colliders
+  ){
+
+    if(
+      !collider ||
+      !collider.geometry ||
+      collider ===
+        colliders[0]
+    ){
+
+      continue;
+
+    }
+
+
+    const box =
+      new THREE.Box3()
+        .setFromObject(
+          collider
+        );
+
+
+    if(
+      !horizontalOverlaps(
+        box,
+        x,
+        z,
+        .36
+      )
+    ){
+
+      continue;
+
+    }
+
+
+    const top =
+      box.max.y;
+
+
+    if(
+      previousFeetY >=
+        top - .08 &&
+
+      nextFeetY <=
+        top + .08
+    ){
+
+      if(
+        bestTop === null ||
+        top > bestTop
+      ){
+
+        bestTop =
+          top;
+
+      }
+
+    }
+
+  }
+
+
+  return bestTop;
+
+}
+
+
+function getCeilingBottom(
+  x,
+  z,
+  previousHeadY,
+  nextHeadY
+){
+
+  let bestBottom =
+    null;
+
+
+  for(
+    const collider
+    of colliders
+  ){
+
+    if(
+      !collider ||
+      !collider.geometry ||
+      collider ===
+        colliders[0]
+    ){
+
+      continue;
+
+    }
+
+
+    const box =
+      new THREE.Box3()
+        .setFromObject(
+          collider
+        );
+
+
+    if(
+      !horizontalOverlaps(
+        box,
+        x,
+        z,
+        .36
+      )
+    ){
+
+      continue;
+
+    }
+
+
+    const bottom =
+      box.min.y;
+
+
+    if(
+      previousHeadY <=
+        bottom + .08 &&
+
+      nextHeadY >=
+        bottom - .08
+    ){
+
+      if(
+        bestBottom === null ||
+        bottom < bestBottom
+      ){
+
+        bestBottom =
+          bottom;
+
+      }
+
+    }
+
+  }
+
+
+  return bestBottom;
+
+}
+
+
+function tryMove(
+  dx,
+  dz
+){
+
+  if(
+    !localPlayer ||
+    !localPlayer.alive ||
+    !matchHasStarted
+  ){
+
+    return;
+
+  }
+
+
+  const nextX =
+    localPlayer.x +
+    dx;
+
+
+  const nextZ =
+    localPlayer.z +
+    dz;
+
+
+  /*
+    X/Zを分離して判定することで、
+    足場の端で壁に引っかかりにくくする。
+  */
+
+  if(
+    isPositionFree(
+      nextX,
+      localPlayer.y,
+      localPlayer.z
+    )
+  ){
+
+    localPlayer.x =
+      nextX;
+
+  }
+
+
+  if(
+    isPositionFree(
+      localPlayer.x,
+      localPlayer.y,
+      nextZ
+    )
+  ){
+
+    localPlayer.z =
+      nextZ;
+
+  }
+
+}
+
+
+function updateMovement(
+  delta
+){
+
+  if(
+    !localPlayer ||
+    !localPlayer.alive ||
+    !matchHasStarted ||
+    grabAnimation
+  ){
+
+    return;
+
+  }
+
+
+  let inputX =
+    0;
+
+  let inputZ =
+    0;
+
+
+  if(keys.w)
+    inputZ -= 1;
+
+  if(keys.s)
+    inputZ += 1;
+
+  if(keys.a)
+    inputX -= 1;
+
+  if(keys.d)
+    inputX += 1;
+
+
+  inputX +=
+    mobileInput.x;
+
+  inputZ +=
+    mobileInput.y;
+
+
+  const length =
+    Math.hypot(
+      inputX,
+      inputZ
+    );
+
+
+  if(length > 1){
+
+    inputX /=
+      length;
+
+    inputZ /=
+      length;
+
+  }
+
+
+  const moving =
+    Math.abs(inputX) > .01 ||
+    Math.abs(inputZ) > .01;
+
+
+  if(moving){
+
+    markActivity();
+
+
+    const speed =
+      physics.moveSpeed;
+
+
+    const amount =
+      speed * delta;
+
+
+    const forwardX =
+      -Math.sin(
+        cameraState.yaw
+      );
+
+
+    const forwardZ =
+      -Math.cos(
+        cameraState.yaw
+      );
+
+
+    const rightX =
+      Math.cos(
+        cameraState.yaw
+      );
+
+
+    const rightZ =
+      -Math.sin(
+        cameraState.yaw
+      );
+
+
+    const moveX =
+      (
+        forwardX * -inputZ +
+        rightX * inputX
+      ) *
+      amount;
+
+
+    const moveZ =
+      (
+        forwardZ * -inputZ +
+        rightZ * inputX
+      ) *
+      amount;
+
+
+    tryMove(
+      moveX,
+      moveZ
+    );
+
+  }
+
+
+  const previousFeetY =
+    localPlayer.y -
+    PLAYER_HEIGHT;
+
+
+  const previousHeadY =
+    localPlayer.y +
+    .35;
+
+
+  velocityY +=
+    physics.gravity *
+    delta;
+
+
+  let nextY =
+    localPlayer.y +
+    velocityY *
+    delta;
+
+
+  const nextFeetY =
+    nextY -
+    PLAYER_HEIGHT;
+
+
+  const nextHeadY =
+    nextY +
+    .35;
+
+
+  if(
+    velocityY <= 0
+  ){
+
+    const landingTop =
+      getLandingTop(
+        localPlayer.x,
+        localPlayer.z,
+        previousFeetY,
+        nextFeetY
+      );
+
+
+    if(
+      landingTop !== null
+    ){
+
+      localPlayer.y =
+        landingTop +
+        PLAYER_HEIGHT;
+
+      velocityY =
+        0;
+
+      grounded =
+        true;
+
+    }else{
+
+      localPlayer.y =
+        nextY;
+
+      grounded =
+        false;
+
+    }
+
+  }else{
+
+    const ceilingBottom =
+      getCeilingBottom(
+        localPlayer.x,
+        localPlayer.z,
+        previousHeadY,
+        nextHeadY
+      );
+
+
+    if(
+      ceilingBottom !== null
+    ){
+
+      localPlayer.y =
+        ceilingBottom -
+        .35;
+
+      velocityY =
+        0;
+
+    }else{
+
+      localPlayer.y =
+        nextY;
+
+    }
+
+    grounded =
+      false;
+
+  }
+
+
+  /*
+    落下しすぎた場合の安全処理。
+  */
+
+  if(
+    localPlayer.y <
+    -10
+  ){
+
+    localPlayer.y =
+      PLAYER_HEIGHT;
+
+    velocityY =
+      0;
+
+    grounded =
+      true;
+
+  }
+
+
+  camera.position.set(
+
+    localPlayer.x,
+
+    localPlayer.y + .45,
+
+    localPlayer.z
+
+  );
+
+
+  camera.rotation.order =
+    "YXZ";
+
+  camera.rotation.y =
+    cameraState.yaw;
+
+  camera.rotation.x =
+    cameraState.pitch;
+
+
+  updateGrabUI();
+
+}
+
+
+function jump(){
+
+  if(
+    !localPlayer ||
+    !localPlayer.alive ||
+    !matchHasStarted
+  ){
+
+    return;
+
+  }
+
+
+  /*
+    空中ならJUMPボタンがGRABになる。
+    条件を満たしていればそのまま掴む。
+  */
+
+  if(!grounded){
+
+    if(
+      canGrab()
+    ){
+
+      startGrab();
+
+    }
+
+    return;
+
+  }
+
+
+  markActivity();
+
+
+  velocityY =
+    physics.jumpPower;
+
+  grounded =
+    false;
+
+}
+
+
+function getGrabTarget(){
+
+  if(
+    !localPlayer ||
+    grounded
+  ){
+
+    return null;
+
+  }
+
+
+  const playerX =
+    localPlayer.x;
+
+  const playerY =
+    localPlayer.y;
+
+  const playerZ =
+    localPlayer.z;
+
+
+  let best =
+    null;
+
+  let bestDistance =
+    Infinity;
+
+
+  /*
+    足場の上面が
+    自分の足元より上、
+    しかし頭より下。
+  */
+
+  const feetY =
+    playerY -
+    PLAYER_HEIGHT;
+
+  const headY =
+    playerY;
+
+
+  for(
+    const collider
+    of colliders
+  ){
+
+    if(
+      collider ===
+      colliders[0]
+    ){
+
+      continue;
+
+    }
+
+
+    const box =
+      new THREE.Box3()
+        .setFromObject(
+          collider
+        );
+
+
+    const insideX =
+      playerX >=
+        box.min.x -
+        GRAB_DISTANCE &&
+
+      playerX <=
+        box.max.x +
+        GRAB_DISTANCE;
+
+
+    const insideZ =
+      playerZ >=
+        box.min.z -
+        GRAB_DISTANCE &&
+
+      playerZ <=
+        box.max.z +
+        GRAB_DISTANCE;
+
+
+    if(
+      !insideX ||
+      !insideZ
+    ){
+
+      continue;
+
+    }
+
+
+    const platformTop =
+      box.max.y;
+
+
+    if(
+      platformTop <=
+      feetY + .05
+    ){
+
+      continue;
+
+    }
+
+
+    if(
+      platformTop >=
+      headY
+    ){
+
+      continue;
+
+    }
+
+
+    const centerX =
+      clamp(
+        playerX,
+        box.min.x,
+        box.max.x
+      );
+
+
+    const centerZ =
+      clamp(
+        playerZ,
+        box.min.z,
+        box.max.z
+      );
+
+
+    const distance =
+      Math.hypot(
+
+        playerX -
+        centerX,
+
+        playerZ -
+        centerZ
+
+      );
+
+
+    if(
+      distance >
+      GRAB_DISTANCE
+    ){
+
+      continue;
+
+    }
+
+
+    if(
+      distance <
+      bestDistance
+    ){
+
+      bestDistance =
+        distance;
+
+
+      best = {
+
+        box,
+
+        top:
+          platformTop,
+
+        x:
+          centerX,
+
+        z:
+          centerZ
+
+      };
+
+    }
+
+  }
+
+
+  return best;
+
+}
+
+
+function canGrab(){
+
+  return Boolean(
+    getGrabTarget()
+  );
+
+}
+
+
+function updateGrabUI(){
+
+  if(
+    !localPlayer ||
+    !matchHasStarted
+  ){
+
+    jumpButton.style.opacity =
+      "0";
+
+    return;
+
+  }
+
+
+  jumpButton.style.opacity =
+    "";
+
+
+  if(
+    grounded
+  ){
+
+    jumpButton.textContent =
+      "JUMP";
+
+    jumpButton.classList.remove(
+      "grabInactive",
+      "grabActive"
+    );
+
+    return;
+
+  }
+
+
+  jumpButton.textContent =
+    "GRAB";
+
+
+  if(
+    canGrab()
+  ){
+
+    jumpButton.classList.remove(
+      "grabInactive"
+    );
+
+    jumpButton.classList.add(
+      "grabActive"
+    );
+
+  }else{
+
+    jumpButton.classList.remove(
+      "grabActive"
+    );
+
+    jumpButton.classList.add(
+      "grabInactive"
+    );
+
+  }
+
+}
+
+
+function startGrab(){
+
+  if(
+    grabAnimation ||
+    grounded ||
+    !localPlayer
+  ){
+
+    return;
+
+  }
+
+
+  const target =
+    getGrabTarget();
+
+
+  if(!target){
+
+    return;
+
+  }
+
+
+  markActivity();
+
+
+  grabAnimation = {
+
+    start:
+      performance.now(),
+
+    target,
+
+    startX:
+      localPlayer.x,
+
+    startY:
+      localPlayer.y,
+
+    startZ:
+      localPlayer.z
+
+  };
+
+
+  velocityY =
+    0;
+
+}
+
+
+function updateGrabAnimation(
+  now
+){
+
+  if(!grabAnimation){
+
+    return;
+
+  }
+
+
+  const elapsed =
+    now -
+    grabAnimation.start;
+
+
+  const progress =
+    clamp(
+      elapsed /
+      GRAB_TIME,
+      0,
+      1
+    );
+
+
+  const smooth =
+    progress *
+    progress *
+    (
+      3 -
+      2 * progress
+    );
+
+
+  const target =
+    grabAnimation.target;
+
+
+  localPlayer.x =
+    grabAnimation.startX +
+    (
+      target.x -
+      grabAnimation.startX
+    ) *
+    smooth;
+
+
+  localPlayer.z =
+    grabAnimation.startZ +
+    (
+      target.z -
+      grabAnimation.startZ
+    ) *
+    smooth;
+
+
+  localPlayer.y =
+    target.top +
+    PLAYER_HEIGHT +
+    .02;
+
+
+  camera.position.set(
+
+    localPlayer.x,
+
+    localPlayer.y + .45,
+
+    localPlayer.z
+
+  );
+
+
+  if(
+    progress >= 1
+  ){
+
+    grabAnimation =
+      null;
+
+    grounded =
+      true;
+
+    velocityY =
+      0;
+
+    updateGrabUI();
+
+  }
+
+}
+
+
+function showKillMessage(
+  text
+){
+
+  killMessage.textContent =
+    text;
+
+  killMessage.style.opacity =
+    "1";
+
+
+  setTimeout(
+    () => {
+
+      killMessage.style.opacity =
+        "0";
+
+    },
+    900
+  );
+
+}
+
+
+function createBullet(
+  origin,
+  direction,
+  ownerUid
+){
+
+  const geometry =
+    new THREE.SphereGeometry(
+      .09,
+      8,
+      8
+    );
+
+
+  const material =
+    new THREE.MeshBasicMaterial({
+
+      color:
+        0xffe36e
+
+    });
+
+
+  const mesh =
+    new THREE.Mesh(
+      geometry,
+      material
+    );
+
+
+  mesh.position.copy(
+    origin
+  );
+
+
+  scene.add(mesh);
+
+
+  const id =
+    ++bulletIdCounter;
+
+
+  bullets.set(
+    id,
+    {
+
+      mesh,
+
+      direction:
+        direction.clone()
+          .normalize(),
+
+      ownerUid,
+
+      created:
+        performance.now(),
+
+      lastPosition:
+        origin.clone()
+
+    }
+  );
+
+}
+
+
+function removeBullet(
+  id
+){
+
+  const bullet =
+    bullets.get(id);
+
+
+  if(!bullet){
+
+    return;
+
+  }
+
+
+  scene.remove(
+    bullet.mesh
+  );
+
+
+  bullet.mesh.geometry.dispose();
+
+  bullet.mesh.material.dispose();
+
+
+  bullets.delete(
+    id
+  );
+
+}
+
+
+function updateBullets(
+  delta,
+  now
+){
+
+  for(
+    const [
+      id,
+      bullet
+    ]
+    of bullets
+  ){
+
+    const previous =
+      bullet.mesh.position.clone();
+
+
+    const distance =
+      BULLET_SPEED *
+      delta;
+
+
+    bullet.mesh.position.add(
+
+      bullet.direction
+        .clone()
+        .multiplyScalar(
+          distance
+        )
+
+    );
+
+
+    bullet.lastPosition =
+      previous;
+
+
+    if(
+      now -
+      bullet.created >
+      BULLET_LIFETIME
+    ){
+
+      removeBullet(
+        id
+      );
+
+      continue;
+
+    }
+
+
+    const bulletLine =
+      new THREE.Line3(
+
+        previous,
+
+        bullet.mesh.position
+
+      );
+
+
+    let hitSomething =
+      false;
+
+
+    /*
+      壁・足場との衝突
+    */
+
+    for(
+      const collider
+      of colliders
+    ){
+
+      const box =
+        new THREE.Box3()
+          .setFromObject(
+            collider
+          );
+
+
+      const closest =
+        new THREE.Vector3();
+
+
+      box.clampPoint(
+        bullet.mesh.position,
+        closest
+      );
+
+
+      if(
+        closest.distanceTo(
+          bullet.mesh.position
+        ) < .18
+      ){
+
+        hitSomething =
+          true;
+
+        break;
+
+      }
+
+    }
+
+
+    if(hitSomething){
+
+      removeBullet(
+        id
+      );
+
+      continue;
+
+    }
+
+
+    /*
+      プレイヤーとの衝突
+    */
+
+    for(
+      const [
+        uid,
+        mesh
+      ]
+      of playerMeshes
+    ){
+
+      if(
+        uid ===
+        bullet.ownerUid ||
+        !mesh.visible
+      ){
+
+        continue;
+
+      }
+
+
+      const box =
+        new THREE.Box3()
+          .setFromObject(
+            mesh
+          );
+
+
+      if(
+        box.distanceToPoint(
+          bullet.mesh.position
+        ) < .15
+      ){
+
+        hitSomething =
+          true;
+
+
+        if(
+          Date.now() >=
+          spawnProtectionUntil
+        ){
+
+          applyBulletDamage(
+            uid,
+            bullet.ownerUid
+          );
+
+        }
+
+
+        break;
+
+      }
+
+    }
+
+
+    if(hitSomething){
+
+      removeBullet(
+        id
+      );
+
+    }
+
+  }
+
+}
+
+
+async function applyBulletDamage(
+  targetUid,
+  shooterUid
+){
+
+  if(
+    !matchRef ||
+    gameEnded
+  ){
+
+    return;
+
+  }
+
+
+  try{
+
+    let wasKill =
+      false;
+
+
+    await runTransaction(
+      db,
+      async transaction => {
+
+        const snap =
+          await transaction.get(
+            matchRef
+          );
+
+
+        if(
+          !snap.exists()
+        ){
+
+          return;
+
+        }
+
+
+        const data =
+          snap.data();
+
+
+        if(
+          data.status !==
+          "active"
+        ){
+
+          return;
+
+        }
+
+
+        const players =
+          {
+            ...(data.players || {})
+          };
+
+
+        const shooter =
+          players[shooterUid];
+
+
+        const target =
+          players[targetUid];
+
+
+        if(
+          !shooter ||
+          !target
+        ){
+
+          return;
+
+        }
+
+
+        if(
+          !shooter.alive ||
+          !target.alive
+        ){
+
+          return;
+
+        }
+
+
+        if(
+          Date.now() <
+          Number(
+            data.startedProtectionUntil ||
+            0
+          )
+        ){
+
+          return;
+
+        }
+
+
+        target.hp =
+          Math.max(
+
+            0,
+
+            Number(
+              target.hp || 0
+            ) -
+            BULLET_DAMAGE
+
+          );
+
+
+        if(
+          target.hp <= 0
+        ){
+
+          target.hp =
+            0;
+
+          target.alive =
+            false;
+
+
+          shooter.kills =
+            Number(
+              shooter.kills || 0
+            ) + 1;
+
+
+          wasKill =
+            shooterUid ===
+            currentUser.uid;
+
+
+          const alivePlayers =
+            Object.values(
+              players
+            ).filter(
+              player =>
+                player.alive
+            );
+
+
+          if(
+            alivePlayers.length <= 1
+          ){
+
+            transaction.update(
+              matchRef,
+              {
+
+                players,
+
+                status:
+                  "ended",
+
+                winnerUid:
+                  alivePlayers.length === 1
+                    ? alivePlayers[0].uid
+                    : null
+
+              }
+            );
+
+            return;
+
+          }
+
+        }
+
+
+        transaction.update(
+          matchRef,
+          {
+
+            players
+
+          }
+        );
+
+      }
+    );
+
+
+    if(wasKill){
+
+      localKills++;
+
+      showKillMessage(
+        "ELIMINATED"
+      );
+
+    }
+
+
+  }catch(error){
+
+    console.error(
+      "bullet damage error",
+      error
+    );
+
+  }
+
+}
+
+
+function getFireProgress(){
+
+  const now =
+    performance.now();
+
+
+  if(
+    now >=
+    fireCooldownEnd
+  ){
+
+    return 100;
+
+  }
+
+
+  const remaining =
+    fireCooldownEnd -
+    now;
+
+
+  return clamp(
+
+    100 -
+      (
+        remaining /
+        FIRE_INTERVAL
+      ) *
+      100,
+
+    0,
+
+    100
+
+  );
+
+}
+
+
+function updateFireUI(){
+
+  const progress =
+    getFireProgress();
+
+
+  fireButton.style.setProperty(
+    "--fireProgress",
+    `${progress}%`
+  );
+
+}
+
+
+function shoot(){
+
+  if(
+    !localPlayer ||
+    !localPlayer.alive ||
+    !matchHasStarted ||
+    gameEnded
+  ){
+
+    return;
+
+  }
+
+
+  if(
+    Date.now() <
+    spawnProtectionUntil
+  ){
+
+    markActivity();
+
+    return;
+
+  }
+
+
+  markActivity();
+
+
+  const now =
+    performance.now();
+
+
+  if(
+    now <
+    fireCooldownEnd
+  ){
+
+    return;
+
+  }
+
+
+  fireCooldownEnd =
+    now +
+    FIRE_INTERVAL;
+
+
+  raycaster.setFromCamera(
+
+    new THREE.Vector2(
+      0,
+      0
+    ),
+
+    camera
+
+  );
+
+
+  const origin =
+    camera.position.clone();
+
+
+  const direction =
+    raycaster.ray.direction
+      .clone()
+      .normalize();
+
+
+  createBullet(
+    origin,
+    direction,
+    currentUser.uid
+  );
+
+
+  updateFireUI();
+
+}
+
+
+function startMatchByHost(){
+
+  if(
+    !isHost ||
+    !matchRef ||
+    matchHasStarted
+  ){
+
+    return;
+
+  }
+
+
+  runTransaction(
+    db,
+    async transaction => {
+
+      const snap =
+        await transaction.get(
+          matchRef
+        );
+
+
+      if(
+        !snap.exists()
+      ){
+
+        return;
+
+      }
+
+
+      const data =
+        snap.data();
+
+
+      if(
+        data.status !==
+        "waiting"
+      ){
+
+        return;
+
+      }
+
+
+      const players =
+        {
+          ...(data.players || {})
+        };
+
+
+      for(
+        const player
+        of Object.values(players)
+      ){
+
+        const spawn =
+          randomSpawn();
+
+
+        player.x =
+          spawn.x;
+
+        player.y =
+          spawn.y;
+
+        player.z =
+          spawn.z;
+
+        player.hp =
+          MAX_HP;
+
+        player.alive =
+          true;
+
+        player.kills =
+          0;
+
+        player.lastActiveAt =
+          Date.now();
+
+      }
+
+
+      transaction.update(
+        matchRef,
+        {
+
+          players,
+
+          status:
+            "active",
+
+          winnerUid:
+            null,
+
+          startedAt:
+            serverTimestamp(),
+
+          startedProtectionUntil:
+            Date.now() +
+            START_PROTECTION_TIME
+
+        }
+      );
+
+    }
+  ).catch(
+    error => {
+
+      console.error(
+        "start error",
+        error
+      );
+
+    }
+  );
+
+}
+
+
+function updateStartProgress(){
+
+  if(
+    !startHolding ||
+    !isHost ||
+    matchHasStarted
+  ){
+
+    if(
+      !startHolding
+    ){
+
+      startButton.style.setProperty(
+        "--progress",
+        "0%"
+      );
+
+    }
+
+    return;
+
+  }
+
+
+  const elapsed =
+    performance.now() -
+    startHoldStart;
+
+
+  const progress =
+    clamp(
+      elapsed /
+      START_HOLD_TIME,
+      0,
+      1
+    );
+
+
+  startButton.style.setProperty(
+
+    "--progress",
+
+    `${progress * 100}%`
+
+  );
+
+
+  if(
+    progress >= 1
+  ){
+
+    startHolding =
+      false;
+
+
+    startButton.style.setProperty(
+      "--progress",
+      "100%"
+    );
+
+
+    startMatchByHost();
+
+  }
+
+}
+
+
+async function checkMatchCleanup(
+  data
+){
+
+  if(
+    !matchRef ||
+    !data
+  ){
+
+    return;
+
+  }
+
+
+  const now =
+    Date.now();
+
+
+  if(
+    now -
+    lastCleanupCheck <
+    CLEANUP_INTERVAL
+  ){
+
+    return;
+
+  }
+
+
+  lastCleanupCheck =
+    now;
+
+
+  let createdMillis =
+    0;
+
+
+  if(
+    data.createdAt &&
+    typeof data.createdAt.toMillis ===
+      "function"
+  ){
+
+    createdMillis =
+      data.createdAt.toMillis();
+
+  }else if(
+    typeof data.createdAt ===
+    "number"
+  ){
+
+    createdMillis =
+      data.createdAt;
+
+  }
+
+
+  if(
+    createdMillis > 0 &&
+    now -
+      createdMillis >=
+      MAX_MATCH_AGE
+  ){
+
+    try{
+
+      await deleteDoc(
+        matchRef
+      );
+
+    }catch(error){
+
+      console.error(
+        "age cleanup error",
+        error
+      );
+
+    }
+
+    return;
+
+  }
+
+
+  const players =
+    Object.values(
+      data.players || {}
+    );
+
+
+  if(
+    players.length === 0
+  ){
+
+    return;
+
+  }
+
+
+  const allInactive =
+    players.every(
+      player => {
+
+        const last =
+          typeof player.lastActiveAt ===
+          "number"
+
+            ? player.lastActiveAt
+
+            : 0;
+
+
+        return (
+
+          last > 0 &&
+
+          now -
+            last >=
+            INACTIVE_MATCH_TIME
+
+        );
+
+      }
+    );
+
+
+  if(
+    allInactive
+  ){
+
+    try{
+
+      await deleteDoc(
+        matchRef
+      );
+
+    }catch(error){
+
+      console.error(
+        "inactive cleanup error",
+        error
+      );
+
+    }
+
+  }
+
+}
+
+
+function finishLocalGame(
+  text
+){
+
+  if(gameEnded){
+
+    return;
+
+  }
+
+
+  gameEnded =
+    true;
+
+  gameStarted =
+    false;
+
+
+  gameOverText.textContent =
+    text;
+
+
+  gameOver.style.display =
+    "flex";
+
+
+  preStart.style.display =
+    "none";
+
+}
+
+
+async function deleteMatch(){
+
+  if(!matchRef){
+
+    return;
+
+  }
+
+
+  const ref =
+    matchRef;
+
+
+  try{
+
+    await deleteDoc(
+      ref
+    );
+
+  }catch(error){
+
+    console.error(
+      "match delete error",
+      error
+    );
+
+  }
+
+}
+
+
+function leaveCurrentMatch(){
+
+  if(unsubscribeMatch){
+
+    unsubscribeMatch();
+
+    unsubscribeMatch =
+      null;
+
+  }
+
+
+  for(
+    const uid
+    of playerMeshes.keys()
+  ){
+
+    removeRemoteMesh(
+      uid
+    );
+
+  }
+
+
+  for(
+    const id
+    of bullets.keys()
+  ){
+
+    removeBullet(
+      id
+    );
+
+  }
+
+
+  currentMatchId =
+    null;
+
+  matchRef =
+    null;
+
+  localPlayer =
+    null;
+
+  gameStarted =
+    false;
+
+  gameEnded =
+    false;
+
+  matchHasStarted =
+    false;
+
+  isHost =
+    false;
+
+  grabAnimation =
+    null;
+
+  spawnProtectionUntil =
+    0;
+
+  fireCooldownEnd =
+    0;
+
+  lastActivityAt =
+    Date.now();
+
+  lastCleanupCheck =
+    0;
+
+
+  gameUI.style.display =
+    "none";
+
+  gameOver.style.display =
+    "none";
+
+  menu.style.display =
+    "flex";
+
+  preStart.style.display =
+    "none";
+
+  statusEl.textContent =
+    "";
+
+  matchCodeInput.value =
+    "";
+
+}
+
+
+async function handleReturn(){
+
+  const wasHost =
+    isHost;
+
+  const ref =
+    matchRef;
+
+
+  leaveCurrentMatch();
+
+
+  if(
+    wasHost &&
+    ref
+  ){
+
+    try{
+
+      await deleteDoc(
+        ref
+      );
+
+    }catch(error){
+
+      console.error(
+        error
+      );
+
+    }
+
+  }
+
+}
+
+
+function handleMouseMove(
+  event
+){
+
+  if(
+    !gameStarted ||
+    gameEnded ||
+    matchMedia(
+      "(pointer:coarse)"
+    ).matches
+  ){
+
+    return;
+
+  }
+
+
+  if(
+    document.pointerLockElement !==
+    renderer.domElement
+  ){
+
+    return;
+
+  }
+
+
+  if(
+    Math.abs(event.movementX) > 0 ||
+    Math.abs(event.movementY) > 0
+  ){
+
+    markActivity();
+
+  }
+
+
+  cameraState.yaw -=
+    event.movementX *
+    .0023;
+
+
+  cameraState.pitch -=
+    event.movementY *
+    .0023;
+
+
+  cameraState.pitch =
+    clamp(
+      cameraState.pitch,
+      -1.45,
+      1.45
+    );
+
+}
+
+
+function requestPointerLock(){
+
+  if(
+    matchMedia(
+      "(pointer:coarse)"
+    ).matches
+  ){
+
+    return;
+
+  }
+
+
+  if(
+    renderer &&
+    renderer.domElement
+      .requestPointerLock
+  ){
+
+    renderer.domElement
+      .requestPointerLock();
+
+  }
+
+}
+
+
+function setupDesktopInput(){
+
+  window.addEventListener(
+    "keydown",
+    event => {
+
+      if(
+        event.code ===
+        "KeyW"
+      ){
+
+        keys.w = true;
+
+        markActivity();
+
+      }
+
+
+      if(
+        event.code ===
+        "KeyA"
+      ){
+
+        keys.a = true;
+
+        markActivity();
+
+      }
+
+
+      if(
+        event.code ===
+        "KeyS"
+      ){
+
+        keys.s = true;
+
+        markActivity();
+
+      }
+
+
+      if(
+        event.code ===
+        "KeyD"
+      ){
+
+        keys.d = true;
+
+        markActivity();
+
+      }
+
+
+      if(
+        event.code ===
+        "Space"
+      ){
+
+        event.preventDefault();
+
+        jump();
+
+      }
+
+    }
+  );
+
+
+  window.addEventListener(
+    "keyup",
+    event => {
+
+      if(
+        event.code ===
+        "KeyW"
+      )
+        keys.w = false;
+
+      if(
+        event.code ===
+        "KeyA"
+      )
+        keys.a = false;
+
+      if(
+        event.code ===
+        "KeyS"
+      )
+        keys.s = false;
+
+      if(
+        event.code ===
+        "KeyD"
+      )
+        keys.d = false;
+
+    }
+  );
+
+
+  document.addEventListener(
+    "mousemove",
+    handleMouseMove
+  );
+
+}
+
+
+function setupMobileInput(){
+
+  let joystickPointerId =
+    null;
+
+
+  function updateJoystick(
+    clientX,
+    clientY
+  ){
+
+    const rect =
+      joystickZone
+        .getBoundingClientRect();
+
+
+    const centerX =
+      rect.left +
+      rect.width / 2;
+
+
+    const centerY =
+      rect.top +
+      rect.height / 2;
+
+
+    let dx =
+      clientX -
+      centerX;
+
+
+    let dy =
+      clientY -
+      centerY;
+
+
+    const max =
+      53;
+
+
+    const distance =
+      Math.hypot(
+        dx,
+        dy
+      );
+
+
+    if(
+      distance >
+      max
+    ){
+
+      dx =
+        dx /
+        distance *
+        max;
+
+      dy =
+        dy /
+        distance *
+        max;
+
+    }
+
+
+    mobileInput.x =
+      dx / max;
+
+    mobileInput.y =
+      dy / max;
+
+
+    joystickKnob.style.transform =
+      `translate(${dx}px,${dy}px)`;
+
+  }
+
+
+  joystickZone.addEventListener(
+    "pointerdown",
+    event => {
+
+      event.preventDefault();
+
+      markActivity();
+
+
+      joystickPointerId =
+        event.pointerId;
+
+
+      joystickZone.setPointerCapture(
+        event.pointerId
+      );
+
+
+      updateJoystick(
+        event.clientX,
+        event.clientY
+      );
+
+    }
+  );
+
+
+  joystickZone.addEventListener(
+    "pointermove",
+    event => {
+
+      if(
+        event.pointerId ===
+        joystickPointerId
+      ){
+
+        updateJoystick(
+          event.clientX,
+          event.clientY
+        );
+
+      }
+
+    }
+  );
+
+
+  const endJoystick =
+    event => {
+
+      if(
+        event.pointerId !==
+        joystickPointerId
+      ){
+
+        return;
+
+      }
+
+
+      joystickPointerId =
+        null;
+
+
+      mobileInput.x =
+        0;
+
+      mobileInput.y =
+        0;
+
+
+      joystickKnob.style.transform =
+        "translate(0,0)";
+
+    };
+
+
+  joystickZone.addEventListener(
+    "pointerup",
+    endJoystick
+  );
+
+
+  joystickZone.addEventListener(
+    "pointercancel",
+    endJoystick
+  );
+
+
+  let lookPointerId =
+    null;
+
+  let lastLookX =
+    0;
+
+  let lastLookY =
+    0;
+
+
+  lookZone.addEventListener(
+    "pointerdown",
+    event => {
+
+      event.preventDefault();
+
+      markActivity();
+
+
+      lookPointerId =
+        event.pointerId;
+
+
+      lastLookX =
+        event.clientX;
+
+
+      lastLookY =
+        event.clientY;
+
+
+      lookZone.setPointerCapture(
+        event.pointerId
+      );
+
+    }
+  );
+
+
+  lookZone.addEventListener(
+    "pointermove",
+    event => {
+
+      if(
+        event.pointerId !==
+        lookPointerId
+      ){
+
+        return;
+
+      }
+
+
+      const dx =
+        event.clientX -
+        lastLookX;
+
+
+      const dy =
+        event.clientY -
+        lastLookY;
+
+
+      lastLookX =
+        event.clientX;
+
+
+      lastLookY =
+        event.clientY;
+
+
+      if(
+        dx !== 0 ||
+        dy !== 0
+      ){
+
+        markActivity();
+
+      }
+
+
+      cameraState.yaw -=
+        dx * .006;
+
+
+      cameraState.pitch -=
+        dy * .006;
+
+
+      cameraState.pitch =
+        clamp(
+          cameraState.pitch,
+          -1.45,
+          1.45
+        );
+
+    }
+  );
+
+
+  const endLook =
+    event => {
+
+      if(
+        event.pointerId ===
+        lookPointerId
+      ){
+
+        lookPointerId =
+          null;
+
+      }
+
+    };
+
+
+  lookZone.addEventListener(
+    "pointerup",
+    endLook
+  );
+
+
+  lookZone.addEventListener(
+    "pointercancel",
+    endLook
+  );
+
+
+  fireButton.addEventListener(
+    "pointerdown",
+    event => {
+
+      event.preventDefault();
+
+
+      fireHolding =
+        true;
+
+      mobileInput.firing =
+        true;
+
+      shoot();
+
+    }
+  );
+
+
+  fireButton.addEventListener(
+    "pointerup",
+    event => {
+
+      event.preventDefault();
+
+
+      fireHolding =
+        false;
+
+      mobileInput.firing =
+        false;
+
+    }
+  );
+
+
+  fireButton.addEventListener(
+    "pointercancel",
+    () => {
+
+      fireHolding =
+        false;
+
+      mobileInput.firing =
+        false;
+
+    }
+  );
+
+
+  jumpButton.addEventListener(
+    "pointerdown",
+    event => {
+
+      event.preventDefault();
+
+
+      if(
+        !grounded &&
+        canGrab()
+      ){
+
+        startGrab();
+
+      }else if(
+        grounded
+      ){
+
+        jump();
+
+      }
+
+    }
+  );
+
+}
+
+
+function setupStartButton(){
+
+  const startDown =
+    event => {
+
+      event.preventDefault();
+
+
+      if(
+        !isHost ||
+        matchHasStarted
+      ){
+
+        return;
+
+      }
+
+
+      markActivity();
+
+
+      startHolding =
+        true;
+
+      startHoldStart =
+        performance.now();
+
+    };
+
+
+  const startUp =
+    event => {
+
+      event.preventDefault();
+
+
+      startHolding =
+        false;
+
+
+      startButton.style.setProperty(
+        "--progress",
+        "0%"
+      );
+
+    };
+
+
+  startButton.addEventListener(
+    "pointerdown",
+    startDown
+  );
+
+
+  startButton.addEventListener(
+    "pointerup",
+    startUp
+  );
+
+
+  startButton.addEventListener(
+    "pointercancel",
+    startUp
+  );
+
+}
+
+
+function setupRendererInput(){
+
+  if(!renderer){
+
+    return;
+
+  }
+
+
+  renderer.domElement.addEventListener(
+    "mousedown",
+    event => {
+
+      if(
+        event.button ===
+        0
+      ){
+
+        requestPointerLock();
+
+        shoot();
+
+      }
+
+    }
+  );
+
+}
+
+
+function gameLoop(
+  time
+){
+
+  const delta =
+    Math.min(
+
+      (
+        time -
+        lastFrameTime
+      ) / 1000,
+
+      .05
+
+    );
+
+
+  lastFrameTime =
+    time;
+
+
+  updateStartProgress();
+
+  updateFireUI();
+
+
+  if(
+    gameStarted &&
+    !gameEnded
+  ){
+
+    updateMovement(
+      delta
+    );
+
+
+    updateGrabAnimation(
+      time
+    );
+
+
+    if(
+      mobileInput.firing
+    ){
+
+      shoot();
+
+    }
+
+
+    updateBullets(
+      delta,
+      time
+    );
+
+
+    syncLocalPlayer();
+
+  }
+
+
+  if(
+    renderer &&
+    scene &&
+    camera
+  ){
+
+    renderer.render(
+      scene,
+      camera
+    );
+
+  }
+
+
+  requestAnimationFrame(
+    gameLoop
+  );
+
+}
+
+
+async function syncLocalPlayer(){
+
+  if(
+    !matchRef ||
+    !localPlayer ||
+    gameEnded
+  ){
+
+    return;
+
+  }
+
+
+  const now =
+    performance.now();
+
+
+  if(
+    now -
+    lastNetworkUpdate <
+    80
+  ){
+
+    return;
+
+  }
+
+
+  lastNetworkUpdate =
+    now;
+
+
+  try{
+
+    await updateDoc(
+
+      matchRef,
+
+      {
+
+        [`players.${currentUser.uid}`]:{
+
+          uid:
+            currentUser.uid,
+
+          name:
+            localPlayer.name,
+
+          x:
+            localPlayer.x,
+
+          y:
+            localPlayer.y,
+
+          z:
+            localPlayer.z,
+
+          yaw:
+            cameraState.yaw,
+
+          pitch:
+            cameraState.pitch,
+
+          hp:
+            localPlayer.hp,
+
+          kills:
+            localKills,
+
+          alive:
+            localPlayer.alive,
+
+          lastActiveAt:
+            localPlayer.lastActiveAt ||
+            lastActivityAt
+
+        }
+
+      }
+
+    );
+
+  }catch(error){
+
+    console.error(
+      "sync error",
+      error
+    );
+
+  }
+
+}
+
+
+matchButton.addEventListener(
+  "click",
+  handleMatchButton
+);
+
+
+returnButton.addEventListener(
+  "click",
+  handleReturn
+);
+
+
+matchCodeInput.addEventListener(
+  "input",
+  () => {
+
+    matchCodeInput.value =
+      matchCodeInput.value
+        .replace(
+          /[^A-Za-z0-9]/g,
+          ""
+        )
+        .toUpperCase();
+
+  }
+);
+
+
+matchCodeInput.addEventListener(
+  "keydown",
+  event => {
+
+    if(
+      event.key ===
+      "Enter"
+    ){
+
+      handleMatchButton();
+
+    }
+
+  }
+);
+
+
+setupDesktopInput();
+
+setupMobileInput();
+
+setupStartButton();
+
+
+window.addEventListener(
+  "beforeunload",
+  () => {
+
+    if(
+      isHost &&
+      matchRef
+    ){
+
+      deleteDoc(
+        matchRef
+      ).catch(
+        () => {}
+      );
+
+    }
+
+  }
+);
+
+
+try{
+
+  await ensureAuth();
+
+  statusEl.textContent =
+    "接続準備OK";
+
+}catch(error){
+
+  console.error(
+    error
+  );
+
+  statusEl.textContent =
+    "Firebase接続失敗：" +
+    getFriendlyError(error);
+
+}
+
+</script>
 
 </body>
 </html>
