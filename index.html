@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.1.0. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.1.0 changes: terrain-safe spawn placement, menu scrolling, player name input, deferred terrain generation until START, and configurable max fire rate. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
+<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.2.0. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.2.0 changes: safer terrain-overlap spawn correction, more reliable code-screen scrolling, player-name entry, deferred terrain generation until START, and configurable max fire rate with a slower default medium rate. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
 <title>Firebase 3D FPS</title>
 
 <style>
@@ -43,16 +43,19 @@ canvas{
   background:
     radial-gradient(circle at 50% 30%,#26384f 0%,#111822 40%,#05070a 100%);
   color:white;
-  overflow-y:auto;
+  overflow-y:scroll;
+  overflow-x:hidden;
   -webkit-overflow-scrolling:touch;
-  touch-action:pan-y;
+  overscroll-behavior:contain;
+  touch-action:pan-y !important;
   align-items:flex-start;
   padding:24px 0;
 }
 
 .menuBox{
   width:min(92vw,480px);
-  margin:auto;
+  flex:0 0 auto;
+  margin:0 auto;
   padding:28px;
   border-radius:22px;
   background:rgba(15,20,28,.88);
@@ -705,7 +708,7 @@ canvas{
     <h1 class="title">3D FPS</h1>
 
     <div class="subtitle">
-      v1.1.0
+      v1.2.0
     </div>
 
     <input
@@ -1063,7 +1066,7 @@ const START_HOLD_TIME = 1000;
 
 const START_PROTECTION_TIME = 3000;
 
-const FIRE_INTERVAL = 360;
+const FIRE_INTERVAL = 400;
 
 const BULLET_SPEED = 42;
 
@@ -1656,6 +1659,66 @@ function getTerrainSpawnY(x, z, settings){
   return top + PLAYER_HEIGHT;
 }
 
+function getActualTerrainSpawnY(x, z, settings){
+
+  let top = 0;
+
+  if(colliders && colliders.length){
+
+    for(const collider of colliders){
+
+      if(!collider || !collider.userData.terrainPlatform){
+        continue;
+      }
+
+      const box =
+        new THREE.Box3().setFromObject(collider);
+
+      if(
+        x >= box.min.x &&
+        x <= box.max.x &&
+        z >= box.min.z &&
+        z <= box.max.z
+      ){
+        top = Math.max(top, box.max.y);
+      }
+
+    }
+
+  }
+
+  const calculated =
+    getTerrainSpawnY(x, z, settings);
+
+  return Math.max(PLAYER_HEIGHT + top, calculated);
+}
+
+function liftPlayerOutOfTerrain(player, settings = currentSettings){
+
+  if(!player){
+    return;
+  }
+
+  const x =
+    Number(player.x) || 0;
+
+  const z =
+    Number(player.z) || 0;
+
+  const safeY =
+    getActualTerrainSpawnY(
+      x,
+      z,
+      settings
+    );
+
+  if(
+    Number(player.y) < safeY
+  ){
+    player.y = safeY;
+  }
+}
+
 function randomSpawn(settings = DEFAULT_SETTINGS){
 
   const margin = 7;
@@ -2133,15 +2196,18 @@ function createArena(settings = DEFAULT_SETTINGS){
     const height =
       Math.max(.45, baseHeight * heightScale);
 
-    createBox(
-      width,
-      height,
-      depth,
-      x,
-      height / 2,
-      z,
-      obstacleMaterial
-    );
+    const platform =
+      createBox(
+        width,
+        height,
+        depth,
+        x,
+        height / 2,
+        z,
+        obstacleMaterial
+      );
+
+    platform.userData.terrainPlatform = true;
   }
 
 }
@@ -3015,13 +3081,17 @@ async function startMatch(
           }
 
           if(localPlayer){
-            const correctedY = getTerrainSpawnY(
-              Number(localPlayer.x) || 0,
-              Number(localPlayer.z) || 0,
+            const beforeY =
+              Number(localPlayer.y) || PLAYER_HEIGHT;
+
+            liftPlayerOutOfTerrain(
+              localPlayer,
               currentSettings
             );
-            if(Number(localPlayer.y) < correctedY){
-              localPlayer.y = correctedY;
+
+            if(
+              Number(localPlayer.y) > beforeY
+            ){
               velocityY = 0;
               grounded = true;
             }
