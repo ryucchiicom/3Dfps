@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<title>3D FPS</title>
-<!-- GPT VERSION MEMORY: 1.1.0. Update this hidden internal version on every game update; increase major/minor/patch according to update size. Do not display this comment or its memory text in the game. -->
+<title>Firebase 3D FPS v1.1.0</title>
 
 <style>
 *{
@@ -146,39 +145,6 @@ canvas{
   font-size:14px;
 }
 
-#protectionIndicator{
-  position:absolute;
-  left:50%;
-  top:82px;
-  transform:translateX(-50%);
-  padding:7px 12px;
-  border-radius:999px;
-  background:rgba(40,140,255,.75);
-  border:1px solid rgba(255,255,255,.35);
-  box-shadow:0 0 18px rgba(50,160,255,.65);
-  font-size:13px;
-  font-weight:900;
-  opacity:0;
-  transition:opacity .15s, transform .15s;
-  pointer-events:none;
-  z-index:5;
-}
-
-#protectionIndicator.active{
-  opacity:1;
-  animation:protectionPulse .8s infinite alternate;
-}
-
-@keyframes protectionPulse{
-  from{
-    transform:translateX(-50%) scale(1);
-  }
-
-  to{
-    transform:translateX(-50%) scale(1.06);
-  }
-}
-
 #health{
   margin-top:5px;
   width:170px;
@@ -279,16 +245,14 @@ canvas{
 
 #preStartText{
   margin-bottom:12px;
+  pointer-events:none;
   font-weight:800;
   font-size:16px;
 }
 
 #startButton{
   position:relative;
-  z-index:2;
-  box-sizing:border-box;
-  pointer-events:auto;
-  touch-action:none;
+  z-index:3;
   width:105px;
   height:105px;
   border-radius:50%;
@@ -311,7 +275,6 @@ canvas{
       rgba(255,255,255,.10) var(--progress,0%)
     );
   z-index:0;
-  pointer-events:none;
 }
 
 #startButton::after{
@@ -321,142 +284,173 @@ canvas{
   border-radius:50%;
   background:rgba(12,17,23,.94);
   z-index:1;
-  pointer-events:none;
 }
 
 #startButton span{
   position:relative;
   z-index:2;
-  pointer-events:none;
 }
 
 #roomActions{
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr;
+  display:flex;
+  justify-content:center;
   gap:8px;
-  width:min(320px,90vw);
-  margin:12px auto 0;
+  flex-wrap:wrap;
+  margin-top:14px;
 }
 
 .roomActionButton{
-  min-height:42px;
   border:1px solid rgba(255,255,255,.18);
-  border-radius:10px;
-  background:rgba(255,255,255,.08);
+  border-radius:11px;
+  min-width:92px;
+  height:42px;
+  padding:0 14px;
   color:#fff;
-  font-size:12px;
+  background:rgba(255,255,255,.08);
+  font-size:14px;
   font-weight:800;
   cursor:pointer;
   pointer-events:auto;
   touch-action:manipulation;
-}
-
-.roomActionButton.danger{
-  background:rgba(180,40,40,.28);
+  appearance:none;
+  -webkit-appearance:none;
 }
 
 .roomActionButton:active{
   transform:scale(.97);
 }
 
+#startButton,
+#startButton::before,
+#startButton::after,
+.mobileButton,
+.mobileButton::before,
+.mobileButton::after{
+  pointer-events:auto;
+}
+
+#startButton{
+  box-sizing:border-box;
+  padding:0;
+  margin:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  appearance:none;
+  -webkit-appearance:none;
+  touch-action:none;
+}
+
+#startButton::before,
+#startButton::after{
+  pointer-events:none;
+}
+
+#spawnProtection{
+  position:absolute;
+  left:50%;
+  top:27%;
+  transform:translate(-50%,-50%);
+  padding:8px 13px;
+  border-radius:999px;
+  background:rgba(40,140,255,.22);
+  border:1px solid rgba(110,190,255,.55);
+  color:#dff3ff;
+  font-size:14px;
+  font-weight:900;
+  letter-spacing:.4px;
+  text-shadow:0 2px 8px #000;
+  opacity:0;
+  transition:opacity .12s;
+  pointer-events:none;
+}
+
 #settingsModal{
   position:fixed;
   inset:0;
-  z-index:200;
+  z-index:70;
   display:none;
-  align-items:center;
   justify-content:center;
+  align-items:center;
   padding:18px;
-  background:rgba(0,0,0,.68);
+  background:rgba(0,0,0,.64);
   backdrop-filter:blur(10px);
-  color:#fff;
   pointer-events:auto;
 }
 
 .settingsBox{
-  width:min(92vw,430px);
+  width:min(92vw,470px);
   max-height:90vh;
   overflow:auto;
-  padding:20px;
+  padding:22px;
   border-radius:20px;
   background:rgba(18,22,29,.97);
-  border:1px solid rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.13);
+  box-shadow:0 24px 80px rgba(0,0,0,.55);
+  color:#fff;
 }
 
 .settingsTitle{
-  font-size:25px;
+  margin:0 0 4px;
+  font-size:26px;
   font-weight:900;
-  text-align:center;
-  margin-bottom:4px;
 }
 
-#settingsNote{
-  text-align:center;
+.settingsHint{
+  margin:0 0 16px;
   font-size:12px;
-  opacity:.6;
-  margin-bottom:15px;
+  opacity:.62;
 }
 
-.settingsBox label{
-  display:flex;
+.settingRow{
+  display:grid;
+  grid-template-columns:1fr 160px;
   align-items:center;
-  justify-content:space-between;
   gap:12px;
-  min-height:48px;
-  padding:7px 0;
+  padding:10px 0;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+.settingLabel{
   font-size:14px;
+  font-weight:800;
 }
 
-.settingsBox label > span{
-  line-height:1.3;
-}
-
-.settingsBox select,
-.settingsBox input{
-  width:150px;
-  min-width:120px;
-  height:38px;
+.settingControl{
+  width:100%;
+  height:40px;
   border:1px solid rgba(255,255,255,.16);
-  border-radius:9px;
-  background:#202630;
+  border-radius:10px;
+  background:#222933;
   color:#fff;
-  padding:0 9px;
+  padding:0 10px;
   font-size:14px;
   outline:none;
+  appearance:none;
+  -webkit-appearance:none;
 }
 
-.settingsBox input{
-  text-align:right;
-}
-
-.settingsBox .disabledSetting{
-  opacity:.3;
-}
-
-.settingsBox .disabledSetting select,
-.settingsBox .disabledSetting input{
-  opacity:.45;
+.settingControl:disabled,
+.settingDisabled{
+  opacity:.28;
 }
 
 .settingsButtons{
-  display:grid;
-  grid-template-columns:1fr 1fr;
+  display:flex;
   gap:8px;
-  margin-top:12px;
+  margin-top:18px;
 }
 
-.settingsBox button{
-  pointer-events:auto;
-  touch-action:manipulation;
+.settingsButtons .button{
+  margin-top:0;
 }
 
-.button,
-.roomActionButton,
-#startButton,
-.mobileButton{
-  box-sizing:border-box;
-  pointer-events:auto;
-  touch-action:manipulation;
+#settingsMessage{
+  min-height:18px;
+  margin-top:8px;
+  text-align:center;
+  color:#ffce66;
+  font-size:12px;
 }
 
 #gameOver{
@@ -555,12 +549,16 @@ canvas{
   display:flex;
   justify-content:center;
   align-items:center;
+  touch-action:none;
+  appearance:none;
+  -webkit-appearance:none;
 }
 
 #fireButton{
   z-index:3;
-  pointer-events:auto;
-  touch-action:none;
+  box-sizing:border-box;
+  padding:0;
+  margin:0;
   width:88px;
   height:88px;
   right:24px;
@@ -580,7 +578,6 @@ canvas{
       rgba(255,255,255,.08) var(--fireProgress,100%)
     );
   z-index:0;
-  pointer-events:none;
 }
 
 #fireButton::after{
@@ -590,19 +587,18 @@ canvas{
   border-radius:50%;
   background:rgba(25,20,20,.9);
   z-index:1;
-  pointer-events:none;
 }
 
 #fireButton span{
   position:relative;
   z-index:2;
-  pointer-events:none;
 }
 
 #jumpButton{
   z-index:3;
-  pointer-events:auto;
-  touch-action:none;
+  box-sizing:border-box;
+  padding:0;
+  margin:0;
   width:64px;
   height:64px;
   right:125px;
@@ -713,10 +709,6 @@ canvas{
 
     </div>
 
-    <div id="protectionIndicator">
-      🛡 無敵 3秒
-    </div>
-
     <div id="matchBox">
 
       <div>
@@ -755,12 +747,14 @@ canvas{
     </button>
 
     <div id="roomActions">
-      <button id="shareCodeButton" class="roomActionButton" type="button">コードを共有</button>
-      <button id="leaveRoomButton" class="roomActionButton danger" type="button">部屋から退出</button>
+      <button id="shareRoomButton" class="roomActionButton" type="button">コードを共有</button>
       <button id="settingsButton" class="roomActionButton" type="button">設定</button>
+      <button id="leaveRoomButton" class="roomActionButton" type="button">部屋から退出</button>
     </div>
 
   </div>
+
+  <div id="spawnProtection">🛡️ 無敵中 <span id="spawnProtectionTime">3.0</span>s</div>
 
   <div id="desktopHint">
     WASD / Mouse / Click / Space
@@ -799,64 +793,70 @@ canvas{
 </div>
 
 <div id="settingsModal">
-  <div class="settingsBox">
-    <div class="settingsTitle">設定</div>
-    <div id="settingsNote">部屋主のみ変更できます</div>
 
-    <label id="terrainAmountSetting">
-      <span>地形の量</span>
-      <select id="terrainAmountSelect">
-        <option value="many">多</option>
+  <div class="settingsBox">
+
+    <h2 class="settingsTitle">設定</h2>
+    <p class="settingsHint">試合開始前のみ変更できます</p>
+
+    <div class="settingRow">
+      <div class="settingLabel" id="terrainAmountLabel">地形の量</div>
+      <select id="terrainAmountSetting" class="settingControl">
+        <option value="high">多</option>
         <option value="medium" selected>中</option>
-        <option value="few">少</option>
+        <option value="low">少</option>
         <option value="none">なし</option>
       </select>
-    </label>
+    </div>
 
-    <label id="terrainHeightSetting">
-      <span>地形の高低差</span>
-      <select id="terrainHeightSelect">
+    <div class="settingRow">
+      <div class="settingLabel" id="terrainHeightLabel">地形の高低差</div>
+      <select id="terrainHeightSetting" class="settingControl">
         <option value="high">高</option>
         <option value="medium" selected>中</option>
         <option value="low">低</option>
       </select>
-    </label>
+    </div>
 
-    <label>
-      <span>弾速</span>
-      <select id="bulletSpeedSelect">
+    <div class="settingRow">
+      <div class="settingLabel">弾速</div>
+      <select id="bulletSpeedSetting" class="settingControl">
         <option value="infinite">∞</option>
         <option value="fast">速</option>
         <option value="medium" selected>中</option>
         <option value="slow">遅</option>
       </select>
-    </label>
+    </div>
 
-    <label>
-      <span>HP最大値</span>
-      <input id="maxHPInput" type="number" min="1" max="9999" step="1" value="100" inputmode="numeric">
-    </label>
+    <div class="settingRow">
+      <div class="settingLabel">HP最大値</div>
+      <input id="maxHpSetting" class="settingControl" type="number" min="1" max="99999" step="1" value="100" inputmode="numeric">
+    </div>
 
-    <label>
-      <span>HP自然回復</span>
-      <select id="hpRegenSelect">
+    <div class="settingRow">
+      <div class="settingLabel" id="hpRegenLabel">HP自然回復</div>
+      <select id="hpRegenSetting" class="settingControl">
         <option value="fast">速</option>
         <option value="medium">中</option>
         <option value="slow">遅</option>
         <option value="none" selected>なし</option>
       </select>
-    </label>
+    </div>
 
-    <label id="regenLockSetting">
-      <span>ダメージからの自然回復ロック</span>
-      <input id="regenLockInput" type="number" min="0" max="600" step="0.1" value="0" inputmode="decimal">
-    </label>
+    <div class="settingRow">
+      <div class="settingLabel" id="regenLockLabel">ダメージからの自然回復ロック</div>
+      <input id="regenLockSetting" class="settingControl" type="number" min="0" max="999" step="0.1" value="0" inputmode="decimal">
+    </div>
+
+    <div id="settingsMessage"></div>
 
     <div class="settingsButtons">
-      <button id="closeSettingsButton" class="button secondary" type="button">閉じる</button>
-      <button id="saveSettingsButton" class="button" type="button">保存</button>
+      <button id="settingsCancelButton" class="button secondary" type="button">閉じる</button>
+      <button id="settingsSaveButton" class="button" type="button">保存</button>
     </div>
+
   </div>
+
 </div>
 
 <div id="gameOver">
@@ -889,6 +889,8 @@ canvas{
 </div>
 
 <script type="module">
+
+/* GAME_CODE_VERSION: 1.1.0 - update this hidden marker every release. */
 
 import {
   initializeApp
@@ -992,24 +994,24 @@ let grabAnimation = null;
 let spawnProtectionUntil = 0;
 
 let fireCooldownEnd = 0;
-
 let lastActivityAt = Date.now();
-
 let lastCleanupCheck = 0;
+let lastRegenAt = 0;
+let lastSpawnProtectionUI = -1;
+let matchSettings = {
+  terrainAmount: "medium",
+  terrainHeight: "medium",
+  bulletSpeed: "medium",
+  maxHp: 100,
+  hpRegen: "none",
+  regenLock: 0
+};
+let appliedTerrainSignature = "";
+
+// CODE_VERSION is intentionally changed on every game update so the model can identify the latest HTML version.
+const CODE_VERSION = "1.1.0";
 
 let bulletIdCounter = 0;
-
-let MAX_HP = 100;
-
-let BULLET_SPEED = 42;
-
-let matchSettings = null;
-
-let roomPlayerOrder = [];
-
-let terrainSeed = 1;
-
-let lastRegenAt = 0;
 
 
 const START_HOLD_TIME = 1000;
@@ -1018,6 +1020,8 @@ const START_PROTECTION_TIME = 3000;
 
 const FIRE_INTERVAL = 320;
 
+const BULLET_SPEED = 42;
+
 const BULLET_LIFETIME = 2200;
 
 const BULLET_DAMAGE = 34;
@@ -1025,32 +1029,15 @@ const BULLET_DAMAGE = 34;
 const GRAB_DISTANCE = 1.15;
 
 const GRAB_TIME = 500;
-
 const INACTIVE_MATCH_TIME = 60 * 1000;
-
 const MAX_MATCH_AGE = 24 * 60 * 60 * 1000;
-
-const DEFAULT_MATCH_SETTINGS = {
-  terrainAmount: "medium",
-  terrainHeight: "medium",
-  bulletSpeed: "medium",
-  maxHP: 100,
-  hpRegen: "none",
-  regenLock: 0
-};
-
-const REGEN_RATES = {
-  fast: 8,
-  medium: 4,
-  slow: 2,
-  none: 0
-};
-
 const CLEANUP_INTERVAL = 10000;
 
 const ARENA_SIZE = 70;
 
 const PLAYER_HEIGHT = 1.6;
+
+const MAX_HP = 100;
 
 
 const keys = {
@@ -1156,6 +1143,60 @@ const preStart =
 const preStartText =
   document.getElementById("preStartText");
 
+const shareRoomButton =
+  document.getElementById("shareRoomButton");
+
+const settingsButton =
+  document.getElementById("settingsButton");
+
+const leaveRoomButton =
+  document.getElementById("leaveRoomButton");
+
+const settingsModal =
+  document.getElementById("settingsModal");
+
+const terrainAmountSetting =
+  document.getElementById("terrainAmountSetting");
+
+const terrainHeightSetting =
+  document.getElementById("terrainHeightSetting");
+
+const bulletSpeedSetting =
+  document.getElementById("bulletSpeedSetting");
+
+const maxHpSetting =
+  document.getElementById("maxHpSetting");
+
+const hpRegenSetting =
+  document.getElementById("hpRegenSetting");
+
+const regenLockSetting =
+  document.getElementById("regenLockSetting");
+
+const terrainHeightLabel =
+  document.getElementById("terrainHeightLabel");
+
+const hpRegenLabel =
+  document.getElementById("hpRegenLabel");
+
+const regenLockLabel =
+  document.getElementById("regenLockLabel");
+
+const settingsCancelButton =
+  document.getElementById("settingsCancelButton");
+
+const settingsSaveButton =
+  document.getElementById("settingsSaveButton");
+
+const settingsMessage =
+  document.getElementById("settingsMessage");
+
+const spawnProtection =
+  document.getElementById("spawnProtection");
+
+const spawnProtectionTime =
+  document.getElementById("spawnProtectionTime");
+
 const startButton =
   document.getElementById("startButton");
 
@@ -1177,664 +1218,8 @@ const lookZone =
 const returnButton =
   document.getElementById("returnButton");
 
-const shareCodeButton =
-  document.getElementById("shareCodeButton");
 
-const leaveRoomButton =
-  document.getElementById("leaveRoomButton");
-
-const settingsButton =
-  document.getElementById("settingsButton");
-
-const settingsModal =
-  document.getElementById("settingsModal");
-
-const closeSettingsButton =
-  document.getElementById("closeSettingsButton");
-
-const saveSettingsButton =
-  document.getElementById("saveSettingsButton");
-
-const terrainAmountSelect =
-  document.getElementById("terrainAmountSelect");
-
-const terrainHeightSelect =
-  document.getElementById("terrainHeightSelect");
-
-const bulletSpeedSelect =
-  document.getElementById("bulletSpeedSelect");
-
-const maxHPInput =
-  document.getElementById("maxHPInput");
-
-const hpRegenSelect =
-  document.getElementById("hpRegenSelect");
-
-const regenLockInput =
-  document.getElementById("regenLockInput");
-
-const terrainHeightSetting =
-  document.getElementById("terrainHeightSetting");
-
-const regenLockSetting =
-  document.getElementById("regenLockSetting");
-
-const settingsNote =
-  document.getElementById("settingsNote");
-
-const protectionIndicator =
-  document.getElementById("protectionIndicator");
-
-
-function normalizeMatchSettings(settings){
-
-  const source =
-    settings || {};
-
-  const result = {
-    ...DEFAULT_MATCH_SETTINGS,
-    ...source
-  };
-
-  if(
-    ![
-      "many",
-      "medium",
-      "few",
-      "none"
-    ].includes(result.terrainAmount)
-  ){
-    result.terrainAmount =
-      DEFAULT_MATCH_SETTINGS.terrainAmount;
-  }
-
-  if(
-    ![
-      "high",
-      "medium",
-      "low"
-    ].includes(result.terrainHeight)
-  ){
-    result.terrainHeight =
-      DEFAULT_MATCH_SETTINGS.terrainHeight;
-  }
-
-  if(
-    ![
-      "infinite",
-      "fast",
-      "medium",
-      "slow"
-    ].includes(result.bulletSpeed)
-  ){
-    result.bulletSpeed =
-      DEFAULT_MATCH_SETTINGS.bulletSpeed;
-  }
-
-  const maxHP =
-    Number(result.maxHP);
-
-  result.maxHP =
-    Number.isFinite(maxHP)
-      ? clamp(Math.round(maxHP),1,9999)
-      : DEFAULT_MATCH_SETTINGS.maxHP;
-
-  if(
-    ![
-      "fast",
-      "medium",
-      "slow",
-      "none"
-    ].includes(result.hpRegen)
-  ){
-    result.hpRegen =
-      DEFAULT_MATCH_SETTINGS.hpRegen;
-  }
-
-  const regenLock =
-    Number(result.regenLock);
-
-  result.regenLock =
-    Number.isFinite(regenLock)
-      ? clamp(regenLock,0,600)
-      : DEFAULT_MATCH_SETTINGS.regenLock;
-
-  return result;
-}
-
-
-function applyMatchSettings(settings){
-
-  matchSettings =
-    normalizeMatchSettings(settings);
-
-  MAX_HP =
-    matchSettings.maxHP;
-
-  BULLET_SPEED =
-    {
-      infinite: Infinity,
-      fast: 70,
-      medium: 42,
-      slow: 20
-    }[
-      matchSettings.bulletSpeed
-    ];
-
-  updateSettingsDisabledState();
-}
-
-
-function setTerrainSeed(code){
-
-  let hash = 2166136261;
-
-  for(
-    let i = 0;
-    i < String(code).length;
-    i++
-  ){
-
-    hash ^= String(code).charCodeAt(i);
-
-    hash =
-      Math.imul(
-        hash,
-        16777619
-      );
-
-  }
-
-  terrainSeed =
-    hash >>> 0;
-
-}
-
-
-function terrainRandom(){
-
-  terrainSeed =
-    (
-      Math.imul(
-        terrainSeed,
-        1664525
-      ) +
-      1013904223
-    ) >>> 0;
-
-  return terrainSeed /
-    4294967296;
-
-}
-
-
-function getMaxHP(){
-
-  return Math.max(
-    1,
-    Number(
-      matchSettings?.maxHP ||
-      MAX_HP ||
-      100
-    )
-  );
-
-}
-
-
-function getRegenRate(){
-
-  return REGEN_RATES[
-    matchSettings?.hpRegen ||
-    "none"
-  ] || 0;
-
-}
-
-
-function updateProtectionUI(){
-
-  if(
-    !matchHasStarted ||
-    !localPlayer
-  ){
-
-    protectionIndicator.classList.remove(
-      "active"
-    );
-
-    return;
-
-  }
-
-  const remaining =
-    Math.max(
-      0,
-      spawnProtectionUntil -
-      Date.now()
-    );
-
-  if(
-    remaining <= 0
-  ){
-
-    protectionIndicator.classList.remove(
-      "active"
-    );
-
-    return;
-
-  }
-
-  protectionIndicator.textContent =
-    `🛡 無敵 ${Math.ceil(
-      remaining / 1000
-    )}秒`;
-
-  protectionIndicator.classList.add(
-    "active"
-  );
-
-}
-
-
-function updateSettingsDisabledState(){
-
-  const noTerrain =
-    matchSettings?.terrainAmount ===
-    "none";
-
-  const noRegen =
-    matchSettings?.hpRegen ===
-    "none";
-
-  terrainHeightSetting.classList.toggle(
-    "disabledSetting",
-    noTerrain
-  );
-
-  regenLockSetting.classList.toggle(
-    "disabledSetting",
-    noRegen
-  );
-
-  terrainHeightSelect.disabled =
-    noTerrain;
-
-  regenLockInput.disabled =
-    noRegen;
-
-}
-
-
-function fillSettingsUI(){
-
-  const settings =
-    normalizeMatchSettings(
-      matchSettings
-    );
-
-  terrainAmountSelect.value =
-    settings.terrainAmount;
-
-  terrainHeightSelect.value =
-    settings.terrainHeight;
-
-  bulletSpeedSelect.value =
-    settings.bulletSpeed;
-
-  maxHPInput.value =
-    String(
-      settings.maxHP
-    );
-
-  hpRegenSelect.value =
-    settings.hpRegen;
-
-  regenLockInput.value =
-    String(
-      settings.regenLock
-    );
-
-  updateSettingsDisabledState();
-
-}
-
-
-async function openSettings(){
-
-  if(
-    !matchRef
-  ){
-
-    return;
-
-  }
-
-  fillSettingsUI();
-
-  settingsNote.textContent =
-    isHost
-      ? "部屋主のみ変更できます"
-      : "部屋主のみ変更できます（閲覧のみ）";
-
-  saveSettingsButton.style.display =
-    isHost
-      ? "block"
-      : "none";
-
-  settingsModal.style.display =
-    "flex";
-
-}
-
-
-async function saveMatchSettings(){
-
-  if(
-    !isHost ||
-    !matchRef ||
-    matchHasStarted
-  ){
-
-    return;
-
-  }
-
-  const next =
-    normalizeMatchSettings({
-
-      terrainAmount:
-        terrainAmountSelect.value,
-
-      terrainHeight:
-        terrainHeightSelect.value,
-
-      bulletSpeed:
-        bulletSpeedSelect.value,
-
-      maxHP:
-        maxHPInput.value,
-
-      hpRegen:
-        hpRegenSelect.value,
-
-      regenLock:
-        regenLockInput.value
-
-    });
-
-  try{
-
-    await updateDoc(
-      matchRef,
-      {
-        settings:
-          next
-      }
-    );
-
-    applyMatchSettings(
-      next
-    );
-
-    setTerrainSeed(
-      currentMatchId
-    );
-
-    rebuildArena();
-
-    if(
-      localPlayer
-    ){
-
-      localPlayer.hp =
-        Math.min(
-          getMaxHP(),
-          Number(
-            localPlayer.hp || 0
-          )
-        );
-
-      updateLocalHUD();
-
-    }
-
-    settingsModal.style.display =
-      "none";
-
-  }catch(error){
-
-    console.error(
-      "settings save error",
-      error
-    );
-
-  }
-
-}
-
-
-function rebuildArena(){
-
-  if(
-    !scene
-  ){
-
-    return;
-
-  }
-
-  for(
-    const collider
-    of colliders
-  ){
-
-    scene.remove(
-      collider
-    );
-
-    if(
-      collider.geometry
-    ){
-
-      collider.geometry.dispose();
-
-    }
-
-    if(
-      collider.material
-    ){
-
-      if(
-        Array.isArray(
-          collider.material
-        )
-      ){
-
-        collider.material.forEach(
-          material =>
-            material.dispose()
-        );
-
-      }else{
-
-        collider.material.dispose();
-
-      }
-
-    }
-
-  }
-
-  colliders.length =
-    0;
-
-  createArena();
-
-}
-
-
-async function regenLocalPlayer(){
-
-  const rate =
-    getRegenRate();
-
-  if(
-    rate <= 0 ||
-    !matchRef ||
-    !matchHasStarted ||
-    gameEnded ||
-    !localPlayer ||
-    !localPlayer.alive
-  ){
-
-    return;
-
-  }
-
-  const now =
-    Date.now();
-
-  if(
-    now -
-    lastRegenAt <
-    250
-  ){
-
-    return;
-
-  }
-
-  lastRegenAt =
-    now;
-
-  try{
-
-    await runTransaction(
-      db,
-      async transaction => {
-
-        const snap =
-          await transaction.get(
-            matchRef
-          );
-
-        if(
-          !snap.exists()
-        ){
-
-          return;
-
-        }
-
-        const data =
-          snap.data();
-
-        if(
-          data.status !==
-          "active"
-        ){
-
-          return;
-
-        }
-
-        const players =
-          {
-            ...(data.players || {})
-          };
-
-        const player =
-          players[
-            currentUser.uid
-          ];
-
-        if(
-          !player ||
-          !player.alive
-        ){
-
-          return;
-
-        }
-
-        const maxHP =
-          normalizeMatchSettings(
-            data.settings
-          ).maxHP;
-
-        const hp =
-          Number(
-            player.hp || 0
-          );
-
-        if(
-          hp >= maxHP
-        ){
-
-          return;
-
-        }
-
-        const lastDamage =
-          Number(
-            player.lastDamageAt || 0
-          );
-
-        const lock =
-          normalizeMatchSettings(
-            data.settings
-          ).regenLock;
-
-        if(
-          lastDamage > 0 &&
-          now -
-          lastDamage <
-          lock * 1000
-        ){
-
-          return;
-
-        }
-
-        player.hp =
-          Math.min(
-            maxHP,
-            hp +
-            rate * .25
-          );
-
-        players[
-          currentUser.uid
-        ] =
-          player;
-
-        transaction.update(
-          matchRef,
-          {
-            players
-          }
-        );
-
-      }
-    );
-
-  }catch(error){
-
-    console.error(
-      "regen error",
-      error
-    );
-
-  }
-
-}
-
-
-function randomCode(
-  length = 6
-){
+function randomCode(length = 6){
 
   const chars =
     "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -1871,10 +1256,7 @@ function randomSpawn(){
     x:
       Math.random() *
       (ARENA_SIZE - margin * 2) -
-      (
-        ARENA_SIZE / 2 -
-        margin
-      ),
+      (ARENA_SIZE / 2 - margin),
 
     y:
       PLAYER_HEIGHT,
@@ -1882,19 +1264,14 @@ function randomSpawn(){
     z:
       Math.random() *
       (ARENA_SIZE - margin * 2) -
-      (
-        ARENA_SIZE / 2 -
-        margin
-      )
+      (ARENA_SIZE / 2 - margin)
 
   };
 
 }
 
 
-function playerColor(
-  uid
-){
+function playerColor(uid){
 
   let hash = 0;
 
@@ -1911,14 +1288,12 @@ function playerColor(
       ) +
       uid.charCodeAt(i);
 
-    hash |=
-      0;
+    hash |= 0;
 
   }
 
   const hue =
-    Math.abs(hash) %
-    360;
+    Math.abs(hash) % 360;
 
   return new THREE.Color(
     `hsl(${hue},70%,58%)`
@@ -1927,9 +1302,7 @@ function playerColor(
 }
 
 
-function createPlayerMesh(
-  uid
-){
+function createPlayerMesh(uid){
 
   const group =
     new THREE.Group();
@@ -1948,8 +1321,7 @@ function createPlayerMesh(
       color:
         playerColor(uid),
 
-      roughness:
-        .8
+      roughness:.8
 
     });
 
@@ -1962,9 +1334,7 @@ function createPlayerMesh(
   body.position.y =
     .8;
 
-  group.add(
-    body
-  );
+  group.add(body);
 
 
   const headGeometry =
@@ -1991,9 +1361,7 @@ function createPlayerMesh(
   head.position.y =
     1.55;
 
-  group.add(
-    head
-  );
+  group.add(head);
 
 
   const gunGeometry =
@@ -2009,11 +1377,9 @@ function createPlayerMesh(
       color:
         0x202020,
 
-      metalness:
-        .8,
+      metalness:.8,
 
-      roughness:
-        .3
+      roughness:.3
 
     });
 
@@ -2029,58 +1395,40 @@ function createPlayerMesh(
     -.42
   );
 
-  group.add(
-    gun
-  );
+  group.add(gun);
 
 
   group.userData.uid =
     uid;
 
-  scene.add(
-    group
-  );
+  scene.add(group);
 
   return group;
 
 }
 
 
-function removeRemoteMesh(
-  uid
-){
+function removeRemoteMesh(uid){
 
   const mesh =
-    playerMeshes.get(
-      uid
-    );
+    playerMeshes.get(uid);
 
-  if(
-    !mesh
-  ){
-
+  if(!mesh){
     return;
-
   }
 
-  scene.remove(
-    mesh
-  );
+  scene.remove(mesh);
 
   mesh.traverse(
     object => {
 
-      if(
-        object.geometry
-      ){
+      if(object.geometry){
 
         object.geometry.dispose();
 
       }
 
-      if(
-        object.material
-      ){
+      if(object.material){
 
         if(
           Array.isArray(
@@ -2104,9 +1452,7 @@ function removeRemoteMesh(
     }
   );
 
-  playerMeshes.delete(
-    uid
-  );
+  playerMeshes.delete(uid);
 
 }
 
@@ -2142,8 +1488,7 @@ function setupScene(){
   renderer =
     new THREE.WebGLRenderer({
 
-      antialias:
-        true,
+      antialias:true,
 
       powerPreference:
         "high-performance"
@@ -2187,9 +1532,7 @@ function setupScene(){
       1.5
     );
 
-  scene.add(
-    ambient
-  );
+  scene.add(ambient);
 
 
   const sun =
@@ -2213,9 +1556,7 @@ function setupScene(){
   sun.shadow.mapSize.height =
     2048;
 
-  scene.add(
-    sun
-  );
+  scene.add(sun);
 
 
   createArena();
@@ -2231,6 +1572,8 @@ function setupScene(){
 
 function createArena(){
 
+  colliders.length = 0;
+
   const floorGeometry =
     new THREE.BoxGeometry(
       ARENA_SIZE,
@@ -2240,10 +1583,13 @@ function createArena(){
 
   const floorMaterial =
     new THREE.MeshStandardMaterial({
+
       color:
         0x41474d,
+
       roughness:
         .92
+
     });
 
   const floor =
@@ -2258,19 +1604,19 @@ function createArena(){
   floor.receiveShadow =
     true;
 
-  scene.add(
-    floor
-  );
+  floor.userData.isArenaObject = true;
 
-  colliders.push(
-    floor
-  );
+  scene.add(floor);
+
+  colliders.push(floor);
 
 
   const wallMaterial =
     new THREE.MeshStandardMaterial({
+
       color:
         0x252b31
+
     });
 
 
@@ -2313,198 +1659,172 @@ function createArena(){
     0,
     wallMaterial
   );
-
-
-  const settings =
-    normalizeMatchSettings(
-      matchSettings
-    );
-
-  if(
-    settings.terrainAmount ===
-    "none"
-  ){
-
-    return;
-
-  }
 
 
   const obstacleMaterial =
     new THREE.MeshStandardMaterial({
+
       color:
         0x69727b,
+
       roughness:
         .7
+
     });
 
 
-  const heightScale =
-    {
-      high:
-        1.35,
+  const terrainSets = {
 
-      medium:
-        1,
+    high:[
+      [8,1.5,8,-15,.75,-10],
+      [11,2,5,13,1,-8],
+      [6,2.5,6,17,1.25,14],
+      [10,1.5,5,-15,.75,15],
+      [5,2,12,0,1,17],
+      [6,3.5,6,-15,1.75,-1],
+      [7,4,7,4,2,-14],
+      [7,4.5,7,16,2.25,2],
+      [5,.9,5,-4,.45,-5],
+      [5,1.3,5,4,.65,-5],
+      [5,1.7,5,10,.85,-5],
+      [4,.7,4,-10,.35,-18],
+      [4,1.1,4,-4,.55,-18],
+      [4,1.5,4,2,.75,-18],
+      [4,1.9,4,8,.95,-18]
+    ],
 
-      low:
-        .65
+    medium:[
+      [8,1.5,8,-15,.75,-10],
+      [11,2,5,13,1,-8],
+      [6,2.5,6,17,1.25,14],
+      [10,1.5,5,-15,.75,15],
+      [5,2,12,0,1,17],
+      [6,3.5,6,-15,1.75,-1],
+      [7,4,7,4,2,-14],
+      [7,4.5,7,16,2.25,2],
+      [5,.9,5,-4,.45,-5],
+      [5,1.3,5,4,.65,-5],
+      [5,1.7,5,10,.85,-5]
+    ],
 
-    }[
-      settings.terrainHeight
-    ];
+    low:[
+      [8,1.5,8,-15,.75,-10],
+      [11,2,5,13,1,-8],
+      [10,1.5,5,-15,.75,15],
+      [5,2,12,0,1,17],
+      [5,.9,5,-4,.45,-5],
+      [5,1.3,5,4,.65,-5]
+    ]
 
-
-  const platforms = [
-
-    [8,1.5,8,-15,-10],
-
-    [11,2,5,13,-8],
-
-    [6,2.5,6,17,14],
-
-    [10,1.5,5,-15,15],
-
-    [5,2,12,0,17],
-
-    [6,3.5,6,-15,-1],
-
-    [7,4,7,4,-14],
-
-    [7,4.5,7,16,2],
-
-    [5,.9,5,-4,-5],
-
-    [5,1.3,5,4,-5],
-
-    [5,1.7,5,10,-5],
-
-    [4,.7,4,-10,-18],
-
-    [4,1.1,4,-4,-18],
-
-    [4,1.5,4,2,-18],
-
-    [4,1.9,4,8,-18]
-
-  ];
+  };
 
 
-  const amountCount =
-    {
-      few:
-        5,
+  const terrainAmount =
+    matchSettings.terrainAmount;
 
-      medium:
-        10,
+  if(terrainAmount !== "none"){
 
-      many:
-        15
+    const base =
+      terrainSets[terrainAmount] ||
+      terrainSets.medium;
 
-    }[
-      settings.terrainAmount
-    ] || 0;
+    let heightScale = 1;
 
+    if(matchSettings.terrainHeight === "high"){
+      heightScale = 1.35;
+    }else if(matchSettings.terrainHeight === "low"){
+      heightScale = .68;
+    }
 
-  for(
-    let i = 0;
-    i <
-      Math.min(
-        amountCount,
-        platforms.length
+    base.forEach(
+      values => {
+
+        const [width,height,depth,x,y,z] = values;
+
+        const scaledHeight =
+          height * heightScale;
+
+        createBox(
+          width,
+          scaledHeight,
+          depth,
+          x,
+          scaledHeight / 2,
+          z,
+          obstacleMaterial
+        );
+
+      }
+    );
+
+    const randomCount =
+      terrainAmount === "high"
+        ? 8
+        : terrainAmount === "medium"
+          ? 5
+          : 2;
+
+    for(
+      let i = 0;
+      i < randomCount;
+      i++
+    ){
+
+      const x =
+        Math.random() * 42 - 21;
+
+      const z =
+        Math.random() * 42 - 21;
+
+      const height =
+        (1.3 + Math.random() * 1.7) *
+        heightScale;
+
+      createBox(
+        2.5 + Math.random() * 2,
+        height,
+        2.5 + Math.random() * 2,
+        x,
+        height / 2,
+        z,
+        obstacleMaterial
       );
-    i++
-  ){
 
-    const [
-      width,
-      height,
-      depth,
-      x,
-      z
-    ] =
-      platforms[i];
-
-    const scaledHeight =
-      height *
-      heightScale;
-
-    createBox(
-      width,
-      scaledHeight,
-      depth,
-      x,
-      scaledHeight / 2,
-      z,
-      obstacleMaterial
-    );
+    }
 
   }
 
+}
 
-  const randomCount =
-    {
-      few:
-        3,
 
-      medium:
-        6,
+function rebuildArena(){
 
-      many:
-        10
-
-    }[
-      settings.terrainAmount
-    ] || 0;
-
+  if(!scene){
+    return;
+  }
 
   for(
-    let i = 0;
-    i < randomCount;
-    i++
+    const child of [...scene.children]
   ){
-
-    const x =
-      terrainRandom() *
-      42 -
-      21;
-
-    const z =
-      terrainRandom() *
-      42 -
-      21;
-
-    const width =
-      2.5 +
-      terrainRandom() *
-      2;
-
-    const depth =
-      2.5 +
-      terrainRandom() *
-      2;
-
-    const baseHeight =
-      1.3 +
-      terrainRandom() *
-      1.7;
-
-    const scaledHeight =
-      baseHeight *
-      heightScale;
-
-    createBox(
-      width,
-      scaledHeight,
-      depth,
-      x,
-      scaledHeight / 2,
-      z,
-      obstacleMaterial
-    );
-
+    if(child.userData?.isArenaObject){
+      scene.remove(child);
+      if(child.geometry){
+        child.geometry.dispose();
+      }
+      if(child.material){
+        if(Array.isArray(child.material)){
+          child.material.forEach(
+            material => material.dispose()
+          );
+        }else{
+          child.material.dispose();
+        }
+      }
+    }
   }
 
+  colliders.length = 0;
+  createArena();
 }
 
 
@@ -2543,13 +1863,11 @@ function createBox(
   mesh.receiveShadow =
     true;
 
-  scene.add(
-    mesh
-  );
+  mesh.userData.isArenaObject = true;
 
-  colliders.push(
-    mesh
-  );
+  scene.add(mesh);
+
+  colliders.push(mesh);
 
   return mesh;
 
@@ -2562,9 +1880,7 @@ function onResize(){
     !camera ||
     !renderer
   ){
-
     return;
-
   }
 
   camera.aspect =
@@ -2583,9 +1899,7 @@ function onResize(){
 
 async function ensureAuth(){
 
-  if(
-    currentUser
-  ){
+  if(currentUser){
 
     return currentUser;
 
@@ -2599,18 +1913,14 @@ async function ensureAuth(){
           auth,
           async user => {
 
-            if(
-              user
-            ){
+            if(user){
 
               currentUser =
                 user;
 
               unsubscribe();
 
-              resolve(
-                user
-              );
+              resolve(user);
 
               return;
 
@@ -2626,14 +1936,19 @@ async function ensureAuth(){
 
               unsubscribe();
 
-              reject(
-                error
-              );
+              reject(error);
 
             }
 
           },
-          reject
+
+          error => {
+
+            unsubscribe();
+
+            reject(error);
+
+          }
         );
 
     }
@@ -2660,9 +1975,7 @@ async function createMatch(
         .toUpperCase();
 
 
-    if(
-      !code
-    ){
+    if(!code){
 
       for(
         let attempt = 0;
@@ -2681,9 +1994,7 @@ async function createMatch(
           );
 
         const existing =
-          await getDoc(
-            ref
-          );
+          await getDoc(ref);
 
         if(
           !existing.exists()
@@ -2701,9 +2012,7 @@ async function createMatch(
     }
 
 
-    if(
-      !code
-    ){
+    if(!code){
 
       throw new Error(
         "試合コードを作成できませんでした。"
@@ -2741,7 +2050,7 @@ async function createMatch(
         0,
 
       hp:
-        getMaxHP(),
+        matchSettings.maxHp,
 
       kills:
         0,
@@ -2752,7 +2061,7 @@ async function createMatch(
       lastActiveAt:
         Date.now(),
 
-      lastDamageAt:
+      lastDamagedAt:
         0
 
     };
@@ -2805,20 +2114,19 @@ async function createMatch(
             startedAt:
               null,
 
-            settings:
-              normalizeMatchSettings(
-                DEFAULT_MATCH_SETTINGS
-              ),
-
-            playerOrder:[
-              user.uid
-            ],
-
             players:{
 
               [user.uid]:
                 player
 
+            },
+
+            playerOrder:[
+              user.uid
+            ],
+
+            settings:{
+              ...matchSettings
             }
 
           }
@@ -2839,9 +2147,7 @@ async function createMatch(
 
   }catch(error){
 
-    console.error(
-      error
-    );
+    console.error(error);
 
     if(
       error?.message ===
@@ -2858,9 +2164,7 @@ async function createMatch(
 
     statusEl.textContent =
       "作成失敗：" +
-      getFriendlyError(
-        error
-      );
+      getFriendlyError(error);
 
   }
 
@@ -2880,13 +2184,9 @@ async function joinMatch(
       .toUpperCase();
 
 
-  if(
-    !code
-  ){
+  if(!code){
 
-    await createMatch(
-      ""
-    );
+    await createMatch("");
 
     return;
 
@@ -2912,10 +2212,16 @@ async function joinMatch(
 
 
     const existing =
-      await getDoc(
-        ref
-      );
+      await getDoc(ref);
 
+
+    /*
+      ここが今回の重要部分。
+
+      部屋が存在しなければ、
+      参加失敗ではなく
+      「そのコードで作成」する。
+    */
 
     if(
       !existing.exists()
@@ -2940,9 +2246,7 @@ async function joinMatch(
           );
 
 
-        if(
-          !snap.exists()
-        ){
+        if(!snap.exists()){
 
           throw new Error(
             "NOT_FOUND"
@@ -2974,9 +2278,7 @@ async function joinMatch(
 
 
         if(
-          players[
-            user.uid
-          ]
+          players[user.uid]
         ){
 
           return;
@@ -2989,10 +2291,13 @@ async function joinMatch(
             players
           ).length;
 
+        const playerOrder =
+          Array.isArray(data.playerOrder)
+            ? [...data.playerOrder]
+            : Object.keys(players);
 
-        if(
-          count >= 8
-        ){
+
+        if(count >= 8){
 
           throw new Error(
             "FULL"
@@ -3001,13 +2306,16 @@ async function joinMatch(
         }
 
 
+        const roomSettings =
+          normalizeMatchSettings(
+            data.settings || matchSettings
+          );
+
         const spawn =
           randomSpawn();
 
 
-        players[
-          user.uid
-        ] = {
+        players[user.uid] = {
 
           uid:
             user.uid,
@@ -3032,9 +2340,7 @@ async function joinMatch(
             0,
 
           hp:
-            normalizeMatchSettings(
-              data.settings
-            ).maxHP,
+            roomSettings.maxHp,
 
           kills:
             0,
@@ -3045,36 +2351,15 @@ async function joinMatch(
           lastActiveAt:
             Date.now(),
 
-          lastDamageAt:
+          lastDamagedAt:
             0
 
         };
 
 
-        const playerOrder =
-          Array.isArray(
-            data.playerOrder
-          )
-            ? [
-                ...data.playerOrder
-              ]
-            : Object.keys(
-                data.players || {}
-              );
-
-
-        if(
-          !playerOrder.includes(
-            user.uid
-          )
-        ){
-
-          playerOrder.push(
-            user.uid
-          );
-
-        }
-
+        playerOrder.push(
+          user.uid
+        );
 
         transaction.update(
           ref,
@@ -3102,13 +2387,10 @@ async function joinMatch(
 
   }catch(error){
 
-    console.error(
-      error
-    );
+    console.error(error);
 
     const message =
-      error?.message ||
-      "";
+      error?.message || "";
 
 
     if(
@@ -3140,9 +2422,7 @@ async function joinMatch(
 
       statusEl.textContent =
         "参加/作成失敗：" +
-        getFriendlyError(
-          error
-        );
+        getFriendlyError(error);
 
     }
 
@@ -3158,9 +2438,8 @@ async function handleMatchButton(){
       .trim()
       .toUpperCase();
 
-  if(
-    code
-  ){
+
+  if(code){
 
     await joinMatch(
       code
@@ -3177,44 +2456,38 @@ async function handleMatchButton(){
 }
 
 
-function getFriendlyError(
-  error
-){
+function getFriendlyError(error){
 
-  const code =
-    error?.code ||
-    "";
+  if(!error){
 
-  if(
-    code ===
-    "auth/admin-restricted-operation"
-  ){
-
-    return "匿名ログインがFirebaseで有効になっていません。";
+    return "不明なエラー";
 
   }
 
-  if(
-    code ===
-    "auth/configuration-not-found"
-  ){
-
-    return "Firebase Authenticationの設定を確認してね。";
-
-  }
 
   if(
-    code ===
+    error.code ===
     "permission-denied"
   ){
 
-    return "Firestoreの権限で拒否されました。";
+    return "Firestoreの権限設定を確認して！";
 
   }
 
+
+  if(
+    error.code ===
+    "auth/operation-not-allowed"
+  ){
+
+    return "Firebaseで匿名ログインを有効にして！";
+
+  }
+
+
   return (
-    error?.message ||
-    "不明なエラー"
+    error.message ||
+    String(error)
   );
 
 }
@@ -3234,6 +2507,16 @@ async function startMatch(
       code
     );
 
+  const initialRoom =
+    await getDoc(matchRef);
+
+  if(initialRoom.exists()){
+    applyMatchSettings(
+      initialRoom.data().settings || matchSettings,
+      true
+    );
+  }
+
 
   menu.style.display =
     "none";
@@ -3247,6 +2530,13 @@ async function startMatch(
 
   roomText.textContent =
     code;
+
+
+  if(!scene){
+
+    setupScene();
+
+  }
 
 
   gameEnded =
@@ -3266,30 +2556,7 @@ async function startMatch(
   await loadLocalPlayer();
 
 
-  applyMatchSettings(
-    matchSettings
-  );
-
-  setTerrainSeed(
-    currentMatchId
-  );
-
-  if(
-    !scene
-  ){
-
-    setupScene();
-
-  }else{
-
-    rebuildArena();
-
-  }
-
-
-  if(
-    unsubscribeMatch
-  ){
+  if(unsubscribeMatch){
 
     unsubscribeMatch();
 
@@ -3309,9 +2576,7 @@ async function startMatch(
           !snapshot.exists()
         ){
 
-          if(
-            gameStarted
-          ){
+          if(gameStarted){
 
             leaveCurrentMatch();
 
@@ -3324,48 +2589,6 @@ async function startMatch(
 
         const data =
           snapshot.data();
-
-
-        roomPlayerOrder =
-          Array.isArray(
-            data.playerOrder
-          )
-            ? [
-                ...data.playerOrder
-              ]
-            : Object.keys(
-                data.players || {}
-              );
-
-
-        const previousSettings =
-          JSON.stringify(
-            matchSettings ||
-            {}
-          );
-
-
-        applyMatchSettings(
-          data.settings
-        );
-
-
-        if(
-          JSON.stringify(
-            matchSettings
-          ) !==
-          previousSettings &&
-          !matchHasStarted
-        ){
-
-          setTerrainSeed(
-            currentMatchId
-          );
-
-          rebuildArena();
-
-        }
-
 
         checkMatchCleanup(
           data
@@ -3382,11 +2605,14 @@ async function startMatch(
             players
           ).length;
 
+        window.__dfpsPlayerOrder =
+          Array.isArray(data.playerOrder)
+            ? [...data.playerOrder]
+            : Object.keys(players);
+
 
         playerCountText.textContent =
-          String(
-            count
-          );
+          String(count);
 
 
         updateRemotePlayers(
@@ -3405,9 +2631,7 @@ async function startMatch(
           ];
 
 
-        if(
-          me
-        ){
+        if(me){
 
           localPlayer =
             {
@@ -3420,8 +2644,7 @@ async function startMatch(
 
 
           localKills =
-            me.kills ||
-            0;
+            me.kills || 0;
 
 
           updateLocalHUD();
@@ -3459,9 +2682,7 @@ async function startMatch(
             START_PROTECTION_TIME;
 
 
-          if(
-            startedAt
-          ){
+          if(startedAt){
 
             const serverMillis =
               startedAt.toMillis
@@ -3513,18 +2734,13 @@ async function startMatch(
 
           );
 
-
           setTimeout(
             () => {
-
               if(
                 matchRef
               ){
-
                 deleteMatch();
-
               }
-
             },
             1200
           );
@@ -3539,9 +2755,7 @@ async function startMatch(
           error
         );
 
-        if(
-          gameStarted
-        ){
+        if(gameStarted){
 
           finishLocalGame(
             "通信エラーが発生しました。"
@@ -3553,9 +2767,7 @@ async function startMatch(
     );
 
 
-  if(
-    !gameLoopStarted
-  ){
+  if(!gameLoopStarted){
 
     gameLoopStarted =
       true;
@@ -3592,38 +2804,13 @@ async function loadLocalPlayer(){
     snap.data();
 
 
-  matchSettings =
-    normalizeMatchSettings(
-      data.settings
-    );
-
-
-  roomPlayerOrder =
-    Array.isArray(
-      data.playerOrder
-    )
-      ? [
-          ...data.playerOrder
-        ]
-      : Object.keys(
-          data.players || {}
-        );
-
-
-  applyMatchSettings(
-    matchSettings
-  );
-
-
   const player =
     data.players?.[
       currentUser.uid
     ];
 
 
-  if(
-    !player
-  ){
+  if(!player){
 
     throw new Error(
       "プレイヤーデータがありません。"
@@ -3634,15 +2821,12 @@ async function loadLocalPlayer(){
 
   localPlayer =
     {
-
       ...player,
-
       lastActiveAt:
         Number(
           player.lastActiveAt ||
           Date.now()
         )
-
     };
 
 
@@ -3651,21 +2835,18 @@ async function loadLocalPlayer(){
 
 
   localKills =
-    player.kills ||
-    0;
+    player.kills || 0;
 
 
   cameraState.yaw =
     Number(
-      player.yaw ||
-      0
+      player.yaw || 0
     );
 
 
   cameraState.pitch =
     Number(
-      player.pitch ||
-      0
+      player.pitch || 0
     );
 
 
@@ -3680,9 +2861,346 @@ async function loadLocalPlayer(){
 }
 
 
-function updateStartUI(
-  data
-){
+function normalizeMatchSettings(settings){
+
+  const source =
+    settings || {};
+
+  const maxHp =
+    Math.round(
+      Number(
+        source.maxHp ||
+        100
+      )
+    );
+
+  const regenLock =
+    Number(
+      source.regenLock ||
+      0
+    );
+
+  return {
+    terrainAmount:
+      ["high","medium","low","none"].includes(source.terrainAmount)
+        ? source.terrainAmount
+        : "medium",
+    terrainHeight:
+      ["high","medium","low"].includes(source.terrainHeight)
+        ? source.terrainHeight
+        : "medium",
+    bulletSpeed:
+      ["infinite","fast","medium","slow"].includes(source.bulletSpeed)
+        ? source.bulletSpeed
+        : "medium",
+    maxHp:
+      clamp(
+        Number.isFinite(maxHp) ? maxHp : 100,
+        1,
+        99999
+      ),
+    hpRegen:
+      ["fast","medium","slow","none"].includes(source.hpRegen)
+        ? source.hpRegen
+        : "none",
+    regenLock:
+      clamp(
+        Number.isFinite(regenLock) ? regenLock : 0,
+        0,
+        999
+      )
+  };
+}
+
+
+function getBulletSpeed(){
+
+  if(matchSettings.bulletSpeed === "infinite"){
+    return 999999;
+  }
+
+  if(matchSettings.bulletSpeed === "fast"){
+    return 60;
+  }
+
+  if(matchSettings.bulletSpeed === "slow"){
+    return 26;
+  }
+
+  return 42;
+}
+
+
+function getRegenConfig(){
+
+  if(matchSettings.hpRegen === "fast"){
+    return { interval:1200, amount:4 };
+  }
+
+  if(matchSettings.hpRegen === "medium"){
+    return { interval:1800, amount:3 };
+  }
+
+  if(matchSettings.hpRegen === "slow"){
+    return { interval:2800, amount:2 };
+  }
+
+  return null;
+}
+
+
+function updateSettingsDisabledUI(){
+
+  const terrainNone =
+    terrainAmountSetting.value === "none";
+
+  terrainHeightSetting.disabled =
+    terrainNone;
+
+  terrainHeightLabel.classList.toggle(
+    "settingDisabled",
+    terrainNone
+  );
+
+  const regenNone =
+    hpRegenSetting.value === "none";
+
+  regenLockSetting.disabled =
+    regenNone;
+
+  regenLockLabel.classList.toggle(
+    "settingDisabled",
+    regenNone
+  );
+}
+
+
+function loadSettingsIntoUI(settings){
+
+  const normalized =
+    normalizeMatchSettings(settings);
+
+  terrainAmountSetting.value =
+    normalized.terrainAmount;
+
+  terrainHeightSetting.value =
+    normalized.terrainHeight;
+
+  bulletSpeedSetting.value =
+    normalized.bulletSpeed;
+
+  maxHpSetting.value =
+    String(normalized.maxHp);
+
+  hpRegenSetting.value =
+    normalized.hpRegen;
+
+  regenLockSetting.value =
+    String(normalized.regenLock);
+
+  updateSettingsDisabledUI();
+}
+
+
+function readSettingsFromUI(){
+
+  const maxHp =
+    Math.round(
+      Number(maxHpSetting.value)
+    );
+
+  const regenLock =
+    Number(regenLockSetting.value);
+
+  return normalizeMatchSettings({
+    terrainAmount: terrainAmountSetting.value,
+    terrainHeight: terrainHeightSetting.value,
+    bulletSpeed: bulletSpeedSetting.value,
+    maxHp,
+    hpRegen: hpRegenSetting.value,
+    regenLock
+  });
+}
+
+
+function applyMatchSettings(settings, force=false){
+
+  const normalized =
+    normalizeMatchSettings(settings);
+
+  const signature =
+    JSON.stringify(normalized);
+
+  const terrainChanged =
+    normalized.terrainAmount !== matchSettings.terrainAmount ||
+    normalized.terrainHeight !== matchSettings.terrainHeight;
+
+  matchSettings =
+    normalized;
+
+  if(
+    (force || terrainChanged) &&
+    scene &&
+    !matchHasStarted
+  ){
+    rebuildArena();
+  }
+
+  appliedTerrainSignature =
+    signature;
+}
+
+
+function openSettings(){
+
+  loadSettingsIntoUI(matchSettings);
+
+  settingsMessage.textContent =
+    isHost
+      ? ""
+      : "部屋主のみ変更できます";
+
+  settingsSaveButton.style.display =
+    isHost ? "block" : "none";
+
+  [
+    terrainAmountSetting,
+    terrainHeightSetting,
+    bulletSpeedSetting,
+    maxHpSetting,
+    hpRegenSetting,
+    regenLockSetting
+  ].forEach(
+    control => {
+      control.disabled = !isHost;
+    }
+  );
+
+  updateSettingsDisabledUI();
+
+  settingsModal.style.display =
+    "flex";
+}
+
+
+function closeSettings(){
+
+  settingsModal.style.display =
+    "none";
+
+}
+
+
+async function saveSettings(){
+
+  if(!isHost || !matchRef || matchHasStarted){
+    return;
+  }
+
+  const settings =
+    readSettingsFromUI();
+
+  settingsMessage.textContent =
+    "保存中…";
+
+  try{
+
+    const snap =
+      await getDoc(matchRef);
+
+    if(!snap.exists()){
+      return;
+    }
+
+    const data =
+      snap.data();
+
+    if(data.status !== "waiting"){
+      settingsMessage.textContent =
+        "もう試合が始まっています";
+      return;
+    }
+
+    const players =
+      { ...(data.players || {}) };
+
+    Object.values(players).forEach(
+      player => {
+        player.hp = settings.maxHp;
+        player.lastDamagedAt = 0;
+      }
+    );
+
+    await updateDoc(
+      matchRef,
+      {
+        settings,
+        players
+      }
+    );
+
+    matchSettings = settings;
+    settingsMessage.textContent =
+      "保存しました";
+
+    setTimeout(
+      closeSettings,
+      220
+    );
+
+  }catch(error){
+
+    console.error(
+      "settings save error",
+      error
+    );
+
+    settingsMessage.textContent =
+      "保存失敗：" +
+      getFriendlyError(error);
+
+  }
+}
+
+
+async function shareRoomCode(){
+
+  if(!currentMatchId){
+    return;
+  }
+
+  const text =
+    currentMatchId;
+
+  try{
+
+    if(navigator.share){
+      await navigator.share({
+        text
+      });
+    }else if(navigator.clipboard){
+      await navigator.clipboard.writeText(text);
+      statusEl.textContent =
+        "試合コードをコピーしたよ";
+    }else{
+      window.prompt(
+        "このコードを共有してね",
+        text
+      );
+    }
+
+  }catch(error){
+    if(error?.name !== "AbortError"){
+      console.error(
+        "share error",
+        error
+      );
+    }
+  }
+}
+
+
+function updateStartUI(data){
 
   if(
     data.status !==
@@ -3692,38 +3210,87 @@ function updateStartUI(
     preStart.style.display =
       "none";
 
-    settingsModal.style.display =
-      "none";
+    return;
+
+  }
+
+  applyMatchSettings(
+    data.settings || matchSettings
+  );
+
+  loadSettingsIntoUI(
+    matchSettings
+  );
+
+  shareRoomButton.style.display =
+    "inline-flex";
+
+  settingsButton.style.display =
+    "inline-flex";
+
+  leaveRoomButton.style.display =
+    "inline-flex";
+
+
+  if(
+    isHost
+  ){
+
+    preStart.style.display =
+      "block";
+
+    preStartText.textContent =
+      "部屋主がSTARTを長押しして開始";
+
+    startButton.style.opacity =
+      "1";
+
+  }else{
+
+    preStart.style.display =
+      "block";
+
+    preStartText.textContent =
+      "部屋主のSTART待ち";
+
+    startButton.style.opacity =
+      ".35";
+
+  }
+
+}
+
+
+function setCameraFromPlayer(){
+
+  if(!localPlayer){
 
     return;
 
   }
 
 
-  preStart.style.display =
-    "block";
+  camera.position.set(
+
+    localPlayer.x,
+
+    localPlayer.y + .45,
+
+    localPlayer.z
+
+  );
 
 
-  startButton.style.display =
-    "block";
+  camera.rotation.order =
+    "YXZ";
 
 
-  startButton.style.opacity =
-    isHost
-      ? "1"
-      : ".35";
+  camera.rotation.y =
+    cameraState.yaw;
 
 
-  preStartText.textContent =
-    isHost
-      ? "STARTを1秒長押しして開始"
-      : "部屋主のSTART待ち";
-
-
-  settingsButton.style.opacity =
-    isHost
-      ? "1"
-      : ".7";
+  camera.rotation.x =
+    cameraState.pitch;
 
 }
 
@@ -3741,9 +3308,7 @@ function updateRemotePlayers(
       uid,
       player
     ]
-    of Object.entries(
-      players
-    )
+    of Object.entries(players)
   ){
 
     if(
@@ -3756,20 +3321,14 @@ function updateRemotePlayers(
     }
 
 
-    seen.add(
-      uid
-    );
+    seen.add(uid);
 
 
     let mesh =
-      playerMeshes.get(
-        uid
-      );
+      playerMeshes.get(uid);
 
 
-    if(
-      !mesh
-    ){
+    if(!mesh){
 
       mesh =
         createPlayerMesh(
@@ -3801,8 +3360,7 @@ function updateRemotePlayers(
 
     mesh.rotation.y =
       Number(
-        player.yaw ||
-        0
+        player.yaw || 0
       );
 
 
@@ -3820,9 +3378,7 @@ function updateRemotePlayers(
   ){
 
     if(
-      !seen.has(
-        uid
-      )
+      !seen.has(uid)
     ){
 
       removeRemoteMesh(
@@ -3841,62 +3397,17 @@ function updateScoreboard(
 ){
 
   const order =
-    Array.isArray(
-      roomPlayerOrder
-    )
-      ? roomPlayerOrder
+    Array.isArray(window.__dfpsPlayerOrder)
+      ? window.__dfpsPlayerOrder
       : [];
 
-
   const entries =
-    Object.entries(
-      players
-    )
-      .sort(
-        (a,b) => {
-
-          const ai =
-            order.indexOf(
-              a[0]
-            );
-
-          const bi =
-            order.indexOf(
-              b[0]
-            );
-
-
-          if(
-            ai === -1 &&
-            bi === -1
-          ){
-
-            return 0;
-
-          }
-
-
-          if(
-            ai === -1
-          ){
-
-            return 1;
-
-          }
-
-
-          if(
-            bi === -1
-          ){
-
-            return -1;
-
-          }
-
-
-          return ai - bi;
-
-        }
+    order
+      .filter(uid => players[uid])
+      .map(uid => [uid, players[uid]])
+      .concat(
+        Object.entries(players)
+          .filter(([uid]) => !order.includes(uid))
       );
 
 
@@ -3959,17 +3470,11 @@ function updateScoreboard(
         : "scoreDead";
 
 
-    row.appendChild(
-      name
-    );
+    row.appendChild(name);
 
-    row.appendChild(
-      state
-    );
+    row.appendChild(state);
 
-    scoreBoard.appendChild(
-      row
-    );
+    scoreBoard.appendChild(row);
 
   }
 
@@ -3978,9 +3483,7 @@ function updateScoreboard(
 
 function updateLocalHUD(){
 
-  if(
-    !localPlayer
-  ){
+  if(!localPlayer){
 
     return;
 
@@ -4000,34 +3503,25 @@ function updateLocalHUD(){
     `HP ${hp}`;
 
 
-  const maxHP =
-    getMaxHP();
-
+  const maxHp =
+    Math.max(
+      1,
+      Number(
+        matchSettings.maxHp ||
+        100
+      )
+    );
 
   healthBar.style.width =
-    `${clamp(
-      hp /
-      maxHP *
-      100,
-      0,
-      100
-    )}%`;
+    `${clamp((hp / maxHp) * 100, 0, 100)}%`;
 
 
-  if(
-    hp >
-    maxHP *
-    .6
-  ){
+  if(hp > 60){
 
     healthBar.style.background =
       "#48e27d";
 
-  }else if(
-    hp >
-    maxHP *
-    .3
-  ){
+  }else if(hp > 30){
 
     healthBar.style.background =
       "#ffd84d";
@@ -4041,9 +3535,7 @@ function updateLocalHUD(){
 
 
   killsText.textContent =
-    String(
-      localKills
-    );
+    String(localKills);
 
 }
 
@@ -4054,10 +3546,10 @@ function clamp(
   max
 ){
 
-  return Math.min(
-    max,
-    Math.max(
-      min,
+  return Math.max(
+    min,
+    Math.min(
+      max,
       value
     )
   );
@@ -4067,61 +3559,45 @@ function clamp(
 
 function markActivity(){
 
-  const now =
-    Date.now();
-
   lastActivityAt =
-    now;
+    Date.now();
 
   if(
     localPlayer
   ){
-
     localPlayer.lastActiveAt =
-      now;
-
+      lastActivityAt;
   }
-
 }
 
 
 function getColliderBoxes(){
-
-  return colliders.map(
-    collider =>
-      new THREE.Box3()
-        .setFromObject(
-          collider
-        )
-  );
-
+  return colliders
+    .filter(
+      collider =>
+        collider &&
+        collider.geometry
+    )
+    .map(
+      collider =>
+        new THREE.Box3()
+          .setFromObject(collider)
+    );
 }
 
 
 function horizontalOverlaps(
   box,
   x,
-  z
+  z,
+  radius = .38
 ){
-
-  const halfWidth =
-    .35;
-
-  const halfDepth =
-    .35;
-
-
   return (
-    x + halfWidth >
-      box.min.x &&
-    x - halfWidth <
-      box.max.x &&
-    z + halfDepth >
-      box.min.z &&
-    z - halfDepth <
-      box.max.z
+    x + radius > box.min.x &&
+    x - radius < box.max.x &&
+    z + radius > box.min.z &&
+    z - radius < box.max.z
   );
-
 }
 
 
@@ -4131,81 +3607,76 @@ function isPositionFree(
   z
 ){
 
-  const boxes =
-    getColliderBoxes();
+  const radius =
+    .38;
 
+  if(
+    x < -ARENA_SIZE / 2 + radius ||
+    x > ARENA_SIZE / 2 - radius ||
+    z < -ARENA_SIZE / 2 + radius ||
+    z > ARENA_SIZE / 2 - radius
+  ){
+    return false;
+  }
 
   const feetY =
-    y -
-    PLAYER_HEIGHT;
-
+    y - PLAYER_HEIGHT;
 
   const headY =
-    y +
-    .35;
-
+    y + .35;
 
   for(
-    const box
-    of boxes
+    const collider
+    of colliders
   ){
 
     if(
-      box ===
-      boxes[0]
+      !collider ||
+      !collider.geometry ||
+      collider === colliders[0]
     ){
-
       continue;
-
     }
 
+    const box =
+      new THREE.Box3()
+        .setFromObject(
+          collider
+        );
 
     if(
       !horizontalOverlaps(
         box,
         x,
-        z
+        z,
+        radius
       )
     ){
-
       continue;
-
     }
 
-
-    const top =
-      box.max.y;
-
-    const bottom =
-      box.min.y;
-
+    /*
+      足場の上に立っている場合は、
+      足場そのものを横移動の障害物にしない。
+    */
+    if(
+      box.max.y <=
+      feetY + .06
+    ){
+      continue;
+    }
 
     if(
-      feetY <
-      top - .08 &&
-      headY >
-      bottom + .08
+      box.min.y >=
+      headY - .06
     ){
-
-      if(
-        Math.abs(
-          feetY -
-          top
-        ) >
-        .12
-      ){
-
-        return false;
-
-      }
-
+      continue;
     }
 
+    return false;
   }
 
-
   return true;
-
 }
 
 
@@ -4216,77 +3687,69 @@ function getLandingTop(
   nextFeetY
 ){
 
-  let landingTop =
+  let bestTop =
     null;
 
-
+  /*
+    床の上面は y=0。
+  */
   if(
-    previousFeetY >= 0 &&
-    nextFeetY <= 0
+    previousFeetY >= -.05 &&
+    nextFeetY <= .05
   ){
-
-    landingTop =
-      0;
-
+    bestTop = 0;
   }
 
-
-  const boxes =
-    getColliderBoxes();
-
-
   for(
-    let i = 1;
-    i < boxes.length;
-    i++
+    const collider
+    of colliders
   ){
 
-    const box =
-      boxes[i];
+    if(
+      !collider ||
+      !collider.geometry ||
+      collider === colliders[0]
+    ){
+      continue;
+    }
 
+    const box =
+      new THREE.Box3()
+        .setFromObject(
+          collider
+        );
 
     if(
       !horizontalOverlaps(
         box,
         x,
-        z
+        z,
+        .36
       )
     ){
-
       continue;
-
     }
-
 
     const top =
       box.max.y;
 
-
     if(
-      previousFeetY >=
-        top - .03 &&
-      nextFeetY <=
-        top + .03
+      previousFeetY >= top - .08 &&
+      nextFeetY <= top + .08
     ){
 
       if(
-        landingTop === null ||
-        top >
-        landingTop
+        bestTop === null ||
+        top > bestTop
       ){
-
-        landingTop =
+        bestTop =
           top;
-
       }
 
     }
-
   }
 
-
-  return landingTop;
-
+  return bestTop;
 }
 
 
@@ -4297,66 +3760,59 @@ function getCeilingBottom(
   nextHeadY
 ){
 
-  const boxes =
-    getColliderBoxes();
-
-
-  let ceiling =
+  let bestBottom =
     null;
 
-
   for(
-    let i = 1;
-    i < boxes.length;
-    i++
+    const collider
+    of colliders
   ){
 
-    const box =
-      boxes[i];
+    if(
+      !collider ||
+      !collider.geometry ||
+      collider === colliders[0]
+    ){
+      continue;
+    }
 
+    const box =
+      new THREE.Box3()
+        .setFromObject(
+          collider
+        );
 
     if(
       !horizontalOverlaps(
         box,
         x,
-        z
+        z,
+        .36
       )
     ){
-
       continue;
-
     }
-
 
     const bottom =
       box.min.y;
 
-
     if(
-      previousHeadY <=
-        bottom + .03 &&
-      nextHeadY >=
-        bottom - .03
+      previousHeadY <= bottom + .08 &&
+      nextHeadY >= bottom - .08
     ){
 
       if(
-        ceiling === null ||
-        bottom <
-        ceiling
+        bestBottom === null ||
+        bottom < bestBottom
       ){
-
-        ceiling =
+        bestBottom =
           bottom;
-
       }
 
     }
-
   }
 
-
-  return ceiling;
-
+  return bestBottom;
 }
 
 
@@ -4366,24 +3822,25 @@ function tryMove(
 ){
 
   if(
-    !localPlayer
+    !localPlayer ||
+    !localPlayer.alive ||
+    !matchHasStarted
   ){
-
     return;
-
   }
-
 
   const nextX =
     localPlayer.x +
     dx;
 
-
   const nextZ =
     localPlayer.z +
     dz;
 
-
+  /*
+    X/Zを分離して判定することで、
+    足場の端で壁に引っかかりにくくする。
+  */
   if(
     isPositionFree(
       nextX,
@@ -4391,12 +3848,9 @@ function tryMove(
       localPlayer.z
     )
   ){
-
     localPlayer.x =
       nextX;
-
   }
-
 
   if(
     isPositionFree(
@@ -4405,12 +3859,9 @@ function tryMove(
       nextZ
     )
   ){
-
     localPlayer.z =
       nextZ;
-
   }
-
 }
 
 
@@ -4420,65 +3871,67 @@ function updateMovement(
 
   if(
     !localPlayer ||
-    !localPlayer.alive
+    !localPlayer.alive ||
+    !matchHasStarted ||
+    grabAnimation
   ){
-
     return;
-
   }
 
+  let inputX =
+    0;
 
-  let moveX =
-    keys.d -
-    keys.a;
+  let inputZ =
+    0;
 
-  let moveZ =
-    keys.s -
-    keys.w;
+  if(keys.w)
+    inputZ -= 1;
 
+  if(keys.s)
+    inputZ += 1;
 
-  if(
-    mobileInput.x !== 0 ||
-    mobileInput.y !== 0
-  ){
+  if(keys.a)
+    inputX -= 1;
 
-    moveX =
-      mobileInput.x;
+  if(keys.d)
+    inputX += 1;
 
-    moveZ =
-      mobileInput.y;
+  inputX +=
+    mobileInput.x;
 
-  }
-
+  inputZ +=
+    mobileInput.y;
 
   const length =
     Math.hypot(
-      moveX,
-      moveZ
+      inputX,
+      inputZ
     );
 
-
-  if(
-    length >
-    1
-  ){
-
-    moveX /=
+  if(length > 1){
+    inputX /=
       length;
 
-    moveZ /=
+    inputZ /=
       length;
-
   }
 
+  const moving =
+    Math.abs(inputX) > .01 ||
+    Math.abs(inputZ) > .01;
 
-  if(
-    length >
-    .05
-  ){
+  if(moving){
+
+    markActivity();
+
+    const speed =
+      physics.moveSpeed;
+
+    const amount =
+      speed * delta;
 
     const forwardX =
-      Math.sin(
+      -Math.sin(
         cameraState.yaw
       );
 
@@ -4493,71 +3946,56 @@ function updateMovement(
       );
 
     const rightZ =
-      Math.sin(
+      -Math.sin(
         cameraState.yaw
       );
 
-
-    const worldX =
+    const moveX =
       (
-        rightX *
-        moveX +
-        forwardX *
-        -moveZ
+        forwardX * -inputZ +
+        rightX * inputX
       ) *
-      physics.moveSpeed *
-      delta;
+      amount;
 
-
-    const worldZ =
+    const moveZ =
       (
-        rightZ *
-        moveX +
-        forwardZ *
-        -moveZ
+        forwardZ * -inputZ +
+        rightZ * inputX
       ) *
-      physics.moveSpeed *
-      delta;
-
+      amount;
 
     tryMove(
-      worldX,
-      worldZ
+      moveX,
+      moveZ
     );
-
-    markActivity();
-
   }
 
-
-  const previousY =
-    localPlayer.y;
-
-
   const previousFeetY =
-    previousY -
+    localPlayer.y -
     PLAYER_HEIGHT;
 
+  const previousHeadY =
+    localPlayer.y +
+    .35;
 
   velocityY +=
     physics.gravity *
     delta;
 
-
-  const nextY =
-    previousY +
-    velocityY *
-    delta;
-
+  let nextY =
+    localPlayer.y +
+    velocityY * delta;
 
   const nextFeetY =
     nextY -
     PLAYER_HEIGHT;
 
+  const nextHeadY =
+    nextY +
+    .35;
 
   if(
-    velocityY <=
-    0
+    velocityY <= 0
   ){
 
     const landingTop =
@@ -4567,7 +4005,6 @@ function updateMovement(
         previousFeetY,
         nextFeetY
       );
-
 
     if(
       landingTop !== null
@@ -4595,14 +4032,6 @@ function updateMovement(
 
   }else{
 
-    const previousHeadY =
-      previousY +
-      .35;
-
-    const nextHeadY =
-      nextY +
-      .35;
-
     const ceilingBottom =
       getCeilingBottom(
         localPlayer.x,
@@ -4611,10 +4040,8 @@ function updateMovement(
         nextHeadY
       );
 
-
     if(
-      ceilingBottom !==
-      null
+      ceilingBottom !== null
     ){
 
       localPlayer.y =
@@ -4633,10 +4060,11 @@ function updateMovement(
 
     grounded =
       false;
-
   }
 
-
+  /*
+    落下しすぎた場合の安全処理。
+  */
   if(
     localPlayer.y <
     -10
@@ -4645,23 +4073,29 @@ function updateMovement(
     localPlayer.y =
       PLAYER_HEIGHT;
 
-    localPlayer.x =
-      0;
-
-    localPlayer.z =
-      0;
-
     velocityY =
       0;
 
     grounded =
       true;
-
   }
 
+  camera.position.set(
+    localPlayer.x,
+    localPlayer.y + .45,
+    localPlayer.z
+  );
 
-  setCameraFromPlayer();
+  camera.rotation.order =
+    "YXZ";
 
+  camera.rotation.y =
+    cameraState.yaw;
+
+  camera.rotation.x =
+    cameraState.pitch;
+
+  updateGrabUI();
 }
 
 
@@ -4670,7 +4104,7 @@ function jump(){
   if(
     !localPlayer ||
     !localPlayer.alive ||
-    !grounded
+    !matchHasStarted
   ){
 
     return;
@@ -4678,13 +4112,32 @@ function jump(){
   }
 
 
+  /*
+    空中ならJUMPボタンがGRABになる。
+    条件を満たしていればそのまま掴む。
+  */
+
+  if(!grounded){
+
+    if(
+      canGrab()
+    ){
+
+      startGrab();
+
+    }
+
+    return;
+
+  }
+
+  markActivity();
+
   velocityY =
     physics.jumpPower;
 
   grounded =
     false;
-
-  markActivity();
 
 }
 
@@ -4692,7 +4145,8 @@ function jump(){
 function getGrabTarget(){
 
   if(
-    !localPlayer
+    !localPlayer ||
+    grounded
   ){
 
     return null;
@@ -4700,39 +4154,45 @@ function getGrabTarget(){
   }
 
 
-  const feetY =
-    localPlayer.y -
-    PLAYER_HEIGHT;
+  const playerX =
+    localPlayer.x;
 
+  const playerY =
+    localPlayer.y;
 
-  const boxes =
-    getColliderBoxes();
+  const playerZ =
+    localPlayer.z;
 
 
   let best =
     null;
 
+  let bestDistance =
+    Infinity;
+
+
+  /*
+    足場の上面が
+    自分の足元より上、
+    しかし頭より下。
+  */
+
+  const feetY =
+    playerY -
+    PLAYER_HEIGHT;
+
+  const headY =
+    playerY;
+
 
   for(
-    let i = 1;
-    i < boxes.length;
-    i++
+    const collider
+    of colliders
   ){
 
-    const box =
-      boxes[i];
-
-
-    const horizontal =
-      horizontalOverlaps(
-        box,
-        localPlayer.x,
-        localPlayer.z
-      );
-
-
     if(
-      !horizontal
+      collider ===
+      colliders[0]
     ){
 
       continue;
@@ -4740,14 +4200,92 @@ function getGrabTarget(){
     }
 
 
-    const top =
+    const box =
+      new THREE.Box3()
+        .setFromObject(
+          collider
+        );
+
+
+    const insideX =
+      playerX >=
+        box.min.x -
+        GRAB_DISTANCE &&
+
+      playerX <=
+        box.max.x +
+        GRAB_DISTANCE;
+
+
+    const insideZ =
+      playerZ >=
+        box.min.z -
+        GRAB_DISTANCE &&
+
+      playerZ <=
+        box.max.z +
+        GRAB_DISTANCE;
+
+
+    if(
+      !insideX ||
+      !insideZ
+    ){
+
+      continue;
+
+    }
+
+
+    const platformTop =
       box.max.y;
 
 
+    if(
+      platformTop <=
+      feetY + .05
+    ){
+
+      continue;
+
+    }
+
+
+    if(
+      platformTop >=
+      headY
+    ){
+
+      continue;
+
+    }
+
+
+    const centerX =
+      clamp(
+        playerX,
+        box.min.x,
+        box.max.x
+      );
+
+
+    const centerZ =
+      clamp(
+        playerZ,
+        box.min.z,
+        box.max.z
+      );
+
+
     const distance =
-      Math.abs(
-        top -
-        feetY
+      Math.hypot(
+
+        playerX -
+        centerX,
+
+        playerZ -
+        centerZ
+
       );
 
 
@@ -4762,28 +4300,25 @@ function getGrabTarget(){
 
 
     if(
-      top >=
-      localPlayer.y
-    ){
-
-      continue;
-
-    }
-
-
-    if(
-      !best ||
       distance <
-      best.distance
+      bestDistance
     ){
+
+      bestDistance =
+        distance;
 
       best = {
 
         box,
 
-        distance,
+        top:
+          platformTop,
 
-        top
+        x:
+          centerX,
+
+        z:
+          centerZ
 
       };
 
@@ -4799,15 +4334,6 @@ function getGrabTarget(){
 
 function canGrab(){
 
-  if(
-    grounded
-  ){
-
-    return false;
-
-  }
-
-
   return Boolean(
     getGrabTarget()
   );
@@ -4816,6 +4342,20 @@ function canGrab(){
 
 
 function updateGrabUI(){
+
+  if(
+    !localPlayer ||
+    !matchHasStarted
+  ){
+
+    jumpButton.style.opacity =
+      "0";
+
+    return;
+  }
+
+  jumpButton.style.opacity =
+    "";
 
   if(
     grounded
@@ -4833,46 +4373,40 @@ function updateGrabUI(){
 
   }
 
-
   jumpButton.textContent =
     "GRAB";
-
 
   if(
     canGrab()
   ){
 
-    jumpButton.classList.add(
-      "grabActive"
-    );
-
     jumpButton.classList.remove(
       "grabInactive"
+    );
+
+    jumpButton.classList.add(
+      "grabActive"
     );
 
   }else{
 
-    jumpButton.classList.add(
-      "grabInactive"
-    );
-
     jumpButton.classList.remove(
       "grabActive"
     );
 
-  }
+    jumpButton.classList.add(
+      "grabInactive"
+    );
 
+  }
 }
 
 
 function startGrab(){
 
-  const target =
-    getGrabTarget();
-
-
   if(
-    !target ||
+    grabAnimation ||
+    grounded ||
     !localPlayer
   ){
 
@@ -4881,18 +4415,33 @@ function startGrab(){
   }
 
 
+  const target =
+    getGrabTarget();
+
+
+  if(!target){
+
+    return;
+
+  }
+
+  markActivity();
+
   grabAnimation = {
 
     start:
       performance.now(),
 
-    end:
-      performance.now() +
-      GRAB_TIME,
+    target,
 
-    targetY:
-      target.top +
-      PLAYER_HEIGHT
+    startX:
+      localPlayer.x,
+
+    startY:
+      localPlayer.y,
+
+    startZ:
+      localPlayer.z
 
   };
 
@@ -4900,70 +4449,93 @@ function startGrab(){
   velocityY =
     0;
 
-  grounded =
-    false;
-
-  markActivity();
-
 }
 
 
 function updateGrabAnimation(
-  time
+  now
 ){
 
-  updateGrabUI();
-
-
-  if(
-    !grabAnimation ||
-    !localPlayer
-  ){
+  if(!grabAnimation){
 
     return;
 
   }
 
 
+  const elapsed =
+    now -
+    grabAnimation.start;
+
+
   const progress =
     clamp(
-      (
-        time -
-        grabAnimation.start
-      ) /
-      (
-        grabAnimation.end -
-        grabAnimation.start
-      ),
+      elapsed /
+      GRAB_TIME,
       0,
       1
     );
 
 
-  localPlayer.y =
-    THREE.MathUtils.lerp(
-      localPlayer.y,
-      grabAnimation.targetY,
-      .28
+  const smooth =
+    progress *
+    progress *
+    (
+      3 -
+      2 * progress
     );
 
 
+  const target =
+    grabAnimation.target;
+
+
+  localPlayer.x =
+    grabAnimation.startX +
+    (
+      target.x -
+      grabAnimation.startX
+    ) *
+    smooth;
+
+  localPlayer.z =
+    grabAnimation.startZ +
+    (
+      target.z -
+      grabAnimation.startZ
+    ) *
+    smooth;
+
+
+  localPlayer.y =
+    target.top +
+    PLAYER_HEIGHT +
+    .02;
+
+
+  camera.position.set(
+
+    localPlayer.x,
+
+    localPlayer.y + .45,
+
+    localPlayer.z
+
+  );
+
+
   if(
-    progress >=
-    1
+    progress >= 1
   ){
 
-    localPlayer.y =
-      grabAnimation.targetY;
-
-    velocityY =
-      0;
+    grabAnimation =
+      null;
 
     grounded =
       true;
 
-    grabAnimation =
-      null;
+    velocityY =
+      0;
 
     updateGrabUI();
 
@@ -4973,11 +4545,11 @@ function updateGrabAnimation(
 
 
 function showKillMessage(
-  message
+  text
 ){
 
   killMessage.textContent =
-    message;
+    text;
 
   killMessage.style.opacity =
     "1";
@@ -4990,7 +4562,7 @@ function showKillMessage(
         "0";
 
     },
-    700
+    900
   );
 
 }
@@ -5031,9 +4603,7 @@ function createBullet(
   );
 
 
-  scene.add(
-    mesh
-  );
+  scene.add(mesh);
 
 
   const id =
@@ -5069,13 +4639,10 @@ function removeBullet(
 ){
 
   const bullet =
-    bullets.get(
-      id
-    );
+    bullets.get(id);
 
-  if(
-    !bullet
-  ){
+
+  if(!bullet){
 
     return;
 
@@ -5087,22 +4654,9 @@ function removeBullet(
   );
 
 
-  if(
-    bullet.mesh.geometry
-  ){
+  bullet.mesh.geometry.dispose();
 
-    bullet.mesh.geometry.dispose();
-
-  }
-
-
-  if(
-    bullet.mesh.material
-  ){
-
-    bullet.mesh.material.dispose();
-
-  }
+  bullet.mesh.material.dispose();
 
 
   bullets.delete(
@@ -5130,11 +4684,8 @@ function updateBullets(
 
 
     const distance =
-      BULLET_SPEED ===
-      Infinity
-        ? 0
-        : BULLET_SPEED *
-          delta;
+      getBulletSpeed() *
+      delta;
 
 
     bullet.mesh.position.add(
@@ -5153,11 +4704,9 @@ function updateBullets(
 
 
     if(
-      BULLET_SPEED !==
-        Infinity &&
       now -
       bullet.created >
-        BULLET_LIFETIME
+      BULLET_LIFETIME
     ){
 
       removeBullet(
@@ -5182,6 +4731,10 @@ function updateBullets(
     let hitSomething =
       false;
 
+
+    /*
+      壁・足場との衝突
+    */
 
     for(
       const collider
@@ -5208,8 +4761,7 @@ function updateBullets(
       if(
         closest.distanceTo(
           bullet.mesh.position
-        ) <
-        .18
+        ) < .18
       ){
 
         hitSomething =
@@ -5222,9 +4774,7 @@ function updateBullets(
     }
 
 
-    if(
-      hitSomething
-    ){
+    if(hitSomething){
 
       removeBullet(
         id
@@ -5234,6 +4784,10 @@ function updateBullets(
 
     }
 
+
+    /*
+      プレイヤーとの衝突
+    */
 
     for(
       const [
@@ -5264,8 +4818,7 @@ function updateBullets(
       if(
         box.distanceToPoint(
           bullet.mesh.position
-        ) <
-        .15
+        ) < .15
       ){
 
         hitSomething =
@@ -5292,9 +4845,7 @@ function updateBullets(
     }
 
 
-    if(
-      hitSomething
-    ){
+    if(hitSomething){
 
       removeBullet(
         id
@@ -5368,15 +4919,11 @@ async function applyBulletDamage(
 
 
         const shooter =
-          players[
-            shooterUid
-          ];
+          players[shooterUid];
 
 
         const target =
-          players[
-            targetUid
-          ];
+          players[targetUid];
 
 
         if(
@@ -5412,33 +4959,24 @@ async function applyBulletDamage(
         }
 
 
-        const settings =
-          normalizeMatchSettings(
-            data.settings
-          );
-
-
         target.hp =
           Math.max(
 
             0,
 
             Number(
-              target.hp ||
-              0
+              target.hp || 0
             ) -
             BULLET_DAMAGE
 
           );
 
-
-        target.lastDamageAt =
+        target.lastDamagedAt =
           Date.now();
 
 
         if(
-          target.hp <=
-          0
+          target.hp <= 0
         ){
 
           target.hp =
@@ -5450,10 +4988,8 @@ async function applyBulletDamage(
 
           shooter.kills =
             Number(
-              shooter.kills ||
-              0
-            ) +
-            1;
+              shooter.kills || 0
+            ) + 1;
 
 
           wasKill =
@@ -5464,16 +5000,14 @@ async function applyBulletDamage(
           const alivePlayers =
             Object.values(
               players
-            )
-              .filter(
-                player =>
-                  player.alive
-              );
+            ).filter(
+              player =>
+                player.alive
+            );
 
 
           if(
-            alivePlayers.length <=
-            1
+            alivePlayers.length <= 1
           ){
 
             transaction.update(
@@ -5486,8 +5020,7 @@ async function applyBulletDamage(
                   "ended",
 
                 winnerUid:
-                  alivePlayers.length ===
-                  1
+                  alivePlayers.length === 1
                     ? alivePlayers[0].uid
                     : null
 
@@ -5514,9 +5047,7 @@ async function applyBulletDamage(
     );
 
 
-    if(
-      wasKill
-    ){
+    if(wasKill){
 
       localKills++;
 
@@ -5536,6 +5067,39 @@ async function applyBulletDamage(
 
   }
 
+}
+
+
+function updateSpawnProtectionUI(){
+
+  if(
+    !matchHasStarted ||
+    !localPlayer ||
+    gameEnded
+  ){
+    spawnProtection.style.opacity =
+      "0";
+    return;
+  }
+
+  const remaining =
+    spawnProtectionUntil -
+    Date.now();
+
+  if(remaining <= 0){
+    spawnProtection.style.opacity =
+      "0";
+    return;
+  }
+
+  spawnProtectionTime.textContent =
+    Math.max(
+      0,
+      remaining / 1000
+    ).toFixed(1);
+
+  spawnProtection.style.opacity =
+    "1";
 }
 
 
@@ -5617,9 +5181,7 @@ function shoot(){
 
   }
 
-
   markActivity();
-
 
   const now =
     performance.now();
@@ -5662,125 +5224,11 @@ function shoot(){
       .normalize();
 
 
-  if(
-    BULLET_SPEED ===
-    Infinity
-  ){
-
-    const candidates =
-      [];
-
-
-    for(
-      const [
-        uid,
-        mesh
-      ]
-      of playerMeshes
-    ){
-
-      if(
-        uid !==
-        currentUser.uid &&
-        mesh.visible
-      ){
-
-        candidates.push(
-          mesh
-        );
-
-      }
-
-    }
-
-
-    const playerHits =
-      raycaster.intersectObjects(
-        candidates,
-        true
-      );
-
-
-    const terrainHits =
-      raycaster.intersectObjects(
-        colliders,
-        true
-      );
-
-
-    const firstPlayer =
-      playerHits.length
-        ? playerHits[0]
-        : null;
-
-
-    const firstTerrain =
-      terrainHits.length
-        ? terrainHits[0]
-        : null;
-
-
-    if(
-      firstPlayer &&
-      (
-        !firstTerrain ||
-        firstPlayer.distance <
-        firstTerrain.distance
-      )
-    ){
-
-      let object =
-        firstPlayer.object;
-
-      let hitUid =
-        null;
-
-
-      while(
-        object &&
-        !hitUid
-      ){
-
-        if(
-          object.userData &&
-          object.userData.uid
-        ){
-
-          hitUid =
-            object.userData.uid;
-
-        }
-
-        object =
-          object.parent;
-
-      }
-
-
-      if(
-        hitUid &&
-        Date.now() >=
-        spawnProtectionUntil
-      ){
-
-        applyBulletDamage(
-          hitUid,
-          currentUser.uid
-        );
-
-      }
-
-    }
-
-  }else{
-
-    createBullet(
-      origin,
-      direction,
-      currentUser.uid
-    );
-
-  }
+  createBullet(
+    origin,
+    direction,
+    currentUser.uid
+  );
 
 
   updateFireUI();
@@ -5799,15 +5247,6 @@ function startMatchByHost(){
     return;
 
   }
-
-
-  lastRegenAt =
-    0;
-
-
-  spawnProtectionUntil =
-    Date.now() +
-    START_PROTECTION_TIME;
 
 
   runTransaction(
@@ -5851,9 +5290,7 @@ function startMatchByHost(){
 
       for(
         const player
-        of Object.values(
-          players
-        )
+        of Object.values(players)
       ){
 
         const spawn =
@@ -5870,13 +5307,10 @@ function startMatchByHost(){
           spawn.z;
 
         player.hp =
-          getMaxHP();
+          matchSettings.maxHp;
 
-        player.lastDamageAt =
+        player.lastDamagedAt =
           0;
-
-        player.lastActiveAt =
-          Date.now();
 
         player.alive =
           true;
@@ -5907,6 +5341,7 @@ function startMatchByHost(){
             START_PROTECTION_TIME
 
         }
+
       );
 
     }
@@ -5972,13 +5407,11 @@ function updateStartProgress(){
 
 
   if(
-    progress >=
-    1
+    progress >= 1
   ){
 
     startHolding =
       false;
-
 
     startButton.style.setProperty(
       "--progress",
@@ -6001,97 +5434,71 @@ async function checkMatchCleanup(
     !matchRef ||
     !data
   ){
-
     return;
-
   }
-
 
   const now =
     Date.now();
-
 
   if(
     now -
     lastCleanupCheck <
     CLEANUP_INTERVAL
   ){
-
     return;
-
   }
-
 
   lastCleanupCheck =
     now;
 
-
   let createdMillis =
     0;
-
 
   if(
     data.createdAt &&
     typeof data.createdAt.toMillis ===
       "function"
   ){
-
     createdMillis =
       data.createdAt.toMillis();
-
   }else if(
     typeof data.createdAt ===
     "number"
   ){
-
     createdMillis =
       data.createdAt;
-
   }
-
 
   if(
     createdMillis > 0 &&
-    now -
-    createdMillis >=
+    now - createdMillis >=
       MAX_MATCH_AGE
   ){
 
     try{
-
       await deleteDoc(
         matchRef
       );
-
     }catch(error){
-
       console.error(
         "age cleanup error",
         error
       );
-
     }
 
     return;
-
   }
-
 
   const players =
     Object.values(
       data.players || {}
     );
 
-
   if(
-    players.length ===
-    0
+    players.length === 0
   ){
-
     return;
-
   }
-
 
   const allInactive =
     players.every(
@@ -6103,39 +5510,30 @@ async function checkMatchCleanup(
             ? player.lastActiveAt
             : 0;
 
-
         return (
           last > 0 &&
-          now -
-          last >=
-          INACTIVE_MATCH_TIME
+          now - last >=
+            INACTIVE_MATCH_TIME
         );
-
       }
     );
-
 
   if(
     allInactive
   ){
 
     try{
-
       await deleteDoc(
         matchRef
       );
-
     }catch(error){
-
       console.error(
         "inactive cleanup error",
         error
       );
-
     }
 
   }
-
 }
 
 
@@ -6143,9 +5541,7 @@ function finishLocalGame(
   text
 ){
 
-  if(
-    gameEnded
-  ){
+  if(gameEnded){
 
     return;
 
@@ -6175,9 +5571,7 @@ function finishLocalGame(
 
 async function deleteMatch(){
 
-  if(
-    !matchRef
-  ){
+  if(!matchRef){
 
     return;
 
@@ -6208,9 +5602,7 @@ async function deleteMatch(){
 
 function leaveCurrentMatch(){
 
-  if(
-    unsubscribeMatch
-  ){
+  if(unsubscribeMatch){
 
     unsubscribeMatch();
 
@@ -6265,27 +5657,23 @@ function leaveCurrentMatch(){
   isHost =
     false;
 
-  matchSettings =
-    null;
-
-  roomPlayerOrder =
-    [];
-
   grabAnimation =
     null;
 
   spawnProtectionUntil =
     0;
 
-  protectionIndicator.classList.remove(
-    "active"
-  );
+  spawnProtection.style.opacity =
+    "0";
 
   fireCooldownEnd =
     0;
 
   lastActivityAt =
     Date.now();
+
+  lastRegenAt =
+    0;
 
   lastCleanupCheck =
     0;
@@ -6303,9 +5691,6 @@ function leaveCurrentMatch(){
   preStart.style.display =
     "none";
 
-  settingsModal.style.display =
-    "none";
-
   statusEl.textContent =
     "";
 
@@ -6315,88 +5700,53 @@ function leaveCurrentMatch(){
 }
 
 
-async function shareMatchCode(){
-
-  if(
-    !currentMatchId
-  ){
-
-    return;
-
-  }
-
-
-  const code =
-    String(
-      currentMatchId
-    );
-
-
-  try{
-
-    if(
-      navigator.share
-    ){
-
-      await navigator.share({
-        text:
-          code
-      });
-
-    }else if(
-      navigator.clipboard
-    ){
-
-      await navigator.clipboard.writeText(
-        code
-      );
-
-      statusEl.textContent =
-        "試合コードをコピーしたよ。";
-
-    }else{
-
-      statusEl.textContent =
-        code;
-
-    }
-
-  }catch(error){
-
-    if(
-      error?.name !==
-      "AbortError"
-    ){
-
-      console.error(
-        "share error",
-        error
-      );
-
-    }
-
-  }
-
-}
-
-
-function closeSettings(){
-
-  settingsModal.style.display =
-    "none";
-
-}
-
-
 async function handleReturn(){
 
   const wasHost =
     isHost;
 
-
   const ref =
     matchRef;
 
+
+  if(
+    !wasHost &&
+    ref &&
+    currentUser
+  ){
+
+    try{
+
+      const snap =
+        await getDoc(ref);
+
+      if(snap.exists()){
+        const data =
+          snap.data();
+        const players =
+          { ...(data.players || {}) };
+        delete players[currentUser.uid];
+
+        const playerOrder =
+          (Array.isArray(data.playerOrder)
+            ? data.playerOrder
+            : Object.keys(players))
+            .filter(uid => uid !== currentUser.uid);
+
+        await updateDoc(
+          ref,
+          { players, playerOrder }
+        );
+      }
+
+    }catch(error){
+      console.error(
+        "leave room error",
+        error
+      );
+    }
+
+  }
 
   leaveCurrentMatch();
 
@@ -6443,7 +5793,8 @@ function handleMouseMove(
 
 
   if(
-    !document.pointerLockElement
+    document.pointerLockElement !==
+    renderer.domElement
   ){
 
     return;
@@ -6451,14 +5802,21 @@ function handleMouseMove(
   }
 
 
+  if(
+    Math.abs(event.movementX) > 0 ||
+    Math.abs(event.movementY) > 0
+  ){
+    markActivity();
+  }
+
   cameraState.yaw -=
     event.movementX *
-    .0025;
+    .0023;
 
 
   cameraState.pitch -=
     event.movementY *
-    .0025;
+    .0023;
 
 
   cameraState.pitch =
@@ -6468,31 +5826,15 @@ function handleMouseMove(
       1.45
     );
 
-
-  markActivity();
-
 }
 
 
 function requestPointerLock(){
 
   if(
-    renderer &&
-    renderer.domElement
-  ){
-
-    renderer.domElement.requestPointerLock();
-
-  }
-
-}
-
-
-function setCameraFromPlayer(){
-
-  if(
-    !camera ||
-    !localPlayer
+    matchMedia(
+      "(pointer:coarse)"
+    ).matches
   ){
 
     return;
@@ -6500,26 +5842,16 @@ function setCameraFromPlayer(){
   }
 
 
-  camera.position.set(
+  if(
+    renderer &&
+    renderer.domElement
+      .requestPointerLock
+  ){
 
-    localPlayer.x,
+    renderer.domElement
+      .requestPointerLock();
 
-    localPlayer.y,
-
-    localPlayer.z
-
-  );
-
-
-  camera.rotation.order =
-    "YXZ";
-
-
-  camera.rotation.y =
-    cameraState.yaw;
-
-  camera.rotation.x =
-    cameraState.pitch;
+  }
 
 }
 
@@ -6534,51 +5866,32 @@ function setupDesktopInput(){
         event.code ===
         "KeyW"
       ){
-
-        keys.w =
-          true;
-
+        keys.w = true;
         markActivity();
-
       }
-
 
       if(
         event.code ===
         "KeyA"
       ){
-
-        keys.a =
-          true;
-
+        keys.a = true;
         markActivity();
-
       }
-
 
       if(
         event.code ===
         "KeyS"
       ){
-
-        keys.s =
-          true;
-
+        keys.s = true;
         markActivity();
-
       }
-
 
       if(
         event.code ===
         "KeyD"
       ){
-
-        keys.d =
-          true;
-
+        keys.d = true;
         markActivity();
-
       }
 
 
@@ -6587,17 +5900,9 @@ function setupDesktopInput(){
         "Space"
       ){
 
+        event.preventDefault();
+
         jump();
-
-      }
-
-
-      if(
-        event.code ===
-        "KeyF"
-      ){
-
-        shoot();
 
       }
 
@@ -6612,80 +5917,34 @@ function setupDesktopInput(){
       if(
         event.code ===
         "KeyW"
-      ){
-
-        keys.w =
-          false;
-
-      }
-
+      )
+        keys.w = false;
 
       if(
         event.code ===
         "KeyA"
-      ){
-
-        keys.a =
-          false;
-
-      }
-
+      )
+        keys.a = false;
 
       if(
         event.code ===
         "KeyS"
-      ){
-
-        keys.s =
-          false;
-
-      }
-
+      )
+        keys.s = false;
 
       if(
         event.code ===
         "KeyD"
-      ){
-
-        keys.d =
-          false;
-
-      }
+      )
+        keys.d = false;
 
     }
-  );
-
-
-  window.addEventListener(
-    "mousemove",
-    handleMouseMove
   );
 
 
   document.addEventListener(
-    "click",
-    event => {
-
-      if(
-        gameStarted &&
-        !gameEnded &&
-        !matchMedia(
-          "(pointer:coarse)"
-        ).matches
-      ){
-
-        if(
-          event.target ===
-          renderer.domElement
-        ){
-
-          shoot();
-
-        }
-
-      }
-
-    }
+    "mousemove",
+    handleMouseMove
   );
 
 }
@@ -6703,7 +5962,8 @@ function setupMobileInput(){
   ){
 
     const rect =
-      joystickZone.getBoundingClientRect();
+      joystickZone
+        .getBoundingClientRect();
 
 
     const centerX =
@@ -6756,13 +6016,11 @@ function setupMobileInput(){
 
 
     mobileInput.x =
-      dx /
-      max;
+      dx / max;
 
 
     mobileInput.y =
-      dy /
-      max;
+      dy / max;
 
 
     joystickKnob.style.transform =
@@ -6925,20 +6183,15 @@ function setupMobileInput(){
         dx !== 0 ||
         dy !== 0
       ){
-
         markActivity();
-
       }
 
-
       cameraState.yaw -=
-        dx *
-        .006;
+        dx * .006;
 
 
       cameraState.pitch -=
-        dy *
-        .006;
+        dy * .006;
 
 
       cameraState.pitch =
@@ -7075,19 +6328,8 @@ function setupStartButton(){
 
       markActivity();
 
-
-      try{
-
-        startButton.setPointerCapture(
-          event.pointerId
-        );
-
-      }catch(error){}
-
-
       startHolding =
         true;
-
 
       startHoldStart =
         performance.now();
@@ -7100,10 +6342,8 @@ function setupStartButton(){
 
       event.preventDefault();
 
-
       startHolding =
         false;
-
 
       startButton.style.setProperty(
         "--progress",
@@ -7135,9 +6375,7 @@ function setupStartButton(){
 
 function setupRendererInput(){
 
-  if(
-    !renderer
-  ){
+  if(!renderer){
 
     return;
 
@@ -7145,21 +6383,147 @@ function setupRendererInput(){
 
 
   renderer.domElement.addEventListener(
-    "pointerdown",
+    "mousedown",
     event => {
 
       if(
-        event.pointerType ===
-        "mouse"
+        event.button ===
+        0
       ){
 
         requestPointerLock();
+
+        shoot();
 
       }
 
     }
   );
 
+}
+
+
+async function updateHealthRegen(){
+
+  if(
+    !matchRef ||
+    !localPlayer ||
+    !matchHasStarted ||
+    gameEnded ||
+    !localPlayer.alive
+  ){
+    return;
+  }
+
+  const config =
+    getRegenConfig();
+
+  if(!config){
+    return;
+  }
+
+  const now =
+    performance.now();
+
+  if(
+    now - lastRegenAt <
+    config.interval
+  ){
+    return;
+  }
+
+  lastRegenAt =
+    now;
+
+  try{
+
+    await runTransaction(
+      db,
+      async transaction => {
+
+        const snap =
+          await transaction.get(
+            matchRef
+          );
+
+        if(!snap.exists()){
+          return;
+        }
+
+        const data =
+          snap.data();
+
+        if(data.status !== "active"){
+          return;
+        }
+
+        const players =
+          { ...(data.players || {}) };
+
+        const player =
+          players[currentUser.uid];
+
+        if(
+          !player ||
+          !player.alive
+        ){
+          return;
+        }
+
+        const hp =
+          Number(player.hp || 0);
+
+        const maxHp =
+          Number(
+            data.settings?.maxHp ||
+            matchSettings.maxHp ||
+            100
+          );
+
+        if(hp >= maxHp){
+          return;
+        }
+
+        const lastDamagedAt =
+          Number(
+            player.lastDamagedAt ||
+            0
+          );
+
+        const lockMs =
+          Number(
+            data.settings?.regenLock ||
+            matchSettings.regenLock ||
+            0
+          ) * 1000;
+
+        if(
+          lockMs > 0 &&
+          Date.now() - lastDamagedAt < lockMs
+        ){
+          return;
+        }
+
+        player.hp =
+          Math.min(
+            maxHp,
+            hp + config.amount
+          );
+
+        transaction.update(
+          matchRef,
+          { players }
+        );
+
+      }
+    );
+
+  }catch(error){
+    console.error(
+      "regen error",
+      error
+    );
+  }
 }
 
 
@@ -7173,8 +6537,7 @@ function gameLoop(
       (
         time -
         lastFrameTime
-      ) /
-      1000,
+      ) / 1000,
 
       .05
 
@@ -7187,9 +6550,9 @@ function gameLoop(
 
   updateStartProgress();
 
-  updateProtectionUI();
 
   updateFireUI();
+  updateSpawnProtectionUI();
 
 
   if(
@@ -7222,7 +6585,8 @@ function gameLoop(
     );
 
 
-    regenLocalPlayer();
+    updateHealthRegen();
+
 
     syncLocalPlayer();
 
@@ -7290,34 +6654,26 @@ async function syncLocalPlayer(){
 
       {
 
-        [`players.${currentUser.uid}`]:{
+        [`players.${currentUser.uid}.name`]:
+          localPlayer.name,
 
-          uid:
-            currentUser.uid,
+        [`players.${currentUser.uid}.x`]:
+          localPlayer.x,
 
-          name:
-            localPlayer.name,
+        [`players.${currentUser.uid}.y`]:
+          localPlayer.y,
 
-          x:
-            localPlayer.x,
+        [`players.${currentUser.uid}.z`]:
+          localPlayer.z,
 
-          y:
-            localPlayer.y,
+        [`players.${currentUser.uid}.yaw`]:
+          cameraState.yaw,
 
-          z:
-            localPlayer.z,
+        [`players.${currentUser.uid}.pitch`]:
+          cameraState.pitch,
 
-          yaw:
-            cameraState.yaw,
-
-          pitch:
-            cameraState.pitch,
-
-          lastActiveAt:
-            localPlayer.lastActiveAt ||
-            Date.now()
-
-        }
+        [`players.${currentUser.uid}.lastActiveAt`]:
+          localPlayer.lastActiveAt
 
       }
 
@@ -7338,65 +6694,6 @@ async function syncLocalPlayer(){
 matchButton.addEventListener(
   "click",
   handleMatchButton
-);
-
-
-shareCodeButton.addEventListener(
-  "click",
-  shareMatchCode
-);
-
-
-leaveRoomButton.addEventListener(
-  "click",
-  handleReturn
-);
-
-
-settingsButton.addEventListener(
-  "click",
-  openSettings
-);
-
-
-closeSettingsButton.addEventListener(
-  "click",
-  closeSettings
-);
-
-
-saveSettingsButton.addEventListener(
-  "click",
-  saveMatchSettings
-);
-
-
-terrainAmountSelect.addEventListener(
-  "change",
-  updateSettingsDisabledState
-);
-
-
-hpRegenSelect.addEventListener(
-  "change",
-  updateSettingsDisabledState
-);
-
-
-settingsModal.addEventListener(
-  "pointerdown",
-  event => {
-
-    if(
-      event.target ===
-      settingsModal
-    ){
-
-      closeSettings();
-
-    }
-
-  }
 );
 
 
@@ -7435,6 +6732,58 @@ matchCodeInput.addEventListener(
 
     }
 
+  }
+);
+
+
+shareRoomButton.addEventListener(
+  "click",
+  shareRoomCode
+);
+
+
+settingsButton.addEventListener(
+  "click",
+  openSettings
+);
+
+
+leaveRoomButton.addEventListener(
+  "click",
+  handleReturn
+);
+
+
+settingsCancelButton.addEventListener(
+  "click",
+  closeSettings
+);
+
+
+settingsSaveButton.addEventListener(
+  "click",
+  saveSettings
+);
+
+
+terrainAmountSetting.addEventListener(
+  "change",
+  updateSettingsDisabledUI
+);
+
+
+hpRegenSetting.addEventListener(
+  "change",
+  updateSettingsDisabledUI
+);
+
+
+settingsModal.addEventListener(
+  "pointerdown",
+  event => {
+    if(event.target === settingsModal){
+      closeSettings();
+    }
   }
 );
 
@@ -7482,9 +6831,7 @@ try{
 
   statusEl.textContent =
     "Firebase接続失敗：" +
-    getFriendlyError(
-      error
-    );
+    getFriendlyError(error);
 
 }
 
