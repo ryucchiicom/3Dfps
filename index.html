@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<title>Firebase 3D FPS v1.1.0</title>
+<title>3D FPS</title>
 
 <style>
 *{
@@ -233,225 +233,6 @@ canvas{
   color:#ff7070;
 }
 
-#preStart{
-  position:absolute;
-  left:50%;
-  top:58%;
-  transform:translate(-50%,-50%);
-  display:none;
-  pointer-events:auto;
-  text-align:center;
-}
-
-#preStartText{
-  margin-bottom:12px;
-  pointer-events:none;
-  font-weight:800;
-  font-size:16px;
-}
-
-#startButton{
-  position:relative;
-  z-index:3;
-  width:105px;
-  height:105px;
-  border-radius:50%;
-  border:2px solid rgba(255,255,255,.35);
-  background:rgba(0,0,0,.42);
-  color:#fff;
-  font-size:18px;
-  font-weight:900;
-  overflow:hidden;
-}
-
-#startButton::before{
-  content:"";
-  position:absolute;
-  inset:5px;
-  border-radius:50%;
-  background:
-    conic-gradient(
-      #36a3ff var(--progress,0%),
-      rgba(255,255,255,.10) var(--progress,0%)
-    );
-  z-index:0;
-}
-
-#startButton::after{
-  content:"";
-  position:absolute;
-  inset:13px;
-  border-radius:50%;
-  background:rgba(12,17,23,.94);
-  z-index:1;
-}
-
-#startButton span{
-  position:relative;
-  z-index:2;
-}
-
-#roomActions{
-  display:flex;
-  justify-content:center;
-  gap:8px;
-  flex-wrap:wrap;
-  margin-top:14px;
-}
-
-.roomActionButton{
-  border:1px solid rgba(255,255,255,.18);
-  border-radius:11px;
-  min-width:92px;
-  height:42px;
-  padding:0 14px;
-  color:#fff;
-  background:rgba(255,255,255,.08);
-  font-size:14px;
-  font-weight:800;
-  cursor:pointer;
-  pointer-events:auto;
-  touch-action:manipulation;
-  appearance:none;
-  -webkit-appearance:none;
-}
-
-.roomActionButton:active{
-  transform:scale(.97);
-}
-
-#startButton,
-#startButton::before,
-#startButton::after,
-.mobileButton,
-.mobileButton::before,
-.mobileButton::after{
-  pointer-events:auto;
-}
-
-#startButton{
-  box-sizing:border-box;
-  padding:0;
-  margin:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  appearance:none;
-  -webkit-appearance:none;
-  touch-action:none;
-}
-
-#startButton::before,
-#startButton::after{
-  pointer-events:none;
-}
-
-#spawnProtection{
-  position:absolute;
-  left:50%;
-  top:27%;
-  transform:translate(-50%,-50%);
-  padding:8px 13px;
-  border-radius:999px;
-  background:rgba(40,140,255,.22);
-  border:1px solid rgba(110,190,255,.55);
-  color:#dff3ff;
-  font-size:14px;
-  font-weight:900;
-  letter-spacing:.4px;
-  text-shadow:0 2px 8px #000;
-  opacity:0;
-  transition:opacity .12s;
-  pointer-events:none;
-}
-
-#settingsModal{
-  position:fixed;
-  inset:0;
-  z-index:70;
-  display:none;
-  justify-content:center;
-  align-items:center;
-  padding:18px;
-  background:rgba(0,0,0,.64);
-  backdrop-filter:blur(10px);
-  pointer-events:auto;
-}
-
-.settingsBox{
-  width:min(92vw,470px);
-  max-height:90vh;
-  overflow:auto;
-  padding:22px;
-  border-radius:20px;
-  background:rgba(18,22,29,.97);
-  border:1px solid rgba(255,255,255,.13);
-  box-shadow:0 24px 80px rgba(0,0,0,.55);
-  color:#fff;
-}
-
-.settingsTitle{
-  margin:0 0 4px;
-  font-size:26px;
-  font-weight:900;
-}
-
-.settingsHint{
-  margin:0 0 16px;
-  font-size:12px;
-  opacity:.62;
-}
-
-.settingRow{
-  display:grid;
-  grid-template-columns:1fr 160px;
-  align-items:center;
-  gap:12px;
-  padding:10px 0;
-  border-bottom:1px solid rgba(255,255,255,.08);
-}
-
-.settingLabel{
-  font-size:14px;
-  font-weight:800;
-}
-
-.settingControl{
-  width:100%;
-  height:40px;
-  border:1px solid rgba(255,255,255,.16);
-  border-radius:10px;
-  background:#222933;
-  color:#fff;
-  padding:0 10px;
-  font-size:14px;
-  outline:none;
-  appearance:none;
-  -webkit-appearance:none;
-}
-
-.settingControl:disabled,
-.settingDisabled{
-  opacity:.28;
-}
-
-.settingsButtons{
-  display:flex;
-  gap:8px;
-  margin-top:18px;
-}
-
-.settingsButtons .button{
-  margin-top:0;
-}
-
-#settingsMessage{
-  min-height:18px;
-  margin-top:8px;
-  text-align:center;
-  color:#ffce66;
-  font-size:12px;
-}
 
 #gameOver{
   position:fixed;
@@ -494,12 +275,13 @@ canvas{
 
 #joystickZone{
   position:absolute;
-  left:18px;
-  bottom:20px;
-  width:150px;
-  height:150px;
-  border-radius:50%;
+  left:0;
+  bottom:0;
+  width:55%;
+  height:70%;
+  border-radius:0;
   pointer-events:auto;
+  touch-action:none;
 }
 
 #joystickBase{
@@ -508,8 +290,8 @@ canvas{
   top:50%;
   width:118px;
   height:118px;
-  margin-left:-59px;
-  margin-top:-59px;
+  margin:0;
+  transform:translate(-50%,-50%);
   border-radius:50%;
   border:2px solid rgba(255,255,255,.23);
   background:rgba(255,255,255,.06);
@@ -549,16 +331,9 @@ canvas{
   display:flex;
   justify-content:center;
   align-items:center;
-  touch-action:none;
-  appearance:none;
-  -webkit-appearance:none;
 }
 
 #fireButton{
-  z-index:3;
-  box-sizing:border-box;
-  padding:0;
-  margin:0;
   width:88px;
   height:88px;
   right:24px;
@@ -595,32 +370,12 @@ canvas{
 }
 
 #jumpButton{
-  z-index:3;
-  box-sizing:border-box;
-  padding:0;
-  margin:0;
   width:64px;
   height:64px;
   right:125px;
   bottom:44px;
-  transition:
-    opacity .12s,
-    background .12s;
 }
 
-#jumpButton.grabInactive{
-  opacity:.28;
-  background:rgba(20,20,20,.25);
-}
-
-#jumpButton.grabActive{
-  opacity:1;
-  background:rgba(35,130,255,.55);
-}
-
-#grabButton{
-  display:none !important;
-}
 
 #desktopHint{
   position:absolute;
@@ -649,6 +404,323 @@ canvas{
   }
 
 }
+
+#roomScreen{
+  position:fixed;
+  inset:0;
+  z-index:90;
+  display:none;
+  justify-content:center;
+  align-items:center;
+  padding:20px;
+  color:#fff;
+  background:
+    radial-gradient(circle at 50% 20%,#243b5a 0%,#111827 38%,#05070a 100%);
+  overflow:auto;
+  pointer-events:auto;
+}
+
+.roomPanel{
+  width:min(94vw,620px);
+  max-height:92vh;
+  overflow:auto;
+  padding:24px;
+  border-radius:24px;
+  background:rgba(12,17,25,.88);
+  border:1px solid rgba(255,255,255,.13);
+  box-shadow:0 24px 90px rgba(0,0,0,.48);
+  backdrop-filter:blur(18px);
+}
+
+.roomHeader{
+  text-align:center;
+  margin-bottom:18px;
+}
+
+.roomHeaderTitle{
+  font-size:28px;
+  font-weight:900;
+  margin-bottom:6px;
+}
+
+.roomCode{
+  font-size:24px;
+  font-weight:900;
+  letter-spacing:4px;
+  color:#72b7ff;
+}
+
+.roomPlayerList{
+  margin:14px 0;
+  padding:10px;
+  border-radius:14px;
+  background:rgba(255,255,255,.055);
+  min-height:80px;
+}
+
+.roomPlayerRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:8px 10px;
+  border-radius:9px;
+  font-size:14px;
+}
+
+.roomPlayerRow:nth-child(odd){
+  background:rgba(255,255,255,.035);
+}
+
+.roomPlayerIndex{
+  width:28px;
+  opacity:.55;
+  flex:none;
+}
+
+.roomPlayerName{
+  flex:1;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.roomHost{
+  font-size:11px;
+  opacity:.62;
+}
+
+.roomActions{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:8px;
+  margin-top:10px;
+}
+
+.roomActions .button{
+  margin-top:0;
+  height:44px;
+}
+
+#roomStartWrap{
+  margin-top:14px;
+  text-align:center;
+}
+
+#roomStartHint{
+  min-height:22px;
+  margin-bottom:8px;
+  font-size:14px;
+  font-weight:800;
+  opacity:.8;
+}
+
+#roomStartButton{
+  position:relative;
+  width:110px;
+  height:110px;
+  margin:0 auto;
+  padding:0;
+  border-radius:50%;
+  border:2px solid rgba(255,255,255,.35);
+  background:rgba(0,0,0,.42);
+  color:#fff;
+  font-size:18px;
+  font-weight:900;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  pointer-events:auto;
+  touch-action:none;
+}
+
+#roomStartButton::before{
+  content:"";
+  position:absolute;
+  inset:5px;
+  border-radius:50%;
+  background:
+    conic-gradient(
+      #36a3ff var(--progress,0%),
+      rgba(255,255,255,.10) var(--progress,0%)
+    );
+  z-index:0;
+}
+
+#roomStartButton::after{
+  content:"";
+  position:absolute;
+  inset:13px;
+  border-radius:50%;
+  background:rgba(12,17,23,.94);
+  z-index:1;
+}
+
+#roomStartButton span{
+  position:relative;
+  z-index:2;
+}
+
+.roomSettings{
+  margin-top:16px;
+  padding:14px;
+  border-radius:16px;
+  background:rgba(255,255,255,.045);
+  border:1px solid rgba(255,255,255,.08);
+}
+
+.roomSettingsTitle{
+  font-size:17px;
+  font-weight:900;
+  margin-bottom:10px;
+}
+
+.settingRow{
+  display:grid;
+  grid-template-columns:minmax(130px,1fr) minmax(150px,1.15fr);
+  gap:10px;
+  align-items:center;
+  padding:7px 0;
+}
+
+.settingLabel{
+  font-size:13px;
+  font-weight:800;
+}
+
+.settingControl{
+  width:100%;
+  min-width:0;
+  height:38px;
+  padding:0 9px;
+  border-radius:9px;
+  border:1px solid rgba(255,255,255,.13);
+  background:rgba(0,0,0,.3);
+  color:#fff;
+  outline:none;
+  font-weight:700;
+}
+
+.settingControl:disabled,
+.settingDisabled{
+  opacity:.28;
+  filter:saturate(.25);
+}
+
+.settingNumber{
+  display:flex;
+  gap:6px;
+  align-items:center;
+}
+
+.settingNumber input{
+  flex:1;
+}
+
+.settingUnit{
+  font-size:12px;
+  opacity:.6;
+}
+
+#settingsLockedText{
+  margin-top:8px;
+  font-size:12px;
+  opacity:.55;
+  text-align:center;
+}
+
+#shareStatus{
+  min-height:18px;
+  margin-top:7px;
+  text-align:center;
+  font-size:12px;
+  opacity:.72;
+}
+
+#spawnProtection{
+  position:absolute;
+  left:50%;
+  top:24%;
+  transform:translate(-50%,-50%);
+  display:none;
+  padding:12px 18px;
+  border-radius:14px;
+  border:2px solid rgba(95,200,255,.72);
+  background:rgba(15,100,170,.34);
+  box-shadow:0 0 28px rgba(70,180,255,.5);
+  color:#c9f3ff;
+  font-size:17px;
+  font-weight:900;
+  letter-spacing:1px;
+  text-align:center;
+  text-shadow:0 2px 10px #000;
+  pointer-events:none;
+}
+
+#spawnProtectionBar{
+  width:180px;
+  height:5px;
+  margin-top:7px;
+  overflow:hidden;
+  border-radius:99px;
+  background:rgba(255,255,255,.15);
+}
+
+#spawnProtectionBar::before{
+  content:"";
+  display:block;
+  width:100%;
+  height:100%;
+  transform-origin:left center;
+  transform:scaleX(var(--protectionProgress,1));
+  background:#72d7ff;
+}
+
+#jumpButton.grabInactive{
+  opacity:.28;
+  background:rgba(20,20,20,.25);
+}
+
+#jumpButton.grabActive{
+  opacity:1;
+  background:rgba(35,130,255,.55);
+}
+
+.mobileButton,
+#roomStartButton,
+.button{
+  touch-action:manipulation;
+  -webkit-user-select:none;
+  user-select:none;
+}
+
+#roomStartButton{
+  pointer-events:auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+  margin:0 auto;
+  touch-action:none;
+}
+
+@media (max-width:600px){
+  .roomPanel{
+    padding:18px;
+  }
+
+  .roomActions{
+    grid-template-columns:1fr;
+  }
+
+  .settingRow{
+    grid-template-columns:1fr;
+    gap:5px;
+  }
+}
+
 </style>
 </head>
 
@@ -660,8 +732,8 @@ canvas{
 
     <h1 class="title">3D FPS</h1>
 
-    <div class="subtitle">
-      v1.1.0
+    <div class="subtitle" id="versionText">
+      1.0.0
     </div>
 
     <input
@@ -685,6 +757,99 @@ canvas{
     <div class="info">
       PC：WASDで移動、マウスで視点、クリックで射撃、Spaceでジャンプ<br>
       スマホ：左スティックで移動、右側スワイプで視点、FIRE・JUMP・GRAB
+    </div>
+
+  </div>
+
+</div>
+
+
+<div id="roomScreen">
+
+  <div class="roomPanel">
+
+    <div class="roomHeader">
+      <div class="roomHeaderTitle">待機ルーム</div>
+      <div class="roomCode" id="roomCodeLarge">----</div>
+    </div>
+
+    <div id="roomPlayerList" class="roomPlayerList"></div>
+
+    <div class="roomActions">
+      <button id="shareCodeButton" class="button secondary">コードを共有</button>
+      <button id="settingsButton" class="button secondary">設定</button>
+      <button id="leaveRoomButton" class="button secondary">部屋から退出</button>
+    </div>
+
+    <div id="shareStatus"></div>
+
+    <div id="roomSettings" class="roomSettings" style="display:none">
+
+      <div class="roomSettingsTitle">設定</div>
+
+      <div class="settingRow">
+        <div class="settingLabel">地形の量</div>
+        <select id="terrainAmount" class="settingControl">
+          <option value="many">多</option>
+          <option value="medium" selected>中</option>
+          <option value="few">少</option>
+          <option value="none">なし</option>
+        </select>
+      </div>
+
+      <div class="settingRow" id="terrainHeightRow">
+        <div class="settingLabel" id="terrainHeightLabel">地形の高低差</div>
+        <select id="terrainHeight" class="settingControl">
+          <option value="high">高</option>
+          <option value="medium" selected>中</option>
+          <option value="low">低</option>
+        </select>
+      </div>
+
+      <div class="settingRow">
+        <div class="settingLabel">弾速</div>
+        <select id="bulletSpeedSetting" class="settingControl">
+          <option value="infinite">∞</option>
+          <option value="fast">速</option>
+          <option value="medium" selected>中</option>
+          <option value="slow">遅</option>
+        </select>
+      </div>
+
+      <div class="settingRow">
+        <div class="settingLabel">HP最大値</div>
+        <div class="settingNumber">
+          <input id="maxHpSetting" class="settingControl" type="number" min="1" step="1" value="100">
+        </div>
+      </div>
+
+      <div class="settingRow" id="regenRow">
+        <div class="settingLabel" id="regenLabel">HP自然回復</div>
+        <select id="regenSetting" class="settingControl">
+          <option value="fast">速</option>
+          <option value="medium">中</option>
+          <option value="slow">遅</option>
+          <option value="none" selected>なし</option>
+        </select>
+      </div>
+
+      <div class="settingRow" id="regenLockRow">
+        <div class="settingLabel" id="regenLockLabel">ダメージからの自然回復ロック</div>
+        <div class="settingNumber">
+          <input id="regenLockSetting" class="settingControl" type="number" min="0" step="0.1" value="0">
+          <span class="settingUnit">秒</span>
+        </div>
+      </div>
+
+      <div id="settingsLockedText"></div>
+
+    </div>
+
+    <div id="roomStartWrap">
+      <div id="roomStartHint">部屋主がSTARTを長押しして開始</div>
+      <button id="roomStartButton">
+        <span>START</span>
+      </button>
     </div>
 
   </div>
@@ -736,25 +901,10 @@ canvas{
 
   <div id="killMessage"></div>
 
-  <div id="preStart">
-
-    <div id="preStartText">
-      部屋主がSTARTを長押しして開始
-    </div>
-
-    <button id="startButton" type="button">
-      <span>START</span>
-    </button>
-
-    <div id="roomActions">
-      <button id="shareRoomButton" class="roomActionButton" type="button">コードを共有</button>
-      <button id="settingsButton" class="roomActionButton" type="button">設定</button>
-      <button id="leaveRoomButton" class="roomActionButton" type="button">部屋から退出</button>
-    </div>
-
+  <div id="spawnProtection">
+    <div>🛡 無敵中 3.0秒</div>
+    <div id="spawnProtectionBar"></div>
   </div>
-
-  <div id="spawnProtection">🛡️ 無敵中 <span id="spawnProtectionTime">3.0</span>s</div>
 
   <div id="desktopHint">
     WASD / Mouse / Click / Space
@@ -792,73 +942,6 @@ canvas{
 
 </div>
 
-<div id="settingsModal">
-
-  <div class="settingsBox">
-
-    <h2 class="settingsTitle">設定</h2>
-    <p class="settingsHint">試合開始前のみ変更できます</p>
-
-    <div class="settingRow">
-      <div class="settingLabel" id="terrainAmountLabel">地形の量</div>
-      <select id="terrainAmountSetting" class="settingControl">
-        <option value="high">多</option>
-        <option value="medium" selected>中</option>
-        <option value="low">少</option>
-        <option value="none">なし</option>
-      </select>
-    </div>
-
-    <div class="settingRow">
-      <div class="settingLabel" id="terrainHeightLabel">地形の高低差</div>
-      <select id="terrainHeightSetting" class="settingControl">
-        <option value="high">高</option>
-        <option value="medium" selected>中</option>
-        <option value="low">低</option>
-      </select>
-    </div>
-
-    <div class="settingRow">
-      <div class="settingLabel">弾速</div>
-      <select id="bulletSpeedSetting" class="settingControl">
-        <option value="infinite">∞</option>
-        <option value="fast">速</option>
-        <option value="medium" selected>中</option>
-        <option value="slow">遅</option>
-      </select>
-    </div>
-
-    <div class="settingRow">
-      <div class="settingLabel">HP最大値</div>
-      <input id="maxHpSetting" class="settingControl" type="number" min="1" max="99999" step="1" value="100" inputmode="numeric">
-    </div>
-
-    <div class="settingRow">
-      <div class="settingLabel" id="hpRegenLabel">HP自然回復</div>
-      <select id="hpRegenSetting" class="settingControl">
-        <option value="fast">速</option>
-        <option value="medium">中</option>
-        <option value="slow">遅</option>
-        <option value="none" selected>なし</option>
-      </select>
-    </div>
-
-    <div class="settingRow">
-      <div class="settingLabel" id="regenLockLabel">ダメージからの自然回復ロック</div>
-      <input id="regenLockSetting" class="settingControl" type="number" min="0" max="999" step="0.1" value="0" inputmode="decimal">
-    </div>
-
-    <div id="settingsMessage"></div>
-
-    <div class="settingsButtons">
-      <button id="settingsCancelButton" class="button secondary" type="button">閉じる</button>
-      <button id="settingsSaveButton" class="button" type="button">保存</button>
-    </div>
-
-  </div>
-
-</div>
-
 <div id="gameOver">
 
   <div class="gameOverBox">
@@ -889,8 +972,6 @@ canvas{
 </div>
 
 <script type="module">
-
-/* GAME_CODE_VERSION: 1.1.0 - update this hidden marker every release. */
 
 import {
   initializeApp
@@ -981,8 +1062,6 @@ let lastFrameTime =
 
 let gameLoopStarted = false;
 
-let startHoldStart = null;
-
 let startHolding = false;
 
 let fireHolding = false;
@@ -994,25 +1073,34 @@ let grabAnimation = null;
 let spawnProtectionUntil = 0;
 
 let fireCooldownEnd = 0;
-let lastActivityAt = Date.now();
-let lastCleanupCheck = 0;
-let lastRegenAt = 0;
-let lastSpawnProtectionUI = -1;
-let matchSettings = {
-  terrainAmount: "medium",
-  terrainHeight: "medium",
-  bulletSpeed: "medium",
-  maxHp: 100,
-  hpRegen: "none",
-  regenLock: 0
-};
-let appliedTerrainSignature = "";
-
-// CODE_VERSION is intentionally changed on every game update so the model can identify the latest HTML version.
-const CODE_VERSION = "1.1.0";
 
 let bulletIdCounter = 0;
 
+let roomPlayerOrder = [];
+
+let currentSettings = {
+  terrainAmount:"medium",
+  terrainHeight:"medium",
+  bulletSpeed:"medium",
+  maxHp:100,
+  regen:"none",
+  regenLock:0
+};
+
+let lastDamageAt = 0;
+
+let lastRegenTime = 0;
+
+let localHpNeedsSync = false;
+
+let lastActivityAt = Date.now();
+
+let lastCleanupCheck = 0;
+
+let startHoldStart = null;
+
+const GAME_VERSION = "1.0.0";
+// GPT VERSION NOTE: Every update must change GAME_VERSION even though this comment/version logic is invisible to the game. Increase the version according to update size.
 
 const START_HOLD_TIME = 1000;
 
@@ -1020,7 +1108,11 @@ const START_PROTECTION_TIME = 3000;
 
 const FIRE_INTERVAL = 320;
 
-const BULLET_SPEED = 42;
+const BULLET_SPEED_VALUES = {
+  fast:70,
+  medium:42,
+  slow:22
+};
 
 const BULLET_LIFETIME = 2200;
 
@@ -1029,15 +1121,34 @@ const BULLET_DAMAGE = 34;
 const GRAB_DISTANCE = 1.15;
 
 const GRAB_TIME = 500;
-const INACTIVE_MATCH_TIME = 60 * 1000;
-const MAX_MATCH_AGE = 24 * 60 * 60 * 1000;
-const CLEANUP_INTERVAL = 10000;
 
 const ARENA_SIZE = 70;
 
 const PLAYER_HEIGHT = 1.6;
 
-const MAX_HP = 100;
+let MAX_HP = 100;
+
+const DEFAULT_SETTINGS = {
+  terrainAmount:"medium",
+  terrainHeight:"medium",
+  bulletSpeed:"medium",
+  maxHp:100,
+  regen:"none",
+  regenLock:0
+};
+
+const REGEN_RATES = {
+  fast:4,
+  medium:2,
+  slow:.75,
+  none:0
+};
+
+const INACTIVE_MATCH_TIME = 60 * 1000;
+
+const MAX_MATCH_AGE = 24 * 60 * 60 * 1000;
+
+const CLEANUP_INTERVAL = 10000;
 
 
 const keys = {
@@ -1104,6 +1215,84 @@ const menu =
 const gameUI =
   document.getElementById("gameUI");
 
+const roomScreen =
+  document.getElementById("roomScreen");
+
+const roomCodeLarge =
+  document.getElementById("roomCodeLarge");
+
+const roomPlayerList =
+  document.getElementById("roomPlayerList");
+
+const shareCodeButton =
+  document.getElementById("shareCodeButton");
+
+const settingsButton =
+  document.getElementById("settingsButton");
+
+const leaveRoomButton =
+  document.getElementById("leaveRoomButton");
+
+const shareStatus =
+  document.getElementById("shareStatus");
+
+const roomSettings =
+  document.getElementById("roomSettings");
+
+const terrainAmount =
+  document.getElementById("terrainAmount");
+
+const terrainHeight =
+  document.getElementById("terrainHeight");
+
+const terrainHeightRow =
+  document.getElementById("terrainHeightRow");
+
+const terrainHeightLabel =
+  document.getElementById("terrainHeightLabel");
+
+const bulletSpeedSetting =
+  document.getElementById("bulletSpeedSetting");
+
+const maxHpSetting =
+  document.getElementById("maxHpSetting");
+
+const regenSetting =
+  document.getElementById("regenSetting");
+
+const regenRow =
+  document.getElementById("regenRow");
+
+const regenLabel =
+  document.getElementById("regenLabel");
+
+const regenLockRow =
+  document.getElementById("regenLockRow");
+
+const regenLockLabel =
+  document.getElementById("regenLockLabel");
+
+const regenLockSetting =
+  document.getElementById("regenLockSetting");
+
+const settingsLockedText =
+  document.getElementById("settingsLockedText");
+
+const roomStartWrap =
+  document.getElementById("roomStartWrap");
+
+const roomStartHint =
+  document.getElementById("roomStartHint");
+
+const roomStartButton =
+  document.getElementById("roomStartButton");
+
+const spawnProtection =
+  document.getElementById("spawnProtection");
+
+const spawnProtectionBar =
+  document.getElementById("spawnProtectionBar");
+
 const gameOver =
   document.getElementById("gameOver");
 
@@ -1136,69 +1325,6 @@ const scoreBoard =
 
 const killMessage =
   document.getElementById("killMessage");
-
-const preStart =
-  document.getElementById("preStart");
-
-const preStartText =
-  document.getElementById("preStartText");
-
-const shareRoomButton =
-  document.getElementById("shareRoomButton");
-
-const settingsButton =
-  document.getElementById("settingsButton");
-
-const leaveRoomButton =
-  document.getElementById("leaveRoomButton");
-
-const settingsModal =
-  document.getElementById("settingsModal");
-
-const terrainAmountSetting =
-  document.getElementById("terrainAmountSetting");
-
-const terrainHeightSetting =
-  document.getElementById("terrainHeightSetting");
-
-const bulletSpeedSetting =
-  document.getElementById("bulletSpeedSetting");
-
-const maxHpSetting =
-  document.getElementById("maxHpSetting");
-
-const hpRegenSetting =
-  document.getElementById("hpRegenSetting");
-
-const regenLockSetting =
-  document.getElementById("regenLockSetting");
-
-const terrainHeightLabel =
-  document.getElementById("terrainHeightLabel");
-
-const hpRegenLabel =
-  document.getElementById("hpRegenLabel");
-
-const regenLockLabel =
-  document.getElementById("regenLockLabel");
-
-const settingsCancelButton =
-  document.getElementById("settingsCancelButton");
-
-const settingsSaveButton =
-  document.getElementById("settingsSaveButton");
-
-const settingsMessage =
-  document.getElementById("settingsMessage");
-
-const spawnProtection =
-  document.getElementById("spawnProtection");
-
-const spawnProtectionTime =
-  document.getElementById("spawnProtectionTime");
-
-const startButton =
-  document.getElementById("startButton");
 
 const fireButton =
   document.getElementById("fireButton");
@@ -1572,8 +1698,6 @@ function setupScene(){
 
 function createArena(){
 
-  colliders.length = 0;
-
   const floorGeometry =
     new THREE.BoxGeometry(
       ARENA_SIZE,
@@ -1583,13 +1707,10 @@ function createArena(){
 
   const floorMaterial =
     new THREE.MeshStandardMaterial({
-
       color:
         0x41474d,
-
       roughness:
         .92
-
     });
 
   const floor =
@@ -1604,21 +1725,14 @@ function createArena(){
   floor.receiveShadow =
     true;
 
-  floor.userData.isArenaObject = true;
-
   scene.add(floor);
-
   colliders.push(floor);
-
 
   const wallMaterial =
     new THREE.MeshStandardMaterial({
-
       color:
         0x252b31
-
     });
-
 
   createBox(
     ARENA_SIZE,
@@ -1660,171 +1774,128 @@ function createArena(){
     wallMaterial
   );
 
+  const terrainCount =
+    terrainCounts();
 
-  const obstacleMaterial =
-    new THREE.MeshStandardMaterial({
-
-      color:
-        0x69727b,
-
-      roughness:
-        .7
-
-    });
-
-
-  const terrainSets = {
-
-    high:[
-      [8,1.5,8,-15,.75,-10],
-      [11,2,5,13,1,-8],
-      [6,2.5,6,17,1.25,14],
-      [10,1.5,5,-15,.75,15],
-      [5,2,12,0,1,17],
-      [6,3.5,6,-15,1.75,-1],
-      [7,4,7,4,2,-14],
-      [7,4.5,7,16,2.25,2],
-      [5,.9,5,-4,.45,-5],
-      [5,1.3,5,4,.65,-5],
-      [5,1.7,5,10,.85,-5],
-      [4,.7,4,-10,.35,-18],
-      [4,1.1,4,-4,.55,-18],
-      [4,1.5,4,2,.75,-18],
-      [4,1.9,4,8,.95,-18]
-    ],
-
-    medium:[
-      [8,1.5,8,-15,.75,-10],
-      [11,2,5,13,1,-8],
-      [6,2.5,6,17,1.25,14],
-      [10,1.5,5,-15,.75,15],
-      [5,2,12,0,1,17],
-      [6,3.5,6,-15,1.75,-1],
-      [7,4,7,4,2,-14],
-      [7,4.5,7,16,2.25,2],
-      [5,.9,5,-4,.45,-5],
-      [5,1.3,5,4,.65,-5],
-      [5,1.7,5,10,.85,-5]
-    ],
-
-    low:[
-      [8,1.5,8,-15,.75,-10],
-      [11,2,5,13,1,-8],
-      [10,1.5,5,-15,.75,15],
-      [5,2,12,0,1,17],
-      [5,.9,5,-4,.45,-5],
-      [5,1.3,5,4,.65,-5]
-    ]
-
-  };
-
-
-  const terrainAmount =
-    matchSettings.terrainAmount;
-
-  if(terrainAmount !== "none"){
-
-    const base =
-      terrainSets[terrainAmount] ||
-      terrainSets.medium;
-
-    let heightScale = 1;
-
-    if(matchSettings.terrainHeight === "high"){
-      heightScale = 1.35;
-    }else if(matchSettings.terrainHeight === "low"){
-      heightScale = .68;
-    }
-
-    base.forEach(
-      values => {
-
-        const [width,height,depth,x,y,z] = values;
-
-        const scaledHeight =
-          height * heightScale;
-
-        createBox(
-          width,
-          scaledHeight,
-          depth,
-          x,
-          scaledHeight / 2,
-          z,
-          obstacleMaterial
-        );
-
-      }
-    );
-
-    const randomCount =
-      terrainAmount === "high"
-        ? 8
-        : terrainAmount === "medium"
-          ? 5
-          : 2;
-
-    for(
-      let i = 0;
-      i < randomCount;
-      i++
-    ){
-
-      const x =
-        Math.random() * 42 - 21;
-
-      const z =
-        Math.random() * 42 - 21;
-
-      const height =
-        (1.3 + Math.random() * 1.7) *
-        heightScale;
-
-      createBox(
-        2.5 + Math.random() * 2,
-        height,
-        2.5 + Math.random() * 2,
-        x,
-        height / 2,
-        z,
-        obstacleMaterial
-      );
-
-    }
-
-  }
-
-}
-
-
-function rebuildArena(){
-
-  if(!scene){
+  if(
+    terrainCount <= 0
+  ){
     return;
   }
 
+  const heightScale =
+    terrainHeightScale();
+
+  const obstacleMaterial =
+    new THREE.MeshStandardMaterial({
+      color:
+        0x69727b,
+      roughness:
+        .7
+    });
+
+  const fixedPlatforms = [
+
+    [8,1.5,8,-15,.75,-10],
+    [11,2,5,13,1,-8],
+    [6,2.5,6,17,1.25,14],
+    [10,1.5,5,-15,.75,15],
+    [5,2,12,0,1,17],
+    [6,3.5,6,-15,1.75,-1],
+    [7,4,7,4,2,-14],
+    [7,4.5,7,16,2.25,2],
+    [5,.9,5,-4,.45,-5],
+    [5,1.3,5,4,.65,-5],
+    [5,1.7,5,10,.85,-5]
+  ];
+
+  const fixedCount =
+    Math.min(
+      fixedPlatforms.length,
+      Math.max(
+        0,
+        Math.floor(
+          terrainCount *
+          .65
+        )
+      )
+    );
+
   for(
-    const child of [...scene.children]
+    let i = 0;
+    i < fixedCount;
+    i++
   ){
-    if(child.userData?.isArenaObject){
-      scene.remove(child);
-      if(child.geometry){
-        child.geometry.dispose();
-      }
-      if(child.material){
-        if(Array.isArray(child.material)){
-          child.material.forEach(
-            material => material.dispose()
-          );
-        }else{
-          child.material.dispose();
-        }
-      }
-    }
+
+    const p =
+      fixedPlatforms[i];
+
+    const scaledHeight =
+      p[1] *
+      heightScale;
+
+    createBox(
+      p[0],
+      scaledHeight,
+      p[2],
+      p[3],
+      scaledHeight / 2,
+      p[5],
+      obstacleMaterial
+    );
+
   }
 
-  colliders.length = 0;
-  createArena();
+  const randomCount =
+    Math.max(
+      0,
+      terrainCount -
+      fixedCount
+    );
+
+  for(
+    let i = 0;
+    i < randomCount;
+    i++
+  ){
+
+    const width =
+      2.5 +
+      Math.random() * 2;
+
+    const depth =
+      2.5 +
+      Math.random() * 2;
+
+    const height =
+      (
+        1.3 +
+        Math.random() * 1.7
+      ) *
+      heightScale;
+
+    const x =
+      Math.random() *
+      42 -
+      21;
+
+    const z =
+      Math.random() *
+      42 -
+      21;
+
+    createBox(
+      width,
+      height,
+      depth,
+      x,
+      height / 2,
+      z,
+      obstacleMaterial
+    );
+
+  }
+
 }
 
 
@@ -1862,8 +1933,6 @@ function createBox(
 
   mesh.receiveShadow =
     true;
-
-  mesh.userData.isArenaObject = true;
 
   scene.add(mesh);
 
@@ -1957,6 +2026,941 @@ async function ensureAuth(){
 }
 
 
+
+function normalizeSettings(settings = {}){
+  const result = {
+    ...DEFAULT_SETTINGS,
+    ...(settings || {})
+  };
+
+  if(!["many","medium","few","none"].includes(result.terrainAmount)){
+    result.terrainAmount = "medium";
+  }
+
+  if(!["high","medium","low"].includes(result.terrainHeight)){
+    result.terrainHeight = "medium";
+  }
+
+  if(!["infinite","fast","medium","slow"].includes(result.bulletSpeed)){
+    result.bulletSpeed = "medium";
+  }
+
+  const hp =
+    Number(result.maxHp);
+
+  result.maxHp =
+    Number.isFinite(hp) && hp > 0
+      ? Math.max(1, Math.floor(hp))
+      : 100;
+
+  if(!["fast","medium","slow","none"].includes(result.regen)){
+    result.regen = "none";
+  }
+
+  const lock =
+    Number(result.regenLock);
+
+  result.regenLock =
+    Number.isFinite(lock) && lock >= 0
+      ? lock
+      : 0;
+
+  return result;
+}
+
+
+function applyMatchSettings(settings = {}){
+  currentSettings =
+    normalizeSettings(settings);
+
+  MAX_HP =
+    currentSettings.maxHp;
+
+  if(
+    localPlayer &&
+    matchHasStarted &&
+    localPlayer.hp > MAX_HP
+  ){
+
+    localPlayer.hp =
+      MAX_HP;
+
+  }
+
+  updateSettingsUI();
+  updateLocalHUD();
+}
+
+
+function readSettingsFromUI(){
+  return normalizeSettings({
+
+    terrainAmount:
+      terrainAmount.value,
+
+    terrainHeight:
+      terrainHeight.value,
+
+    bulletSpeed:
+      bulletSpeedSetting.value,
+
+    maxHp:
+      Number(
+        maxHpSetting.value
+      ),
+
+    regen:
+      regenSetting.value,
+
+    regenLock:
+      Number(
+        regenLockSetting.value
+      )
+
+  });
+}
+
+
+function writeSettingsToUI(settings){
+  const normalized =
+    normalizeSettings(settings);
+
+  currentSettings =
+    normalized;
+
+  MAX_HP =
+    normalized.maxHp;
+
+  terrainAmount.value =
+    normalized.terrainAmount;
+
+  terrainHeight.value =
+    normalized.terrainHeight;
+
+  bulletSpeedSetting.value =
+    normalized.bulletSpeed;
+
+  maxHpSetting.value =
+    normalized.maxHp;
+
+  regenSetting.value =
+    normalized.regen;
+
+  regenLockSetting.value =
+    normalized.regenLock;
+
+  updateSettingsUI();
+}
+
+
+function updateSettingsUI(){
+  const disabled =
+    currentSettings.terrainAmount ===
+    "none";
+
+  terrainHeight.disabled =
+    disabled;
+
+  terrainHeightRow.classList.toggle(
+    "settingDisabled",
+    disabled
+  );
+
+  terrainHeightLabel.classList.toggle(
+    "settingDisabled",
+    disabled
+  );
+
+  const regenDisabled =
+    currentSettings.regen ===
+    "none";
+
+  regenLockSetting.disabled =
+    regenDisabled;
+
+  regenLockRow.classList.toggle(
+    "settingDisabled",
+    regenDisabled
+  );
+
+  regenLockLabel.classList.toggle(
+    "settingDisabled",
+    regenDisabled
+  );
+
+  if(disabled || regenDisabled){
+    settingsLockedText.textContent =
+      disabled
+        ? "地形の量が「なし」のため、地形の高低差は設定できません"
+        : "HP自然回復が「なし」のため、自然回復ロックは設定できません";
+  }else{
+    settingsLockedText.textContent =
+      "";
+  }
+
+  const controls = [
+    terrainAmount,
+    terrainHeight,
+    bulletSpeedSetting,
+    maxHpSetting,
+    regenSetting,
+    regenLockSetting
+  ];
+
+  for(const control of controls){
+    control.disabled =
+      !isHost ||
+      (
+        control === terrainHeight &&
+        disabled
+      ) ||
+      (
+        control === regenLockSetting &&
+        regenDisabled
+      );
+  }
+
+  settingsButton.style.opacity =
+    isHost ? "1" : ".72";
+}
+
+
+async function saveSettings(){
+  if(
+    !matchRef ||
+    !isHost ||
+    matchHasStarted
+  ){
+    return;
+  }
+
+  const settings =
+    readSettingsFromUI();
+
+  applyMatchSettings(settings);
+
+  try{
+
+    await updateDoc(
+      matchRef,
+      {
+        settings
+      }
+    );
+
+  }catch(error){
+
+    console.error(
+      "settings save error",
+      error
+    );
+
+  }
+}
+
+
+function updateRoomPlayerList(
+  players,
+  playerOrder
+){
+  const order =
+    Array.isArray(playerOrder)
+      ? playerOrder.filter(
+          uid => players[uid]
+        )
+      : Object.keys(players);
+
+  roomPlayerList.innerHTML =
+    "";
+
+  order.forEach(
+    (uid,index) => {
+
+      const player =
+        players[uid];
+
+      if(!player){
+        return;
+      }
+
+      const row =
+        document.createElement(
+          "div"
+        );
+
+      row.className =
+        "roomPlayerRow";
+
+      const number =
+        document.createElement(
+          "span"
+        );
+
+      number.className =
+        "roomPlayerIndex";
+
+      number.textContent =
+        `${index + 1}.`;
+
+      const name =
+        document.createElement(
+          "span"
+        );
+
+      name.className =
+        "roomPlayerName";
+
+      name.textContent =
+        uid === currentUser.uid
+          ? "YOU"
+          : player.name ||
+            uid.slice(-4);
+
+      const host =
+        document.createElement(
+          "span"
+        );
+
+      host.className =
+        "roomHost";
+
+      host.textContent =
+        uid ===
+        (
+          player.hostUid ||
+          ""
+        )
+          ? "HOST"
+          : (
+            uid ===
+            currentHostUid
+              ? "HOST"
+              : ""
+          );
+
+      row.appendChild(number);
+      row.appendChild(name);
+      row.appendChild(host);
+
+      roomPlayerList.appendChild(row);
+
+    }
+  );
+}
+
+
+let currentHostUid = null;
+
+
+function updateRoomUI(data){
+  if(
+    !data ||
+    data.status !== "waiting"
+  ){
+    roomScreen.style.display =
+      "none";
+    return;
+  }
+
+  roomScreen.style.display =
+    "flex";
+
+  roomCodeLarge.textContent =
+    currentMatchId || "----";
+
+  currentHostUid =
+    data.hostUid || null;
+
+  roomPlayerOrder =
+    Array.isArray(data.playerOrder)
+      ? data.playerOrder.slice()
+      : Object.keys(data.players || {});
+
+  updateRoomPlayerList(
+    data.players || {},
+    roomPlayerOrder
+  );
+
+  writeSettingsToUI(
+    data.settings || DEFAULT_SETTINGS
+  );
+
+  roomStartWrap.style.display =
+    "block";
+
+  if(isHost){
+
+    roomStartHint.textContent =
+      "部屋主がSTARTを長押しして開始";
+
+    roomStartButton.style.opacity =
+      "1";
+
+    roomStartButton.disabled =
+      false;
+
+  }else{
+
+    roomStartHint.textContent =
+      "部屋主のSTART待ち";
+
+    roomStartButton.style.opacity =
+      ".35";
+
+    roomStartButton.disabled =
+      true;
+
+  }
+
+  roomSettings.style.display =
+    roomSettings.style.display === "block"
+      ? "block"
+      : "none";
+
+  updateSettingsUI();
+}
+
+
+function hideRoomScreen(){
+  roomScreen.style.display =
+    "none";
+}
+
+
+async function shareRoomCode(){
+  if(!currentMatchId){
+    return;
+  }
+
+  const text =
+    `試合コード：${currentMatchId}`;
+
+  try{
+
+    if(
+      navigator.share
+    ){
+
+      await navigator.share({
+        text
+      });
+
+      shareStatus.textContent =
+        "共有しました";
+
+      return;
+
+    }
+
+    if(
+      navigator.clipboard &&
+      navigator.clipboard.writeText
+    ){
+
+      await navigator.clipboard.writeText(
+        text
+      );
+
+      shareStatus.textContent =
+        "コードをコピーしました";
+
+      return;
+
+    }
+
+    shareStatus.textContent =
+      text;
+
+  }catch(error){
+
+    if(
+      error &&
+      error.name ===
+      "AbortError"
+    ){
+
+      return;
+
+    }
+
+    shareStatus.textContent =
+      "共有できませんでした";
+
+  }
+}
+
+
+async function leaveRoom(){
+  const ref =
+    matchRef;
+
+  const wasHost =
+    isHost;
+
+  const uid =
+    currentUser &&
+    currentUser.uid;
+
+  leaveCurrentMatch();
+
+  if(!ref || !uid){
+    return;
+  }
+
+  try{
+
+    if(wasHost){
+
+      await deleteDoc(
+        ref
+      );
+
+      return;
+
+    }
+
+    await runTransaction(
+      db,
+      async transaction => {
+
+        const snap =
+          await transaction.get(
+            ref
+          );
+
+        if(!snap.exists()){
+          return;
+        }
+
+        const data =
+          snap.data();
+
+        const players =
+          {
+            ...(data.players || {})
+          };
+
+        delete players[uid];
+
+        const playerOrder =
+          Array.isArray(data.playerOrder)
+            ? data.playerOrder.filter(
+                id => id !== uid
+              )
+            : Object.keys(players);
+
+        transaction.update(
+          ref,
+          {
+            players,
+            playerOrder
+          }
+        );
+
+      }
+    );
+
+  }catch(error){
+
+    console.error(
+      "leave room error",
+      error
+    );
+
+  }
+}
+
+
+function terrainCounts(){
+  switch(
+    currentSettings.terrainAmount
+  ){
+    case "many":
+      return 18;
+    case "few":
+      return 6;
+    case "none":
+      return 0;
+    default:
+      return 10;
+  }
+}
+
+
+function terrainHeightScale(){
+  switch(
+    currentSettings.terrainHeight
+  ){
+    case "high":
+      return 1.65;
+    case "low":
+      return .58;
+    default:
+      return 1;
+  }
+}
+
+
+function bulletSpeedValue(){
+  if(
+    currentSettings.bulletSpeed ===
+    "infinite"
+  ){
+    return Infinity;
+  }
+
+  return (
+    BULLET_SPEED_VALUES[
+      currentSettings.bulletSpeed
+    ] ||
+    BULLET_SPEED_VALUES.medium
+  );
+}
+
+
+function getRegenRate(){
+  return (
+    REGEN_RATES[
+      currentSettings.regen
+    ] ||
+    0
+  );
+}
+
+
+function markActivity(){
+  lastActivityAt =
+    Date.now();
+
+  if(
+    localPlayer
+  ){
+    localPlayer.lastActiveAt =
+      lastActivityAt;
+  }
+}
+
+
+function updateSpawnProtectionUI(now = Date.now()){
+  if(
+    !matchHasStarted ||
+    now >= spawnProtectionUntil
+  ){
+
+    spawnProtection.style.display =
+      "none";
+
+    return;
+
+  }
+
+  const remaining =
+    Math.max(
+      0,
+      spawnProtectionUntil -
+      now
+    );
+
+  const progress =
+    clamp(
+      remaining /
+      START_PROTECTION_TIME,
+      0,
+      1
+    );
+
+  spawnProtection.style.display =
+    "block";
+
+  spawnProtectionBar.style.setProperty(
+    "--protectionProgress",
+    String(progress)
+  );
+
+  spawnProtection.firstElementChild.textContent =
+    `🛡 無敵中 ${(
+      remaining / 1000
+    ).toFixed(1)}秒`;
+}
+
+
+async function checkMatchCleanup(data){
+  if(
+    !matchRef ||
+    !data ||
+    !data.players
+  ){
+    return;
+  }
+
+  const now =
+    Date.now();
+
+  if(
+    now -
+    lastCleanupCheck <
+    CLEANUP_INTERVAL
+  ){
+    return;
+  }
+
+  lastCleanupCheck =
+    now;
+
+  let createdMillis =
+    0;
+
+  if(
+    data.createdAt
+  ){
+
+    if(
+      typeof data.createdAt.toMillis ===
+      "function"
+    ){
+
+      createdMillis =
+        data.createdAt.toMillis();
+
+    }else{
+
+      createdMillis =
+        Number(
+          data.createdAt
+        ) || 0;
+
+    }
+
+  }
+
+  if(
+    createdMillis &&
+    now -
+    createdMillis >=
+    MAX_MATCH_AGE
+  ){
+
+    try{
+      await deleteDoc(
+        matchRef
+      );
+    }catch(error){
+      console.error(
+        "age cleanup error",
+        error
+      );
+    }
+
+    return;
+  }
+
+  const players =
+    Object.values(
+      data.players
+    );
+
+  if(
+    !players.length
+  ){
+    return;
+  }
+
+  const allInactive =
+    players.every(
+      player =>
+        Number.isFinite(
+          Number(
+            player.lastActiveAt
+          )
+        ) &&
+        now -
+        Number(
+          player.lastActiveAt
+        ) >=
+        INACTIVE_MATCH_TIME
+    );
+
+  if(allInactive){
+
+    try{
+      await deleteDoc(
+        matchRef
+      );
+    }catch(error){
+      console.error(
+        "inactive cleanup error",
+        error
+      );
+    }
+
+  }
+}
+
+
+function getPlayerOrder(
+  players,
+  order
+){
+  const result =
+    Array.isArray(order)
+      ? order.filter(
+          uid => players[uid]
+        )
+      : [];
+
+  for(
+    const uid of Object.keys(players)
+  ){
+    if(
+      !result.includes(uid)
+    ){
+      result.push(uid);
+    }
+  }
+
+  return result;
+}
+
+
+function getLandingTop(
+  x,
+  z,
+  previousFeetY,
+  nextFeetY
+){
+  if(
+    nextFeetY >
+    previousFeetY
+  ){
+    return null;
+  }
+
+  let best =
+    null;
+
+  for(
+    let i = 1;
+    i < colliders.length;
+    i++
+  ){
+
+    const collider =
+      colliders[i];
+
+    const box =
+      new THREE.Box3()
+        .setFromObject(
+          collider
+        );
+
+    const inside =
+      x >=
+        box.min.x - .38 &&
+      x <=
+        box.max.x + .38 &&
+      z >=
+        box.min.z - .38 &&
+      z <=
+        box.max.z + .38;
+
+    if(!inside){
+      continue;
+    }
+
+    const top =
+      box.max.y;
+
+    if(
+      previousFeetY >=
+      top - .08 &&
+      nextFeetY <=
+      top + .08
+    ){
+
+      if(
+        best === null ||
+        top > best
+      ){
+        best =
+          top;
+      }
+
+    }
+
+  }
+
+  return best;
+}
+
+
+function getCeilingBottom(
+  x,
+  z,
+  previousHeadY,
+  nextHeadY
+){
+  if(
+    nextHeadY <
+    previousHeadY
+  ){
+    return null;
+  }
+
+  let best =
+    null;
+
+  for(
+    let i = 1;
+    i < colliders.length;
+    i++
+  ){
+
+    const box =
+      new THREE.Box3()
+        .setFromObject(
+          colliders[i]
+        );
+
+    const inside =
+      x >=
+        box.min.x - .32 &&
+      x <=
+        box.max.x + .32 &&
+      z >=
+        box.min.z - .32 &&
+      z <=
+        box.max.z + .32;
+
+    if(!inside){
+      continue;
+    }
+
+    const bottom =
+      box.min.y;
+
+    if(
+      previousHeadY <=
+      bottom + .08 &&
+      nextHeadY >=
+      bottom - .08
+    ){
+
+      if(
+        best === null ||
+        bottom < best
+      ){
+        best =
+          bottom;
+      }
+
+    }
+
+  }
+
+  return best;
+}
+
+
 async function createMatch(
   requestedCode = ""
 ){
@@ -1973,7 +2977,6 @@ async function createMatch(
       requestedCode
         .trim()
         .toUpperCase();
-
 
     if(!code){
 
@@ -1996,9 +2999,7 @@ async function createMatch(
         const existing =
           await getDoc(ref);
 
-        if(
-          !existing.exists()
-        ){
+        if(!existing.exists()){
 
           code =
             candidate;
@@ -2011,19 +3012,14 @@ async function createMatch(
 
     }
 
-
     if(!code){
-
       throw new Error(
         "試合コードを作成できませんでした。"
       );
-
     }
-
 
     const spawn =
       randomSpawn();
-
 
     const player = {
 
@@ -2050,7 +3046,7 @@ async function createMatch(
         0,
 
       hp:
-        matchSettings.maxHp,
+        MAX_HP,
 
       kills:
         0,
@@ -2059,13 +3055,9 @@ async function createMatch(
         true,
 
       lastActiveAt:
-        Date.now(),
-
-      lastDamagedAt:
-        0
+        Date.now()
 
     };
-
 
     const ref =
       doc(
@@ -2074,26 +3066,20 @@ async function createMatch(
         code
       );
 
-
     await runTransaction(
       db,
       async transaction => {
 
         const snap =
-          await transaction.get(
-            ref
-          );
+          await transaction.get(ref);
 
-        if(
-          snap.exists()
-        ){
+        if(snap.exists()){
 
           throw new Error(
             "ALREADY_EXISTS"
           );
 
         }
-
 
         transaction.set(
           ref,
@@ -2114,19 +3100,17 @@ async function createMatch(
             startedAt:
               null,
 
-            players:{
+            settings:
+              {
+                ...DEFAULT_SETTINGS
+              },
 
+            playerOrder:
+              [user.uid],
+
+            players:{
               [user.uid]:
                 player
-
-            },
-
-            playerOrder:[
-              user.uid
-            ],
-
-            settings:{
-              ...matchSettings
             }
 
           }
@@ -2135,15 +3119,12 @@ async function createMatch(
       }
     );
 
-
     isHost =
       true;
-
 
     await startMatch(
       code
     );
-
 
   }catch(error){
 
@@ -2167,7 +3148,6 @@ async function createMatch(
       getFriendlyError(error);
 
   }
-
 }
 
 
@@ -2183,7 +3163,6 @@ async function joinMatch(
       .trim()
       .toUpperCase();
 
-
   if(!code){
 
     await createMatch("");
@@ -2192,16 +3171,13 @@ async function joinMatch(
 
   }
 
-
   statusEl.textContent =
     "試合を確認中…";
-
 
   try{
 
     const user =
       await ensureAuth();
-
 
     const ref =
       doc(
@@ -2210,22 +3186,10 @@ async function joinMatch(
         code
       );
 
-
     const existing =
       await getDoc(ref);
 
-
-    /*
-      ここが今回の重要部分。
-
-      部屋が存在しなければ、
-      参加失敗ではなく
-      「そのコードで作成」する。
-    */
-
-    if(
-      !existing.exists()
-    ){
+    if(!existing.exists()){
 
       await createMatch(
         code
@@ -2235,16 +3199,12 @@ async function joinMatch(
 
     }
 
-
     await runTransaction(
       db,
       async transaction => {
 
         const snap =
-          await transaction.get(
-            ref
-          );
-
+          await transaction.get(ref);
 
         if(!snap.exists()){
 
@@ -2254,50 +3214,50 @@ async function joinMatch(
 
         }
 
-
         const data =
           snap.data();
 
-
         if(
-          data.status ===
-          "ended"
+          data.status !==
+          "waiting"
         ){
 
+          if(
+            data.status ===
+            "ended"
+          ){
+
+            throw new Error(
+              "ENDED"
+            );
+
+          }
+
           throw new Error(
-            "ENDED"
+            "ALREADY_STARTED"
           );
 
         }
-
 
         const players =
           {
             ...(data.players || {})
           };
 
-
-        if(
-          players[user.uid]
-        ){
-
+        if(players[user.uid]){
           return;
-
         }
 
-
-        const count =
-          Object.keys(
-            players
-          ).length;
-
         const playerOrder =
-          Array.isArray(data.playerOrder)
-            ? [...data.playerOrder]
+          Array.isArray(
+            data.playerOrder
+          )
+            ? data.playerOrder.slice()
             : Object.keys(players);
 
-
-        if(count >= 8){
+        if(
+          playerOrder.length >= 8
+        ){
 
           throw new Error(
             "FULL"
@@ -2305,15 +3265,8 @@ async function joinMatch(
 
         }
 
-
-        const roomSettings =
-          normalizeMatchSettings(
-            data.settings || matchSettings
-          );
-
         const spawn =
           randomSpawn();
-
 
         players[user.uid] = {
 
@@ -2340,7 +3293,7 @@ async function joinMatch(
             0,
 
           hp:
-            roomSettings.maxHp,
+            MAX_HP,
 
           kills:
             0,
@@ -2349,13 +3302,9 @@ async function joinMatch(
             true,
 
           lastActiveAt:
-            Date.now(),
-
-          lastDamagedAt:
-            0
+            Date.now()
 
         };
-
 
         playerOrder.push(
           user.uid
@@ -2364,26 +3313,20 @@ async function joinMatch(
         transaction.update(
           ref,
           {
-
             players,
-
             playerOrder
-
           }
         );
 
       }
     );
 
-
     isHost =
       false;
-
 
     await startMatch(
       code
     );
-
 
   }catch(error){
 
@@ -2391,7 +3334,6 @@ async function joinMatch(
 
     const message =
       error?.message || "";
-
 
     if(
       message ===
@@ -2418,6 +3360,14 @@ async function joinMatch(
       statusEl.textContent =
         "その試合はもう終了してるよ。";
 
+    }else if(
+      message ===
+      "ALREADY_STARTED"
+    ){
+
+      statusEl.textContent =
+        "その試合はもう始まってるよ。";
+
     }else{
 
       statusEl.textContent =
@@ -2427,7 +3377,6 @@ async function joinMatch(
     }
 
   }
-
 }
 
 
@@ -2507,37 +3456,8 @@ async function startMatch(
       code
     );
 
-  const initialRoom =
-    await getDoc(matchRef);
-
-  if(initialRoom.exists()){
-    applyMatchSettings(
-      initialRoom.data().settings || matchSettings,
-      true
-    );
-  }
-
-
-  menu.style.display =
-    "none";
-
-  gameUI.style.display =
-    "block";
-
   gameOver.style.display =
     "none";
-
-
-  roomText.textContent =
-    code;
-
-
-  if(!scene){
-
-    setupScene();
-
-  }
-
 
   gameEnded =
     false;
@@ -2548,13 +3468,21 @@ async function startMatch(
   matchHasStarted =
     false;
 
+  gameUI.style.display =
+    "none";
+
+  hideRoomScreen();
 
   velocityY =
     0;
 
+  lastActivityAt =
+    Date.now();
+
+  lastCleanupCheck =
+    0;
 
   await loadLocalPlayer();
-
 
   if(unsubscribeMatch){
 
@@ -2564,7 +3492,6 @@ async function startMatch(
       null;
 
   }
-
 
   unsubscribeMatch =
     onSnapshot(
@@ -2586,75 +3513,97 @@ async function startMatch(
 
         }
 
-
         const data =
           snapshot.data();
-
-        checkMatchCleanup(
-          data
-        );
-
 
         const players =
           data.players ||
           {};
 
+        roomPlayerOrder =
+          getPlayerOrder(
+            players,
+            data.playerOrder
+          );
 
         const count =
-          Object.keys(
-            players
-          ).length;
-
-        window.__dfpsPlayerOrder =
-          Array.isArray(data.playerOrder)
-            ? [...data.playerOrder]
-            : Object.keys(players);
-
+          roomPlayerOrder.length;
 
         playerCountText.textContent =
           String(count);
-
-
-        updateRemotePlayers(
-          players
-        );
-
-
-        updateScoreboard(
-          players
-        );
-
 
         const me =
           players[
             currentUser.uid
           ];
 
-
         if(me){
+
+          const previousHp =
+            localPlayer
+              ? Number(
+                  localPlayer.hp
+                )
+              : Number(
+                  me.hp
+                );
+
+          const preservedHp =
+            localHpNeedsSync &&
+            localPlayer
+              ? localPlayer.hp
+              : me.hp;
 
           localPlayer =
             {
-
               ...localPlayer,
-
-              ...me
-
+              ...me,
+              hp:
+                preservedHp
             };
-
 
           localKills =
             me.kills || 0;
 
+          if(
+            previousHp >
+            Number(me.hp) &&
+            matchHasStarted
+          ){
+
+            lastDamageAt =
+              Date.now();
+
+          }
 
           updateLocalHUD();
 
         }
 
-
         const wasStarted =
           matchHasStarted;
 
+        if(
+          data.status ===
+          "waiting"
+        ){
+
+          matchHasStarted =
+            false;
+
+          applyMatchSettings(
+            data.settings ||
+            DEFAULT_SETTINGS
+          );
+
+          updateRoomUI(
+            data
+          );
+
+          gameUI.style.display =
+            "none";
+
+        }
 
         if(
           data.status ===
@@ -2664,45 +3613,65 @@ async function startMatch(
           matchHasStarted =
             true;
 
-        }
+          applyMatchSettings(
+            data.settings ||
+            DEFAULT_SETTINGS
+          );
 
+          if(
+            !wasStarted
+          ){
 
-        if(
-          data.status ===
-          "active" &&
-          !wasStarted
-        ){
-
-          const startedAt =
-            data.startedAt;
-
-
-          spawnProtectionUntil =
-            Date.now() +
-            START_PROTECTION_TIME;
-
-
-          if(startedAt){
-
-            const serverMillis =
-              startedAt.toMillis
-                ? startedAt.toMillis()
-                : Date.now();
-
+            const startedAt =
+              data.startedAt;
 
             spawnProtectionUntil =
-              serverMillis +
+              Date.now() +
               START_PROTECTION_TIME;
+
+            if(startedAt){
+
+              const serverMillis =
+                startedAt.toMillis
+                  ? startedAt.toMillis()
+                  : Date.now();
+
+              spawnProtectionUntil =
+                serverMillis +
+                START_PROTECTION_TIME;
+
+            }
+
+            lastDamageAt =
+              0;
+
+            lastRegenTime =
+              performance.now();
 
           }
 
+          if(!scene){
+
+            setupScene();
+
+          }
+
+          setCameraFromPlayer();
+
+          updateRemotePlayers(
+            players
+          );
+
+          updateScoreboard(
+            players
+          );
+
+          gameUI.style.display =
+            "block";
+
+          hideRoomScreen();
+
         }
-
-
-        updateStartUI(
-          data
-        );
-
 
         if(
           data.status ===
@@ -2713,7 +3682,6 @@ async function startMatch(
           const winner =
             data.winnerUid;
 
-
           const winnerName =
             winner &&
             players[winner] &&
@@ -2721,14 +3689,11 @@ async function startMatch(
               ? players[winner].name
               : "勝者";
 
-
           finishLocalGame(
 
             winner ===
             currentUser.uid
-
               ? "YOU WIN!"
-
               : winnerName +
                 " の勝利！"
 
@@ -2736,16 +3701,16 @@ async function startMatch(
 
           setTimeout(
             () => {
-              if(
-                matchRef
-              ){
-                deleteMatch();
-              }
+              deleteMatch();
             },
             1200
           );
 
         }
+
+        await checkMatchCleanup(
+          data
+        );
 
       },
 
@@ -2757,15 +3722,12 @@ async function startMatch(
 
         if(gameStarted){
 
-          finishLocalGame(
-            "通信エラーが発生しました。"
-          );
+          leaveCurrentMatch();
 
         }
 
       }
     );
-
 
   if(!gameLoopStarted){
 
@@ -2788,7 +3750,6 @@ async function loadLocalPlayer(){
       matchRef
     );
 
-
   if(
     !snap.exists()
   ){
@@ -2799,16 +3760,13 @@ async function loadLocalPlayer(){
 
   }
 
-
   const data =
     snap.data();
-
 
   const player =
     data.players?.[
       currentUser.uid
     ];
-
 
   if(!player){
 
@@ -2818,443 +3776,60 @@ async function loadLocalPlayer(){
 
   }
 
-
   localPlayer =
     {
-      ...player,
-      lastActiveAt:
-        Number(
-          player.lastActiveAt ||
-          Date.now()
-        )
+      ...player
     };
-
-
-  lastActivityAt =
-    localPlayer.lastActiveAt;
-
 
   localKills =
     player.kills || 0;
 
+  lastActivityAt =
+    Number(
+      player.lastActiveAt
+    ) ||
+    Date.now();
+
+  localPlayer.lastActiveAt =
+    lastActivityAt;
 
   cameraState.yaw =
     Number(
       player.yaw || 0
     );
 
-
   cameraState.pitch =
     Number(
       player.pitch || 0
     );
 
+  applyMatchSettings(
+    data.settings ||
+    DEFAULT_SETTINGS
+  );
 
-  setCameraFromPlayer();
+  if(
+    data.status ===
+    "active"
+  ){
+
+    matchHasStarted =
+      true;
+
+    setCameraFromPlayer();
+
+  }
 
   updateLocalHUD();
 
-  updateStartUI(
-    data
-  );
-
-}
-
-
-function normalizeMatchSettings(settings){
-
-  const source =
-    settings || {};
-
-  const maxHp =
-    Math.round(
-      Number(
-        source.maxHp ||
-        100
-      )
-    );
-
-  const regenLock =
-    Number(
-      source.regenLock ||
-      0
-    );
-
-  return {
-    terrainAmount:
-      ["high","medium","low","none"].includes(source.terrainAmount)
-        ? source.terrainAmount
-        : "medium",
-    terrainHeight:
-      ["high","medium","low"].includes(source.terrainHeight)
-        ? source.terrainHeight
-        : "medium",
-    bulletSpeed:
-      ["infinite","fast","medium","slow"].includes(source.bulletSpeed)
-        ? source.bulletSpeed
-        : "medium",
-    maxHp:
-      clamp(
-        Number.isFinite(maxHp) ? maxHp : 100,
-        1,
-        99999
-      ),
-    hpRegen:
-      ["fast","medium","slow","none"].includes(source.hpRegen)
-        ? source.hpRegen
-        : "none",
-    regenLock:
-      clamp(
-        Number.isFinite(regenLock) ? regenLock : 0,
-        0,
-        999
-      )
-  };
-}
-
-
-function getBulletSpeed(){
-
-  if(matchSettings.bulletSpeed === "infinite"){
-    return 999999;
-  }
-
-  if(matchSettings.bulletSpeed === "fast"){
-    return 60;
-  }
-
-  if(matchSettings.bulletSpeed === "slow"){
-    return 26;
-  }
-
-  return 42;
-}
-
-
-function getRegenConfig(){
-
-  if(matchSettings.hpRegen === "fast"){
-    return { interval:1200, amount:4 };
-  }
-
-  if(matchSettings.hpRegen === "medium"){
-    return { interval:1800, amount:3 };
-  }
-
-  if(matchSettings.hpRegen === "slow"){
-    return { interval:2800, amount:2 };
-  }
-
-  return null;
-}
-
-
-function updateSettingsDisabledUI(){
-
-  const terrainNone =
-    terrainAmountSetting.value === "none";
-
-  terrainHeightSetting.disabled =
-    terrainNone;
-
-  terrainHeightLabel.classList.toggle(
-    "settingDisabled",
-    terrainNone
-  );
-
-  const regenNone =
-    hpRegenSetting.value === "none";
-
-  regenLockSetting.disabled =
-    regenNone;
-
-  regenLockLabel.classList.toggle(
-    "settingDisabled",
-    regenNone
-  );
-}
-
-
-function loadSettingsIntoUI(settings){
-
-  const normalized =
-    normalizeMatchSettings(settings);
-
-  terrainAmountSetting.value =
-    normalized.terrainAmount;
-
-  terrainHeightSetting.value =
-    normalized.terrainHeight;
-
-  bulletSpeedSetting.value =
-    normalized.bulletSpeed;
-
-  maxHpSetting.value =
-    String(normalized.maxHp);
-
-  hpRegenSetting.value =
-    normalized.hpRegen;
-
-  regenLockSetting.value =
-    String(normalized.regenLock);
-
-  updateSettingsDisabledUI();
-}
-
-
-function readSettingsFromUI(){
-
-  const maxHp =
-    Math.round(
-      Number(maxHpSetting.value)
-    );
-
-  const regenLock =
-    Number(regenLockSetting.value);
-
-  return normalizeMatchSettings({
-    terrainAmount: terrainAmountSetting.value,
-    terrainHeight: terrainHeightSetting.value,
-    bulletSpeed: bulletSpeedSetting.value,
-    maxHp,
-    hpRegen: hpRegenSetting.value,
-    regenLock
-  });
-}
-
-
-function applyMatchSettings(settings, force=false){
-
-  const normalized =
-    normalizeMatchSettings(settings);
-
-  const signature =
-    JSON.stringify(normalized);
-
-  const terrainChanged =
-    normalized.terrainAmount !== matchSettings.terrainAmount ||
-    normalized.terrainHeight !== matchSettings.terrainHeight;
-
-  matchSettings =
-    normalized;
-
   if(
-    (force || terrainChanged) &&
-    scene &&
-    !matchHasStarted
-  ){
-    rebuildArena();
-  }
-
-  appliedTerrainSignature =
-    signature;
-}
-
-
-function openSettings(){
-
-  loadSettingsIntoUI(matchSettings);
-
-  settingsMessage.textContent =
-    isHost
-      ? ""
-      : "部屋主のみ変更できます";
-
-  settingsSaveButton.style.display =
-    isHost ? "block" : "none";
-
-  [
-    terrainAmountSetting,
-    terrainHeightSetting,
-    bulletSpeedSetting,
-    maxHpSetting,
-    hpRegenSetting,
-    regenLockSetting
-  ].forEach(
-    control => {
-      control.disabled = !isHost;
-    }
-  );
-
-  updateSettingsDisabledUI();
-
-  settingsModal.style.display =
-    "flex";
-}
-
-
-function closeSettings(){
-
-  settingsModal.style.display =
-    "none";
-
-}
-
-
-async function saveSettings(){
-
-  if(!isHost || !matchRef || matchHasStarted){
-    return;
-  }
-
-  const settings =
-    readSettingsFromUI();
-
-  settingsMessage.textContent =
-    "保存中…";
-
-  try{
-
-    const snap =
-      await getDoc(matchRef);
-
-    if(!snap.exists()){
-      return;
-    }
-
-    const data =
-      snap.data();
-
-    if(data.status !== "waiting"){
-      settingsMessage.textContent =
-        "もう試合が始まっています";
-      return;
-    }
-
-    const players =
-      { ...(data.players || {}) };
-
-    Object.values(players).forEach(
-      player => {
-        player.hp = settings.maxHp;
-        player.lastDamagedAt = 0;
-      }
-    );
-
-    await updateDoc(
-      matchRef,
-      {
-        settings,
-        players
-      }
-    );
-
-    matchSettings = settings;
-    settingsMessage.textContent =
-      "保存しました";
-
-    setTimeout(
-      closeSettings,
-      220
-    );
-
-  }catch(error){
-
-    console.error(
-      "settings save error",
-      error
-    );
-
-    settingsMessage.textContent =
-      "保存失敗：" +
-      getFriendlyError(error);
-
-  }
-}
-
-
-async function shareRoomCode(){
-
-  if(!currentMatchId){
-    return;
-  }
-
-  const text =
-    currentMatchId;
-
-  try{
-
-    if(navigator.share){
-      await navigator.share({
-        text
-      });
-    }else if(navigator.clipboard){
-      await navigator.clipboard.writeText(text);
-      statusEl.textContent =
-        "試合コードをコピーしたよ";
-    }else{
-      window.prompt(
-        "このコードを共有してね",
-        text
-      );
-    }
-
-  }catch(error){
-    if(error?.name !== "AbortError"){
-      console.error(
-        "share error",
-        error
-      );
-    }
-  }
-}
-
-
-function updateStartUI(data){
-
-  if(
-    data.status !==
+    data.status ===
     "waiting"
   ){
 
-    preStart.style.display =
-      "none";
-
-    return;
-
-  }
-
-  applyMatchSettings(
-    data.settings || matchSettings
-  );
-
-  loadSettingsIntoUI(
-    matchSettings
-  );
-
-  shareRoomButton.style.display =
-    "inline-flex";
-
-  settingsButton.style.display =
-    "inline-flex";
-
-  leaveRoomButton.style.display =
-    "inline-flex";
-
-
-  if(
-    isHost
-  ){
-
-    preStart.style.display =
-      "block";
-
-    preStartText.textContent =
-      "部屋主がSTARTを長押しして開始";
-
-    startButton.style.opacity =
-      "1";
-
-  }else{
-
-    preStart.style.display =
-      "block";
-
-    preStartText.textContent =
-      "部屋主のSTART待ち";
-
-    startButton.style.opacity =
-      ".35";
+    updateRoomUI(
+      data
+    );
 
   }
 
@@ -3397,31 +3972,25 @@ function updateScoreboard(
 ){
 
   const order =
-    Array.isArray(window.__dfpsPlayerOrder)
-      ? window.__dfpsPlayerOrder
-      : [];
-
-  const entries =
-    order
-      .filter(uid => players[uid])
-      .map(uid => [uid, players[uid]])
-      .concat(
-        Object.entries(players)
-          .filter(([uid]) => !order.includes(uid))
-      );
-
+    getPlayerOrder(
+      players,
+      roomPlayerOrder
+    );
 
   scoreBoard.innerHTML =
     "";
 
-
   for(
-    const [
-      uid,
-      player
-    ]
-    of entries
+    const uid
+    of order
   ){
+
+    const player =
+      players[uid];
+
+    if(!player){
+      continue;
+    }
 
     const row =
       document.createElement(
@@ -3431,64 +4000,46 @@ function updateScoreboard(
     row.className =
       "scoreRow";
 
-
     const name =
       document.createElement(
         "span"
       );
 
-
     name.textContent =
       uid ===
       currentUser.uid
-
         ? "YOU"
-
         : player.name ||
           uid.slice(-4);
-
 
     const state =
       document.createElement(
         "span"
       );
 
-
     state.textContent =
       player.alive
-
         ? `${player.kills || 0} K`
-
         : "DEAD";
-
 
     state.className =
       player.alive
-
         ? "scoreAlive"
-
         : "scoreDead";
 
-
     row.appendChild(name);
-
     row.appendChild(state);
 
     scoreBoard.appendChild(row);
-
   }
-
 }
 
 
 function updateLocalHUD(){
 
   if(!localPlayer){
-
     return;
-
   }
-
 
   const hp =
     Math.max(
@@ -3498,30 +4049,31 @@ function updateLocalHUD(){
       )
     );
 
-
   healthText.textContent =
     `HP ${hp}`;
 
-
-  const maxHp =
-    Math.max(
-      1,
-      Number(
-        matchSettings.maxHp ||
-        100
-      )
-    );
+  const percent =
+    MAX_HP > 0
+      ? clamp(
+          hp / MAX_HP * 100,
+          0,
+          100
+        )
+      : 0;
 
   healthBar.style.width =
-    `${clamp((hp / maxHp) * 100, 0, 100)}%`;
+    `${percent}%`;
 
-
-  if(hp > 60){
+  if(
+    percent > 60
+  ){
 
     healthBar.style.background =
       "#48e27d";
 
-  }else if(hp > 30){
+  }else if(
+    percent > 30
+  ){
 
     healthBar.style.background =
       "#ffd84d";
@@ -3532,7 +4084,6 @@ function updateLocalHUD(){
       "#ff5959";
 
   }
-
 
   killsText.textContent =
     String(localKills);
@@ -3557,46 +4108,20 @@ function clamp(
 }
 
 
-function markActivity(){
-
-  lastActivityAt =
-    Date.now();
-
-  if(
-    localPlayer
-  ){
-    localPlayer.lastActiveAt =
-      lastActivityAt;
-  }
-}
-
-
-function getColliderBoxes(){
-  return colliders
-    .filter(
-      collider =>
-        collider &&
-        collider.geometry
-    )
-    .map(
-      collider =>
-        new THREE.Box3()
-          .setFromObject(collider)
-    );
-}
-
-
 function horizontalOverlaps(
-  box,
   x,
   z,
-  radius = .38
+  box
 ){
   return (
-    x + radius > box.min.x &&
-    x - radius < box.max.x &&
-    z + radius > box.min.z &&
-    z - radius < box.max.z
+    x + .38 >
+      box.min.x &&
+    x - .38 <
+      box.max.x &&
+    z + .38 >
+      box.min.z &&
+    z - .38 <
+      box.max.z
   );
 }
 
@@ -3611,208 +4136,64 @@ function isPositionFree(
     .38;
 
   if(
-    x < -ARENA_SIZE / 2 + radius ||
-    x > ARENA_SIZE / 2 - radius ||
-    z < -ARENA_SIZE / 2 + radius ||
-    z > ARENA_SIZE / 2 - radius
+    x <
+      -ARENA_SIZE / 2 +
+      radius ||
+    x >
+      ARENA_SIZE / 2 -
+      radius ||
+    z <
+      -ARENA_SIZE / 2 +
+      radius ||
+    z >
+      ARENA_SIZE / 2 -
+      radius
   ){
     return false;
   }
 
   const feetY =
-    y - PLAYER_HEIGHT;
+    y -
+    PLAYER_HEIGHT;
 
   const headY =
-    y + .35;
+    feetY +
+    PLAYER_HEIGHT;
 
   for(
-    const collider
-    of colliders
+    let i = 1;
+    i < colliders.length;
+    i++
   ){
-
-    if(
-      !collider ||
-      !collider.geometry ||
-      collider === colliders[0]
-    ){
-      continue;
-    }
 
     const box =
       new THREE.Box3()
         .setFromObject(
-          collider
+          colliders[i]
         );
 
     if(
       !horizontalOverlaps(
-        box,
         x,
         z,
-        radius
+        box
       )
     ){
       continue;
     }
 
-    /*
-      足場の上に立っている場合は、
-      足場そのものを横移動の障害物にしない。
-    */
     if(
-      box.max.y <=
-      feetY + .06
+      headY >
+      box.min.y + .05 &&
+      feetY <
+      box.max.y - .05
     ){
-      continue;
+      return false;
     }
 
-    if(
-      box.min.y >=
-      headY - .06
-    ){
-      continue;
-    }
-
-    return false;
   }
 
   return true;
-}
-
-
-function getLandingTop(
-  x,
-  z,
-  previousFeetY,
-  nextFeetY
-){
-
-  let bestTop =
-    null;
-
-  /*
-    床の上面は y=0。
-  */
-  if(
-    previousFeetY >= -.05 &&
-    nextFeetY <= .05
-  ){
-    bestTop = 0;
-  }
-
-  for(
-    const collider
-    of colliders
-  ){
-
-    if(
-      !collider ||
-      !collider.geometry ||
-      collider === colliders[0]
-    ){
-      continue;
-    }
-
-    const box =
-      new THREE.Box3()
-        .setFromObject(
-          collider
-        );
-
-    if(
-      !horizontalOverlaps(
-        box,
-        x,
-        z,
-        .36
-      )
-    ){
-      continue;
-    }
-
-    const top =
-      box.max.y;
-
-    if(
-      previousFeetY >= top - .08 &&
-      nextFeetY <= top + .08
-    ){
-
-      if(
-        bestTop === null ||
-        top > bestTop
-      ){
-        bestTop =
-          top;
-      }
-
-    }
-  }
-
-  return bestTop;
-}
-
-
-function getCeilingBottom(
-  x,
-  z,
-  previousHeadY,
-  nextHeadY
-){
-
-  let bestBottom =
-    null;
-
-  for(
-    const collider
-    of colliders
-  ){
-
-    if(
-      !collider ||
-      !collider.geometry ||
-      collider === colliders[0]
-    ){
-      continue;
-    }
-
-    const box =
-      new THREE.Box3()
-        .setFromObject(
-          collider
-        );
-
-    if(
-      !horizontalOverlaps(
-        box,
-        x,
-        z,
-        .36
-      )
-    ){
-      continue;
-    }
-
-    const bottom =
-      box.min.y;
-
-    if(
-      previousHeadY <= bottom + .08 &&
-      nextHeadY >= bottom - .08
-    ){
-
-      if(
-        bestBottom === null ||
-        bottom < bestBottom
-      ){
-        bestBottom =
-          bottom;
-      }
-
-    }
-  }
-
-  return bestBottom;
 }
 
 
@@ -3824,7 +4205,8 @@ function tryMove(
   if(
     !localPlayer ||
     !localPlayer.alive ||
-    !matchHasStarted
+    !matchHasStarted ||
+    grabAnimation
   ){
     return;
   }
@@ -3833,14 +4215,6 @@ function tryMove(
     localPlayer.x +
     dx;
 
-  const nextZ =
-    localPlayer.z +
-    dz;
-
-  /*
-    X/Zを分離して判定することで、
-    足場の端で壁に引っかかりにくくする。
-  */
   if(
     isPositionFree(
       nextX,
@@ -3848,9 +4222,15 @@ function tryMove(
       localPlayer.z
     )
   ){
+
     localPlayer.x =
       nextX;
+
   }
+
+  const nextZ =
+    localPlayer.z +
+    dz;
 
   if(
     isPositionFree(
@@ -3859,8 +4239,19 @@ function tryMove(
       nextZ
     )
   ){
+
     localPlayer.z =
       nextZ;
+
+  }
+
+  if(
+    Math.abs(dx) > .0001 ||
+    Math.abs(dz) > .0001
+  ){
+
+    markActivity();
+
   }
 }
 
@@ -3908,12 +4299,16 @@ function updateMovement(
       inputZ
     );
 
-  if(length > 1){
+  if(
+    length > 1
+  ){
+
     inputX /=
       length;
 
     inputZ /=
       length;
+
   }
 
   const moving =
@@ -3921,8 +4316,6 @@ function updateMovement(
     Math.abs(inputZ) > .01;
 
   if(moving){
-
-    markActivity();
 
     const speed =
       physics.moveSpeed;
@@ -3968,31 +4361,25 @@ function updateMovement(
       moveX,
       moveZ
     );
+
   }
 
   const previousFeetY =
     localPlayer.y -
     PLAYER_HEIGHT;
 
-  const previousHeadY =
-    localPlayer.y +
-    .35;
-
   velocityY +=
     physics.gravity *
     delta;
 
-  let nextY =
+  const nextY =
     localPlayer.y +
-    velocityY * delta;
+    velocityY *
+    delta;
 
   const nextFeetY =
     nextY -
     PLAYER_HEIGHT;
-
-  const nextHeadY =
-    nextY +
-    .35;
 
   if(
     velocityY <= 0
@@ -4007,11 +4394,26 @@ function updateMovement(
       );
 
     if(
-      landingTop !== null
+      landingTop !==
+      null
     ){
 
       localPlayer.y =
         landingTop +
+        PLAYER_HEIGHT;
+
+      velocityY =
+        0;
+
+      grounded =
+        true;
+
+    }else if(
+      nextFeetY <=
+      0
+    ){
+
+      localPlayer.y =
         PLAYER_HEIGHT;
 
       velocityY =
@@ -4032,6 +4434,14 @@ function updateMovement(
 
   }else{
 
+    const previousHeadY =
+      previousFeetY +
+      PLAYER_HEIGHT;
+
+    const nextHeadY =
+      nextFeetY +
+      PLAYER_HEIGHT;
+
     const ceilingBottom =
       getCeilingBottom(
         localPlayer.x,
@@ -4041,43 +4451,56 @@ function updateMovement(
       );
 
     if(
-      ceilingBottom !== null
+      ceilingBottom !==
+      null
     ){
 
       localPlayer.y =
-        ceilingBottom -
-        .35;
+        ceilingBottom;
 
       velocityY =
         0;
+
+      grounded =
+        false;
 
     }else{
 
       localPlayer.y =
         nextY;
 
+      grounded =
+        false;
+
     }
 
-    grounded =
-      false;
   }
 
-  /*
-    落下しすぎた場合の安全処理。
-  */
   if(
     localPlayer.y <
-    -10
+    -8
   ){
+
+    const spawn =
+      randomSpawn();
+
+    localPlayer.x =
+      spawn.x;
 
     localPlayer.y =
       PLAYER_HEIGHT;
+
+    localPlayer.z =
+      spawn.z;
 
     velocityY =
       0;
 
     grounded =
       true;
+
+    markActivity();
+
   }
 
   camera.position.set(
@@ -4106,32 +4529,19 @@ function jump(){
     !localPlayer.alive ||
     !matchHasStarted
   ){
-
     return;
-
   }
-
-
-  /*
-    空中ならJUMPボタンがGRABになる。
-    条件を満たしていればそのまま掴む。
-  */
 
   if(!grounded){
 
     if(
       canGrab()
     ){
-
       startGrab();
-
     }
 
     return;
-
   }
-
-  markActivity();
 
   velocityY =
     physics.jumpPower;
@@ -4139,6 +4549,7 @@ function jump(){
   grounded =
     false;
 
+  markActivity();
 }
 
 
@@ -4344,33 +4755,23 @@ function canGrab(){
 function updateGrabUI(){
 
   if(
+    grounded ||
     !localPlayer ||
     !matchHasStarted
-  ){
-
-    jumpButton.style.opacity =
-      "0";
-
-    return;
-  }
-
-  jumpButton.style.opacity =
-    "";
-
-  if(
-    grounded
   ){
 
     jumpButton.textContent =
       "JUMP";
 
     jumpButton.classList.remove(
-      "grabInactive",
-      "grabActive"
+      "grabActive",
+      "grabInactive"
     );
 
-    return;
+    jumpButton.style.opacity =
+      "1";
 
+    return;
   }
 
   jumpButton.textContent =
@@ -4425,7 +4826,6 @@ function startGrab(){
 
   }
 
-  markActivity();
 
   grabAnimation = {
 
@@ -4448,6 +4848,8 @@ function startGrab(){
 
   velocityY =
     0;
+
+  markActivity();
 
 }
 
@@ -4497,6 +4899,7 @@ function updateGrabAnimation(
       grabAnimation.startX
     ) *
     smooth;
+
 
   localPlayer.z =
     grabAnimation.startZ +
@@ -4622,6 +5025,9 @@ function createBullet(
 
       ownerUid,
 
+      speed:
+        bulletSpeedValue(),
+
       created:
         performance.now(),
 
@@ -4679,29 +5085,37 @@ function updateBullets(
     of bullets
   ){
 
+    if(
+      !Number.isFinite(
+        bullet.speed
+      )
+    ){
+
+      removeBullet(
+        id
+      );
+
+      continue;
+
+    }
+
     const previous =
       bullet.mesh.position.clone();
 
-
     const distance =
-      getBulletSpeed() *
+      bullet.speed *
       delta;
 
-
     bullet.mesh.position.add(
-
       bullet.direction
         .clone()
         .multiplyScalar(
           distance
         )
-
     );
-
 
     bullet.lastPosition =
       previous;
-
 
     if(
       now -
@@ -4717,24 +5131,8 @@ function updateBullets(
 
     }
 
-
-    const bulletLine =
-      new THREE.Line3(
-
-        previous,
-
-        bullet.mesh.position
-
-      );
-
-
     let hitSomething =
       false;
-
-
-    /*
-      壁・足場との衝突
-    */
 
     for(
       const collider
@@ -4747,16 +5145,13 @@ function updateBullets(
             collider
           );
 
-
       const closest =
         new THREE.Vector3();
-
 
       box.clampPoint(
         bullet.mesh.position,
         closest
       );
-
 
       if(
         closest.distanceTo(
@@ -4773,7 +5168,6 @@ function updateBullets(
 
     }
 
-
     if(hitSomething){
 
       removeBullet(
@@ -4783,11 +5177,6 @@ function updateBullets(
       continue;
 
     }
-
-
-    /*
-      プレイヤーとの衝突
-    */
 
     for(
       const [
@@ -4802,18 +5191,14 @@ function updateBullets(
         bullet.ownerUid ||
         !mesh.visible
       ){
-
         continue;
-
       }
-
 
       const box =
         new THREE.Box3()
           .setFromObject(
             mesh
           );
-
 
       if(
         box.distanceToPoint(
@@ -4824,26 +5209,16 @@ function updateBullets(
         hitSomething =
           true;
 
-
-        if(
-          Date.now() >=
-          spawnProtectionUntil
-        ){
-
-          applyBulletDamage(
-            uid,
-            bullet.ownerUid
-          );
-
-        }
-
+        applyBulletDamage(
+          uid,
+          bullet.ownerUid
+        );
 
         break;
 
       }
 
     }
-
 
     if(hitSomething){
 
@@ -4858,6 +5233,108 @@ function updateBullets(
 }
 
 
+function shootHitscan(){
+
+  raycaster.setFromCamera(
+    new THREE.Vector2(
+      0,
+      0
+    ),
+    camera
+  );
+
+  const colliderHits =
+    raycaster.intersectObjects(
+      colliders,
+      false
+    );
+
+  const remoteMeshes =
+    Array.from(
+      playerMeshes.values()
+    );
+
+  const playerHits =
+    raycaster.intersectObjects(
+      remoteMeshes,
+      true
+    );
+
+  let closestCollider =
+    colliderHits.length
+      ? colliderHits[0]
+      : null;
+
+  let closestPlayer =
+    null;
+
+  for(
+    const hit
+    of playerHits
+  ){
+
+    let object =
+      hit.object;
+
+    let uid =
+      null;
+
+    while(
+      object
+    ){
+
+      if(
+        object.userData &&
+        object.userData.uid
+      ){
+
+        uid =
+          object.userData.uid;
+
+        break;
+
+      }
+
+      object =
+        object.parent;
+
+    }
+
+    if(
+      !uid ||
+      uid ===
+      currentUser.uid
+    ){
+      continue;
+    }
+
+    closestPlayer = {
+      hit,
+      uid
+    };
+
+    break;
+
+  }
+
+  if(
+    closestPlayer &&
+    (
+      !closestCollider ||
+      closestPlayer.hit.distance <=
+      closestCollider.distance
+    )
+  ){
+
+    applyBulletDamage(
+      closestPlayer.uid,
+      currentUser.uid
+    );
+
+  }
+}
+
+
 async function applyBulletDamage(
   targetUid,
   shooterUid
@@ -4867,17 +5344,16 @@ async function applyBulletDamage(
     !matchRef ||
     gameEnded
   ){
-
     return;
-
   }
-
 
   try{
 
     let wasKill =
       false;
 
+    let wasLocalDamage =
+      false;
 
     await runTransaction(
       db,
@@ -4888,95 +5364,89 @@ async function applyBulletDamage(
             matchRef
           );
 
-
         if(
           !snap.exists()
         ){
-
           return;
-
         }
-
 
         const data =
           snap.data();
-
 
         if(
           data.status !==
           "active"
         ){
-
           return;
-
         }
-
 
         const players =
           {
             ...(data.players || {})
           };
 
-
         const shooter =
           players[shooterUid];
-
 
         const target =
           players[targetUid];
 
-
         if(
           !shooter ||
-          !target
-        ){
-
-          return;
-
-        }
-
-
-        if(
+          !target ||
           !shooter.alive ||
           !target.alive
         ){
-
           return;
-
         }
 
-
-        if(
-          Date.now() <
+        const protectionUntil =
           Number(
             data.startedProtectionUntil ||
             0
+          );
+
+        if(
+          Date.now() <
+          protectionUntil
+        ){
+          return;
+        }
+
+        const beforeHpRaw =
+          Number(
+            target.hp
+          );
+
+        const beforeHp =
+          Number.isFinite(
+            beforeHpRaw
           )
+            ? beforeHpRaw
+            : MAX_HP;
+
+        const newHp =
+          Math.max(
+            0,
+            beforeHp -
+            BULLET_DAMAGE
+          );
+
+        target.hp =
+          newHp;
+
+        if(
+          targetUid ===
+          currentUser.uid
         ){
 
-          return;
+          wasLocalDamage =
+            true;
 
         }
 
-
-        target.hp =
-          Math.max(
-
-            0,
-
-            Number(
-              target.hp || 0
-            ) -
-            BULLET_DAMAGE
-
-          );
-
-        target.lastDamagedAt =
-          Date.now();
-
-
         if(
-          target.hp <= 0
+          newHp <= 0
         ){
 
           target.hp =
@@ -4985,17 +5455,14 @@ async function applyBulletDamage(
           target.alive =
             false;
 
-
           shooter.kills =
             Number(
               shooter.kills || 0
             ) + 1;
 
-
           wasKill =
             shooterUid ===
             currentUser.uid;
-
 
           const alivePlayers =
             Object.values(
@@ -5004,7 +5471,6 @@ async function applyBulletDamage(
               player =>
                 player.alive
             );
-
 
           if(
             alivePlayers.length <= 1
@@ -5033,19 +5499,24 @@ async function applyBulletDamage(
 
         }
 
-
         transaction.update(
           matchRef,
           {
-
             players
-
           }
         );
 
       }
     );
 
+    if(
+      wasLocalDamage
+    ){
+
+      lastDamageAt =
+        Date.now();
+
+    }
 
     if(wasKill){
 
@@ -5057,7 +5528,6 @@ async function applyBulletDamage(
 
     }
 
-
   }catch(error){
 
     console.error(
@@ -5066,40 +5536,6 @@ async function applyBulletDamage(
     );
 
   }
-
-}
-
-
-function updateSpawnProtectionUI(){
-
-  if(
-    !matchHasStarted ||
-    !localPlayer ||
-    gameEnded
-  ){
-    spawnProtection.style.opacity =
-      "0";
-    return;
-  }
-
-  const remaining =
-    spawnProtectionUntil -
-    Date.now();
-
-  if(remaining <= 0){
-    spawnProtection.style.opacity =
-      "0";
-    return;
-  }
-
-  spawnProtectionTime.textContent =
-    Math.max(
-      0,
-      remaining / 1000
-    ).toFixed(1);
-
-  spawnProtection.style.opacity =
-    "1";
 }
 
 
@@ -5164,11 +5600,8 @@ function shoot(){
     !matchHasStarted ||
     gameEnded
   ){
-
     return;
-
   }
-
 
   if(
     Date.now() <
@@ -5181,58 +5614,106 @@ function shoot(){
 
   }
 
-  markActivity();
-
   const now =
     performance.now();
-
 
   if(
     now <
     fireCooldownEnd
   ){
-
     return;
-
   }
-
 
   fireCooldownEnd =
     now +
     FIRE_INTERVAL;
 
+  if(
+    currentSettings.bulletSpeed ===
+    "infinite"
+  ){
 
-  raycaster.setFromCamera(
+    shootHitscan();
 
-    new THREE.Vector2(
-      0,
-      0
-    ),
+  }else{
 
-    camera
+    raycaster.setFromCamera(
+      new THREE.Vector2(
+        0,
+        0
+      ),
+      camera
+    );
 
-  );
+    const origin =
+      camera.position.clone();
 
+    const direction =
+      raycaster.ray.direction
+        .clone()
+        .normalize();
 
-  const origin =
-    camera.position.clone();
+    createBullet(
+      origin,
+      direction,
+      currentUser.uid
+    );
 
+  }
 
-  const direction =
-    raycaster.ray.direction
-      .clone()
-      .normalize();
-
-
-  createBullet(
-    origin,
-    direction,
-    currentUser.uid
-  );
-
+  markActivity();
 
   updateFireUI();
 
+}
+
+
+
+function getSeparatedSpawn(
+  used
+){
+  for(
+    let attempt = 0;
+    attempt < 80;
+    attempt++
+  ){
+
+    const spawn =
+      randomSpawn();
+
+    let safe =
+      true;
+
+    for(
+      const other
+      of used
+    ){
+
+      if(
+        Math.hypot(
+          spawn.x -
+          other.x,
+          spawn.z -
+          other.z
+        ) < 2.4
+      ){
+
+        safe =
+          false;
+
+        break;
+
+      }
+
+    }
+
+    if(safe){
+      return spawn;
+    }
+
+  }
+
+  return randomSpawn();
 }
 
 
@@ -5243,11 +5724,8 @@ function startMatchByHost(){
     !matchRef ||
     matchHasStarted
   ){
-
     return;
-
   }
-
 
   runTransaction(
     db,
@@ -5258,59 +5736,72 @@ function startMatchByHost(){
           matchRef
         );
 
-
-      if(
-        !snap.exists()
-      ){
-
+      if(!snap.exists()){
         return;
-
       }
-
 
       const data =
         snap.data();
-
 
       if(
         data.status !==
         "waiting"
       ){
-
         return;
-
       }
-
 
       const players =
         {
           ...(data.players || {})
         };
 
+      const settings =
+        normalizeSettings(
+          data.settings ||
+          currentSettings
+        );
+
+      const usedSpawns =
+        [];
+
+      const order =
+        getPlayerOrder(
+          players,
+          data.playerOrder
+        );
 
       for(
-        const player
-        of Object.values(players)
+        const uid
+        of order
       ){
 
-        const spawn =
-          randomSpawn();
+        const player =
+          players[uid];
 
+        if(!player){
+          continue;
+        }
+
+        const spawn =
+          getSeparatedSpawn(
+            usedSpawns
+          );
+
+        usedSpawns.push(
+          spawn
+        );
 
         player.x =
           spawn.x;
 
         player.y =
-          spawn.y;
+          PLAYER_HEIGHT;
 
         player.z =
           spawn.z;
 
         player.hp =
-          matchSettings.maxHp;
-
-        player.lastDamagedAt =
-          0;
+          settings.maxHp;
 
         player.alive =
           true;
@@ -5318,14 +5809,21 @@ function startMatchByHost(){
         player.kills =
           0;
 
-      }
+        player.lastActiveAt =
+          Date.now();
 
+      }
 
       transaction.update(
         matchRef,
         {
 
           players,
+
+          playerOrder:
+            order,
+
+          settings,
 
           status:
             "active",
@@ -5341,7 +5839,6 @@ function startMatchByHost(){
             START_PROTECTION_TIME
 
         }
-
       );
 
     }
@@ -5355,7 +5852,6 @@ function startMatchByHost(){
 
     }
   );
-
 }
 
 
@@ -5371,7 +5867,7 @@ function updateStartProgress(){
       !startHolding
     ){
 
-      startButton.style.setProperty(
+      roomStartButton.style.setProperty(
         "--progress",
         "0%"
       );
@@ -5379,14 +5875,11 @@ function updateStartProgress(){
     }
 
     return;
-
   }
-
 
   const elapsed =
     performance.now() -
     startHoldStart;
-
 
   const progress =
     clamp(
@@ -5396,15 +5889,10 @@ function updateStartProgress(){
       1
     );
 
-
-  startButton.style.setProperty(
-
+  roomStartButton.style.setProperty(
     "--progress",
-
     `${progress * 100}%`
-
   );
-
 
   if(
     progress >= 1
@@ -5413,125 +5901,12 @@ function updateStartProgress(){
     startHolding =
       false;
 
-    startButton.style.setProperty(
+    roomStartButton.style.setProperty(
       "--progress",
       "100%"
     );
 
-
     startMatchByHost();
-
-  }
-
-}
-
-
-async function checkMatchCleanup(
-  data
-){
-
-  if(
-    !matchRef ||
-    !data
-  ){
-    return;
-  }
-
-  const now =
-    Date.now();
-
-  if(
-    now -
-    lastCleanupCheck <
-    CLEANUP_INTERVAL
-  ){
-    return;
-  }
-
-  lastCleanupCheck =
-    now;
-
-  let createdMillis =
-    0;
-
-  if(
-    data.createdAt &&
-    typeof data.createdAt.toMillis ===
-      "function"
-  ){
-    createdMillis =
-      data.createdAt.toMillis();
-  }else if(
-    typeof data.createdAt ===
-    "number"
-  ){
-    createdMillis =
-      data.createdAt;
-  }
-
-  if(
-    createdMillis > 0 &&
-    now - createdMillis >=
-      MAX_MATCH_AGE
-  ){
-
-    try{
-      await deleteDoc(
-        matchRef
-      );
-    }catch(error){
-      console.error(
-        "age cleanup error",
-        error
-      );
-    }
-
-    return;
-  }
-
-  const players =
-    Object.values(
-      data.players || {}
-    );
-
-  if(
-    players.length === 0
-  ){
-    return;
-  }
-
-  const allInactive =
-    players.every(
-      player => {
-
-        const last =
-          typeof player.lastActiveAt ===
-          "number"
-            ? player.lastActiveAt
-            : 0;
-
-        return (
-          last > 0 &&
-          now - last >=
-            INACTIVE_MATCH_TIME
-        );
-      }
-    );
-
-  if(
-    allInactive
-  ){
-
-    try{
-      await deleteDoc(
-        matchRef
-      );
-    }catch(error){
-      console.error(
-        "inactive cleanup error",
-        error
-      );
-    }
 
   }
 }
@@ -5563,8 +5938,7 @@ function finishLocalGame(
     "flex";
 
 
-  preStart.style.display =
-    "none";
+  hideRoomScreen();
 
 }
 
@@ -5663,19 +6037,7 @@ function leaveCurrentMatch(){
   spawnProtectionUntil =
     0;
 
-  spawnProtection.style.opacity =
-    "0";
-
   fireCooldownEnd =
-    0;
-
-  lastActivityAt =
-    Date.now();
-
-  lastRegenAt =
-    0;
-
-  lastCleanupCheck =
     0;
 
 
@@ -5685,11 +6047,35 @@ function leaveCurrentMatch(){
   gameOver.style.display =
     "none";
 
+  hideRoomScreen();
+
+  if(
+    renderer
+  ){
+
+    renderer.domElement.remove();
+
+    renderer.dispose();
+
+  }
+
+  renderer =
+    null;
+
+  scene =
+    null;
+
+  camera =
+    null;
+
+  raycaster =
+    null;
+
+  colliders.length =
+    0;
+
   menu.style.display =
     "flex";
-
-  preStart.style.display =
-    "none";
 
   statusEl.textContent =
     "";
@@ -5708,45 +6094,6 @@ async function handleReturn(){
   const ref =
     matchRef;
 
-
-  if(
-    !wasHost &&
-    ref &&
-    currentUser
-  ){
-
-    try{
-
-      const snap =
-        await getDoc(ref);
-
-      if(snap.exists()){
-        const data =
-          snap.data();
-        const players =
-          { ...(data.players || {}) };
-        delete players[currentUser.uid];
-
-        const playerOrder =
-          (Array.isArray(data.playerOrder)
-            ? data.playerOrder
-            : Object.keys(players))
-            .filter(uid => uid !== currentUser.uid);
-
-        await updateDoc(
-          ref,
-          { players, playerOrder }
-        );
-      }
-
-    }catch(error){
-      console.error(
-        "leave room error",
-        error
-      );
-    }
-
-  }
 
   leaveCurrentMatch();
 
@@ -5802,13 +6149,6 @@ function handleMouseMove(
   }
 
 
-  if(
-    Math.abs(event.movementX) > 0 ||
-    Math.abs(event.movementY) > 0
-  ){
-    markActivity();
-  }
-
   cameraState.yaw -=
     event.movementX *
     .0023;
@@ -5825,6 +6165,13 @@ function handleMouseMove(
       -1.45,
       1.45
     );
+
+  if(
+    Math.abs(event.movementX) > .1 ||
+    Math.abs(event.movementY) > .1
+  ){
+    markActivity();
+  }
 
 }
 
@@ -5904,6 +6251,8 @@ function setupDesktopInput(){
 
         jump();
 
+        markActivity();
+
       }
 
     }
@@ -5955,6 +6304,82 @@ function setupMobileInput(){
   let joystickPointerId =
     null;
 
+  let joystickCenterX =
+    null;
+
+  let joystickCenterY =
+    null;
+
+  function setJoystickCenter(
+    clientX,
+    clientY
+  ){
+
+    const rect =
+      joystickZone
+        .getBoundingClientRect();
+
+    const minX =
+      65;
+
+    const maxX =
+      rect.width -
+      65;
+
+    const minY =
+      65;
+
+    const maxY =
+      rect.height -
+      65;
+
+    const x =
+      clamp(
+        clientX -
+        rect.left,
+        minX,
+        maxX
+      );
+
+    const y =
+      clamp(
+        clientY -
+        rect.top,
+        minY,
+        maxY
+      );
+
+    joystickCenterX =
+      x;
+
+    joystickCenterY =
+      y;
+
+    joystickBase.style.left =
+      `${x}px`;
+
+    joystickBase.style.top =
+      `${y}px`;
+
+  }
+
+
+  function resetJoystickCenter(){
+
+    joystickCenterX =
+      null;
+
+    joystickCenterY =
+      null;
+
+    joystickBase.style.left =
+      "50%";
+
+    joystickBase.style.top =
+      "50%";
+
+  }
+
 
   function updateJoystick(
     clientX,
@@ -5965,37 +6390,36 @@ function setupMobileInput(){
       joystickZone
         .getBoundingClientRect();
 
-
     const centerX =
       rect.left +
-      rect.width / 2;
-
+      (
+        joystickCenterX ??
+        rect.width / 2
+      );
 
     const centerY =
       rect.top +
-      rect.height / 2;
-
+      (
+        joystickCenterY ??
+        rect.height / 2
+      );
 
     let dx =
       clientX -
       centerX;
 
-
     let dy =
       clientY -
       centerY;
 
-
     const max =
       53;
-
 
     const distance =
       Math.hypot(
         dx,
         dy
       );
-
 
     if(
       distance >
@@ -6014,17 +6438,27 @@ function setupMobileInput(){
 
     }
 
-
     mobileInput.x =
       dx / max;
-
 
     mobileInput.y =
       dy / max;
 
-
     joystickKnob.style.transform =
       `translate(${dx}px,${dy}px)`;
+
+    if(
+      Math.abs(
+        mobileInput.x
+      ) > .05 ||
+      Math.abs(
+        mobileInput.y
+      ) > .05
+    ){
+
+      markActivity();
+
+    }
 
   }
 
@@ -6033,14 +6467,19 @@ function setupMobileInput(){
     "pointerdown",
     event => {
 
+      event.preventDefault();
+
       joystickPointerId =
         event.pointerId;
-
 
       joystickZone.setPointerCapture(
         event.pointerId
       );
 
+      setJoystickCenter(
+        event.clientX,
+        event.clientY
+      );
 
       updateJoystick(
         event.clientX,
@@ -6078,15 +6517,11 @@ function setupMobileInput(){
         event.pointerId !==
         joystickPointerId
       ){
-
         return;
-
       }
-
 
       joystickPointerId =
         null;
-
 
       mobileInput.x =
         0;
@@ -6094,9 +6529,10 @@ function setupMobileInput(){
       mobileInput.y =
         0;
 
-
       joystickKnob.style.transform =
         "translate(0,0)";
+
+      resetJoystickCenter();
 
     };
 
@@ -6105,7 +6541,6 @@ function setupMobileInput(){
     "pointerup",
     endJoystick
   );
-
 
   joystickZone.addEventListener(
     "pointercancel",
@@ -6130,14 +6565,11 @@ function setupMobileInput(){
       lookPointerId =
         event.pointerId;
 
-
       lastLookX =
         event.clientX;
 
-
       lastLookY =
         event.clientY;
-
 
       lookZone.setPointerCapture(
         event.pointerId
@@ -6155,44 +6587,28 @@ function setupMobileInput(){
         event.pointerId !==
         lookPointerId
       ){
-
         return;
-
       }
-
 
       const dx =
         event.clientX -
         lastLookX;
 
-
       const dy =
         event.clientY -
         lastLookY;
 
-
       lastLookX =
         event.clientX;
-
 
       lastLookY =
         event.clientY;
 
-
-      if(
-        dx !== 0 ||
-        dy !== 0
-      ){
-        markActivity();
-      }
-
       cameraState.yaw -=
         dx * .006;
 
-
       cameraState.pitch -=
         dy * .006;
-
 
       cameraState.pitch =
         clamp(
@@ -6200,6 +6616,13 @@ function setupMobileInput(){
           -1.45,
           1.45
         );
+
+      if(
+        Math.abs(dx) > .1 ||
+        Math.abs(dy) > .1
+      ){
+        markActivity();
+      }
 
     }
   );
@@ -6225,7 +6648,6 @@ function setupMobileInput(){
     "pointerup",
     endLook
   );
-
 
   lookZone.addEventListener(
     "pointercancel",
@@ -6287,20 +6709,7 @@ function setupMobileInput(){
 
       event.preventDefault();
 
-      if(
-        !grounded &&
-        canGrab()
-      ){
-
-        startGrab();
-
-      }else if(
-        grounded
-      ){
-
-        jump();
-
-      }
+      jump();
 
     }
   );
@@ -6315,24 +6724,20 @@ function setupStartButton(){
 
       event.preventDefault();
 
-
       if(
         !isHost ||
         matchHasStarted
       ){
-
         return;
-
       }
-
-
-      markActivity();
 
       startHolding =
         true;
 
       startHoldStart =
         performance.now();
+
+      markActivity();
 
     };
 
@@ -6345,7 +6750,7 @@ function setupStartButton(){
       startHolding =
         false;
 
-      startButton.style.setProperty(
+      roomStartButton.style.setProperty(
         "--progress",
         "0%"
       );
@@ -6353,21 +6758,30 @@ function setupStartButton(){
     };
 
 
-  startButton.addEventListener(
+  roomStartButton.addEventListener(
     "pointerdown",
     startDown
   );
 
-
-  startButton.addEventListener(
+  roomStartButton.addEventListener(
     "pointerup",
     startUp
   );
 
-
-  startButton.addEventListener(
+  roomStartButton.addEventListener(
     "pointercancel",
     startUp
+  );
+
+  roomStartButton.addEventListener(
+    "pointerleave",
+    event => {
+      if(
+        event.buttons === 0
+      ){
+        startUp(event);
+      }
+    }
   );
 
 }
@@ -6403,127 +6817,80 @@ function setupRendererInput(){
 }
 
 
-async function updateHealthRegen(){
+
+function updateHealthRegen(
+  delta,
+  now
+){
 
   if(
-    !matchRef ||
     !localPlayer ||
-    !matchHasStarted ||
-    gameEnded ||
-    !localPlayer.alive
+    !localPlayer.alive ||
+    !matchHasStarted
   ){
     return;
   }
 
-  const config =
-    getRegenConfig();
-
-  if(!config){
-    return;
-  }
-
-  const now =
-    performance.now();
+  const rate =
+    getRegenRate();
 
   if(
-    now - lastRegenAt <
-    config.interval
+    rate <= 0 ||
+    localPlayer.hp >=
+    MAX_HP
   ){
     return;
   }
 
-  lastRegenAt =
-    now;
-
-  try{
-
-    await runTransaction(
-      db,
-      async transaction => {
-
-        const snap =
-          await transaction.get(
-            matchRef
-          );
-
-        if(!snap.exists()){
-          return;
-        }
-
-        const data =
-          snap.data();
-
-        if(data.status !== "active"){
-          return;
-        }
-
-        const players =
-          { ...(data.players || {}) };
-
-        const player =
-          players[currentUser.uid];
-
-        if(
-          !player ||
-          !player.alive
-        ){
-          return;
-        }
-
-        const hp =
-          Number(player.hp || 0);
-
-        const maxHp =
-          Number(
-            data.settings?.maxHp ||
-            matchSettings.maxHp ||
-            100
-          );
-
-        if(hp >= maxHp){
-          return;
-        }
-
-        const lastDamagedAt =
-          Number(
-            player.lastDamagedAt ||
-            0
-          );
-
-        const lockMs =
-          Number(
-            data.settings?.regenLock ||
-            matchSettings.regenLock ||
-            0
-          ) * 1000;
-
-        if(
-          lockMs > 0 &&
-          Date.now() - lastDamagedAt < lockMs
-        ){
-          return;
-        }
-
-        player.hp =
-          Math.min(
-            maxHp,
-            hp + config.amount
-          );
-
-        transaction.update(
-          matchRef,
-          { players }
-        );
-
-      }
-    );
-
-  }catch(error){
-    console.error(
-      "regen error",
-      error
-    );
+  if(
+    lastDamageAt > 0 &&
+    Date.now() -
+    lastDamageAt <
+    currentSettings.regenLock *
+    1000
+  ){
+    return;
   }
+
+  const amount =
+    rate *
+    delta;
+
+  const nextHp =
+    Math.min(
+      MAX_HP,
+      Number(
+        localPlayer.hp
+      ) +
+      amount
+    );
+
+  if(
+    nextHp <=
+    Number(localPlayer.hp)
+  ){
+    return;
+  }
+
+  localPlayer.hp =
+    nextHp;
+
+  localHpNeedsSync =
+    true;
+
+  if(
+    now -
+    lastRegenTime >
+    100
+  ){
+
+    lastRegenTime =
+      now;
+
+    updateLocalHUD();
+
+  }
+
 }
 
 
@@ -6533,27 +6900,21 @@ function gameLoop(
 
   const delta =
     Math.min(
-
       (
         time -
         lastFrameTime
       ) / 1000,
-
       .05
-
     );
-
 
   lastFrameTime =
     time;
 
-
   updateStartProgress();
 
-
   updateFireUI();
-  updateSpawnProtectionUI();
 
+  updateSpawnProtectionUI();
 
   if(
     gameStarted &&
@@ -6564,39 +6925,35 @@ function gameLoop(
       delta
     );
 
-
     updateGrabAnimation(
       time
     );
 
+    updateHealthRegen(
+      delta,
+      time
+    );
 
     if(
       mobileInput.firing
     ){
-
       shoot();
-
     }
-
 
     updateBullets(
       delta,
       time
     );
 
-
-    updateHealthRegen();
-
-
     syncLocalPlayer();
 
   }
 
-
   if(
     renderer &&
     scene &&
-    camera
+    camera &&
+    matchHasStarted
   ){
 
     renderer.render(
@@ -6606,11 +6963,9 @@ function gameLoop(
 
   }
 
-
   requestAnimationFrame(
     gameLoop
   );
-
 }
 
 
@@ -6621,62 +6976,73 @@ async function syncLocalPlayer(){
     !localPlayer ||
     gameEnded
   ){
-
     return;
-
   }
-
 
   const now =
     performance.now();
-
 
   if(
     now -
     lastNetworkUpdate <
     80
   ){
-
     return;
-
   }
-
 
   lastNetworkUpdate =
     now;
 
+  const playerPath =
+    `players.${currentUser.uid}`;
+
+  const updates = {
+
+    [`${playerPath}.x`]:
+      localPlayer.x,
+
+    [`${playerPath}.y`]:
+      localPlayer.y,
+
+    [`${playerPath}.z`]:
+      localPlayer.z,
+
+    [`${playerPath}.yaw`]:
+      cameraState.yaw,
+
+    [`${playerPath}.pitch`]:
+      cameraState.pitch,
+
+    [`${playerPath}.kills`]:
+      localKills,
+
+    [`${playerPath}.alive`]:
+      localPlayer.alive,
+
+    [`${playerPath}.lastActiveAt`]:
+      lastActivityAt
+
+  };
+
+  if(
+    localHpNeedsSync
+  ){
+
+    updates[
+      `${playerPath}.hp`
+    ] =
+      localPlayer.hp;
+
+    localHpNeedsSync =
+      false;
+
+  }
 
   try{
 
     await updateDoc(
-
       matchRef,
-
-      {
-
-        [`players.${currentUser.uid}.name`]:
-          localPlayer.name,
-
-        [`players.${currentUser.uid}.x`]:
-          localPlayer.x,
-
-        [`players.${currentUser.uid}.y`]:
-          localPlayer.y,
-
-        [`players.${currentUser.uid}.z`]:
-          localPlayer.z,
-
-        [`players.${currentUser.uid}.yaw`]:
-          cameraState.yaw,
-
-        [`players.${currentUser.uid}.pitch`]:
-          cameraState.pitch,
-
-        [`players.${currentUser.uid}.lastActiveAt`]:
-          localPlayer.lastActiveAt
-
-      }
-
+      updates
     );
 
   }catch(error){
@@ -6687,6 +7053,100 @@ async function syncLocalPlayer(){
     );
 
   }
+}
+
+
+shareCodeButton.addEventListener(
+  "click",
+  shareRoomCode
+);
+
+
+settingsButton.addEventListener(
+  "click",
+  () => {
+
+    roomSettings.style.display =
+      roomSettings.style.display ===
+      "none"
+        ? "block"
+        : "none";
+
+    updateSettingsUI();
+
+  }
+);
+
+
+leaveRoomButton.addEventListener(
+  "click",
+  leaveRoom
+);
+
+
+for(
+  const control
+  of [
+    terrainAmount,
+    terrainHeight,
+    bulletSpeedSetting,
+    maxHpSetting,
+    regenSetting,
+    regenLockSetting
+  ]
+){
+
+  control.addEventListener(
+    "change",
+    () => {
+
+      if(
+        control ===
+        terrainAmount
+      ){
+
+        currentSettings =
+          readSettingsFromUI();
+
+      }
+
+      if(
+        control ===
+        regenSetting
+      ){
+
+        currentSettings =
+          readSettingsFromUI();
+
+      }
+
+      updateSettingsUI();
+
+      saveSettings();
+
+    }
+  );
+
+  control.addEventListener(
+    "input",
+    () => {
+
+      if(
+        control ===
+        maxHpSetting ||
+        control ===
+        regenLockSetting
+      ){
+
+        currentSettings =
+          readSettingsFromUI();
+
+        updateSettingsUI();
+
+      }
+
+    }
+  );
 
 }
 
@@ -6732,58 +7192,6 @@ matchCodeInput.addEventListener(
 
     }
 
-  }
-);
-
-
-shareRoomButton.addEventListener(
-  "click",
-  shareRoomCode
-);
-
-
-settingsButton.addEventListener(
-  "click",
-  openSettings
-);
-
-
-leaveRoomButton.addEventListener(
-  "click",
-  handleReturn
-);
-
-
-settingsCancelButton.addEventListener(
-  "click",
-  closeSettings
-);
-
-
-settingsSaveButton.addEventListener(
-  "click",
-  saveSettings
-);
-
-
-terrainAmountSetting.addEventListener(
-  "change",
-  updateSettingsDisabledUI
-);
-
-
-hpRegenSetting.addEventListener(
-  "change",
-  updateSettingsDisabledUI
-);
-
-
-settingsModal.addEventListener(
-  "pointerdown",
-  event => {
-    if(event.target === settingsModal){
-      closeSettings();
-    }
   }
 );
 
