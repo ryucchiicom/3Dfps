@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: Current version 1.2.2. Keep this comment invisible to players. Every future update must change this tracker and the visible version together. Release 1.2.2: robust room lifecycle deletion/reuse, non-blocking automatic room-code generation, stricter pre-start arena isolation, and spawn overlap recovery. Preserve all existing features unless the user explicitly requests a change. -->
+<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.2.1. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.2.1 changes: room URLs with QR sharing and an enhanced START hold animation. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
 <title>Firebase 3D FPS</title>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 
@@ -816,7 +816,7 @@ canvas{
     <h1 class="title">3D FPS</h1>
 
     <div class="subtitle">
-      v1.2.2
+      v1.2.1
     </div>
 
     <input
@@ -2546,125 +2546,199 @@ async function createMatch(
     const user =
       await ensureAuth();
 
-    const requested =
+    let code =
       requestedCode
         .trim()
         .toUpperCase();
 
-    const maxAttempts =
-      requested ? 1 : 8;
 
-    let created = false;
+    if(!code){
 
-    let createdCode = "";
+      for(
+        let attempt = 0;
+        attempt < 20;
+        attempt++
+      ){
 
-    for(
-      let attempt = 0;
-      attempt < maxAttempts && !created;
-      attempt++
-    ){
+        const candidate =
+          randomCode();
 
-      const code =
-        requested ||
-        randomCode();
+        const ref =
+          doc(
+            db,
+            "matches",
+            candidate
+          );
 
-      const ref =
-        doc(
-          db,
-          "matches",
-          code
-        );
+        const existing =
+          await getDoc(ref);
 
-      const player = {
+        if(
+          !existing.exists()
+        ){
 
-        uid: user.uid,
+          code =
+            candidate;
 
-        name: getPlayerName(),
+          break;
 
-        x: 0,
-        y: PLAYER_HEIGHT,
-        z: 0,
+        }
 
-        yaw: 0,
-        pitch: 0,
+      }
 
-        hp: normalizeSettings(DEFAULT_SETTINGS).maxHp,
-        kills: 0,
-        alive: true,
-        lastActiveAt: Date.now(),
-        lastDamageAt: 0,
-        joinOrder: 0
+    }
 
-      };
 
-      try{
+    if(!code){
 
-        await runTransaction(
-          db,
-          async transaction => {
+      throw new Error(
+        "試合コードを作成できませんでした。"
+      );
 
-            const snap =
-              await transaction.get(ref);
+    }
 
-            if(snap.exists()){
-              throw new Error("ALREADY_EXISTS");
+
+    const spawn =
+      randomSpawn();
+
+
+    const player = {
+
+      uid:
+        user.uid,
+
+      name:
+        getPlayerName(),
+
+      x:
+        spawn.x,
+
+      y:
+        spawn.y,
+
+      z:
+        spawn.z,
+
+      yaw:
+        0,
+
+      pitch:
+        0,
+
+      hp:
+        normalizeSettings(currentSettings).maxHp,
+
+      kills:
+        0,
+
+      alive:
+        true,
+
+      lastActiveAt:
+        Date.now(),
+
+      lastDamageAt:
+        0,
+
+      joinOrder:
+        0
+
+    };
+
+
+    const ref =
+      doc(
+        db,
+        "matches",
+        code
+      );
+
+
+    await runTransaction(
+      db,
+      async transaction => {
+
+        const snap =
+          await transaction.get(
+            ref
+          );
+
+        if(
+          snap.exists()
+        ){
+
+          throw new Error(
+            "ALREADY_EXISTS"
+          );
+
+        }
+
+
+        transaction.set(
+          ref,
+          {
+
+            hostUid:
+              user.uid,
+
+            status:
+              "waiting",
+
+            winnerUid:
+              null,
+
+            createdAt:
+              serverTimestamp(),
+
+            startedAt:
+              null,
+
+            settings:
+              { ...DEFAULT_SETTINGS },
+
+            playerOrder:[
+              user.uid
+            ],
+
+            players:{
+
+              [user.uid]:
+                player
+
             }
-
-            transaction.set(
-              ref,
-              {
-                hostUid: user.uid,
-                status: "waiting",
-                winnerUid: null,
-                createdAt: serverTimestamp(),
-                startedAt: null,
-                settings: { ...DEFAULT_SETTINGS },
-                playerOrder: [user.uid],
-                players: {
-                  [user.uid]: player
-                }
-              }
-            );
 
           }
         );
 
-        created = true;
-        createdCode = code;
-
-      }catch(error){
-
-        if(
-          error?.message === "ALREADY_EXISTS" &&
-          !requested
-        ){
-          continue;
-        }
-
-        if(
-          error?.message === "ALREADY_EXISTS"
-        ){
-          await joinMatch(requested);
-          return;
-        }
-
-        throw error;
       }
-    }
+    );
 
-    if(!created){
-      throw new Error(
-        "試合コードを作成できませんでした。"
-      );
-    }
 
-    isHost = true;
+    isHost =
+      true;
 
-    await startMatch(createdCode);
+
+    await startMatch(
+      code
+    );
+
 
   }catch(error){
 
     console.error(error);
+
+    if(
+      error?.message ===
+      "ALREADY_EXISTS"
+    ){
+
+      await joinMatch(
+        requestedCode
+      );
+
+      return;
+
+    }
 
     statusEl.textContent =
       "作成失敗：" +
@@ -2917,18 +2991,8 @@ async function joinMatch(
       "ENDED"
     ){
 
-      try{
-        await deleteDoc(ref);
-        await createMatch(code);
-        return;
-      }catch(cleanupError){
-        console.error(
-          "ended room cleanup error",
-          cleanupError
-        );
-        statusEl.textContent =
-          "終了した試合の削除に失敗したよ。もう一度試して！";
-      }
+      statusEl.textContent =
+        "その試合はもう終了してるよ。";
 
     }else{
 
@@ -3050,10 +3114,12 @@ async function startMatch(
   currentSettings =
     normalizeSettings(currentSettings || DEFAULT_SETTINGS);
 
-  /*
-    IMPORTANT: the waiting room must not load the battle world.
-    The renderer/scene itself is also delayed until the match becomes active.
-  */
+  if(!scene){
+
+    setupScene();
+
+  }
+
 
   gameEnded =
     false;
@@ -3205,11 +3271,9 @@ async function startMatch(
           !wasStarted
         ){
 
-          if(!scene){
-            setupScene();
+          if(scene){
+            rebuildArena(currentSettings);
           }
-
-          rebuildArena(currentSettings);
 
           if(localPlayer){
             const beforeY =
@@ -3263,11 +3327,13 @@ async function startMatch(
 
         if(
           data.status ===
-          "ended"
-          ) {
+          "ended" &&
+          !gameEnded
+        ){
 
           const winner =
             data.winnerUid;
+
 
           const winnerName =
             winner &&
@@ -3276,20 +3342,29 @@ async function startMatch(
               ? players[winner].name
               : "勝者";
 
-          if(!gameEnded){
-            finishLocalGame(
-              winner === currentUser.uid
-                ? "YOU WIN!"
-                : winnerName + " の勝利！"
-            );
-          }
 
-          /*
-            Delete immediately instead of waiting for a delayed timer.
-            Any client that sees the ended state may perform the cleanup,
-            so closing the host's tab cannot leave a stale ended room behind.
-          */
-          deleteMatch();
+          finishLocalGame(
+
+            winner ===
+            currentUser.uid
+
+              ? "YOU WIN!"
+
+              : winnerName +
+                " の勝利！"
+
+          );
+
+          setTimeout(
+            () => {
+              if(
+                matchRef
+              ){
+                deleteMatch();
+              }
+            },
+            1200
+          );
 
         }
 
@@ -6608,10 +6683,6 @@ function setupStartButton(){
       startHoldStart =
         performance.now();
 
-      try{
-        startButton.setPointerCapture(event.pointerId);
-      }catch(error){}
-
     };
 
 
@@ -6622,12 +6693,6 @@ function setupStartButton(){
 
       startHolding =
         false;
-
-      try{
-        if(event.pointerId !== undefined){
-          startButton.releasePointerCapture(event.pointerId);
-        }
-      }catch(error){}
 
       startButton.classList.remove("startHolding");
 
