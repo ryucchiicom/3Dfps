@@ -3,9 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.4.0. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.4.0 changes: changed the document title to 3Dfps, added icon.png as the site icon only, and restyled arena floor/walls/platforms with cold-color glowing edge outlines without adding floating lines. Previous release changes: added best-effort landscape orientation locking, reorganized the title screen, moved player name and mobile control preferences into the main settings, added movable-stick/sensitivity/right-tap settings, and made those preferences persist locally. Previous release changes: safer terrain-overlap spawn correction, more reliable code-screen scrolling, player-name entry, deferred terrain generation until START, and configurable max fire rate with a slower default medium rate. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
+<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.5.0. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.5.0 changes: added route-aware social/share descriptions for the original site and room links, and improved arena floor/wall/platform metal materials with subtle per-surface highlight variation while keeping the cold-color glowing edge treatment and avoiding floating lines. Previous release changes: changed the document title to 3Dfps, added icon.png as the site icon only, and restyled arena floor/walls/platforms with cold-color glowing edge outlines without adding floating lines. Previous release changes: added best-effort landscape orientation locking, reorganized the title screen, moved player name and mobile control preferences into the main settings, added movable-stick/sensitivity/right-tap settings, and made those preferences persist locally. Previous release changes: safer terrain-overlap spawn correction, more reliable code-screen scrolling, player-name entry, deferred terrain generation until START, and configurable max fire rate with a slower default medium rate. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
 <title>3Dfps</title>
 <link rel="icon" type="image/png" href="icon.png">
+<meta name="description" content="シンプルなfpsゲームで、firebaseを利用して通信しています">
+<meta property="og:title" content="3Dfps">
+<meta property="og:description" content="シンプルなfpsゲームで、firebaseを利用して通信しています">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="3Dfps">
+<meta name="twitter:description" content="シンプルなfpsゲームで、firebaseを利用して通信しています">
 
 <style>
 *{
@@ -819,7 +826,7 @@ canvas{
     <h1 class="title">3D FPS</h1>
 
     <div class="subtitle">
-      v1.3.3
+      v1.5.0
     </div>
 
     <input
@@ -2311,6 +2318,47 @@ function setupScene(){
 }
 
 
+function createArenaMetalMaterial({
+  color = 0x172a3d,
+  metalness = .65,
+  roughness = .32
+} = {}){
+
+  const variedMetalness =
+    clamp(
+      metalness + (Math.random() - .5) * .14,
+      .4,
+      .85
+    );
+
+  const variedRoughness =
+    clamp(
+      roughness + (Math.random() - .5) * .18,
+      .16,
+      .5
+    );
+
+  return new THREE.MeshPhysicalMaterial({
+
+    color,
+
+    metalness:
+      variedMetalness,
+
+    roughness:
+      variedRoughness,
+
+    clearcoat:
+      .18 + Math.random() * .32,
+
+    clearcoatRoughness:
+      .16 + Math.random() * .24
+
+  });
+
+}
+
+
 function createArena(settings = DEFAULT_SETTINGS){
 
   const normalized =
@@ -2324,16 +2372,16 @@ function createArena(settings = DEFAULT_SETTINGS){
     );
 
   const floorMaterial =
-    new THREE.MeshStandardMaterial({
+    createArenaMetalMaterial({
 
       color:
         0x172a3d,
 
-      roughness:
-        .82,
-
       metalness:
-        .18
+        .68,
+
+      roughness:
+        .3
 
     });
 
@@ -2362,16 +2410,16 @@ function createArena(settings = DEFAULT_SETTINGS){
 
 
   const wallMaterial =
-    new THREE.MeshStandardMaterial({
+    createArenaMetalMaterial({
 
       color:
         0x101d31,
 
-      roughness:
-        .72,
-
       metalness:
-        .2
+        .7,
+
+      roughness:
+        .28
 
     });
 
@@ -2427,16 +2475,16 @@ function createArena(settings = DEFAULT_SETTINGS){
 
 
   const obstacleMaterial =
-    new THREE.MeshStandardMaterial({
+    createArenaMetalMaterial({
 
       color:
         0x233d58,
 
-      roughness:
-        .68,
-
       metalness:
-        .24
+        .66,
+
+      roughness:
+        .3
 
     });
 
@@ -2569,10 +2617,61 @@ function createBox(
       depth
     );
 
+  const surfaceMaterial =
+    material && material.isMaterial
+      ? material.clone()
+      : material;
+
+  if(
+    surfaceMaterial &&
+    (
+      surfaceMaterial.isMeshStandardMaterial ||
+      surfaceMaterial.isMeshPhysicalMaterial
+    )
+  ){
+
+    surfaceMaterial.metalness =
+      clamp(
+        Number(surfaceMaterial.metalness || 0) +
+          (Math.random() - .5) * .12,
+        0,
+        1
+      );
+
+    surfaceMaterial.roughness =
+      clamp(
+        Number(surfaceMaterial.roughness || .3) +
+          (Math.random() - .5) * .16,
+        .12,
+        .55
+      );
+
+    if(surfaceMaterial.isMeshPhysicalMaterial){
+
+      surfaceMaterial.clearcoat =
+        clamp(
+          Number(surfaceMaterial.clearcoat || 0) +
+            (Math.random() - .5) * .2,
+          0,
+          1
+        );
+
+      surfaceMaterial.clearcoatRoughness =
+        clamp(
+          Number(surfaceMaterial.clearcoatRoughness || .2) +
+            (Math.random() - .5) * .14,
+          .08,
+          .55
+        );
+
+    }
+
+  }
+
   const mesh =
     new THREE.Mesh(
       geometry,
-      material
+      surfaceMaterial
     );
 
   mesh.position.set(
@@ -7212,11 +7311,43 @@ async function syncLocalPlayer(){
 }
 
 
+function updatePageDescription(isRoomPage){
+
+  const description =
+    isRoomPage
+      ? "誰かが部屋を作りました！参加しましょう！"
+      : "シンプルなfpsゲームで、firebaseを利用して通信しています";
+
+  document.title =
+    "3Dfps";
+
+  const descriptionMeta =
+    document.querySelector('meta[name="description"]');
+
+  if(descriptionMeta){
+    descriptionMeta.setAttribute(
+      "content",
+      description
+    );
+  }
+
+  document
+    .querySelectorAll('meta[property="og:description"], meta[name="twitter:description"]')
+    .forEach(meta => {
+      meta.setAttribute(
+        "content",
+        description
+      );
+    });
+
+}
+
 const initialRouteMatch = location.pathname.match(/\/3Dfps\/r\/([^/]+)\/?$/i);
 const initialQueryCode = new URLSearchParams(location.search).get("room");
 const initialRouteCode = initialRouteMatch
   ? decodeURIComponent(initialRouteMatch[1]).toUpperCase()
   : (initialQueryCode ? initialQueryCode.toUpperCase() : "");
+updatePageDescription(Boolean(initialRouteMatch || initialQueryCode));
 if(initialRouteCode){
   matchCodeInput.value = initialRouteCode;
   ensureAuth().then(()=>{
