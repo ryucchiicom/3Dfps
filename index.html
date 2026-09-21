@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.3.0. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.3.0 changes: room URL routing and QR sharing, enhanced START hold feedback, immediate ended-room cleanup, hidden renderer during room setup, and blocking joins to already-started rooms. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
-<title>3D FPS</title>
+<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.3.0. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.3.0 changes: prevent joining started rooms, remove waiting-room game-scene initialization, harden room-route handling, and improve START hold presentation. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
+<title>Firebase 3D FPS</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 
 <style>
 *{
@@ -46,10 +47,8 @@ canvas{
   overflow-y:scroll;
   overflow-x:hidden;
   -webkit-overflow-scrolling:touch;
-  overscroll-behavior-y:auto;
-  overscroll-behavior-x:none;
+  overscroll-behavior:contain;
   touch-action:pan-y !important;
-  pointer-events:auto;
   align-items:flex-start;
   padding:24px 0;
 }
@@ -390,43 +389,6 @@ canvas{
   z-index:2;
 }
 
-#startButton.holding{
-  border-color:rgba(105,190,255,.9);
-  box-shadow:
-    0 0 0 4px rgba(54,163,255,.08),
-    0 0 24px rgba(54,163,255,.38),
-    0 0 60px rgba(54,163,255,.18);
-  animation:startHoldPulse .7s ease-in-out infinite alternate;
-}
-
-#startButton.holding::after{
-  background:
-    radial-gradient(circle at 50% 45%,rgba(54,163,255,.22),rgba(12,17,23,.95) 62%);
-  animation:startHoldCore .7s ease-in-out infinite alternate;
-}
-
-#startButton.holding span{
-  text-shadow:
-    0 0 8px rgba(130,210,255,.9),
-    0 0 22px rgba(54,163,255,.7);
-  animation:startHoldText .45s ease-in-out infinite alternate;
-}
-
-@keyframes startHoldPulse{
-  from{transform:scale(1);}
-  to{transform:scale(1.045);}
-}
-
-@keyframes startHoldCore{
-  from{opacity:.86;}
-  to{opacity:1;}
-}
-
-@keyframes startHoldText{
-  from{transform:scale(1);}
-  to{transform:scale(1.08);}
-}
-
 #protectionIndicator{
   position:absolute;
   left:50%;
@@ -447,7 +409,7 @@ canvas{
   z-index:4;
 }
 
-#shareUrlModal{
+#shareModal{
   position:absolute;
   inset:0;
   display:none;
@@ -455,58 +417,119 @@ canvas{
   align-items:center;
   padding:18px;
   background:rgba(0,0,0,.68);
-  backdrop-filter:blur(10px);
+  backdrop-filter:blur(9px);
   pointer-events:auto;
-  z-index:35;
+  z-index:40;
 }
 
-.shareUrlBox{
-  width:min(92vw,420px);
+.shareBox{
+  width:min(92vw,430px);
   padding:22px;
   border-radius:20px;
   background:rgba(15,20,28,.97);
-  border:1px solid rgba(255,255,255,.13);
-  box-shadow:0 20px 80px rgba(0,0,0,.6);
+  border:1px solid rgba(255,255,255,.14);
+  box-shadow:0 20px 80px rgba(0,0,0,.55);
   text-align:center;
 }
 
-.shareUrlTitle{
-  margin:0 0 14px;
+.shareTitle{
+  margin:0 0 12px;
   font-size:22px;
   font-weight:900;
 }
 
-#shareQrImage{
-  display:block;
-  width:240px;
-  height:240px;
-  max-width:70vw;
-  margin:0 auto 14px;
-  border-radius:12px;
-  background:#fff;
-  object-fit:contain;
-}
-
 #shareUrlText{
-  margin:0 auto 12px;
-  padding:9px 11px;
-  border-radius:9px;
+  width:100%;
+  padding:10px 12px;
+  border-radius:10px;
   background:rgba(255,255,255,.06);
-  color:#dbe8f7;
+  color:#dce6f2;
   font-size:12px;
-  line-height:1.45;
-  overflow-wrap:anywhere;
-  user-select:text;
-  -webkit-user-select:text;
+  line-height:1.4;
+  word-break:break-all;
+  margin-bottom:14px;
 }
 
-.shareUrlButtons{
+#qrContainer{
+  width:230px;
+  height:230px;
+  margin:0 auto 16px;
+  padding:10px;
+  border-radius:14px;
+  background:#fff;
   display:flex;
-  gap:8px;
+  justify-content:center;
+  align-items:center;
+  overflow:hidden;
 }
 
-.shareUrlButtons .button{
-  margin-top:0;
+#qrContainer img,
+#qrContainer canvas{
+  width:210px !important;
+  height:210px !important;
+  image-rendering:pixelated;
+}
+
+#closeShareButton{
+  margin-top:8px;
+}
+
+#startButton.startHolding{
+  transform:scale(1.055);
+  border-color:rgba(100,190,255,.95);
+  box-shadow:
+    0 0 0 5px rgba(54,163,255,.13),
+    0 0 22px rgba(54,163,255,.55),
+    0 0 48px rgba(54,163,255,.25),
+    0 0 78px rgba(54,163,255,.14);
+  animation:startPulse 1s ease-in-out infinite, startOrbit 2.2s linear infinite;
+}
+
+#startButton.startHolding::after{
+  background:
+    radial-gradient(circle at 50% 42%,rgba(54,163,255,.28),rgba(12,17,23,.96) 64%);
+  box-shadow:
+    inset 0 0 18px rgba(54,163,255,.24),
+    inset 0 0 42px rgba(54,163,255,.10);
+}
+
+#startButton.startHolding span{
+  text-shadow:
+    0 0 7px rgba(110,205,255,.9),
+    0 0 18px rgba(54,163,255,.55);
+  animation:startTextPulse .65s ease-in-out infinite alternate;
+}
+
+@keyframes startPulse{
+  0%,100%{
+    filter:brightness(1);
+  }
+  50%{
+    filter:brightness(1.18);
+  }
+}
+
+@keyframes startOrbit{
+  0%{
+    border-color:rgba(100,190,255,.72);
+  }
+  50%{
+    border-color:rgba(190,235,255,1);
+  }
+  100%{
+    border-color:rgba(100,190,255,.72);
+  }
+}
+
+@keyframes startTextPulse{
+  from{
+    transform:scale(1);
+    letter-spacing:0;
+  }
+  to{
+    transform:scale(1.08);
+    letter-spacing:1.5px;
+  }
 }
 
 #settingsModal{
@@ -797,17 +820,6 @@ canvas{
   }
 
 }
-#menu input,
-#menu button{
-  touch-action:auto;
-}
-
-@media (max-width:600px){
-  #menu{
-    align-items:flex-start;
-    min-height:100dvh;
-  }
-}
 </style>
 </head>
 
@@ -924,19 +936,17 @@ canvas{
 
   </div>
 
-  <div id="shareUrlModal">
-    <div class="shareUrlBox">
-      <div class="shareUrlTitle">部屋のURL</div>
-      <img id="shareQrImage" alt="部屋URLのQRコード">
+  <div id="protectionIndicator">🛡 無敵 3.0秒</div>
+
+  <div id="shareModal">
+    <div class="shareBox">
+      <h2 class="shareTitle">部屋のURL</h2>
       <div id="shareUrlText"></div>
-      <div class="shareUrlButtons">
-        <button id="closeShareUrlButton" class="button secondary">閉じる</button>
-        <button id="shareUrlButton" class="button">リンクを共有</button>
-      </div>
+      <div id="qrContainer"></div>
+      <button id="shareUrlButton" class="button">リンクを共有</button>
+      <button id="closeShareButton" class="button secondary">閉じる</button>
     </div>
   </div>
-
-  <div id="protectionIndicator">🛡 無敵 3.0秒</div>
 
   <div id="settingsModal">
     <div class="settingsBox">
@@ -1185,6 +1195,33 @@ let settingsModalOpen = false;
 
 let bulletIdCounter = 0;
 
+const roomRouteCode = (() => {
+  const match = location.pathname.match(/\/r\/([^/]+)\/?$/i);
+  return match ? decodeURIComponent(match[1]).trim().toUpperCase() : "";
+})();
+
+function getAppBaseUrl(){
+  const pathname = location.pathname;
+  const routeIndex = pathname.search(/\/r\/[^/]+\/?$/i);
+  const basePath =
+    routeIndex >= 0
+      ? (pathname.slice(0, routeIndex) || "/")
+      : pathname;
+  return location.origin + basePath;
+}
+
+function getRoomUrl(code = currentMatchId){
+  if(!code) return getAppBaseUrl();
+  return location.origin + "/r/" + encodeURIComponent(String(code));
+}
+
+function restoreOriginalUrl(){
+  try{
+    history.replaceState({}, "", getAppBaseUrl());
+  }catch(error){}
+}
+
+
 
 const START_HOLD_TIME = 1000;
 
@@ -1355,20 +1392,20 @@ const returnButton =
 const shareCodeButton =
   document.getElementById("shareCodeButton");
 
-const shareUrlModal =
-  document.getElementById("shareUrlModal");
-
-const shareQrImage =
-  document.getElementById("shareQrImage");
+const shareModal =
+  document.getElementById("shareModal");
 
 const shareUrlText =
   document.getElementById("shareUrlText");
 
+const qrContainer =
+  document.getElementById("qrContainer");
+
 const shareUrlButton =
   document.getElementById("shareUrlButton");
 
-const closeShareUrlButton =
-  document.getElementById("closeShareUrlButton");
+const closeShareButton =
+  document.getElementById("closeShareButton");
 
 const leaveRoomButton =
   document.getElementById("leaveRoomButton");
@@ -1637,97 +1674,40 @@ async function saveSettings(){
   }
 }
 
-function getBasePath(){
+async function shareMatchCode(){
 
-  const path =
-    location.pathname;
-
-  const match =
-    path.match(/^(.*)\/r\/[A-Za-z0-9]{1,8}\/?$/i);
-
-  if(match){
-    return match[1] || "/";
-  }
-
-  return path.endsWith("/")
-    ? path
-    : path.substring(0, path.lastIndexOf("/") + 1);
-}
-
-function getRoomUrl(code = currentMatchId){
-
-  if(!code){
-    return "";
-  }
-
-  const base =
-    getBasePath().replace(/\/+$/, "");
-
-  return
-    location.origin +
-    (base ? base + "/" : "/") +
-    "r/" +
-    encodeURIComponent(String(code).toUpperCase());
-}
-
-function restoreOriginalUrl(){
-
-  try{
-    const base =
-      getBasePath();
-
-    const target =
-      base || "/";
-
-    if(location.pathname !== target){
-      history.replaceState({}, "", target);
-    }
-  }catch(error){
-    console.error("restore url error", error);
-  }
-}
-
-function getRoomCodeFromUrl(){
-
-  const match =
-    location.pathname.match(/\/r\/([A-Za-z0-9]{1,8})\/?$/i);
-
-  return match
-    ? match[1].toUpperCase()
-    : "";
-}
-
-function openShareUrl(){
-
-  if(!currentMatchId){
-    return;
-  }
+  if(!currentMatchId) return;
 
   const url =
-    getRoomUrl();
-
-  if(!url){
-    return;
-  }
+    getRoomUrl(currentMatchId);
 
   shareUrlText.textContent =
     url;
 
-  shareQrImage.src =
-    "https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=" +
-    encodeURIComponent(url);
+  qrContainer.innerHTML = "";
 
-  shareUrlModal.style.display = "flex";
+  try{
+    if(typeof qrcode === "function"){
+      const qr = qrcode(0, "M");
+      qr.addData(url);
+      qr.make();
+      qrContainer.innerHTML = qr.createImgTag(5, 0);
+    }else{
+      qrContainer.textContent = "QRコードを生成できませんでした";
+    }
+  }catch(error){
+    console.error("QR generation error", error);
+    qrContainer.textContent = "QRコードを生成できませんでした";
+  }
+
+  shareModal.style.display = "flex";
 }
 
-async function shareMatchUrl(){
+async function shareRoomUrl(){
 
-  const url =
-    getRoomUrl();
+  if(!currentMatchId) return;
 
-  if(!url){
-    return;
-  }
+  const url = getRoomUrl(currentMatchId);
 
   try{
     if(navigator.share){
@@ -1745,14 +1725,11 @@ async function shareMatchUrl(){
     await navigator.clipboard.writeText(url);
     statusEl.textContent = "リンクをコピーしたよ！";
   }catch(error){
-    console.error("url share/copy error", error);
+    console.error("URL share/copy error", error);
     statusEl.textContent = url;
   }
 }
 
-function closeShareUrl(){
-  shareUrlModal.style.display = "none";
-}
 
 function updateProtectionIndicator(){
 
@@ -2637,10 +2614,6 @@ async function createMatch(
     }
 
 
-    const spawn =
-      randomSpawn();
-
-
     const player = {
 
       uid:
@@ -2650,13 +2623,13 @@ async function createMatch(
         getPlayerName(),
 
       x:
-        spawn.x,
+        0,
 
       y:
-        spawn.y,
+        PLAYER_HEIGHT,
 
       z:
-        spawn.z,
+        0,
 
       yaw:
         0,
@@ -2878,6 +2851,17 @@ async function joinMatch(
 
         if(
           data.status ===
+          "active"
+        ){
+
+          throw new Error(
+            "STARTED"
+          );
+
+        }
+
+        if(
+          data.status ===
           "ended"
         ){
 
@@ -2888,8 +2872,8 @@ async function joinMatch(
         }
 
         if(
-          data.status ===
-          "active"
+          data.status !==
+          "waiting"
         ){
 
           throw new Error(
@@ -2944,7 +2928,8 @@ async function joinMatch(
             user.uid,
 
           name:
-            getPlayerName(),
+            "Player-" +
+            user.uid.slice(-4),
 
           x:
             spawn.x,
@@ -3014,19 +2999,13 @@ async function joinMatch(
 
     console.error(error);
 
+    restoreOriginalUrl();
+
     const message =
       error?.message || "";
 
 
     if(
-      message ===
-      "STARTED"
-    ){
-
-      statusEl.textContent =
-        "その試合はもう開始されているよ。";
-
-    }else if(
       message ===
       "NOT_FOUND"
     ){
@@ -3045,17 +3024,19 @@ async function joinMatch(
 
     }else if(
       message ===
+      "STARTED"
+    ){
+
+      statusEl.textContent =
+        "その試合はもう始まっているよ。";
+
+    }else if(
+      message ===
       "ENDED"
     ){
 
-      try{
-        await deleteDoc(ref);
-      }catch(error){
-        console.error("ended join cleanup error", error);
-      }
-
       statusEl.textContent =
-        "その試合はもう終了してるよ。";
+        "その試合は終了しているよ。";
 
     }else{
 
@@ -3150,6 +3131,8 @@ async function startMatch(
   currentMatchId =
     code;
 
+  restoreOriginalUrl();
+
   matchRef =
     doc(
       db,
@@ -3164,10 +3147,6 @@ async function startMatch(
   gameUI.style.display =
     "block";
 
-  if(renderer){
-    renderer.style.display = "none";
-  }
-
   gameOver.style.display =
     "none";
 
@@ -3179,10 +3158,8 @@ async function startMatch(
   currentSettings =
     normalizeSettings(currentSettings || DEFAULT_SETTINGS);
 
-  if(!scene){
-
-    setupScene();
-
+  if(renderer && renderer.domElement){
+    renderer.domElement.style.display = "none";
   }
 
 
@@ -3195,17 +3172,12 @@ async function startMatch(
   matchHasStarted =
     false;
 
-  gameUI.classList.add("preStartMode");
-  preStart.style.display = "flex";
-
 
   velocityY =
     0;
 
 
   await loadLocalPlayer();
-
-  restoreOriginalUrl();
 
 
   if(unsubscribeMatch){
@@ -3329,12 +3301,16 @@ async function startMatch(
           "active"
         ){
 
-          if(renderer){
-            renderer.style.display = "block";
-          }
-
           matchHasStarted =
             true;
+
+          if(!scene){
+            setupScene();
+          }
+
+          if(renderer && renderer.domElement){
+            renderer.domElement.style.display = "block";
+          }
 
         }
 
@@ -3345,9 +3321,15 @@ async function startMatch(
           !wasStarted
         ){
 
-          if(scene){
-            rebuildArena(currentSettings);
+          if(!scene){
+            setupScene();
           }
+
+          if(renderer && renderer.domElement){
+            renderer.domElement.style.display = "block";
+          }
+
+          rebuildArena(currentSettings);
 
           if(localPlayer){
             const beforeY =
@@ -3596,10 +3578,6 @@ function updateStartUI(data){
     "preStartMode"
   );
 
-  if(renderer){
-    renderer.style.display = "none";
-  }
-
   preStart.style.display =
     "flex";
 
@@ -3610,8 +3588,6 @@ function updateStartUI(data){
     isHost
       ? "部屋主がSTARTを長押しして開始"
       : "部屋主のSTART待ち";
-
-  startButton.classList.remove("holding");
 
   startButton.style.opacity =
     isHost ? "1" : ".35";
@@ -5749,6 +5725,8 @@ function updateStartProgress(){
       !startHolding
     ){
 
+      startButton.classList.remove("startHolding");
+
       startButton.style.setProperty(
         "--progress",
         "0%"
@@ -5791,7 +5769,7 @@ function updateStartProgress(){
     startHolding =
       false;
 
-    startButton.classList.remove("holding");
+    startButton.classList.remove("startHolding");
 
     startButton.style.setProperty(
       "--progress",
@@ -5820,15 +5798,6 @@ async function checkMatchCleanup(
   const now =
     Date.now();
 
-  if(data.status === "ended"){
-    try{
-      await deleteDoc(matchRef);
-    }catch(error){
-      console.error("ended cleanup error", error);
-    }
-    return;
-  }
-
   if(
     now -
     lastCleanupCheck <
@@ -5839,13 +5808,6 @@ async function checkMatchCleanup(
 
   lastCleanupCheck =
     now;
-    try{
-      await deleteDoc(matchRef);
-    }catch(error){
-      console.error("ended cleanup error", error);
-    }
-    return;
-  }
 
   let createdMillis =
     0;
@@ -6151,10 +6113,6 @@ function leaveCurrentMatch(){
   gameUI.style.display =
     "none";
 
-  if(renderer){
-    renderer.style.display = "none";
-  }
-
   gameUI.classList.remove(
     "preStartMode"
   );
@@ -6174,7 +6132,7 @@ function leaveCurrentMatch(){
   settingsModal.style.display =
     "none";
 
-  shareUrlModal.style.display =
+  shareModal.style.display =
     "none";
 
   settingsModalOpen =
@@ -6778,8 +6736,6 @@ function setupStartButton(){
       startHolding =
         true;
 
-      startButton.classList.add("holding");
-
       startHoldStart =
         performance.now();
 
@@ -6794,7 +6750,7 @@ function setupStartButton(){
       startHolding =
         false;
 
-      startButton.classList.remove("holding");
+      startButton.classList.remove("startHolding");
 
       startButton.style.setProperty(
         "--progress",
@@ -7142,24 +7098,26 @@ matchButton.addEventListener(
 
 shareCodeButton.addEventListener(
   "click",
-  openShareUrl
+  shareMatchCode
 );
 
 shareUrlButton.addEventListener(
   "click",
-  shareMatchUrl
+  shareRoomUrl
 );
 
-closeShareUrlButton.addEventListener(
+closeShareButton.addEventListener(
   "click",
-  closeShareUrl
+  () => {
+    shareModal.style.display = "none";
+  }
 );
 
-shareUrlModal.addEventListener(
+shareModal.addEventListener(
   "pointerdown",
   event => {
-    if(event.target === shareUrlModal){
-      closeShareUrl();
+    if(event.target === shareModal){
+      shareModal.style.display = "none";
     }
   }
 );
@@ -7294,18 +7252,14 @@ window.addEventListener(
 
 try{
 
-  const routedRoomCode =
-    getRoomCodeFromUrl();
-
   await ensureAuth();
 
-  if(routedRoomCode){
-    matchCodeInput.value = routedRoomCode;
-    statusEl.textContent = "リンクの部屋に参加中…";
-    await joinMatch(routedRoomCode);
-  }else{
-    statusEl.textContent =
-      "接続準備OK";
+  statusEl.textContent =
+    "接続準備OK";
+
+  if(roomRouteCode){
+    matchCodeInput.value = roomRouteCode;
+    await joinMatch(roomRouteCode);
   }
 
 }catch(error){
