@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.3.1. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.3.1 changes: fixed dark text visibility, restored terrain generation at match start, made settings apply/send when START is pressed without a save button, and added GitHub Pages 404 fallback routing for room URLs. Previous release changes: safer terrain-overlap spawn correction, more reliable code-screen scrolling, player-name entry, deferred terrain generation until START, and configurable max fire rate with a slower default medium rate. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
+<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.3.2. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.3.2 changes: added best-effort landscape orientation locking, reorganized the title screen, moved player name and mobile control preferences into the main settings, added movable-stick/sensitivity/right-tap settings, and made those preferences persist locally. Previous release changes: safer terrain-overlap spawn correction, more reliable code-screen scrolling, player-name entry, deferred terrain generation until START, and configurable max fire rate with a slower default medium rate. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
 <title>Firebase 3D FPS</title>
 
 <style>
@@ -29,6 +29,41 @@ body{
   touch-action:none;
   color:#fff;
   color-scheme:dark;
+}
+
+#orientationNotice{
+  position:fixed;
+  inset:0;
+  z-index:1000;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:30px;
+  background:rgba(4,7,11,.96);
+  color:#fff;
+  font-size:20px;
+  font-weight:900;
+}
+
+.orientationNoticeInner{
+  width:min(86vw,420px);
+  padding:28px 22px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:22px;
+  background:rgba(20,25,32,.96);
+  box-shadow:0 20px 80px rgba(0,0,0,.5);
+}
+
+.orientationIcon{
+  font-size:52px;
+  margin-bottom:12px;
+}
+
+@media (orientation:portrait) and (pointer:coarse){
+  body.landscapeRequired #orientationNotice{
+    display:flex;
+  }
 }
 
 button,input,select,textarea{
@@ -475,6 +510,42 @@ canvas{
   z-index:4;
 }
 
+#playerSettingsModal{
+  position:fixed;
+  inset:0;
+  display:none;
+  justify-content:center;
+  align-items:center;
+  padding:18px;
+  background:rgba(0,0,0,.68);
+  backdrop-filter:blur(10px);
+  pointer-events:auto;
+  z-index:200;
+}
+
+.playerSettingsBox{
+  width:min(92vw,500px);
+  max-height:88vh;
+  overflow:auto;
+  padding:20px;
+  border-radius:18px;
+  background:rgba(15,20,28,.97);
+  border:1px solid rgba(255,255,255,.13);
+  box-shadow:0 20px 80px rgba(0,0,0,.5);
+}
+
+.playerSettingsRange{
+  width:100%;
+  accent-color:#1976ff;
+}
+
+.rangeValue{
+  margin-top:5px;
+  text-align:center;
+  font-size:13px;
+  opacity:.8;
+}
+
 #settingsModal{
   position:absolute;
   inset:0;
@@ -768,6 +839,13 @@ canvas{
 
 <body>
 
+<div id="orientationNotice">
+  <div class="orientationNoticeInner">
+    <div class="orientationIcon">↻</div>
+    横画面でプレイしてね
+  </div>
+</div>
+
 <div id="menu">
 
   <div class="menuBox">
@@ -775,7 +853,7 @@ canvas{
     <h1 class="title">3D FPS</h1>
 
     <div class="subtitle">
-      v1.3.1
+      v1.3.2
     </div>
 
     <input
@@ -787,20 +865,18 @@ canvas{
       spellcheck="false"
     >
 
-    <input
-      id="playerNameInput"
-      class="input"
-      maxlength="16"
-      placeholder="プレイヤー名"
-      autocomplete="off"
-      spellcheck="false"
-    >
-
     <button
       id="matchButton"
       class="button"
     >
       試合を作成/参加
+    </button>
+
+    <button
+      id="playerSettingsButton"
+      class="button secondary"
+    >
+      設定
     </button>
 
     <div id="status"></div>
@@ -814,6 +890,51 @@ canvas{
 
 </div>
 
+
+<div id="playerSettingsModal">
+  <div class="playerSettingsBox">
+    <h2 class="settingsTitle">設定</h2>
+
+    <div class="settingRow">
+      <label class="settingLabel" for="playerNameInput">プレイヤー名</label>
+      <input
+        id="playerNameInput"
+        class="input"
+        maxlength="16"
+        placeholder="プレイヤー名"
+        autocomplete="off"
+        spellcheck="false"
+      >
+    </div>
+
+    <div class="settingRow">
+      <span class="settingLabel">可動仮想スティック</span>
+      <div class="settingOptions" data-player-setting="movableStick">
+        <button class="settingOption selected" data-value="on">オン</button>
+        <button class="settingOption" data-value="off">オフ</button>
+      </div>
+    </div>
+
+    <div class="settingRow">
+      <span class="settingLabel">感度</span>
+      <input id="sensitivityInput" class="playerSettingsRange" type="range" min="50" max="200" step="1" value="100">
+      <div id="sensitivityValue" class="rangeValue">100%</div>
+    </div>
+
+    <div class="settingRow">
+      <span class="settingLabel">右側タップの動作</span>
+      <div class="settingOptions" data-player-setting="rightTapAction">
+        <button class="settingOption selected" data-value="none">なし</button>
+        <button class="settingOption" data-value="jumpGrab">JUMP&GRAB</button>
+        <button class="settingOption" data-value="fire">FIRE</button>
+      </div>
+    </div>
+
+    <div class="settingsButtons">
+      <button id="closePlayerSettingsButton" class="button secondary">閉じる</button>
+    </div>
+  </div>
+</div>
 
 <div id="qrModal">
   <div class="qrBox">
@@ -1197,6 +1318,37 @@ const mobileInput = {
 
 };
 
+function getLookSensitivity(){
+  return clamp(Number(playerSettings.sensitivity) || 100, 50, 200) / 100;
+}
+
+function isMovableStickEnabled(){
+  return playerSettings.movableStick !== "off";
+}
+
+function performRightTapAction(){
+  if(!matchHasStarted || gameEnded) return;
+  const action = playerSettings.rightTapAction;
+  if(action === "fire") {
+    markActivity();
+    shoot();
+    return;
+  }
+  if(action === "jumpGrab") {
+    if(!grounded && canGrab()) startGrab();
+    else if(grounded) jump();
+  }
+}
+
+function requestLandscape(){
+  try{
+    if(screen.orientation && typeof screen.orientation.lock === "function") {
+      const result = screen.orientation.lock("landscape");
+      if(result && typeof result.catch === "function") result.catch(()=>{});
+    }
+  }catch(error){}
+}
+
 
 const cameraState = {
 
@@ -1327,6 +1479,24 @@ const closeQrButton = document.getElementById("closeQrButton");
 const protectionIndicator =
   document.getElementById("protectionIndicator");
 
+const playerSettingsModal =
+  document.getElementById("playerSettingsModal");
+
+const playerSettingsButton =
+  document.getElementById("playerSettingsButton");
+
+const closePlayerSettingsButton =
+  document.getElementById("closePlayerSettingsButton");
+
+const sensitivityInput =
+  document.getElementById("sensitivityInput");
+
+const sensitivityValue =
+  document.getElementById("sensitivityValue");
+
+const orientationNotice =
+  document.getElementById("orientationNotice");
+
 const settingsModal =
   document.getElementById("settingsModal");
 
@@ -1349,9 +1519,76 @@ const regenRow =
 const regenLockRow =
   document.getElementById("regenLockRow");
 
-try{
-  playerNameInput.value = localStorage.getItem("dfpsPlayerName") || "";
-}catch(error){}
+const DEFAULT_PLAYER_SETTINGS = {
+  playerName: "",
+  movableStick: "on",
+  sensitivity: 100,
+  rightTapAction: "none"
+};
+
+let playerSettings = { ...DEFAULT_PLAYER_SETTINGS };
+
+function makeDefaultPlayerName(){
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let value = "";
+  for(let i = 0; i < 4; i++){
+    value += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return "P-" + value;
+}
+
+function loadPlayerSettings(){
+  try{
+    const raw = localStorage.getItem("dfpsPlayerSettings");
+    const parsed = raw ? JSON.parse(raw) : {};
+    playerSettings = {
+      ...DEFAULT_PLAYER_SETTINGS,
+      ...(parsed && typeof parsed === "object" ? parsed : {})
+    };
+  }catch(error){
+    playerSettings = { ...DEFAULT_PLAYER_SETTINGS };
+  }
+
+  const savedName = String(playerSettings.playerName || "").trim().slice(0,16);
+  playerSettings.playerName = savedName || makeDefaultPlayerName();
+  playerSettings.movableStick = playerSettings.movableStick === "off" ? "off" : "on";
+  playerSettings.sensitivity = clamp(Number(playerSettings.sensitivity) || 100, 50, 200);
+  if(!["none","jumpGrab","fire"].includes(playerSettings.rightTapAction)){
+    playerSettings.rightTapAction = "none";
+  }
+}
+
+function savePlayerSettings(){
+  try{
+    localStorage.setItem("dfpsPlayerSettings", JSON.stringify(playerSettings));
+    localStorage.setItem("dfpsPlayerName", playerSettings.playerName);
+  }catch(error){}
+}
+
+function updatePlayerSettingsUI(){
+  playerNameInput.value = playerSettings.playerName;
+  sensitivityInput.value = String(playerSettings.sensitivity);
+  sensitivityValue.textContent = playerSettings.sensitivity + "%";
+
+  document.querySelectorAll("[data-player-setting]").forEach(group => {
+    const value = playerSettings[group.dataset.playerSetting];
+    group.querySelectorAll(".settingOption").forEach(button => {
+      button.classList.toggle("selected", button.dataset.value === value);
+    });
+  });
+}
+
+function openPlayerSettings(){
+  updatePlayerSettingsUI();
+  playerSettingsModal.style.display = "flex";
+}
+
+function closePlayerSettings(){
+  playerSettingsModal.style.display = "none";
+  updatePlayerSettingsUI();
+}
+
+loadPlayerSettings();
 
 
 function normalizeSettings(settings){
@@ -2898,17 +3135,18 @@ async function joinMatch(
 
 
 function getPlayerName(){
-
   const name =
-    String(playerNameInput.value || "")
+    String(playerSettings.playerName || "")
       .replace(/\s+/g, " ")
       .trim()
       .slice(0, 16);
 
-  return name || "Player-" + (currentUser?.uid || "").slice(-4);
+  return name || makeDefaultPlayerName();
 }
 
 async function handleMatchButton(){
+
+  requestLandscape();
 
   const code =
     matchCodeInput.value
@@ -3145,6 +3383,9 @@ async function startMatch(
           "active"
         ){
 
+          document.body.classList.add("landscapeRequired");
+          requestLandscape();
+
           matchHasStarted =
             true;
 
@@ -3160,6 +3401,8 @@ async function startMatch(
           if(!scene){
             setupScene();
             createArena(currentSettings);
+            document.body.classList.add("landscapeRequired");
+            requestLandscape();
             gameUI.style.display = "block";
             preStart.style.display = "none";
             setCameraFromPlayer();
@@ -3402,6 +3645,8 @@ function updateStartUI(data){
 
   }
 
+
+  document.body.classList.remove("landscapeRequired");
 
   gameUI.classList.remove(
     "preStartMode"
@@ -5949,6 +6194,8 @@ function leaveCurrentMatch(){
   gameUI.style.display =
     "none";
 
+  document.body.classList.remove("landscapeRequired");
+
   gameUI.classList.remove(
     "preStartMode"
   );
@@ -6269,28 +6516,29 @@ function setupMobileInput(){
       const rect =
         joystickZone.getBoundingClientRect();
 
-      const radius =
-        59;
+      const radius = 59;
 
-      const x =
-        clamp(
-          event.clientX - rect.left,
-          radius,
-          rect.width - radius
-        );
+      if(isMovableStickEnabled()){
+        const x =
+          clamp(
+            event.clientX - rect.left,
+            radius,
+            rect.width - radius
+          );
 
-      const y =
-        clamp(
-          event.clientY - rect.top,
-          radius,
-          rect.height - radius
-        );
+        const y =
+          clamp(
+            event.clientY - rect.top,
+            radius,
+            rect.height - radius
+          );
 
-      joystickBase.style.left =
-        `${x}px`;
-
-      joystickBase.style.top =
-        `${y}px`;
+        joystickBase.style.left = `${x}px`;
+        joystickBase.style.top = `${y}px`;
+      }else{
+        joystickBase.style.left = "76px";
+        joystickBase.style.top = "calc(100% - 76px)";
+      }
 
       joystickBase.style.opacity =
         "1";
@@ -6376,6 +6624,10 @@ function setupMobileInput(){
 
   let lastLookY =
     0;
+  let lookDownX = 0;
+  let lookDownY = 0;
+  let lookDownTime = 0;
+  let lookMoved = false;
 
   lookZone.addEventListener(
     "pointerdown",
@@ -6393,6 +6645,10 @@ function setupMobileInput(){
 
       lastLookY =
         event.clientY;
+      lookDownX = event.clientX;
+      lookDownY = event.clientY;
+      lookDownTime = performance.now();
+      lookMoved = false;
 
       lookZone.setPointerCapture(
         event.pointerId
@@ -6425,14 +6681,15 @@ function setupMobileInput(){
         event.clientY;
 
       if(Math.abs(dx) + Math.abs(dy) > 0){
+        lookMoved = true;
         markActivity();
       }
 
       cameraState.yaw -=
-        dx * .004;
+        dx * .004 * getLookSensitivity();
 
       cameraState.pitch -=
-        dy * .004;
+        dy * .004 * getLookSensitivity();
 
       cameraState.pitch =
         clamp(
@@ -6451,6 +6708,16 @@ function setupMobileInput(){
         event.pointerId ===
         lookPointerId
       ){
+
+        const duration = performance.now() - lookDownTime;
+        const distance = Math.hypot(
+          event.clientX - lookDownX,
+          event.clientY - lookDownY
+        );
+
+        if(!lookMoved && duration <= 260 && distance <= 10){
+          performRightTapAction();
+        }
 
         lookPointerId =
           null;
@@ -6555,6 +6822,7 @@ function setupStartButton(){
     event => {
 
       event.preventDefault();
+      requestLandscape();
 
 
       if(
@@ -6969,6 +7237,60 @@ settingsButton.addEventListener(
   openSettings
 );
 
+playerSettingsButton.addEventListener(
+  "click",
+  openPlayerSettings
+);
+
+closePlayerSettingsButton.addEventListener(
+  "click",
+  closePlayerSettings
+);
+
+playerSettingsModal.addEventListener(
+  "pointerdown",
+  event => {
+    if(event.target === playerSettingsModal){
+      closePlayerSettings();
+    }
+  }
+);
+
+sensitivityInput.addEventListener(
+  "input",
+  () => {
+    playerSettings.sensitivity = clamp(Number(sensitivityInput.value) || 100, 50, 200);
+    sensitivityValue.textContent = playerSettings.sensitivity + "%";
+    savePlayerSettings();
+  }
+);
+
+document
+  .querySelectorAll("[data-player-setting]")
+  .forEach(group => {
+    group.querySelectorAll(".settingOption").forEach(button => {
+      button.addEventListener("click", () => {
+        const key = group.dataset.playerSetting;
+        playerSettings[key] = button.dataset.value;
+        savePlayerSettings();
+        updatePlayerSettingsUI();
+      });
+    });
+  });
+
+playerNameInput.addEventListener(
+  "input",
+  () => {
+    playerSettings.playerName =
+      playerNameInput.value
+        .replace(/\s+/g, " ")
+        .slice(0,16);
+    savePlayerSettings();
+  }
+);
+
+requestLandscape();
+
 closeSettingsButton.addEventListener(
   "click",
   closeSettings
@@ -7009,16 +7331,6 @@ returnButton.addEventListener(
 );
 
 
-playerNameInput.addEventListener(
-  "input",
-  () => {
-    playerNameInput.value =
-      playerNameInput.value.slice(0, 16);
-    try{
-      localStorage.setItem("dfpsPlayerName", playerNameInput.value);
-    }catch(error){}
-  }
-);
 
 
 matchCodeInput.addEventListener(
