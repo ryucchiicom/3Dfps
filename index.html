@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.3.3. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.3.3 changes: removed landscape orientation locking and made the mobile JUMP button stack above FIRE in portrait mode. Previous release changes: added best-effort landscape orientation locking, reorganized the title screen, moved player name and mobile control preferences into the main settings, added movable-stick/sensitivity/right-tap settings, and made those preferences persist locally. Previous release changes: safer terrain-overlap spawn correction, more reliable code-screen scrolling, player-name entry, deferred terrain generation until START, and configurable max fire rate with a slower default medium rate. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
-<title>Firebase 3D FPS</title>
+<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.4.0. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.4.0 changes: changed the document title to 3Dfps, added icon.png as the site icon only, and restyled arena floor/walls/platforms with cold-color glowing edge outlines without adding floating lines. Previous release changes: added best-effort landscape orientation locking, reorganized the title screen, moved player name and mobile control preferences into the main settings, added movable-stick/sensitivity/right-tap settings, and made those preferences persist locally. Previous release changes: safer terrain-overlap spawn correction, more reliable code-screen scrolling, player-name entry, deferred terrain generation until START, and configurable max fire rate with a slower default medium rate. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
+<title>3Dfps</title>
+<link rel="icon" type="image/png" href="icon.png">
 
 <style>
 *{
@@ -2326,10 +2327,13 @@ function createArena(settings = DEFAULT_SETTINGS){
     new THREE.MeshStandardMaterial({
 
       color:
-        0x41474d,
+        0x172a3d,
 
       roughness:
-        .92
+        .82,
+
+      metalness:
+        .18
 
     });
 
@@ -2347,6 +2351,11 @@ function createArena(settings = DEFAULT_SETTINGS){
 
   floor.userData.isArena = true;
 
+  addNeonEdges(
+    floor,
+    0x55d9ff
+  );
+
   scene.add(floor);
 
   colliders.push(floor);
@@ -2356,7 +2365,13 @@ function createArena(settings = DEFAULT_SETTINGS){
     new THREE.MeshStandardMaterial({
 
       color:
-        0x252b31
+        0x101d31,
+
+      roughness:
+        .72,
+
+      metalness:
+        .2
 
     });
 
@@ -2368,7 +2383,8 @@ function createArena(settings = DEFAULT_SETTINGS){
     0,
     3,
     -ARENA_SIZE / 2,
-    wallMaterial
+    wallMaterial,
+    0x5fe4ff
   );
 
   createBox(
@@ -2378,7 +2394,8 @@ function createArena(settings = DEFAULT_SETTINGS){
     0,
     3,
     ARENA_SIZE / 2,
-    wallMaterial
+    wallMaterial,
+    0x8e7dff
   );
 
   createBox(
@@ -2388,7 +2405,8 @@ function createArena(settings = DEFAULT_SETTINGS){
     -ARENA_SIZE / 2,
     3,
     0,
-    wallMaterial
+    wallMaterial,
+    0x55d9ff
   );
 
   createBox(
@@ -2398,7 +2416,8 @@ function createArena(settings = DEFAULT_SETTINGS){
     ARENA_SIZE / 2,
     3,
     0,
-    wallMaterial
+    wallMaterial,
+    0xa078ff
   );
 
 
@@ -2411,10 +2430,13 @@ function createArena(settings = DEFAULT_SETTINGS){
     new THREE.MeshStandardMaterial({
 
       color:
-        0x69727b,
+        0x233d58,
 
       roughness:
-        .7
+        .68,
+
+      metalness:
+        .24
 
     });
 
@@ -2475,13 +2497,59 @@ function createArena(settings = DEFAULT_SETTINGS){
         x,
         height / 2,
         z,
-        obstacleMaterial
+        obstacleMaterial,
+        i % 2 === 0
+          ? 0x55d9ff
+          : 0x9b7dff
       );
 
     platform.userData.terrainPlatform = true;
   }
 
 }
+
+function addNeonEdges(mesh, color){
+
+  const edgeGeometry =
+    new THREE.EdgesGeometry(
+      mesh.geometry,
+      1
+    );
+
+  const glowMaterial =
+    new THREE.LineBasicMaterial({
+      color,
+      transparent:true,
+      opacity:.22
+    });
+
+  const glow =
+    new THREE.LineSegments(
+      edgeGeometry,
+      glowMaterial
+    );
+
+  glow.scale.setScalar(1.006);
+  mesh.add(glow);
+
+  const edgeMaterial =
+    new THREE.LineBasicMaterial({
+      color,
+      transparent:true,
+      opacity:.96
+    });
+
+  const edges =
+    new THREE.LineSegments(
+      edgeGeometry.clone(),
+      edgeMaterial
+    );
+
+  edges.scale.setScalar(1.002);
+  mesh.add(edges);
+
+}
+
 
 function createBox(
   width,
@@ -2490,7 +2558,8 @@ function createBox(
   x,
   y,
   z,
-  material
+  material,
+  edgeColor = 0x55d9ff
 ){
 
   const geometry =
@@ -2510,6 +2579,11 @@ function createBox(
     x,
     y,
     z
+  );
+
+  addNeonEdges(
+    mesh,
+    edgeColor
   );
 
   mesh.castShadow =
