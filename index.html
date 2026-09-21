@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.3.0. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.3.0 changes: room URLs and QR sharing, START-only arena rendering, active-room join blocking, enhanced START hold feedback, stale ended-room cleanup, and URL-state restoration. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
+<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.4.0. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.4.0 changes: strict waiting-room/game-layer separation, no scene or remote meshes before START, immediate ended-room cleanup, safer active-room rejection, and URL-state restoration. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
 <title>Firebase 3D FPS</title>
 
 <style>
@@ -798,7 +798,7 @@ canvas{
     <h1 class="title">3D FPS</h1>
 
     <div class="subtitle">
-      v1.3.0
+      v1.4.0
     </div>
 
     <input
@@ -837,51 +837,6 @@ canvas{
 
 </div>
 
-<div id="gameUI">
-
-  <div id="topBar">
-
-    <div id="healthBox">
-
-      <div id="healthText">
-        HP 100
-      </div>
-
-      <div id="health">
-
-        <div id="healthBar"></div>
-
-      </div>
-
-    </div>
-
-    <div id="matchBox">
-
-      <div>
-        ROOM:
-        <span id="roomText">----</span>
-      </div>
-
-      <div>
-        PLAYER:
-        <span id="playerCountText">0</span>
-      </div>
-
-      <div>
-        KILLS:
-        <span id="killsText">0</span>
-      </div>
-
-    </div>
-
-  </div>
-
-  <div id="scoreBoard"></div>
-
-  <div id="crosshair"></div>
-
-  <div id="killMessage"></div>
-
   <div id="preStart">
 
     <div class="preStartRoomTitle">ROOM <span id="preStartRoomCode">----</span></div>
@@ -901,8 +856,6 @@ canvas{
     </div>
 
   </div>
-
-  <div id="protectionIndicator">🛡 無敵 3.0秒</div>
 
   <div id="shareUrlModal">
     <div class="shareUrlBox">
@@ -983,6 +936,53 @@ canvas{
       </div>
     </div>
   </div>
+
+<div id="gameUI">
+
+  <div id="topBar">
+
+    <div id="healthBox">
+
+      <div id="healthText">
+        HP 100
+      </div>
+
+      <div id="health">
+
+        <div id="healthBar"></div>
+
+      </div>
+
+    </div>
+
+    <div id="matchBox">
+
+      <div>
+        ROOM:
+        <span id="roomText">----</span>
+      </div>
+
+      <div>
+        PLAYER:
+        <span id="playerCountText">0</span>
+      </div>
+
+      <div>
+        KILLS:
+        <span id="killsText">0</span>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div id="scoreBoard"></div>
+
+  <div id="crosshair"></div>
+
+  <div id="killMessage"></div>
+
+  <div id="protectionIndicator">🛡 無敵 3.0秒</div>
 
   <div id="desktopHint">
     WASD / Mouse / Click / Space
@@ -2060,7 +2060,9 @@ function removeRemoteMesh(uid){
     return;
   }
 
-  scene.remove(mesh);
+  if(scene){
+    scene.remove(mesh);
+  }
 
   mesh.traverse(
     object => {
@@ -2831,9 +2833,11 @@ async function joinMatch(
           "ended"
         ){
 
-          throw new Error(
-            "ENDED"
-          );
+          deleteMatch();
+
+          leaveCurrentMatch();
+
+          return;
 
         }
 
@@ -2987,8 +2991,14 @@ async function joinMatch(
       "ENDED"
     ){
 
+      try{
+        await deleteDoc(
+          ref
+        );
+      }catch(cleanupError){}
+
       statusEl.textContent =
-        "その試合はもう終了してるよ。";
+        "その部屋は終了済みだったため、削除したよ。";
 
     }else{
 
@@ -3099,7 +3109,10 @@ async function startMatch(
     "none";
 
   gameUI.style.display =
-    "block";
+    "none";
+
+  preStart.style.display =
+    "flex";
 
   gameOver.style.display =
     "none";
@@ -3149,11 +3162,7 @@ async function startMatch(
           !snapshot.exists()
         ){
 
-          if(gameStarted){
-
-            leaveCurrentMatch();
-
-          }
+          leaveCurrentMatch();
 
           return;
 
@@ -3203,15 +3212,16 @@ async function startMatch(
           String(count);
 
 
-        updateRemotePlayers(
-          players
-        );
-
-
         updateScoreboard(
           players,
           data.playerOrder
         );
+
+        if(data.status === "active"){
+          updateRemotePlayers(
+            players
+          );
+        }
 
 
         const me =
@@ -3252,6 +3262,12 @@ async function startMatch(
 
           matchHasStarted =
             true;
+
+          preStart.style.display =
+            "none";
+
+          gameUI.style.display =
+            "block";
 
           if(!scene){
             setupScene();
@@ -3504,8 +3520,15 @@ function updateStartUI(data){
     settingsModal.style.display =
       "none";
 
+    shareUrlModal.style.display =
+      "none";
+
     settingsModalOpen =
       false;
+
+    if(data.status === "active"){
+      gameUI.style.display = "block";
+    }
 
     return;
 
@@ -3515,6 +3538,9 @@ function updateStartUI(data){
   gameUI.classList.add(
     "preStartMode"
   );
+
+  gameUI.style.display =
+    "none";
 
   preStart.style.display =
     "flex";
@@ -3548,7 +3574,7 @@ function updateStartUI(data){
 
 function setCameraFromPlayer(){
 
-  if(!localPlayer){
+  if(!localPlayer || !camera){
 
     return;
 
@@ -3583,6 +3609,10 @@ function setCameraFromPlayer(){
 function updateRemotePlayers(
   players
 ){
+
+  if(!scene || !matchHasStarted){
+    return;
+  }
 
   const seen =
     new Set();
