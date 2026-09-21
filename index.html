@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.3.0. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.3.0 changes: URL room routing, QR sharing, decorative START hold animation, strict pre-start room lifecycle, active-room join blocking, and deferred game rendering until START. Previous release changes: safer terrain-overlap spawn correction, more reliable code-screen scrolling, player-name entry, deferred terrain generation until START, and configurable max fire rate with a slower default medium rate. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
+<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.3.1. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.3.1 changes: fixed dark text visibility, restored terrain generation at match start, made settings apply/send when START is pressed without a save button, and added GitHub Pages 404 fallback routing for room URLs. Previous release changes: safer terrain-overlap spawn correction, more reliable code-screen scrolling, player-name entry, deferred terrain generation until START, and configurable max fire rate with a slower default medium rate. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
 <title>Firebase 3D FPS</title>
 
 <style>
@@ -27,6 +27,13 @@ html,body{
 
 body{
   touch-action:none;
+  color:#fff;
+  color-scheme:dark;
+}
+
+button,input,select,textarea{
+  color:#fff;
+  color-scheme:dark;
 }
 
 canvas{
@@ -768,7 +775,7 @@ canvas{
     <h1 class="title">3D FPS</h1>
 
     <div class="subtitle">
-      v1.3.0
+      v1.3.1
     </div>
 
     <input
@@ -951,7 +958,6 @@ canvas{
 
       <div class="settingsButtons">
         <button id="closeSettingsButton" class="button secondary">閉じる</button>
-        <button id="saveSettingsButton" class="button">保存</button>
       </div>
     </div>
   </div>
@@ -1327,8 +1333,6 @@ const settingsModal =
 const closeSettingsButton =
   document.getElementById("closeSettingsButton");
 
-const saveSettingsButton =
-  document.getElementById("saveSettingsButton");
 
 const maxHpInput =
   document.getElementById("maxHpInput");
@@ -1540,43 +1544,6 @@ function closeSettings(){
   settingsModalOpen = false;
   settingsModal.style.display = "none";
   updateSettingsUI(currentSettings);
-}
-
-async function saveSettings(){
-
-  if(
-    !matchRef ||
-    !isHost ||
-    matchHasStarted
-  ){
-    return;
-  }
-
-  const settings =
-    readSettingsUI();
-
-  try{
-    await updateDoc(
-      matchRef,
-      { settings }
-    );
-
-    currentSettings = settings;
-    if(matchHasStarted){
-      rebuildArena(settings);
-    }
-    closeSettings();
-    statusEl.textContent = "設定を保存したよ！";
-    setTimeout(() => {
-      if(statusEl.textContent === "設定を保存したよ！")
-        statusEl.textContent = "";
-    }, 1200);
-  }catch(error){
-    console.error("settings save error", error);
-    statusEl.textContent =
-      "設定保存失敗：" +
-      getFriendlyError(error);
-  }
 }
 
 function getRoomUrl(){
@@ -3192,6 +3159,7 @@ async function startMatch(
 
           if(!scene){
             setupScene();
+            createArena(currentSettings);
             gameUI.style.display = "block";
             preStart.style.display = "none";
             setCameraFromPlayer();
@@ -5489,7 +5457,9 @@ function startMatchByHost(){
         };
 
       const settings =
-        normalizeSettings(data.settings);
+        normalizeSettings(
+          isHost ? readSettingsUI() : data.settings
+        );
 
       currentSettings =
         settings;
@@ -6960,8 +6930,11 @@ async function syncLocalPlayer(){
 
 
 const initialRouteMatch = location.pathname.match(/\/3Dfps\/r\/([^/]+)\/?$/i);
-if(initialRouteMatch){
-  const initialRouteCode = decodeURIComponent(initialRouteMatch[1]).toUpperCase();
+const initialQueryCode = new URLSearchParams(location.search).get("room");
+const initialRouteCode = initialRouteMatch
+  ? decodeURIComponent(initialRouteMatch[1]).toUpperCase()
+  : (initialQueryCode ? initialQueryCode.toUpperCase() : "");
+if(initialRouteCode){
   matchCodeInput.value = initialRouteCode;
   ensureAuth().then(()=>{
     if(!gameStarted && !currentMatchId) joinMatch(initialRouteCode);
@@ -6999,11 +6972,6 @@ settingsButton.addEventListener(
 closeSettingsButton.addEventListener(
   "click",
   closeSettings
-);
-
-saveSettingsButton.addEventListener(
-  "click",
-  saveSettings
 );
 
 settingsModal.addEventListener(
