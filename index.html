@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: Current version 1.3.0. Keep this comment invisible to players. Every future update must change this tracker and the visible version together. Release 1.3.0: room URL routing/sharing, stronger ended-room cleanup, duplicate action protection, and refined start-hold presentation. Preserve all existing features unless the user explicitly requests a change. -->
+<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.2.0. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.2.0 changes: safer terrain-overlap spawn correction, more reliable code-screen scrolling, player-name entry, deferred terrain generation until START, and configurable max fire rate with a slower default medium rate. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
 <title>Firebase 3D FPS</title>
-<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 
 <style>
 *{
@@ -389,54 +388,6 @@ canvas{
   z-index:2;
 }
 
-
-#matchButton:disabled{
-  opacity:.55;
-  pointer-events:none;
-}
-
-#startButton{
-  --startGlow:20px;
-  overflow:visible;
-}
-
-#startButton::before{
-  content:"";
-  position:absolute;
-  inset:-7px;
-  border-radius:50%;
-  padding:7px;
-  background:conic-gradient(
-    rgba(90,190,255,.98) var(--progress,0%),
-    rgba(255,255,255,.07) var(--progress,0%)
-  );
-  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
-  -webkit-mask-composite:xor;
-  mask-composite:exclude;
-  filter:drop-shadow(0 0 var(--startGlow) rgba(60,170,255,.5));
-  opacity:.95;
-  pointer-events:none;
-  z-index:0;
-}
-
-#startButton.startHolding::before{
-  animation:startRingSpin .9s linear infinite;
-}
-
-#startButton.startHolding{
-  transform:scale(1.075);
-}
-
-#startButton.startHolding::after{
-  box-shadow:inset 0 0 28px rgba(60,170,255,.25);
-}
-
-@keyframes startRingSpin{
-  to{
-    transform:rotate(360deg);
-  }
-}
-
 #protectionIndicator{
   position:absolute;
   left:50%;
@@ -455,113 +406,6 @@ canvas{
   transition:opacity .12s;
   pointer-events:none;
   z-index:4;
-}
-
-#shareModal{
-  position:absolute;
-  inset:0;
-  display:none;
-  justify-content:center;
-  align-items:center;
-  padding:18px;
-  background:rgba(0,0,0,.68);
-  backdrop-filter:blur(9px);
-  pointer-events:auto;
-  z-index:40;
-}
-
-.shareBox{
-  width:min(92vw,430px);
-  padding:22px;
-  border-radius:20px;
-  background:rgba(15,20,28,.97);
-  border:1px solid rgba(255,255,255,.14);
-  box-shadow:0 20px 80px rgba(0,0,0,.55);
-  text-align:center;
-}
-
-.shareTitle{
-  margin:0 0 12px;
-  font-size:22px;
-  font-weight:900;
-}
-
-#shareUrlText{
-  width:100%;
-  padding:10px 12px;
-  border-radius:10px;
-  background:rgba(255,255,255,.06);
-  color:#dce6f2;
-  font-size:12px;
-  line-height:1.4;
-  word-break:break-all;
-  margin-bottom:14px;
-}
-
-#qrContainer{
-  width:230px;
-  height:230px;
-  margin:0 auto 16px;
-  padding:10px;
-  border-radius:14px;
-  background:#fff;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  overflow:hidden;
-}
-
-#qrContainer img,
-#qrContainer canvas{
-  width:210px !important;
-  height:210px !important;
-  image-rendering:pixelated;
-}
-
-#closeShareButton{
-  margin-top:8px;
-}
-
-#startButton.startHolding{
-  transform:scale(1.055);
-  border-color:rgba(100,190,255,.9);
-  box-shadow:
-    0 0 0 5px rgba(54,163,255,.13),
-    0 0 22px rgba(54,163,255,.55),
-    0 0 48px rgba(54,163,255,.25);
-  animation:startPulse 1s ease-in-out infinite;
-}
-
-#startButton.startHolding::after{
-  background:
-    radial-gradient(circle at 50% 42%,rgba(54,163,255,.24),rgba(12,17,23,.96) 64%);
-}
-
-#startButton.startHolding span{
-  text-shadow:
-    0 0 7px rgba(110,205,255,.9),
-    0 0 18px rgba(54,163,255,.55);
-  animation:startTextPulse .65s ease-in-out infinite alternate;
-}
-
-@keyframes startPulse{
-  0%,100%{
-    filter:brightness(1);
-  }
-  50%{
-    filter:brightness(1.18);
-  }
-}
-
-@keyframes startTextPulse{
-  from{
-    transform:scale(1);
-    letter-spacing:0;
-  }
-  to{
-    transform:scale(1.08);
-    letter-spacing:1.5px;
-  }
 }
 
 #settingsModal{
@@ -864,7 +708,7 @@ canvas{
     <h1 class="title">3D FPS</h1>
 
     <div class="subtitle">
-      v1.3.0
+      v1.2.0
     </div>
 
     <input
@@ -961,7 +805,7 @@ canvas{
     </button>
 
     <div class="preStartButtons">
-      <button id="shareCodeButton" class="preStartSmallButton">URL…</button>
+      <button id="shareCodeButton" class="preStartSmallButton">コードを共有</button>
       <button id="leaveRoomButton" class="preStartSmallButton">部屋から退出</button>
       <button id="settingsButton" class="preStartSmallButton">設定</button>
     </div>
@@ -969,16 +813,6 @@ canvas{
   </div>
 
   <div id="protectionIndicator">🛡 無敵 3.0秒</div>
-
-  <div id="shareModal">
-    <div class="shareBox">
-      <h2 class="shareTitle">部屋のURL</h2>
-      <div id="shareUrlText"></div>
-      <div id="qrContainer"></div>
-      <button id="shareUrlButton" class="button">リンクを共有</button>
-      <button id="closeShareButton" class="button secondary">閉じる</button>
-    </div>
-  </div>
 
   <div id="settingsModal">
     <div class="settingsBox">
@@ -1132,7 +966,6 @@ import {
   doc,
   setDoc,
   getDoc,
-  getDocFromServer,
   updateDoc,
   deleteDoc,
   onSnapshot,
@@ -1213,10 +1046,6 @@ let startHolding = false;
 
 let fireHolding = false;
 
-let matchActionBusy = false;
-
-let roomDeletionInProgress = false;
-
 let grabHolding = false;
 
 let grabAnimation = null;
@@ -1231,33 +1060,6 @@ let currentSettings = null;
 let settingsModalOpen = false;
 
 let bulletIdCounter = 0;
-
-const roomRouteCode = (() => {
-  const match = location.pathname.match(/\/r\/([^/]+)\/?$/i);
-  return match ? decodeURIComponent(match[1]).trim().toUpperCase() : "";
-})();
-
-function getAppBaseUrl(){
-  const pathname = location.pathname;
-  const routeIndex = pathname.search(/\/r\/[^/]+\/?$/i);
-  const basePath =
-    routeIndex >= 0
-      ? (pathname.slice(0, routeIndex) || "/")
-      : pathname;
-  return location.origin + basePath;
-}
-
-function getRoomUrl(code = currentMatchId){
-  if(!code) return getAppBaseUrl();
-  return location.origin + "/r/" + encodeURIComponent(String(code));
-}
-
-function restoreOriginalUrl(){
-  try{
-    history.replaceState({}, "", getAppBaseUrl());
-  }catch(error){}
-}
-
 
 
 const START_HOLD_TIME = 1000;
@@ -1428,21 +1230,6 @@ const returnButton =
 
 const shareCodeButton =
   document.getElementById("shareCodeButton");
-
-const shareModal =
-  document.getElementById("shareModal");
-
-const shareUrlText =
-  document.getElementById("shareUrlText");
-
-const qrContainer =
-  document.getElementById("qrContainer");
-
-const shareUrlButton =
-  document.getElementById("shareUrlButton");
-
-const closeShareButton =
-  document.getElementById("closeShareButton");
 
 const leaveRoomButton =
   document.getElementById("leaveRoomButton");
@@ -1715,43 +1502,11 @@ async function shareMatchCode(){
 
   if(!currentMatchId) return;
 
-  const url =
-    getRoomUrl(currentMatchId);
-
-  shareUrlText.textContent =
-    url;
-
-  qrContainer.innerHTML = "";
-
-  try{
-    if(typeof qrcode === "function"){
-      const qr = qrcode(0, "M");
-      qr.addData(url);
-      qr.make();
-      qrContainer.innerHTML = qr.createImgTag(5, 0);
-    }else{
-      qrContainer.textContent = "QRコードを生成できませんでした";
-    }
-  }catch(error){
-    console.error("QR generation error", error);
-    qrContainer.textContent = "QRコードを生成できませんでした";
-  }
-
-  shareModal.style.display = "flex";
-}
-
-async function shareRoomUrl(){
-
-  if(!currentMatchId) return;
-
-  const url = getRoomUrl(currentMatchId);
+  const text = String(currentMatchId);
 
   try{
     if(navigator.share){
-      await navigator.share({
-        title:"3D FPSの部屋",
-        url
-      });
+      await navigator.share({ text });
       return;
     }
   }catch(error){
@@ -1759,14 +1514,13 @@ async function shareRoomUrl(){
   }
 
   try{
-    await navigator.clipboard.writeText(url);
-    statusEl.textContent = "リンクをコピーしたよ！";
+    await navigator.clipboard.writeText(text);
+    statusEl.textContent = "試合コードをコピーしたよ！";
   }catch(error){
-    console.error("URL share/copy error", error);
-    statusEl.textContent = url;
+    console.error("share/copy error", error);
+    statusEl.textContent = text;
   }
 }
-
 
 function updateProtectionIndicator(){
 
@@ -2599,125 +2353,199 @@ async function createMatch(
     const user =
       await ensureAuth();
 
-    const requested =
+    let code =
       requestedCode
         .trim()
         .toUpperCase();
 
-    const maxAttempts =
-      requested ? 1 : 4;
 
-    let created = false;
+    if(!code){
 
-    let createdCode = "";
+      for(
+        let attempt = 0;
+        attempt < 20;
+        attempt++
+      ){
 
-    for(
-      let attempt = 0;
-      attempt < maxAttempts && !created;
-      attempt++
-    ){
+        const candidate =
+          randomCode();
 
-      const code =
-        requested ||
-        randomCode();
+        const ref =
+          doc(
+            db,
+            "matches",
+            candidate
+          );
 
-      const ref =
-        doc(
-          db,
-          "matches",
-          code
-        );
+        const existing =
+          await getDoc(ref);
 
-      const player = {
+        if(
+          !existing.exists()
+        ){
 
-        uid: user.uid,
+          code =
+            candidate;
 
-        name: getPlayerName(),
+          break;
 
-        x: 0,
-        y: PLAYER_HEIGHT,
-        z: 0,
+        }
 
-        yaw: 0,
-        pitch: 0,
+      }
 
-        hp: normalizeSettings(DEFAULT_SETTINGS).maxHp,
-        kills: 0,
-        alive: true,
-        lastActiveAt: Date.now(),
-        lastDamageAt: 0,
-        joinOrder: 0
+    }
 
-      };
 
-      try{
+    if(!code){
 
-        await runTransaction(
-          db,
-          async transaction => {
+      throw new Error(
+        "試合コードを作成できませんでした。"
+      );
 
-            const snap =
-              await transaction.get(ref);
+    }
 
-            if(snap.exists()){
-              throw new Error("ALREADY_EXISTS");
+
+    const spawn =
+      randomSpawn();
+
+
+    const player = {
+
+      uid:
+        user.uid,
+
+      name:
+        getPlayerName(),
+
+      x:
+        spawn.x,
+
+      y:
+        spawn.y,
+
+      z:
+        spawn.z,
+
+      yaw:
+        0,
+
+      pitch:
+        0,
+
+      hp:
+        normalizeSettings(currentSettings).maxHp,
+
+      kills:
+        0,
+
+      alive:
+        true,
+
+      lastActiveAt:
+        Date.now(),
+
+      lastDamageAt:
+        0,
+
+      joinOrder:
+        0
+
+    };
+
+
+    const ref =
+      doc(
+        db,
+        "matches",
+        code
+      );
+
+
+    await runTransaction(
+      db,
+      async transaction => {
+
+        const snap =
+          await transaction.get(
+            ref
+          );
+
+        if(
+          snap.exists()
+        ){
+
+          throw new Error(
+            "ALREADY_EXISTS"
+          );
+
+        }
+
+
+        transaction.set(
+          ref,
+          {
+
+            hostUid:
+              user.uid,
+
+            status:
+              "waiting",
+
+            winnerUid:
+              null,
+
+            createdAt:
+              serverTimestamp(),
+
+            startedAt:
+              null,
+
+            settings:
+              { ...DEFAULT_SETTINGS },
+
+            playerOrder:[
+              user.uid
+            ],
+
+            players:{
+
+              [user.uid]:
+                player
+
             }
-
-            transaction.set(
-              ref,
-              {
-                hostUid: user.uid,
-                status: "waiting",
-                winnerUid: null,
-                createdAt: serverTimestamp(),
-                startedAt: null,
-                settings: { ...DEFAULT_SETTINGS },
-                playerOrder: [user.uid],
-                players: {
-                  [user.uid]: player
-                }
-              }
-            );
 
           }
         );
 
-        created = true;
-        createdCode = code;
-
-      }catch(error){
-
-        if(
-          error?.message === "ALREADY_EXISTS" &&
-          !requested
-        ){
-          continue;
-        }
-
-        if(
-          error?.message === "ALREADY_EXISTS"
-        ){
-          await joinMatch(requested);
-          return;
-        }
-
-        throw error;
       }
-    }
+    );
 
-    if(!created){
-      throw new Error(
-        "試合コードを作成できませんでした。"
-      );
-    }
 
-    isHost = true;
+    isHost =
+      true;
 
-    await startMatch(createdCode);
+
+    await startMatch(
+      code
+    );
+
 
   }catch(error){
 
     console.error(error);
+
+    if(
+      error?.message ===
+      "ALREADY_EXISTS"
+    ){
+
+      await joinMatch(
+        requestedCode
+      );
+
+      return;
+
+    }
 
     statusEl.textContent =
       "作成失敗：" +
@@ -2769,7 +2597,7 @@ async function joinMatch(
 
 
     const existing =
-      await getDocFromServer(ref);
+      await getDoc(ref);
 
 
     /*
@@ -2873,7 +2701,8 @@ async function joinMatch(
             user.uid,
 
           name:
-            getPlayerName(),
+            "Player-" +
+            user.uid.slice(-4),
 
           x:
             spawn.x,
@@ -2969,26 +2798,8 @@ async function joinMatch(
       "ENDED"
     ){
 
-      try{
-        await deleteDoc(ref);
-
-        const afterDelete =
-          await getDocFromServer(ref);
-
-        if(afterDelete.exists()){
-          throw new Error("ENDED_ROOM_STILL_EXISTS");
-        }
-
-        await createMatch(code);
-        return;
-      }catch(cleanupError){
-        console.error(
-          "ended room cleanup error",
-          cleanupError
-        );
-        statusEl.textContent =
-          "終了した試合の削除を確認できなかったよ。もう一度試して！";
-      }
+      statusEl.textContent =
+        "その試合はもう終了してるよ。";
 
     }else{
 
@@ -3016,15 +2827,6 @@ function getPlayerName(){
 
 async function handleMatchButton(){
 
-  if(matchActionBusy){
-    return;
-  }
-
-  matchActionBusy = true;
-  matchButton.disabled = true;
-
-  try{
-
   const code =
     matchCodeInput.value
       .trim()
@@ -3043,11 +2845,6 @@ async function handleMatchButton(){
       ""
     );
 
-  }
-
-  }finally{
-    matchActionBusy = false;
-    matchButton.disabled = false;
   }
 
 }
@@ -3097,8 +2894,6 @@ async function startMatch(
   currentMatchId =
     code;
 
-  restoreOriginalUrl();
-
   matchRef =
     doc(
       db,
@@ -3124,10 +2919,12 @@ async function startMatch(
   currentSettings =
     normalizeSettings(currentSettings || DEFAULT_SETTINGS);
 
-  /*
-    IMPORTANT: the waiting room must not load the battle world.
-    The renderer/scene itself is also delayed until the match becomes active.
-  */
+  if(!scene){
+
+    setupScene();
+
+  }
+
 
   gameEnded =
     false;
@@ -3279,11 +3076,9 @@ async function startMatch(
           !wasStarted
         ){
 
-          if(!scene){
-            setupScene();
+          if(scene){
+            rebuildArena(currentSettings);
           }
-
-          rebuildArena(currentSettings);
 
           if(localPlayer){
             const beforeY =
@@ -3337,11 +3132,13 @@ async function startMatch(
 
         if(
           data.status ===
-          "ended"
-          ) {
+          "ended" &&
+          !gameEnded
+        ){
 
           const winner =
             data.winnerUid;
+
 
           const winnerName =
             winner &&
@@ -3350,20 +3147,29 @@ async function startMatch(
               ? players[winner].name
               : "勝者";
 
-          if(!gameEnded){
-            finishLocalGame(
-              winner === currentUser.uid
-                ? "YOU WIN!"
-                : winnerName + " の勝利！"
-            );
-          }
 
-          /*
-            Delete immediately instead of waiting for a delayed timer.
-            Any client that sees the ended state may perform the cleanup,
-            so closing the host's tab cannot leave a stale ended room behind.
-          */
-          deleteMatch();
+          finishLocalGame(
+
+            winner ===
+            currentUser.uid
+
+              ? "YOU WIN!"
+
+              : winnerName +
+                " の勝利！"
+
+          );
+
+          setTimeout(
+            () => {
+              if(
+                matchRef
+              ){
+                deleteMatch();
+              }
+            },
+            1200
+          );
 
         }
 
@@ -3404,7 +3210,7 @@ async function startMatch(
 async function loadLocalPlayer(){
 
   const snap =
-    await getDocFromServer(
+    await getDoc(
       matchRef
     );
 
@@ -5668,16 +5474,9 @@ function updateStartProgress(){
       !startHolding
     ){
 
-      startButton.classList.remove("startHolding");
-
       startButton.style.setProperty(
         "--progress",
         "0%"
-      );
-
-      startButton.style.setProperty(
-        "--startGlow",
-        "20px"
       );
 
     }
@@ -5701,19 +5500,12 @@ function updateStartProgress(){
     );
 
 
-  startButton.classList.add("startHolding");
-
   startButton.style.setProperty(
 
     "--progress",
 
     `${progress * 100}%`
 
-  );
-
-  startButton.style.setProperty(
-    "--startGlow",
-    `${20 + progress * 55}px`
   );
 
 
@@ -5723,8 +5515,6 @@ function updateStartProgress(){
 
     startHolding =
       false;
-
-    startButton.classList.remove("startHolding");
 
     startButton.style.setProperty(
       "--progress",
@@ -5884,29 +5674,22 @@ function finishLocalGame(
 
 async function deleteMatch(){
 
-  if(!matchRef || roomDeletionInProgress){
+  if(!matchRef){
 
     return;
 
   }
 
-  roomDeletionInProgress = true;
 
   const ref =
     matchRef;
+
 
   try{
 
     await deleteDoc(
       ref
     );
-
-    const check =
-      await getDocFromServer(ref);
-
-    if(!check.exists()){
-      return;
-    }
 
   }catch(error){
 
@@ -5915,8 +5698,6 @@ async function deleteMatch(){
       error
     );
 
-  }finally{
-    roomDeletionInProgress = false;
   }
 
 }
@@ -6094,9 +5875,6 @@ function leaveCurrentMatch(){
     "0";
 
   settingsModal.style.display =
-    "none";
-
-  shareModal.style.display =
     "none";
 
   settingsModalOpen =
@@ -6703,14 +6481,6 @@ function setupStartButton(){
       startHoldStart =
         performance.now();
 
-      startButton.classList.add("startHolding");
-      startButton.style.setProperty("--progress", "0%");
-      startButton.style.setProperty("--startGlow", "20px");
-
-      try{
-        startButton.setPointerCapture(event.pointerId);
-      }catch(error){}
-
     };
 
 
@@ -6721,14 +6491,6 @@ function setupStartButton(){
 
       startHolding =
         false;
-
-      try{
-        if(event.pointerId !== undefined){
-          startButton.releasePointerCapture(event.pointerId);
-        }
-      }catch(error){}
-
-      startButton.classList.remove("startHolding");
 
       startButton.style.setProperty(
         "--progress",
@@ -7079,27 +6841,6 @@ shareCodeButton.addEventListener(
   shareMatchCode
 );
 
-shareUrlButton.addEventListener(
-  "click",
-  shareRoomUrl
-);
-
-closeShareButton.addEventListener(
-  "click",
-  () => {
-    shareModal.style.display = "none";
-  }
-);
-
-shareModal.addEventListener(
-  "pointerdown",
-  event => {
-    if(event.target === shareModal){
-      shareModal.style.display = "none";
-    }
-  }
-);
-
 leaveRoomButton.addEventListener(
   "click",
   leaveRoom
@@ -7234,11 +6975,6 @@ try{
 
   statusEl.textContent =
     "接続準備OK";
-
-  if(roomRouteCode){
-    matchCodeInput.value = roomRouteCode;
-    await joinMatch(roomRouteCode);
-  }
 
 }catch(error){
 
