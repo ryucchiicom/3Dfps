@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.2.0. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.2.0 changes: safer terrain-overlap spawn correction, more reliable code-screen scrolling, player-name entry, deferred terrain generation until START, and configurable max fire rate with a slower default medium rate. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
-<title>Firebase 3D FPS</title>
+<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.3.0. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.3.0 changes: room URL routing and QR sharing, enhanced START hold feedback, immediate ended-room cleanup, hidden renderer during room setup, and blocking joins to already-started rooms. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
+<title>3D FPS</title>
 
 <style>
 *{
@@ -46,8 +46,10 @@ canvas{
   overflow-y:scroll;
   overflow-x:hidden;
   -webkit-overflow-scrolling:touch;
-  overscroll-behavior:contain;
+  overscroll-behavior-y:auto;
+  overscroll-behavior-x:none;
   touch-action:pan-y !important;
+  pointer-events:auto;
   align-items:flex-start;
   padding:24px 0;
 }
@@ -388,6 +390,43 @@ canvas{
   z-index:2;
 }
 
+#startButton.holding{
+  border-color:rgba(105,190,255,.9);
+  box-shadow:
+    0 0 0 4px rgba(54,163,255,.08),
+    0 0 24px rgba(54,163,255,.38),
+    0 0 60px rgba(54,163,255,.18);
+  animation:startHoldPulse .7s ease-in-out infinite alternate;
+}
+
+#startButton.holding::after{
+  background:
+    radial-gradient(circle at 50% 45%,rgba(54,163,255,.22),rgba(12,17,23,.95) 62%);
+  animation:startHoldCore .7s ease-in-out infinite alternate;
+}
+
+#startButton.holding span{
+  text-shadow:
+    0 0 8px rgba(130,210,255,.9),
+    0 0 22px rgba(54,163,255,.7);
+  animation:startHoldText .45s ease-in-out infinite alternate;
+}
+
+@keyframes startHoldPulse{
+  from{transform:scale(1);}
+  to{transform:scale(1.045);}
+}
+
+@keyframes startHoldCore{
+  from{opacity:.86;}
+  to{opacity:1;}
+}
+
+@keyframes startHoldText{
+  from{transform:scale(1);}
+  to{transform:scale(1.08);}
+}
+
 #protectionIndicator{
   position:absolute;
   left:50%;
@@ -406,6 +445,68 @@ canvas{
   transition:opacity .12s;
   pointer-events:none;
   z-index:4;
+}
+
+#shareUrlModal{
+  position:absolute;
+  inset:0;
+  display:none;
+  justify-content:center;
+  align-items:center;
+  padding:18px;
+  background:rgba(0,0,0,.68);
+  backdrop-filter:blur(10px);
+  pointer-events:auto;
+  z-index:35;
+}
+
+.shareUrlBox{
+  width:min(92vw,420px);
+  padding:22px;
+  border-radius:20px;
+  background:rgba(15,20,28,.97);
+  border:1px solid rgba(255,255,255,.13);
+  box-shadow:0 20px 80px rgba(0,0,0,.6);
+  text-align:center;
+}
+
+.shareUrlTitle{
+  margin:0 0 14px;
+  font-size:22px;
+  font-weight:900;
+}
+
+#shareQrImage{
+  display:block;
+  width:240px;
+  height:240px;
+  max-width:70vw;
+  margin:0 auto 14px;
+  border-radius:12px;
+  background:#fff;
+  object-fit:contain;
+}
+
+#shareUrlText{
+  margin:0 auto 12px;
+  padding:9px 11px;
+  border-radius:9px;
+  background:rgba(255,255,255,.06);
+  color:#dbe8f7;
+  font-size:12px;
+  line-height:1.45;
+  overflow-wrap:anywhere;
+  user-select:text;
+  -webkit-user-select:text;
+}
+
+.shareUrlButtons{
+  display:flex;
+  gap:8px;
+}
+
+.shareUrlButtons .button{
+  margin-top:0;
 }
 
 #settingsModal{
@@ -696,6 +797,17 @@ canvas{
   }
 
 }
+#menu input,
+#menu button{
+  touch-action:auto;
+}
+
+@media (max-width:600px){
+  #menu{
+    align-items:flex-start;
+    min-height:100dvh;
+  }
+}
 </style>
 </head>
 
@@ -708,7 +820,7 @@ canvas{
     <h1 class="title">3D FPS</h1>
 
     <div class="subtitle">
-      v1.2.0
+      v1.3.0
     </div>
 
     <input
@@ -805,11 +917,23 @@ canvas{
     </button>
 
     <div class="preStartButtons">
-      <button id="shareCodeButton" class="preStartSmallButton">コードを共有</button>
+      <button id="shareCodeButton" class="preStartSmallButton">URL…</button>
       <button id="leaveRoomButton" class="preStartSmallButton">部屋から退出</button>
       <button id="settingsButton" class="preStartSmallButton">設定</button>
     </div>
 
+  </div>
+
+  <div id="shareUrlModal">
+    <div class="shareUrlBox">
+      <div class="shareUrlTitle">部屋のURL</div>
+      <img id="shareQrImage" alt="部屋URLのQRコード">
+      <div id="shareUrlText"></div>
+      <div class="shareUrlButtons">
+        <button id="closeShareUrlButton" class="button secondary">閉じる</button>
+        <button id="shareUrlButton" class="button">リンクを共有</button>
+      </div>
+    </div>
   </div>
 
   <div id="protectionIndicator">🛡 無敵 3.0秒</div>
@@ -1231,6 +1355,21 @@ const returnButton =
 const shareCodeButton =
   document.getElementById("shareCodeButton");
 
+const shareUrlModal =
+  document.getElementById("shareUrlModal");
+
+const shareQrImage =
+  document.getElementById("shareQrImage");
+
+const shareUrlText =
+  document.getElementById("shareUrlText");
+
+const shareUrlButton =
+  document.getElementById("shareUrlButton");
+
+const closeShareUrlButton =
+  document.getElementById("closeShareUrlButton");
+
 const leaveRoomButton =
   document.getElementById("leaveRoomButton");
 
@@ -1498,15 +1637,104 @@ async function saveSettings(){
   }
 }
 
-async function shareMatchCode(){
+function getBasePath(){
 
-  if(!currentMatchId) return;
+  const path =
+    location.pathname;
 
-  const text = String(currentMatchId);
+  const match =
+    path.match(/^(.*)\/r\/[A-Za-z0-9]{1,8}\/?$/i);
+
+  if(match){
+    return match[1] || "/";
+  }
+
+  return path.endsWith("/")
+    ? path
+    : path.substring(0, path.lastIndexOf("/") + 1);
+}
+
+function getRoomUrl(code = currentMatchId){
+
+  if(!code){
+    return "";
+  }
+
+  const base =
+    getBasePath().replace(/\/+$/, "");
+
+  return
+    location.origin +
+    (base ? base + "/" : "/") +
+    "r/" +
+    encodeURIComponent(String(code).toUpperCase());
+}
+
+function restoreOriginalUrl(){
+
+  try{
+    const base =
+      getBasePath();
+
+    const target =
+      base || "/";
+
+    if(location.pathname !== target){
+      history.replaceState({}, "", target);
+    }
+  }catch(error){
+    console.error("restore url error", error);
+  }
+}
+
+function getRoomCodeFromUrl(){
+
+  const match =
+    location.pathname.match(/\/r\/([A-Za-z0-9]{1,8})\/?$/i);
+
+  return match
+    ? match[1].toUpperCase()
+    : "";
+}
+
+function openShareUrl(){
+
+  if(!currentMatchId){
+    return;
+  }
+
+  const url =
+    getRoomUrl();
+
+  if(!url){
+    return;
+  }
+
+  shareUrlText.textContent =
+    url;
+
+  shareQrImage.src =
+    "https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=" +
+    encodeURIComponent(url);
+
+  shareUrlModal.style.display = "flex";
+}
+
+async function shareMatchUrl(){
+
+  const url =
+    getRoomUrl();
+
+  if(!url){
+    return;
+  }
 
   try{
     if(navigator.share){
-      await navigator.share({ text });
+      await navigator.share({
+        title:"3D FPSの部屋",
+        url
+      });
       return;
     }
   }catch(error){
@@ -1514,12 +1742,16 @@ async function shareMatchCode(){
   }
 
   try{
-    await navigator.clipboard.writeText(text);
-    statusEl.textContent = "試合コードをコピーしたよ！";
+    await navigator.clipboard.writeText(url);
+    statusEl.textContent = "リンクをコピーしたよ！";
   }catch(error){
-    console.error("share/copy error", error);
-    statusEl.textContent = text;
+    console.error("url share/copy error", error);
+    statusEl.textContent = url;
   }
+}
+
+function closeShareUrl(){
+  shareUrlModal.style.display = "none";
 }
 
 function updateProtectionIndicator(){
@@ -2655,6 +2887,17 @@ async function joinMatch(
 
         }
 
+        if(
+          data.status ===
+          "active"
+        ){
+
+          throw new Error(
+            "STARTED"
+          );
+
+        }
+
 
         const players =
           {
@@ -2701,8 +2944,7 @@ async function joinMatch(
             user.uid,
 
           name:
-            "Player-" +
-            user.uid.slice(-4),
+            getPlayerName(),
 
           x:
             spawn.x,
@@ -2778,6 +3020,14 @@ async function joinMatch(
 
     if(
       message ===
+      "STARTED"
+    ){
+
+      statusEl.textContent =
+        "その試合はもう開始されているよ。";
+
+    }else if(
+      message ===
       "NOT_FOUND"
     ){
 
@@ -2797,6 +3047,12 @@ async function joinMatch(
       message ===
       "ENDED"
     ){
+
+      try{
+        await deleteDoc(ref);
+      }catch(error){
+        console.error("ended join cleanup error", error);
+      }
 
       statusEl.textContent =
         "その試合はもう終了してるよ。";
@@ -2908,6 +3164,10 @@ async function startMatch(
   gameUI.style.display =
     "block";
 
+  if(renderer){
+    renderer.style.display = "none";
+  }
+
   gameOver.style.display =
     "none";
 
@@ -2935,12 +3195,17 @@ async function startMatch(
   matchHasStarted =
     false;
 
+  gameUI.classList.add("preStartMode");
+  preStart.style.display = "flex";
+
 
   velocityY =
     0;
 
 
   await loadLocalPlayer();
+
+  restoreOriginalUrl();
 
 
   if(unsubscribeMatch){
@@ -3063,6 +3328,10 @@ async function startMatch(
           data.status ===
           "active"
         ){
+
+          if(renderer){
+            renderer.style.display = "block";
+          }
 
           matchHasStarted =
             true;
@@ -3327,6 +3596,10 @@ function updateStartUI(data){
     "preStartMode"
   );
 
+  if(renderer){
+    renderer.style.display = "none";
+  }
+
   preStart.style.display =
     "flex";
 
@@ -3337,6 +3610,8 @@ function updateStartUI(data){
     isHost
       ? "部屋主がSTARTを長押しして開始"
       : "部屋主のSTART待ち";
+
+  startButton.classList.remove("holding");
 
   startButton.style.opacity =
     isHost ? "1" : ".35";
@@ -5516,6 +5791,8 @@ function updateStartProgress(){
     startHolding =
       false;
 
+    startButton.classList.remove("holding");
+
     startButton.style.setProperty(
       "--progress",
       "100%"
@@ -5543,6 +5820,15 @@ async function checkMatchCleanup(
   const now =
     Date.now();
 
+  if(data.status === "ended"){
+    try{
+      await deleteDoc(matchRef);
+    }catch(error){
+      console.error("ended cleanup error", error);
+    }
+    return;
+  }
+
   if(
     now -
     lastCleanupCheck <
@@ -5553,6 +5839,13 @@ async function checkMatchCleanup(
 
   lastCleanupCheck =
     now;
+    try{
+      await deleteDoc(matchRef);
+    }catch(error){
+      console.error("ended cleanup error", error);
+    }
+    return;
+  }
 
   let createdMillis =
     0;
@@ -5858,6 +6151,10 @@ function leaveCurrentMatch(){
   gameUI.style.display =
     "none";
 
+  if(renderer){
+    renderer.style.display = "none";
+  }
+
   gameUI.classList.remove(
     "preStartMode"
   );
@@ -5875,6 +6172,9 @@ function leaveCurrentMatch(){
     "0";
 
   settingsModal.style.display =
+    "none";
+
+  shareUrlModal.style.display =
     "none";
 
   settingsModalOpen =
@@ -6478,6 +6778,8 @@ function setupStartButton(){
       startHolding =
         true;
 
+      startButton.classList.add("holding");
+
       startHoldStart =
         performance.now();
 
@@ -6491,6 +6793,8 @@ function setupStartButton(){
 
       startHolding =
         false;
+
+      startButton.classList.remove("holding");
 
       startButton.style.setProperty(
         "--progress",
@@ -6838,7 +7142,26 @@ matchButton.addEventListener(
 
 shareCodeButton.addEventListener(
   "click",
-  shareMatchCode
+  openShareUrl
+);
+
+shareUrlButton.addEventListener(
+  "click",
+  shareMatchUrl
+);
+
+closeShareUrlButton.addEventListener(
+  "click",
+  closeShareUrl
+);
+
+shareUrlModal.addEventListener(
+  "pointerdown",
+  event => {
+    if(event.target === shareUrlModal){
+      closeShareUrl();
+    }
+  }
 );
 
 leaveRoomButton.addEventListener(
@@ -6971,10 +7294,19 @@ window.addEventListener(
 
 try{
 
+  const routedRoomCode =
+    getRoomCodeFromUrl();
+
   await ensureAuth();
 
-  statusEl.textContent =
-    "接続準備OK";
+  if(routedRoomCode){
+    matchCodeInput.value = routedRoomCode;
+    statusEl.textContent = "リンクの部屋に参加中…";
+    await joinMatch(routedRoomCode);
+  }else{
+    statusEl.textContent =
+      "接続準備OK";
+  }
 
 }catch(error){
 
