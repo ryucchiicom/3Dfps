@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.6.0. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.6.0 changes: fixed room-setting persistence so host settings are saved locally and uploaded/applied at START, added animated two-color fading arena edge lighting, added a forward-facing requirement to GRAB, added cleanup for empty Firebase room data, and added optional kill-streak boost behavior with a 10-second rainbow BOOST HUD. Previous release changes: added route-aware social/share descriptions for the original site and room links, and improved arena floor/wall/platform metal materials with subtle per-surface highlight variation while keeping the cold-color glowing edge treatment and avoiding floating lines. Previous release changes: changed the document title to 3Dfps, added icon.png as the site icon only, and restyled arena floor/walls/platforms with cold-color glowing edge outlines without adding floating lines. Previous release changes: added best-effort landscape orientation locking, reorganized the title screen, moved player name and mobile control preferences into the main settings, added movable-stick/sensitivity/right-tap settings, and made those preferences persist locally. Previous release changes: safer terrain-overlap spawn correction, more reliable code-screen scrolling, player-name entry, deferred terrain generation until START, and configurable max fire rate with a slower default medium rate. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
+<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.6.0. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.6.0 changes: fixed room-setting persistence/application by auto-saving room settings locally and uploading the latest host settings on START, added configurable kill-streak boost, added front-facing GRAB validation, added empty-room Firebase cleanup, and added animated two-color edge gradients for arena geometry. Previous release changes: added route-aware social/share descriptions for the original site and room links, and improved arena floor/wall/platform metal materials with subtle per-surface highlight variation while keeping the cold-color glowing edge treatment and avoiding floating lines. Previous release changes: changed the document title to 3Dfps, added icon.png as the site icon only, and restyled arena floor/walls/platforms with cold-color glowing edge outlines without adding floating lines. Previous release changes: added best-effort landscape orientation locking, reorganized the title screen, moved player name and mobile control preferences into the main settings, added movable-stick/sensitivity/right-tap settings, and made those preferences persist locally. Previous release changes: safer terrain-overlap spawn correction, more reliable code-screen scrolling, player-name entry, deferred terrain generation until START, and configurable max fire rate with a slower default medium rate. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
 <title>3Dfps</title>
 <link rel="icon" type="image/png" href="icon.png">
 <meta name="description" content="シンプルなfpsゲームで、firebaseを利用して通信しています">
@@ -194,77 +194,82 @@ canvas{
 
 #boostIndicator{
   display:flex;
-  justify-content:flex-start;
   align-items:center;
-  height:0;
-  margin-top:7px;
+  gap:7px;
+  margin-top:8px;
+  height:38px;
+  transition:opacity .12s, transform .12s;
+}
+
+#boostIndicator.boostHidden{
   opacity:0;
-  transform:scale(.82);
-  transform-origin:left top;
-  transition:opacity .16s,transform .16s,height .16s;
+  transform:scale(.86);
   pointer-events:none;
 }
 
-#boostIndicator.active{
-  height:48px;
-  opacity:1;
-  transform:scale(1);
-}
-
 #boostCircle{
-  --boost-angle:0deg;
+  --boostProgress:100%;
   position:relative;
-  width:44px;
-  height:44px;
+  width:36px;
+  height:36px;
+  flex:0 0 36px;
   display:flex;
-  justify-content:center;
   align-items:center;
+  justify-content:center;
   border-radius:50%;
   background:
     conic-gradient(
       from -90deg,
-      #ff375f 0deg,
-      #ff9f0a 55deg,
-      #ffe600 105deg,
-      #32d74b 165deg,
-      #00e5ff 225deg,
-      #5e5ce6 285deg,
-      #bf5af2 325deg,
-      #ff375f 360deg
+      #ff3b30 0deg,
+      #ffcc00 60deg,
+      #34c759 120deg,
+      #00c7ff 180deg,
+      #5856d6 240deg,
+      #ff2d8f 300deg,
+      #ff3b30 360deg
     );
-  box-shadow:0 0 17px rgba(100,220,255,.22);
+  box-shadow:0 0 14px rgba(0,199,255,.28);
 }
 
 #boostCircle::before{
   content:"";
   position:absolute;
-  inset:0;
+  inset:5px;
   border-radius:50%;
   background:
     conic-gradient(
       from -90deg,
-      transparent 0deg,
-      transparent var(--boost-angle,0deg),
-      rgba(9,15,23,.94) var(--boost-angle,0deg),
-      rgba(9,15,23,.94) 360deg
+      transparent 0 var(--boostProgress),
+      rgba(9,13,18,.94) var(--boostProgress) 100%
     );
+  z-index:1;
 }
 
 #boostCircle::after{
   content:"";
   position:absolute;
-  inset:4px;
+  inset:9px;
   border-radius:50%;
-  background:rgba(9,15,23,.92);
+  background:rgba(8,12,17,.96);
+  z-index:1;
 }
 
 #boostCircle span{
   position:relative;
-  z-index:1;
-  font-size:8px;
+  z-index:2;
+  font-size:7px;
+  font-weight:1000;
+  letter-spacing:.25px;
+  color:#fff;
+  text-shadow:0 1px 4px rgba(0,0,0,.95);
+}
+
+#boostMultiplier{
+  min-width:27px;
+  font-size:12px;
   font-weight:900;
-  letter-spacing:.5px;
-  text-shadow:0 1px 5px #000;
+  color:#fff;
+  text-shadow:0 1px 5px rgba(0,0,0,.9);
 }
 
 #crosshair{
@@ -1010,8 +1015,11 @@ canvas{
 
       </div>
 
-      <div id="boostIndicator" aria-hidden="true">
-        <div id="boostCircle"><span>BOOST</span></div>
+      <div id="boostIndicator" class="boostHidden">
+        <div id="boostCircle" class="boostCircle">
+          <span>BOOST</span>
+        </div>
+        <div id="boostMultiplier">2x</div>
       </div>
 
     </div>
@@ -1320,6 +1328,7 @@ let lastCleanupCheck = 0;
 let lastRegenTick = 0;
 let currentSettings = null;
 let settingsModalOpen = false;
+let roomSettingsDraft = null;
 
 let bulletIdCounter = 0;
 
@@ -1337,7 +1346,7 @@ const BULLET_LIFETIME = 2200;
 const BULLET_DAMAGE = 34;
 
 const GRAB_DISTANCE = 1.15;
-const GRAB_FORWARD_DOT = 0.5;
+
 const GRAB_TIME = 500;
 const KILL_BOOST_DURATION = 10000;
 const INACTIVE_MATCH_TIME = 60 * 1000;
@@ -1355,10 +1364,10 @@ const DEFAULT_SETTINGS = {
   terrainHeight: "medium",
   bulletSpeed: "medium",
   fireRate: "medium",
-  killBoost: "off",
   maxHp: 100,
   hpRegen: "none",
-  regenLock: 0
+  regenLock: 0,
+  killBoost: "off"
 };
 
 
@@ -1434,14 +1443,12 @@ let raycaster;
 
 
 const colliders = [];
+const edgeAnimations = new Set();
 
 const playerMeshes =
   new Map();
 
 const bullets = new Map();
-
-const neonEdgeMaterials =
-  new Set();
 
 
 const menu =
@@ -1474,17 +1481,20 @@ const playerCountText =
 const killsText =
   document.getElementById("killsText");
 
-const healthText =
-  document.getElementById("healthText");
-
-const healthBar =
-  document.getElementById("healthBar");
-
 const boostIndicator =
   document.getElementById("boostIndicator");
 
 const boostCircle =
   document.getElementById("boostCircle");
+
+const boostMultiplier =
+  document.getElementById("boostMultiplier");
+
+const healthText =
+  document.getElementById("healthText");
+
+const healthBar =
+  document.getElementById("healthBar");
 
 const scoreBoard =
   document.getElementById("scoreBoard");
@@ -1648,71 +1658,6 @@ function closePlayerSettings(){
 
 loadPlayerSettings();
 
-const ROOM_SETTINGS_STORAGE_KEY = "dfpsRoomSettings";
-
-function loadRoomSettingsDraft(){
-  try{
-    const raw = localStorage.getItem(ROOM_SETTINGS_STORAGE_KEY);
-    if(raw){
-      return normalizeSettings(JSON.parse(raw));
-    }
-  }catch(error){}
-  return { ...DEFAULT_SETTINGS };
-}
-
-function saveRoomSettingsDraft(settings){
-  try{
-    localStorage.setItem(
-      ROOM_SETTINGS_STORAGE_KEY,
-      JSON.stringify(normalizeSettings(settings))
-    );
-  }catch(error){}
-}
-
-function getKillBoostEnabled(settings = currentSettings){
-  return normalizeSettings(settings).killBoost === "on";
-}
-
-function getPlayerBoostMultiplier(player = localPlayer){
-  if(!player || !getKillBoostEnabled()) return 1;
-
-  const expiresAt = Number(player.boostExpiresAt || 0);
-  if(expiresAt <= Date.now()) return 1;
-
-  const streak = Math.max(0, Number(player.killStreak || 0));
-  return Math.max(1, streak + 1);
-}
-
-function updateBoostUI(){
-  if(
-    !localPlayer ||
-    !matchHasStarted ||
-    gameEnded ||
-    !getKillBoostEnabled()
-  ){
-    boostIndicator.classList.remove("active");
-    boostCircle.style.setProperty("--boost-angle", "0deg");
-    return;
-  }
-
-  const expiresAt = Number(localPlayer.boostExpiresAt || 0);
-  const remaining = expiresAt - Date.now();
-  const streak = Number(localPlayer.killStreak || 0);
-
-  if(remaining <= 0 || streak <= 0){
-    boostIndicator.classList.remove("active");
-    boostCircle.style.setProperty("--boost-angle", "0deg");
-    return;
-  }
-
-  const progress = clamp(remaining / KILL_BOOST_DURATION, 0, 1);
-  boostCircle.style.setProperty(
-    "--boost-angle",
-    `${progress * 360}deg`
-  );
-  boostIndicator.classList.add("active");
-}
-
 
 function normalizeSettings(settings){
 
@@ -1752,17 +1697,92 @@ function normalizeSettings(settings){
       ["fast","medium","slow"].includes(source.fireRate)
         ? source.fireRate
         : DEFAULT_SETTINGS.fireRate,
-    killBoost:
-      ["on","off"].includes(source.killBoost)
-        ? source.killBoost
-        : DEFAULT_SETTINGS.killBoost,
-    maxHp:
+    maxHp,
     hpRegen:
       ["fast","medium","slow","none"].includes(source.hpRegen)
         ? source.hpRegen
         : DEFAULT_SETTINGS.hpRegen,
-    regenLock
+    regenLock,
+    killBoost:
+      ["on","off"].includes(source.killBoost)
+        ? source.killBoost
+        : DEFAULT_SETTINGS.killBoost
   };
+}
+
+const ROOM_SETTINGS_STORAGE_KEY = "dfpsRoomSettings";
+
+function loadRoomSettings(){
+  try{
+    const raw = localStorage.getItem(ROOM_SETTINGS_STORAGE_KEY);
+    if(!raw) return normalizeSettings(DEFAULT_SETTINGS);
+    return normalizeSettings(JSON.parse(raw));
+  }catch(error){
+    return normalizeSettings(DEFAULT_SETTINGS);
+  }
+}
+
+function saveRoomSettings(settings){
+  const normalized = normalizeSettings(settings);
+  roomSettingsDraft = normalized;
+  currentSettings = normalized;
+  try{
+    localStorage.setItem(ROOM_SETTINGS_STORAGE_KEY, JSON.stringify(normalized));
+  }catch(error){}
+}
+
+roomSettingsDraft = loadRoomSettings();
+currentSettings = { ...roomSettingsDraft };
+
+function getPlayerBoostMultiplier(player){
+  const settings = normalizeSettings(currentSettings);
+  if(settings.killBoost !== "on" || !player) return 1;
+
+  const streak = Number(player.killStreak || 0);
+  const lastKillAt = Number(player.lastKillAt || 0);
+  if(streak <= 0 || !lastKillAt) return 1;
+  if(Date.now() - lastKillAt >= KILL_BOOST_DURATION) return 1;
+  return Math.max(1, streak + 1);
+}
+
+function getLocalBoostMultiplier(){
+  return getPlayerBoostMultiplier(localPlayer);
+}
+
+function updateBoostHUD(){
+  if(
+    !matchHasStarted ||
+    !localPlayer ||
+    gameEnded ||
+    normalizeSettings(currentSettings).killBoost !== "on"
+  ){
+    boostIndicator.classList.add("boostHidden");
+    return;
+  }
+
+  const streak = Number(localPlayer.killStreak || 0);
+  const lastKillAt = Number(localPlayer.lastKillAt || 0);
+  if(!streak || !lastKillAt){
+    boostIndicator.classList.add("boostHidden");
+    return;
+  }
+
+  const elapsed = Date.now() - lastKillAt;
+  if(elapsed >= KILL_BOOST_DURATION){
+    boostIndicator.classList.add("boostHidden");
+    return;
+  }
+
+  const remaining = clamp(1 - elapsed / KILL_BOOST_DURATION, 0, 1);
+  const multiplier = Math.max(2, streak + 1);
+
+  boostCircle.style.setProperty(
+    "--boostProgress",
+    `${remaining * 100}%`
+  );
+
+  boostMultiplier.textContent = `${multiplier}x`;
+  boostIndicator.classList.remove("boostHidden");
 }
 
 function getBulletSpeed(){
@@ -1781,13 +1801,12 @@ function getFireInterval(){
   const setting =
     normalizeSettings(currentSettings).fireRate;
 
-  let interval =
-    FIRE_INTERVAL;
+  let baseInterval;
+  if(setting === "fast") baseInterval = 260;
+  else if(setting === "slow") baseInterval = 500;
+  else baseInterval = FIRE_INTERVAL;
 
-  if(setting === "fast") interval = 260;
-  if(setting === "slow") interval = 500;
-
-  return interval / getPlayerBoostMultiplier();
+  return baseInterval / getLocalBoostMultiplier();
 }
 
 function getRegenRate(){
@@ -1900,7 +1919,12 @@ function openSettings(){
   }
 
   currentSettings =
-    loadRoomSettingsDraft();
+    isHost
+      ? loadRoomSettings()
+      : normalizeSettings(currentSettings);
+
+  roomSettingsDraft =
+    { ...currentSettings };
 
   updateSettingsUI(
     currentSettings
@@ -1912,17 +1936,10 @@ function openSettings(){
 
 function closeSettings(){
 
-  currentSettings =
-    readSettingsUI();
-
-  saveRoomSettingsDraft(
-    currentSettings
-  );
-
   settingsModalOpen = false;
   settingsModal.style.display = "none";
+  updateSettingsUI(currentSettings);
 }
-
 
 function getRoomUrl(){
   if(!currentMatchId) return location.href;
@@ -2010,11 +2027,13 @@ function rebuildArena(settings){
 
   if(!scene) return;
 
-  neonEdgeMaterials.clear();
-
   for(const collider of colliders){
     scene.remove(collider);
     collider.traverse?.(object => {
+      if(object.userData?.edgeAnimation){
+        edgeAnimations.delete(object.userData.edgeAnimation);
+        object.userData.edgeAnimation = null;
+      }
       if(object.geometry) object.geometry.dispose();
       if(object.material){
         if(Array.isArray(object.material)){
@@ -2584,8 +2603,7 @@ function createArena(settings = DEFAULT_SETTINGS){
 
   addNeonEdges(
     floor,
-    0x55d9ff,
-    0x9b7dff
+    0x55d9ff
   );
 
   scene.add(floor);
@@ -2740,7 +2758,7 @@ function createArena(settings = DEFAULT_SETTINGS){
 
 }
 
-function addNeonEdges(mesh, color, secondColor = 0x9b7dff){
+function addNeonEdges(mesh, color){
 
   const edgeGeometry =
     new THREE.EdgesGeometry(
@@ -2748,90 +2766,187 @@ function addNeonEdges(mesh, color, secondColor = 0x9b7dff){
       1
     );
 
-  const colorA =
-    new THREE.Color(color);
+  const positionAttribute =
+    edgeGeometry.getAttribute("position");
 
-  const colorB =
-    new THREE.Color(secondColor);
+  const mainColors =
+    new Float32Array(
+      positionAttribute.count * 3
+    );
 
-  const phase =
-    Math.random() * Math.PI * 2;
+  const glowColors =
+    new Float32Array(
+      positionAttribute.count * 3
+    );
 
-  const axis =
-    new THREE.Vector3(1, .38, .82).normalize();
+  const primaryColor =
+    new THREE.Color(0x55d9ff);
 
-  const createEdgeMaterial = (opacity) => {
-    const material =
-      new THREE.ShaderMaterial({
-        transparent:true,
-        depthWrite:false,
-        blending:THREE.AdditiveBlending,
-        uniforms:{
-          uTime:{value:0},
-          uColorA:{value:colorA.clone()},
-          uColorB:{value:colorB.clone()},
-          uAxis:{value:axis.clone()},
-          uPhase:{value:phase},
-          uSpeed:{value:1.35},
-          uFrequency:{value:1.25},
-          uOpacity:{value:opacity}
-        },
-        vertexShader:`
-          varying vec3 vPosition;
-          void main(){
-            vPosition = position;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          }
-        `,
-        fragmentShader:`
-          uniform float uTime;
-          uniform float uPhase;
-          uniform float uSpeed;
-          uniform float uFrequency;
-          uniform float uOpacity;
-          uniform vec3 uColorA;
-          uniform vec3 uColorB;
-          uniform vec3 uAxis;
-          varying vec3 vPosition;
-          void main(){
-            float coordinate = dot(vPosition, normalize(uAxis));
-            float wave = sin(coordinate * uFrequency + uTime * uSpeed + uPhase);
-            float mixAmount = wave * 0.5 + 0.5;
-            vec3 edgeColor = mix(uColorA, uColorB, mixAmount);
-            float shimmer = 0.78 + 0.22 * (sin(coordinate * 2.1 + uTime * 2.2 + uPhase * 1.7) * 0.5 + 0.5);
-            gl_FragColor = vec4(edgeColor, uOpacity * shimmer);
-          }
-        `
-      });
+  const secondaryColor =
+    new THREE.Color(0x9b7dff);
 
-    neonEdgeMaterials.add(material);
-    return material;
+  const animation = {
+    main:null,
+    glow:null,
+    primary:primaryColor,
+    secondary:secondaryColor,
+    tempA:new THREE.Color(),
+    tempB:new THREE.Color(),
+    phase:Math.random() * Math.PI * 2,
+    speed:.0012 + Math.random() * .0009,
+    count:positionAttribute.count
   };
 
+  edgeGeometry.setAttribute(
+    "color",
+    new THREE.BufferAttribute(
+      mainColors,
+      3
+    )
+  );
+
+  const glowGeometry =
+    edgeGeometry.clone();
+
+  glowGeometry.setAttribute(
+    "color",
+    new THREE.BufferAttribute(
+      glowColors,
+      3
+    )
+  );
+
   const glowMaterial =
-    createEdgeMaterial(.25);
+    new THREE.LineBasicMaterial({
+      vertexColors:true,
+      transparent:true,
+      opacity:.22,
+      depthWrite:false
+    });
 
   const glow =
     new THREE.LineSegments(
-      edgeGeometry,
+      glowGeometry,
       glowMaterial
     );
 
-  glow.scale.setScalar(1.007);
-  mesh.add(glow);
+  glow.scale.setScalar(1.006);
 
   const edgeMaterial =
-    createEdgeMaterial(.95);
+    new THREE.LineBasicMaterial({
+      vertexColors:true,
+      transparent:true,
+      opacity:.96,
+      depthWrite:false
+    });
 
   const edges =
     new THREE.LineSegments(
-      edgeGeometry.clone(),
+      edgeGeometry,
       edgeMaterial
     );
 
   edges.scale.setScalar(1.002);
+
+  animation.main =
+    edges;
+
+  animation.glow =
+    glow;
+
+  edges.userData.edgeAnimation =
+    animation;
+
+  glow.userData.edgeAnimation =
+    animation;
+
+  edgeAnimations.add(
+    animation
+  );
+
+  mesh.add(glow);
   mesh.add(edges);
 
+}
+
+function updateEdgeGradients(time){
+
+  for(const animation of edgeAnimations){
+
+    const main =
+      animation.main;
+
+    const glow =
+      animation.glow;
+
+    if(!main || !glow || !main.parent){
+      continue;
+    }
+
+    const mainColors =
+      main.geometry.getAttribute("color");
+
+    const glowColors =
+      glow.geometry.getAttribute("color");
+
+    for(let i = 0; i < animation.count; i += 2){
+
+      const t0 =
+        .5 + .5 * Math.sin(
+          animation.phase +
+          time * animation.speed +
+          i * .23
+        );
+
+      const t1 =
+        .5 + .5 * Math.sin(
+          animation.phase +
+          time * animation.speed +
+          Math.PI +
+          i * .23
+        );
+
+      animation.tempA
+        .copy(animation.primary)
+        .lerp(animation.secondary, t0);
+
+      animation.tempB
+        .copy(animation.primary)
+        .lerp(animation.secondary, t1);
+
+      mainColors.setXYZ(
+        i,
+        animation.tempA.r,
+        animation.tempA.g,
+        animation.tempA.b
+      );
+
+      mainColors.setXYZ(
+        i + 1,
+        animation.tempB.r,
+        animation.tempB.g,
+        animation.tempB.b
+      );
+
+      glowColors.setXYZ(
+        i,
+        animation.tempA.r,
+        animation.tempA.g,
+        animation.tempA.b
+      );
+
+      glowColors.setXYZ(
+        i + 1,
+        animation.tempB.r,
+        animation.tempB.g,
+        animation.tempB.b
+      );
+
+    }
+
+    mainColors.needsUpdate = true;
+    glowColors.needsUpdate = true;
+  }
 }
 
 
@@ -2843,8 +2958,7 @@ function createBox(
   y,
   z,
   material,
-  edgeColor = 0x55d9ff,
-  edgeColor2 = 0x9b7dff
+  edgeColor = 0x55d9ff
 ){
 
   const geometry =
@@ -2919,8 +3033,7 @@ function createBox(
 
   addNeonEdges(
     mesh,
-    edgeColor,
-    edgeColor2
+    edgeColor
   );
 
   mesh.castShadow =
@@ -3035,6 +3148,12 @@ async function createMatch(
     const user =
       await ensureAuth();
 
+    currentSettings =
+      loadRoomSettings();
+
+    roomSettingsDraft =
+      { ...currentSettings };
+
     let code =
       requestedCode
         .trim()
@@ -3120,12 +3239,6 @@ async function createMatch(
       kills:
         0,
 
-      killStreak:
-        0,
-
-      boostExpiresAt:
-        0,
-
       alive:
         true,
 
@@ -3133,6 +3246,12 @@ async function createMatch(
         Date.now(),
 
       lastDamageAt:
+        0,
+
+      killStreak:
+        0,
+
+      lastKillAt:
         0,
 
       joinOrder:
@@ -3414,12 +3533,6 @@ async function joinMatch(
           kills:
             0,
 
-          killStreak:
-            0,
-
-          boostExpiresAt:
-            0,
-
           alive:
             true,
 
@@ -3427,6 +3540,12 @@ async function joinMatch(
             Date.now(),
 
           lastDamageAt:
+            0,
+
+          killStreak:
+            0,
+
+          lastKillAt:
             0,
 
           joinOrder:
@@ -3676,17 +3795,20 @@ async function startMatch(
         const incomingSettings =
           normalizeSettings(data.settings);
 
-        const effectiveSettings =
-          data.status === "waiting" && isHost
-            ? loadRoomSettingsDraft()
-            : incomingSettings;
+        if(data.status === "waiting" && isHost){
 
-        if(
+          currentSettings =
+            loadRoomSettings();
+
+          roomSettingsDraft =
+            { ...currentSettings };
+
+        }else if(
           JSON.stringify(currentSettings) !==
-          JSON.stringify(effectiveSettings)
+          JSON.stringify(incomingSettings)
         ){
           currentSettings =
-            effectiveSettings;
+            incomingSettings;
 
           if(scene && matchHasStarted){
             rebuildArena(currentSettings);
@@ -3739,12 +3861,7 @@ async function startMatch(
 
               ...localPlayer,
 
-              ...me,
-
-              killStreak:
-                Number(me.killStreak || 0),
-              boostExpiresAt:
-                Number(me.boostExpiresAt || 0)
+              ...me
 
             };
 
@@ -3929,18 +4046,11 @@ async function loadLocalPlayer(){
   const data =
     snap.data();
 
-  isHost =
-    data.hostUid === currentUser.uid;
-
-  currentSettings =
-    normalizeSettings(data.settings);
-
-  if(
-    data.status === "waiting" &&
-    isHost
-  ){
-    currentSettings =
-      loadRoomSettingsDraft();
+  if(data.status === "waiting" && isHost){
+    currentSettings = loadRoomSettings();
+    roomSettingsDraft = { ...currentSettings };
+  }else{
+    currentSettings = normalizeSettings(data.settings);
   }
 
   const player =
@@ -4065,6 +4175,11 @@ function updateStartUI(data){
 
   settingsButton.style.pointerEvents =
     isHost ? "auto" : "none";
+
+  if(isHost){
+    currentSettings = loadRoomSettings();
+    roomSettingsDraft = { ...currentSettings };
+  }
 
   updateSettingsUI(
     currentSettings
@@ -4355,8 +4470,7 @@ function updateLocalHUD(){
   killsText.textContent =
     String(localKills);
 
-  updateBoostUI();
-
+  updateBoostHUD();
 
 }
 
@@ -4747,7 +4861,7 @@ function updateMovement(
 
     const speed =
       physics.moveSpeed *
-      getPlayerBoostMultiplier();
+      getLocalBoostMultiplier();
 
     const amount =
       speed * delta;
@@ -5098,19 +5212,43 @@ function getGrabTarget(){
         box.max.z
       );
 
+    const towardX =
+      centerX - playerX;
 
-    const targetDX =
-      centerX -
-      playerX;
+    const towardZ =
+      centerZ - playerZ;
 
-    const targetDZ =
-      centerZ -
-      playerZ;
+    const towardDistance =
+      Math.hypot(towardX, towardZ);
+
+    if(towardDistance > .0001){
+
+      const forwardX =
+        -Math.sin(cameraState.yaw);
+
+      const forwardZ =
+        -Math.cos(cameraState.yaw);
+
+      const facingDot =
+        (towardX * forwardX + towardZ * forwardZ) /
+        towardDistance;
+
+      if(facingDot < .35){
+        continue;
+      }
+
+    }
+
 
     const distance =
       Math.hypot(
-        targetDX,
-        targetDZ
+
+        playerX -
+        centerX,
+
+        playerZ -
+        centerZ
+
       );
 
 
@@ -5123,38 +5261,6 @@ function getGrabTarget(){
 
     }
 
-
-    if(
-      distance <
-      .05
-    ){
-      continue;
-    }
-
-    const forwardX =
-      -Math.sin(cameraState.yaw);
-
-    const forwardZ =
-      -Math.cos(cameraState.yaw);
-
-    const directionX =
-      targetDX /
-      distance;
-
-    const directionZ =
-      targetDZ /
-      distance;
-
-    const facingDot =
-      forwardX * directionX +
-      forwardZ * directionZ;
-
-    if(
-      facingDot <
-      GRAB_FORWARD_DOT
-    ){
-      continue;
-    }
 
     if(
       distance <
@@ -5326,10 +5432,14 @@ function updateGrabAnimation(
     grabAnimation.start;
 
 
+  const grabDuration =
+    GRAB_TIME /
+    getLocalBoostMultiplier();
+
   const progress =
     clamp(
       elapsed /
-      (GRAB_TIME / getPlayerBoostMultiplier()),
+      grabDuration,
       0,
       1
     );
@@ -5430,8 +5540,7 @@ function showKillMessage(
 function createBullet(
   origin,
   direction,
-  ownerUid,
-  hitRadius = .15
+  ownerUid
 ){
 
   const geometry =
@@ -5482,10 +5591,11 @@ function createBullet(
 
       ownerUid,
 
-      hitRadius,
-
       created:
         performance.now(),
+
+      hitRadius:
+        .15 * getLocalBoostMultiplier(),
 
       lastPosition:
         origin.clone()
@@ -5687,7 +5797,8 @@ function updateBullets(
       if(
         box.distanceToPoint(
           bullet.mesh.position
-        ) < bullet.hitRadius
+        ) <
+        (bullet.hitRadius || .15)
       ){
 
         hitSomething =
@@ -5868,25 +5979,23 @@ async function applyBulletDamage(
               shooter.kills || 0
             ) + 1;
 
-          const nowForBoost =
+          const killNow =
             Date.now();
 
-          const boostEnabled =
-            normalizeSettings(data.settings).killBoost === "on";
-
-          const previousBoostExpiry =
-            Number(shooter.boostExpiresAt || 0);
+          const previousKillAt =
+            Number(shooter.lastKillAt || 0);
 
           shooter.killStreak =
-            boostEnabled &&
-            previousBoostExpiry > nowForBoost
+            (
+              previousKillAt > 0 &&
+              killNow - previousKillAt < KILL_BOOST_DURATION
+            )
               ? Number(shooter.killStreak || 0) + 1
-              : (boostEnabled ? 1 : 0);
+              : 1;
 
-          shooter.boostExpiresAt =
-            boostEnabled
-              ? nowForBoost + KILL_BOOST_DURATION
-              : 0;
+          shooter.lastKillAt =
+            killNow;
+
 
           wasKill =
             shooterUid ===
@@ -5946,23 +6055,6 @@ async function applyBulletDamage(
     if(wasKill){
 
       localKills++;
-
-      if(localPlayer && getKillBoostEnabled()){
-        const nowForLocalBoost = Date.now();
-        const currentExpiry =
-          Number(localPlayer.boostExpiresAt || 0);
-
-        localPlayer.killStreak =
-          currentExpiry > nowForLocalBoost
-            ? Number(localPlayer.killStreak || 0) + 1
-            : 1;
-
-        localPlayer.boostExpiresAt =
-          nowForLocalBoost + KILL_BOOST_DURATION;
-      }else if(localPlayer){
-        localPlayer.killStreak = 0;
-        localPlayer.boostExpiresAt = 0;
-      }
 
       showKillMessage(
         "ELIMINATED"
@@ -6107,8 +6199,7 @@ function shoot(){
   createBullet(
     origin,
     direction,
-    currentUser.uid,
-    .15 * getPlayerBoostMultiplier()
+    currentUser.uid
   );
 
 
@@ -6171,16 +6262,17 @@ function startMatchByHost(){
       const settings =
         normalizeSettings(
           isHost
-            ? readSettingsUI()
+            ? loadRoomSettings()
             : data.settings
         );
 
-      if(isHost){
-        saveRoomSettingsDraft(settings);
-      }
-
       currentSettings =
         settings;
+
+      roomSettingsDraft =
+        { ...settings };
+
+      saveRoomSettings(settings);
 
 
       for(
@@ -6219,7 +6311,7 @@ function startMatchByHost(){
         player.killStreak =
           0;
 
-        player.boostExpiresAt =
+        player.lastKillAt =
           0;
 
         player.lastDamageAt =
@@ -6421,7 +6513,7 @@ async function checkMatchCleanup(
       );
     }catch(error){
       console.error(
-        "empty room cleanup error",
+        "empty-room cleanup error",
         error
       );
     }
@@ -6553,6 +6645,10 @@ async function leaveRoom(){
         const data =
           snap.data();
 
+        if(data.status !== "waiting"){
+          return;
+        }
+
         const players =
           { ...(data.players || {}) };
 
@@ -6573,7 +6669,7 @@ async function leaveRoom(){
 
         const nextHost =
           data.hostUid === uid
-            ? playerOrder[0] || null
+            ? playerOrder[0]
             : data.hostUid;
 
         Object.keys(players).forEach(id => {
@@ -6666,11 +6762,6 @@ function leaveCurrentMatch(){
   fireCooldownEnd =
     0;
 
-  neonEdgeMaterials.clear();
-
-  boostIndicator.classList.remove("active");
-  boostCircle.style.setProperty("--boost-angle", "0deg");
-
   lastActivityAt =
     Date.now();
 
@@ -6699,6 +6790,8 @@ function leaveCurrentMatch(){
 
   protectionIndicator.style.opacity =
     "0";
+
+  boostIndicator.classList.add("boostHidden");
 
   settingsModal.style.display =
     "none";
@@ -7429,13 +7522,7 @@ function gameLoop(
 
   updateFireUI();
   updateProtectionIndicator();
-  updateBoostUI();
-
-  for(const material of neonEdgeMaterials){
-    if(material.uniforms?.uTime){
-      material.uniforms.uTime.value = time * .001;
-    }
-  }
+  updateBoostHUD();
 
 
   if(
@@ -7838,15 +7925,39 @@ document
       .forEach(button => {
         button.addEventListener("click", () => {
           if(group.parentElement.classList.contains("disabled")) return;
+
           group
             .querySelectorAll(".settingOption")
             .forEach(item => item.classList.remove("selected"));
+
           button.classList.add("selected");
-          const draft = readSettingsUI();
-          currentSettings = draft;
-          saveRoomSettingsDraft(draft);
-          terrainHeightRow.classList.toggle("disabled", draft.terrainAmount === "none");
-          regenLockRow.classList.toggle("disabled", draft.hpRegen === "none");
+
+          const draft =
+            readSettingsUI();
+
+          currentSettings =
+            draft;
+
+          roomSettingsDraft =
+            { ...draft };
+
+          saveRoomSettings(
+            draft
+          );
+
+          terrainHeightRow.classList.toggle(
+            "disabled",
+            draft.terrainAmount === "none"
+          );
+
+          regenLockRow.classList.toggle(
+            "disabled",
+            draft.hpRegen === "none"
+          );
+
+          updateSettingsUI(
+            draft
+          );
         });
       });
   });
@@ -7854,13 +7965,15 @@ document
 maxHpInput.addEventListener("input", () => {
   const draft = readSettingsUI();
   currentSettings = draft;
-  saveRoomSettingsDraft(draft);
+  roomSettingsDraft = { ...draft };
+  saveRoomSettings(draft);
 });
 
 regenLockInput.addEventListener("input", () => {
   const draft = readSettingsUI();
   currentSettings = draft;
-  saveRoomSettingsDraft(draft);
+  roomSettingsDraft = { ...draft };
+  saveRoomSettings(draft);
 });
 
 
