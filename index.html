@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.4.0. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.4.0 changes: room URLs and QR sharing, START-only arena rendering, active-room join blocking, enhanced START hold feedback, stale ended-room cleanup, URL-state restoration, and a separated waiting-room layer. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
+<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.3.0. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.3.0 changes: room URLs and QR sharing, START-only arena rendering, active-room join blocking, enhanced START hold feedback, stale ended-room cleanup, and URL-state restoration. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
 <title>Firebase 3D FPS</title>
 
 <style>
@@ -27,18 +27,6 @@ html,body{
 
 body{
   touch-action:none;
-}
-
-#menu input,
-#menu button{
-  user-select:text;
-  -webkit-user-select:text;
-}
-
-@media (pointer:coarse){
-  #menu{
-    touch-action:pan-y !important;
-  }
 }
 
 canvas{
@@ -256,9 +244,8 @@ canvas{
 }
 
 #preStart{
-  position:fixed;
+  position:absolute;
   inset:0;
-  z-index:15;
   display:none;
   flex-direction:column;
   justify-content:center;
@@ -463,68 +450,19 @@ canvas{
   margin-top:8px;
 }
 
-#startButton{
-  --progress:0%;
-  overflow:visible;
-  transition:transform .12s ease,box-shadow .18s ease,border-color .18s ease;
-}
-
-#startButton::before{
-  content:"";
-  position:absolute;
-  inset:-8px;
-  border-radius:50%;
-  background:conic-gradient(from -90deg,rgba(75,190,255,1) var(--progress),rgba(255,255,255,.08) var(--progress));
-  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));
-  mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));
-  opacity:.9;
-  z-index:-1;
-  transition:filter .15s ease,opacity .15s ease;
-}
-
-#startButton::after{
-  content:"";
-  position:absolute;
-  inset:7px;
-  border-radius:50%;
-  background:radial-gradient(circle at 50% 45%,rgba(23,39,55,.98),rgba(7,11,16,.98) 72%);
-  z-index:0;
-}
-
 #startButton.holding{
-  border-color:rgba(110,215,255,1);
-  transform:scale(1.045);
-  box-shadow:0 0 0 8px rgba(50,160,255,.10),0 0 45px rgba(40,155,255,.72),inset 0 0 30px rgba(50,150,255,.18);
-}
-
-#startButton.holding::before{
-  opacity:1;
-  filter:drop-shadow(0 0 7px rgba(80,200,255,.95));
+  border-color:rgba(80,190,255,.95);
+  background:conic-gradient(from -90deg,rgba(45,150,255,.24),rgba(255,255,255,.04),rgba(45,150,255,.24));
+  box-shadow:0 0 0 5px rgba(50,160,255,.10),0 0 28px rgba(40,155,255,.55),inset 0 0 25px rgba(50,150,255,.12);
+  animation:startPulse .8s ease-in-out infinite alternate;
 }
 
 #startButton.holding::after{
-  animation:startCorePulse .55s ease-in-out infinite alternate;
+  background:radial-gradient(circle,rgba(30,90,150,.95) 0%,rgba(9,15,23,.96) 72%);
 }
 
 #startButton.holding span{
-  text-shadow:0 0 12px rgba(100,210,255,.95),0 0 28px rgba(50,160,255,.55);
-  animation:startTextPulse .55s ease-in-out infinite alternate;
-}
-
-#startButton[data-progress="25"]::before,
-#startButton[data-progress="50"]::before,
-#startButton[data-progress="75"]::before{
-  filter:drop-shadow(0 0 10px rgba(90,205,255,.8));
-}
-
-@keyframes startCorePulse{
-  from{transform:scale(.985);opacity:.92;}
-  to{transform:scale(1.02);opacity:1;}
-}
-
-@keyframes startTextPulse{
-  from{transform:scale(.98);}
-  to{transform:scale(1.04);}
+  text-shadow:0 0 12px rgba(100,210,255,.95);
 }
 
 #startButton.holding::marker{
@@ -860,7 +798,7 @@ canvas{
     <h1 class="title">3D FPS</h1>
 
     <div class="subtitle">
-      v1.4.0
+      v1.3.0
     </div>
 
     <input
@@ -1166,8 +1104,6 @@ const firebaseConfig = {
 };
 
 
-const ORIGINAL_PAGE_URL = window.location.href;
-
 const app =
   initializeApp(firebaseConfig);
 
@@ -1443,18 +1379,6 @@ const regenRow =
 
 const regenLockRow =
   document.getElementById("regenLockRow");
-
-// WAITING ROOM IS NOT PART OF THE 3D GAME LAYER.
-// Keep it mounted directly on <body> so the renderer/game UI can remain completely hidden until START.
-if(preStart.parentElement !== document.body){
-  document.body.appendChild(preStart);
-}
-if(shareUrlModal.parentElement !== document.body){
-  document.body.appendChild(shareUrlModal);
-}
-if(settingsModal.parentElement !== document.body){
-  document.body.appendChild(settingsModal);
-}
 
 try{
   playerNameInput.value = localStorage.getItem("dfpsPlayerName") || "";
@@ -3160,7 +3084,7 @@ async function startMatch(
     code;
 
   try{
-    window.history.replaceState({}, "", new URL(ORIGINAL_PAGE_URL).pathname + new URL(ORIGINAL_PAGE_URL).search + new URL(ORIGINAL_PAGE_URL).hash);
+    window.history.replaceState({}, "", "/");
   }catch(error){}
 
   matchRef =
@@ -3175,7 +3099,7 @@ async function startMatch(
     "none";
 
   gameUI.style.display =
-    "none";
+    "block";
 
   gameOver.style.display =
     "none";
@@ -3183,12 +3107,6 @@ async function startMatch(
 
   roomText.textContent =
     code;
-
-  preStartRoomCode.textContent =
-    code;
-
-  preStart.style.display =
-    "flex";
 
 
   currentSettings =
@@ -3342,12 +3260,6 @@ async function startMatch(
           gameStarted =
             true;
 
-          preStart.style.display =
-            "none";
-
-          gameUI.style.display =
-            "block";
-
         }
 
 
@@ -3445,7 +3357,7 @@ async function startMatch(
                 deleteMatch();
               }
             },
-            0
+            250
           );
 
         }
@@ -5758,6 +5670,8 @@ function updateStartProgress(){
         "0%"
       );
       startButton.querySelector("span").textContent = "START";
+      startButton.classList.remove("holding");
+      startButton.dataset.progress = "0";
 
     }
 
@@ -5808,7 +5722,6 @@ function updateStartProgress(){
     );
     startButton.querySelector("span").textContent = "START!";
     startButton.classList.remove("holding");
-    preStartText.textContent = "開始中…";
 
 
     startMatchByHost();
@@ -6150,9 +6063,6 @@ function leaveCurrentMatch(){
   gameUI.classList.remove(
     "preStartMode"
   );
-
-  gameUI.style.display =
-    "none";
 
   gameOver.style.display =
     "none";
@@ -6772,10 +6682,6 @@ function setupStartButton(){
 
       startHolding =
         true;
-
-      try{
-        startButton.setPointerCapture(event.pointerId);
-      }catch(error){}
 
       startHoldStart =
         performance.now();
