@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.4.0. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.4.0 changes: strict waiting-room/game-layer separation, no scene or remote meshes before START, immediate ended-room cleanup, safer active-room rejection, and URL-state restoration. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
+<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.3.0. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.3.0 changes: URL room routing, QR sharing, decorative START hold animation, strict pre-start room lifecycle, active-room join blocking, and deferred game rendering until START. Previous release changes: safer terrain-overlap spawn correction, more reliable code-screen scrolling, player-name entry, deferred terrain generation until START, and configurable max fire rate with a slower default medium rate. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
 <title>Firebase 3D FPS</title>
 
 <style>
@@ -35,6 +35,8 @@ canvas{
 
 #menu{
   position:fixed;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
   inset:0;
   z-index:100;
   display:flex;
@@ -125,6 +127,10 @@ canvas{
   text-align:center;
   color:#ffce66;
   font-size:14px;
+}
+
+#preStart{
+  z-index:20;
 }
 
 #gameUI{
@@ -389,94 +395,58 @@ canvas{
 }
 
 
-#shareUrlModal{
-  position:absolute;
-  inset:0;
-  display:none;
-  justify-content:center;
-  align-items:center;
-  padding:18px;
-  background:rgba(0,0,0,.68);
-  backdrop-filter:blur(10px);
-  pointer-events:auto;
-  z-index:35;
-}
-
-.shareUrlBox{
-  width:min(90vw,430px);
-  padding:22px;
-  border-radius:20px;
-  background:rgba(15,20,28,.97);
-  border:1px solid rgba(255,255,255,.14);
-  box-shadow:0 20px 80px rgba(0,0,0,.55);
-  text-align:center;
-}
-
-.shareUrlTitle{
-  margin:0 0 12px;
-  font-size:22px;
-  font-weight:900;
-}
-
-#shareUrlText{
-  padding:10px;
-  margin-bottom:12px;
-  border-radius:10px;
-  background:rgba(255,255,255,.06);
-  color:#dce9ff;
-  font-size:12px;
-  line-height:1.45;
-  word-break:break-all;
-  user-select:text;
-  -webkit-user-select:text;
-}
-
-#shareQrWrap{
-  width:220px;
-  height:220px;
-  margin:0 auto 14px;
-  padding:10px;
-  border-radius:14px;
-  background:#fff;
-}
-
-#shareQr{
-  display:block;
-  width:200px;
-  height:200px;
-}
-
-#closeShareUrlButton{
-  margin-top:8px;
+#startButton{
+  box-shadow:0 0 0 rgba(54,163,255,0);
+  transition:transform .12s, filter .15s, box-shadow .2s;
 }
 
 #startButton.holding{
-  border-color:rgba(80,190,255,.95);
-  background:conic-gradient(from -90deg,rgba(45,150,255,.24),rgba(255,255,255,.04),rgba(45,150,255,.24));
-  box-shadow:0 0 0 5px rgba(50,160,255,.10),0 0 28px rgba(40,155,255,.55),inset 0 0 25px rgba(50,150,255,.12);
-  animation:startPulse .8s ease-in-out infinite alternate;
+  transform:scale(1.045);
+  filter:brightness(1.18);
+  box-shadow:0 0 28px rgba(54,163,255,.45), 0 0 70px rgba(54,163,255,.18);
+}
+
+#startButton.holding::before{
+  animation:startRingSpin .8s linear infinite;
 }
 
 #startButton.holding::after{
-  background:radial-gradient(circle,rgba(30,90,150,.95) 0%,rgba(9,15,23,.96) 72%);
+  box-shadow:inset 0 0 18px rgba(54,163,255,.22);
 }
 
-#startButton.holding span{
-  text-shadow:0 0 12px rgba(100,210,255,.95);
+@keyframes startRingSpin{
+  from{transform:rotate(0deg);}
+  to{transform:rotate(360deg);}
 }
 
-#startButton.holding::marker{
+#qrModal{
+  position:fixed;
+  inset:0;
+  z-index:80;
   display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background:rgba(0,0,0,.68);
+  backdrop-filter:blur(12px);
+  pointer-events:auto;
 }
 
-@keyframes startPulse{
-  from{transform:scale(1);}
-  to{transform:scale(1.045);}
+.qrBox{
+  width:min(360px,92vw);
+  padding:24px;
+  border-radius:20px;
+  background:rgba(20,25,32,.96);
+  border:1px solid rgba(255,255,255,.16);
+  box-shadow:0 20px 70px rgba(0,0,0,.5);
+  text-align:center;
 }
 
-#startButton::selection{
-  background:transparent;
-}
+.qrTitle{font-size:20px;font-weight:900;margin-bottom:16px;}
+#qrCode{width:256px;height:256px;margin:0 auto 14px;padding:10px;background:#fff;border-radius:12px;box-sizing:border-box;}
+#qrCode img,#qrCode canvas{display:block;width:236px !important;height:236px !important;margin:auto;}
+#qrUrlText{font-size:11px;line-height:1.4;word-break:break-all;opacity:.68;margin-bottom:14px;}
+#shareUrlButton,#closeQrButton{width:100%;margin-top:8px;}
 
 #protectionIndicator{
   position:absolute;
@@ -798,7 +768,7 @@ canvas{
     <h1 class="title">3D FPS</h1>
 
     <div class="subtitle">
-      v1.4.0
+      v1.3.0
     </div>
 
     <input
@@ -837,13 +807,71 @@ canvas{
 
 </div>
 
-  <div id="preStart">
+
+<div id="qrModal">
+  <div class="qrBox">
+    <div class="qrTitle">部屋へのリンク</div>
+    <div id="qrCode"></div>
+    <div id="qrUrlText"></div>
+    <button id="shareUrlButton" class="button">リンクを共有</button>
+    <button id="closeQrButton" class="button secondary">閉じる</button>
+  </div>
+</div>
+
+<div id="gameUI">
+
+  <div id="topBar">
+
+    <div id="healthBox">
+
+      <div id="healthText">
+        HP 100
+      </div>
+
+      <div id="health">
+
+        <div id="healthBar"></div>
+
+      </div>
+
+    </div>
+
+    <div id="matchBox">
+
+      <div>
+        ROOM:
+        <span id="roomText">----</span>
+      </div>
+
+      <div>
+        PLAYER:
+        <span id="playerCountText">0</span>
+      </div>
+
+      <div>
+        KILLS:
+        <span id="killsText">0</span>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div id="scoreBoard"></div>
+
+  <div id="crosshair"></div>
+
+  <div id="killMessage"></div>
+
+</div>
+
+<div id="preStart">
 
     <div class="preStartRoomTitle">ROOM <span id="preStartRoomCode">----</span></div>
 
     <div id="preStartText">
       部屋主がSTARTを長押しして開始
-    </div>
+  </div>
 
     <button id="startButton">
       <span>START</span>
@@ -856,16 +884,7 @@ canvas{
     </div>
 
   </div>
-
-  <div id="shareUrlModal">
-    <div class="shareUrlBox">
-      <h2 class="shareUrlTitle">部屋URL</h2>
-      <div id="shareUrlText"></div>
-      <div id="shareQrWrap"><canvas id="shareQr"></canvas></div>
-      <button id="shareUrlButton" class="button">リンクを共有</button>
-      <button id="closeShareUrlButton" class="button secondary">閉じる</button>
-    </div>
-  </div>
+<div id="protectionIndicator">🛡 無敵 3.0秒</div>
 
   <div id="settingsModal">
     <div class="settingsBox">
@@ -937,53 +956,6 @@ canvas{
     </div>
   </div>
 
-<div id="gameUI">
-
-  <div id="topBar">
-
-    <div id="healthBox">
-
-      <div id="healthText">
-        HP 100
-      </div>
-
-      <div id="health">
-
-        <div id="healthBar"></div>
-
-      </div>
-
-    </div>
-
-    <div id="matchBox">
-
-      <div>
-        ROOM:
-        <span id="roomText">----</span>
-      </div>
-
-      <div>
-        PLAYER:
-        <span id="playerCountText">0</span>
-      </div>
-
-      <div>
-        KILLS:
-        <span id="killsText">0</span>
-      </div>
-
-    </div>
-
-  </div>
-
-  <div id="scoreBoard"></div>
-
-  <div id="crosshair"></div>
-
-  <div id="killMessage"></div>
-
-  <div id="protectionIndicator">🛡 無敵 3.0秒</div>
-
   <div id="desktopHint">
     WASD / Mouse / Click / Space
   </div>
@@ -1018,6 +990,7 @@ canvas{
 
   </div>
 
+
 </div>
 
 <div id="gameOver">
@@ -1049,7 +1022,8 @@ canvas{
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
 <script type="module">
 
 import {
@@ -1332,26 +1306,17 @@ const returnButton =
 const shareCodeButton =
   document.getElementById("shareCodeButton");
 
-const shareUrlModal =
-  document.getElementById("shareUrlModal");
-
-const shareUrlText =
-  document.getElementById("shareUrlText");
-
-const shareQr =
-  document.getElementById("shareQr");
-
-const shareUrlButton =
-  document.getElementById("shareUrlButton");
-
-const closeShareUrlButton =
-  document.getElementById("closeShareUrlButton");
-
 const leaveRoomButton =
   document.getElementById("leaveRoomButton");
 
 const settingsButton =
   document.getElementById("settingsButton");
+
+const qrModal = document.getElementById("qrModal");
+const qrCode = document.getElementById("qrCode");
+const qrUrlText = document.getElementById("qrUrlText");
+const shareUrlButton = document.getElementById("shareUrlButton");
+const closeQrButton = document.getElementById("closeQrButton");
 
 const protectionIndicator =
   document.getElementById("protectionIndicator");
@@ -1614,84 +1579,63 @@ async function saveSettings(){
   }
 }
 
-function getMatchUrl(){
-
-  if(!currentMatchId){
-    return window.location.origin + window.location.pathname;
+function getRoomUrl(){
+  if(!currentMatchId) return location.href;
+  const url = new URL(location.href);
+  let base = url.pathname.replace(/\/r\/[^/]*\/?$/, "");
+  if(!base.endsWith("/3Dfps") && !base.endsWith("/3Dfps/")){
+    const idx = base.indexOf("/3Dfps");
+    base = idx >= 0 ? base.slice(0, idx + 6) : base.replace(/\/?$/, "") + "/3Dfps";
   }
-
-  return new URL(
-    "/r/" + encodeURIComponent(currentMatchId),
-    window.location.origin
-  ).href;
+  base = base.replace(/\/$/, "");
+  url.pathname = base + "/r/" + encodeURIComponent(currentMatchId);
+  url.search = "";
+  url.hash = "";
+  return url.toString();
 }
 
-function openShareUrl(){
-
-  if(!currentMatchId){
-    return;
-  }
-
-  const url =
-    getMatchUrl();
-
-  shareUrlText.textContent =
-    url;
-
-  shareUrlModal.style.display =
-    "flex";
-
-  if(window.QRCode && shareQr){
-    QRCode.toCanvas(
-      shareQr,
-      url,
-      {
-        width:200,
-        margin:1,
-        errorCorrectionLevel:"M"
-      },
-      error => {
-        if(error) console.error("QR error",error);
-      }
-    );
-  }
+function returnToBaseUrl(){
+  const url = new URL(location.href);
+  const base = url.pathname.replace(/\/r\/[^/]*\/?$/, "").replace(/\/$/, "");
+  if(base) history.replaceState(null, "", base);
 }
 
-function closeShareUrl(){
-  shareUrlModal.style.display =
-    "none";
+function openQrModal(){
+  const url = getRoomUrl();
+  qrCode.innerHTML = "";
+  if(window.QRCode){
+    new QRCode(qrCode,{text:url,width:236,height:236,colorDark:"#000000",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});
+  }
+  qrUrlText.textContent = url;
+  qrModal.style.display = "flex";
 }
 
-async function shareMatchUrl(){
+function closeQrModal(){
+  qrModal.style.display = "none";
+}
 
-  if(!currentMatchId) return;
-
-  const url =
-    getMatchUrl();
-
+async function shareRoomUrl(){
+  const url = getRoomUrl();
   try{
     if(navigator.share){
-      await navigator.share({
-        title:"3D FPS",
-        text:"この部屋に参加",
-        url
-      });
+      await navigator.share({url});
       return;
     }
   }catch(error){
     if(error?.name === "AbortError") return;
   }
-
   try{
     await navigator.clipboard.writeText(url);
-    statusEl.textContent =
-      "リンクをコピーしたよ！";
+    statusEl.textContent = "リンクをコピーしたよ！";
   }catch(error){
-    console.error("share/copy error",error);
+    console.error("URL share/copy error",error);
     statusEl.textContent = url;
   }
 }
 
+async function shareMatchCode(){
+  openQrModal();
+}
 
 function updateProtectionIndicator(){
 
@@ -2060,9 +2004,7 @@ function removeRemoteMesh(uid){
     return;
   }
 
-  if(scene){
-    scene.remove(mesh);
-  }
+  scene.remove(mesh);
 
   mesh.traverse(
     object => {
@@ -2772,6 +2714,15 @@ async function joinMatch(
     const existing =
       await getDoc(ref);
 
+    if(existing.exists() && existing.data().status === "ended"){
+      try{ await deleteDoc(ref); }catch(error){ console.error("ended room cleanup error",error); }
+      const fresh = await getDoc(ref);
+      if(!fresh.exists()){
+        await createMatch(code);
+        return;
+      }
+    }
+
 
     /*
       ここが今回の重要部分。
@@ -2817,28 +2768,8 @@ async function joinMatch(
           snap.data();
 
 
-        if(
-          data.status ===
-          "active"
-        ){
-
-          throw new Error(
-            "ACTIVE"
-          );
-
-        }
-
-        if(
-          data.status ===
-          "ended"
-        ){
-
-          deleteMatch();
-
-          leaveCurrentMatch();
-
-          return;
-
+        if(data.status !== "waiting"){
+          throw new Error("STARTED");
         }
 
 
@@ -2980,25 +2911,11 @@ async function joinMatch(
 
     }else if(
       message ===
-      "ACTIVE"
+      "STARTED"
     ){
 
       statusEl.textContent =
-        "その試合はもうSTART済みだよ。";
-
-    }else if(
-      message ===
-      "ENDED"
-    ){
-
-      try{
-        await deleteDoc(
-          ref
-        );
-      }catch(cleanupError){}
-
-      statusEl.textContent =
-        "その部屋は終了済みだったため、削除したよ。";
+        "その試合はもう始まっているよ。";
 
     }else{
 
@@ -3093,10 +3010,6 @@ async function startMatch(
   currentMatchId =
     code;
 
-  try{
-    window.history.replaceState({}, "", "/");
-  }catch(error){}
-
   matchRef =
     doc(
       db,
@@ -3117,6 +3030,8 @@ async function startMatch(
   gameOver.style.display =
     "none";
 
+  returnToBaseUrl();
+
 
   roomText.textContent =
     code;
@@ -3129,7 +3044,7 @@ async function startMatch(
     false;
 
   gameStarted =
-    false;
+    true;
 
   matchHasStarted =
     false;
@@ -3162,7 +3077,11 @@ async function startMatch(
           !snapshot.exists()
         ){
 
-          leaveCurrentMatch();
+          if(gameStarted){
+
+            leaveCurrentMatch();
+
+          }
 
           return;
 
@@ -3212,16 +3131,15 @@ async function startMatch(
           String(count);
 
 
+        updateRemotePlayers(
+          players
+        );
+
+
         updateScoreboard(
           players,
           data.playerOrder
         );
-
-        if(data.status === "active"){
-          updateRemotePlayers(
-            players
-          );
-        }
 
 
         const me =
@@ -3263,19 +3181,6 @@ async function startMatch(
           matchHasStarted =
             true;
 
-          preStart.style.display =
-            "none";
-
-          gameUI.style.display =
-            "block";
-
-          if(!scene){
-            setupScene();
-          }
-
-          gameStarted =
-            true;
-
         }
 
 
@@ -3285,7 +3190,14 @@ async function startMatch(
           !wasStarted
         ){
 
-          rebuildArena(currentSettings);
+          if(!scene){
+            setupScene();
+            gameUI.style.display = "block";
+            preStart.style.display = "none";
+            setCameraFromPlayer();
+          }else{
+            rebuildArena(currentSettings);
+          }
 
           if(localPlayer){
             const beforeY =
@@ -3367,14 +3279,7 @@ async function startMatch(
 
           );
 
-          setTimeout(
-            () => {
-              if(matchRef){
-                deleteMatch();
-              }
-            },
-            250
-          );
+          deleteMatch();
 
         }
 
@@ -3513,6 +3418,8 @@ function updateStartUI(data){
     preStart.style.display =
       "none";
 
+    if(scene) gameUI.style.display = "block";
+
     gameUI.classList.remove(
       "preStartMode"
     );
@@ -3520,22 +3427,15 @@ function updateStartUI(data){
     settingsModal.style.display =
       "none";
 
-    shareUrlModal.style.display =
-      "none";
-
     settingsModalOpen =
       false;
-
-    if(data.status === "active"){
-      gameUI.style.display = "block";
-    }
 
     return;
 
   }
 
 
-  gameUI.classList.add(
+  gameUI.classList.remove(
     "preStartMode"
   );
 
@@ -3610,9 +3510,7 @@ function updateRemotePlayers(
   players
 ){
 
-  if(!scene || !matchHasStarted){
-    return;
-  }
+  if(!scene) return;
 
   const seen =
     new Set();
@@ -5693,15 +5591,12 @@ function updateStartProgress(){
       !startHolding
     ){
 
-      startButton.classList.remove("holding");
-      startButton.dataset.progress = "0";
       startButton.style.setProperty(
         "--progress",
         "0%"
       );
-      startButton.querySelector("span").textContent = "START";
-      startButton.classList.remove("holding");
-      startButton.dataset.progress = "0";
+      const span = startButton.querySelector("span");
+      if(span) span.textContent = "START";
 
     }
 
@@ -5732,12 +5627,6 @@ function updateStartProgress(){
 
   );
 
-  startButton.classList.add("holding");
-  startButton.dataset.progress =
-    String(Math.floor(progress * 100));
-  startButton.querySelector("span").textContent =
-    `START ${Math.floor(progress * 100)}%`;
-
 
   if(
     progress >= 1
@@ -5746,12 +5635,12 @@ function updateStartProgress(){
     startHolding =
       false;
 
+    startButton.classList.remove("holding");
+
     startButton.style.setProperty(
       "--progress",
       "100%"
     );
-    startButton.querySelector("span").textContent = "START!";
-    startButton.classList.remove("holding");
 
 
     startMatchByHost();
@@ -6109,11 +5998,11 @@ function leaveCurrentMatch(){
   settingsModal.style.display =
     "none";
 
+  qrModal.style.display =
+    "none";
+
   settingsModalOpen =
     false;
-
-  shareUrlModal.style.display =
-    "none";
 
   statusEl.textContent =
     "";
@@ -6713,6 +6602,8 @@ function setupStartButton(){
       startHolding =
         true;
 
+      startButton.classList.add("holding");
+
       startHoldStart =
         performance.now();
 
@@ -6726,6 +6617,8 @@ function setupStartButton(){
 
       startHolding =
         false;
+
+      startButton.classList.remove("holding");
 
       startButton.style.setProperty(
         "--progress",
@@ -7066,29 +6959,16 @@ async function syncLocalPlayer(){
 }
 
 
-function getRoomCodeFromPath(){
-  const parts =
-    window.location.pathname.split("/").filter(Boolean);
-
-  if(parts.length === 2 && parts[0].toLowerCase() === "r"){
-    try{
-      return decodeURIComponent(parts[1]).trim().toUpperCase();
-    }catch(error){
-      return parts[1].trim().toUpperCase();
-    }
-  }
-
-  return "";
+const initialRouteMatch = location.pathname.match(/\/3Dfps\/r\/([^/]+)\/?$/i);
+if(initialRouteMatch){
+  const initialRouteCode = decodeURIComponent(initialRouteMatch[1]).toUpperCase();
+  matchCodeInput.value = initialRouteCode;
+  ensureAuth().then(()=>{
+    if(!gameStarted && !currentMatchId) joinMatch(initialRouteCode);
+  }).catch(error=>{
+    statusEl.textContent = "認証失敗：" + getFriendlyError(error);
+  });
 }
-
-async function enterRoomFromUrl(){
-  const roomCode = getRoomCodeFromPath();
-  if(!roomCode) return;
-
-  matchCodeInput.value = roomCode;
-  await joinMatch(roomCode);
-}
-
 
 matchButton.addEventListener(
   "click",
@@ -7097,27 +6977,14 @@ matchButton.addEventListener(
 
 shareCodeButton.addEventListener(
   "click",
-  openShareUrl
+  shareMatchCode
 );
 
-shareUrlButton.addEventListener(
-  "click",
-  shareMatchUrl
-);
-
-closeShareUrlButton.addEventListener(
-  "click",
-  closeShareUrl
-);
-
-shareUrlModal.addEventListener(
-  "pointerdown",
-  event => {
-    if(event.target === shareUrlModal){
-      closeShareUrl();
-    }
-  }
-);
+shareUrlButton.addEventListener("click",shareRoomUrl);
+closeQrButton.addEventListener("click",closeQrModal);
+qrModal.addEventListener("pointerdown",event=>{
+  if(event.target === qrModal) closeQrModal();
+});
 
 leaveRoomButton.addEventListener(
   "click",
@@ -7265,11 +7132,6 @@ try{
     getFriendlyError(error);
 
 }
-
-
-setTimeout(() => {
-  enterRoomFromUrl();
-}, 0);
 
 </script>
 
