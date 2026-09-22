@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.6.4. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.6.4 changes: switched room sharing from /r/room paths to a query-string URL so GitHub Pages serves the main HTML directly without a 404 page. Release 1.6.2 changes: restored the social-share subtitle metadata and kept the visible in-game version synchronized with the current version. Release 1.6.0 changes: fixed local room-setting persistence and START-time upload, added animated two-color edge gradients, added a forward-facing requirement to GRAB, deleted empty rooms during cleanup, and added configurable kill-streak boost with synchronized per-player streak state and HUD countdown. Previous release changes: added route-aware social/share descriptions for the original site and room links, and improved arena floor/wall/platform metal materials with subtle per-surface highlight variation while keeping the cold-color glowing edge treatment and avoiding floating lines. Previous release changes: changed the document title to 3Dfps, added icon.png as the site icon only, and restyled arena floor/walls/platforms with cold-color glowing edge outlines without adding floating lines. Previous release changes: added best-effort landscape orientation locking, reorganized the title screen, moved player name and mobile control preferences into the main settings, added movable-stick/sensitivity/right-tap settings, and made those preferences persist locally. Previous release changes: safer terrain-overlap spawn correction, more reliable code-screen scrolling, player-name entry, deferred terrain generation until START, and configurable max fire rate with a slower default medium rate. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
+<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.6.5. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.6.5 changes: added a dedicated immediate-loading screen for direct ?room= links so the room join state is shown before the normal top screen. Release 1.6.4 changes: switched room sharing from /r/room paths to a query-string URL so GitHub Pages serves the main HTML directly without a 404 page. Release 1.6.2 changes: restored the social-share subtitle metadata and kept the visible in-game version synchronized with the current version. Release 1.6.0 changes: fixed local room-setting persistence and START-time upload, added animated two-color edge gradients, added a forward-facing requirement to GRAB, deleted empty rooms during cleanup, and added configurable kill-streak boost with synchronized per-player streak state and HUD countdown. Previous release changes: added route-aware social/share descriptions for the original site and room links, and improved arena floor/wall/platform metal materials with subtle per-surface highlight variation while keeping the cold-color glowing edge treatment and avoiding floating lines. Previous release changes: changed the document title to 3Dfps, added icon.png as the site icon only, and restyled arena floor/walls/platforms with cold-color glowing edge outlines without adding floating lines. Previous release changes: added best-effort landscape orientation locking, reorganized the title screen, moved player name and mobile control preferences into the main settings, added movable-stick/sensitivity/right-tap settings, and made those preferences persist locally. Previous release changes: safer terrain-overlap spawn correction, more reliable code-screen scrolling, player-name entry, deferred terrain generation until START, and configurable max fire rate with a slower default medium rate. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
 <title>3Dfps</title>
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
@@ -19,6 +19,16 @@
 <meta name="twitter:title" content="3Dfps">
 <meta name="twitter:description" content="シンプルなfpsゲームで、firebaseを利用して通信しています">
 <meta name="twitter:image" content="/3Dfps/icon.png">
+<script>
+(function(){
+  try{
+    const room = new URLSearchParams(location.search).get("room");
+    if(room && room.trim()){
+      document.documentElement.classList.add("roomJoinMode");
+    }
+  }catch(error){}
+})();
+</script>
 
 <style>
 *{
@@ -148,6 +158,63 @@ canvas{
   text-align:center;
   color:#ffce66;
   font-size:14px;
+}
+
+#roomJoinScreen{
+  position:fixed;
+  inset:0;
+  z-index:1000;
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:18px;
+  padding:24px;
+  text-align:center;
+  color:#fff;
+  background:
+    radial-gradient(circle at 50% 35%,rgba(39,83,132,.82) 0%,rgba(16,27,42,.97) 42%,rgba(3,6,10,1) 100%);
+}
+
+html.roomJoinMode #menu,
+html.roomJoinMode #playerSettingsModal,
+html.roomJoinMode #qrModal,
+html.roomJoinMode #gameUI,
+html.roomJoinMode #preStart,
+html.roomJoinMode #roomJoinScreen{
+  display:none;
+}
+
+html.roomJoinMode #roomJoinScreen{
+  display:flex;
+}
+
+.roomJoinSpinner{
+  width:54px;
+  height:54px;
+  border:4px solid rgba(255,255,255,.16);
+  border-top-color:#fff;
+  border-right-color:rgba(110,190,255,.95);
+  border-radius:50%;
+  animation:roomJoinSpin .8s linear infinite;
+}
+
+@keyframes roomJoinSpin{
+  to{
+    transform:rotate(360deg);
+  }
+}
+
+#roomJoinText{
+  font-size:22px;
+  font-weight:900;
+  letter-spacing:.2px;
+}
+
+#roomJoinStatus{
+  min-height:20px;
+  font-size:13px;
+  opacity:.68;
 }
 
 #preStart{
@@ -856,6 +923,25 @@ canvas{
 
 <body>
 
+<div id="roomJoinScreen" aria-live="polite">
+  <div class="roomJoinSpinner" aria-hidden="true"></div>
+  <div id="roomJoinText">ルーム <span id="roomJoinCode">----</span> に参加中…</div>
+  <div id="roomJoinStatus">接続しています…</div>
+</div>
+
+<script>
+(function(){
+  try{
+    const room = new URLSearchParams(location.search).get("room");
+    if(room && room.trim()){
+      const code = room.trim().toUpperCase();
+      const el = document.getElementById("roomJoinCode");
+      if(el) el.textContent = code;
+    }
+  }catch(error){}
+})();
+</script>
+
 <div id="menu">
 
   <div class="menuBox">
@@ -863,7 +949,7 @@ canvas{
     <h1 class="title">3D FPS</h1>
 
     <div class="subtitle">
-      v1.6.2
+      v1.6.5
     </div>
 
     <input
@@ -1428,6 +1514,15 @@ const gameOver =
 
 const statusEl =
   document.getElementById("status");
+
+const roomJoinScreen =
+  document.getElementById("roomJoinScreen");
+
+const roomJoinCode =
+  document.getElementById("roomJoinCode");
+
+const roomJoinStatus =
+  document.getElementById("roomJoinStatus");
 
 const matchCodeInput =
   document.getElementById("matchCodeInput");
@@ -3212,6 +3307,9 @@ async function joinMatch(
 
   statusEl.textContent =
     "試合を確認中…";
+  if(directRoomJoin && roomJoinStatus){
+    roomJoinStatus.textContent = "試合を確認中…";
+  }
 
 
   try{
@@ -3431,6 +3529,7 @@ async function joinMatch(
 
       statusEl.textContent =
         "その試合は満員だよ。";
+      if(directRoomJoin && roomJoinStatus) roomJoinStatus.textContent = "その試合は満員だよ。";
 
     }else if(
       message ===
@@ -3439,12 +3538,14 @@ async function joinMatch(
 
       statusEl.textContent =
         "その試合はもう始まっているよ。";
+      if(directRoomJoin && roomJoinStatus) roomJoinStatus.textContent = "その試合はもう始まっているよ。";
 
     }else{
 
       statusEl.textContent =
         "参加/作成失敗：" +
         getFriendlyError(error);
+      if(directRoomJoin && roomJoinStatus) roomJoinStatus.textContent = statusEl.textContent;
 
     }
 
@@ -3552,6 +3653,11 @@ async function startMatch(
 
   gameOver.style.display =
     "none";
+
+  if(roomJoinScreen){
+    roomJoinScreen.style.display = "none";
+  }
+  document.documentElement.classList.remove("roomJoinMode");
 
   returnToBaseUrl();
 
@@ -6573,6 +6679,11 @@ function leaveCurrentMatch(){
   menu.style.display =
     "flex";
 
+  if(roomJoinScreen){
+    roomJoinScreen.style.display = "none";
+  }
+  document.documentElement.classList.remove("roomJoinMode");
+
   preStart.style.display =
     "none";
 
@@ -7601,13 +7712,18 @@ const initialQueryCode = new URLSearchParams(location.search).get("room");
 const initialRouteCode = initialQueryCode
   ? initialQueryCode.toUpperCase()
   : "";
+let directRoomJoin = Boolean(initialRouteCode);
 updatePageDescription(Boolean(initialQueryCode));
 if(initialRouteCode){
   matchCodeInput.value = initialRouteCode;
+  if(roomJoinCode) roomJoinCode.textContent = initialRouteCode;
+  if(roomJoinStatus) roomJoinStatus.textContent = "接続しています…";
   ensureAuth().then(()=>{
     if(!gameStarted && !currentMatchId) joinMatch(initialRouteCode);
   }).catch(error=>{
-    statusEl.textContent = "認証失敗：" + getFriendlyError(error);
+    const message = "認証失敗：" + getFriendlyError(error);
+    statusEl.textContent = message;
+    if(roomJoinStatus) roomJoinStatus.textContent = message;
   });
 }
 
