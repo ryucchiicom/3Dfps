@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.6.5. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.6.5 changes: added a dedicated immediate-loading screen for direct ?room= links so the room join state is shown before the normal top screen. Release 1.6.4 changes: switched room sharing from /r/room paths to a query-string URL so GitHub Pages serves the main HTML directly without a 404 page. Release 1.6.2 changes: restored the social-share subtitle metadata and kept the visible in-game version synchronized with the current version. Release 1.6.0 changes: fixed local room-setting persistence and START-time upload, added animated two-color edge gradients, added a forward-facing requirement to GRAB, deleted empty rooms during cleanup, and added configurable kill-streak boost with synchronized per-player streak state and HUD countdown. Previous release changes: added route-aware social/share descriptions for the original site and room links, and improved arena floor/wall/platform metal materials with subtle per-surface highlight variation while keeping the cold-color glowing edge treatment and avoiding floating lines. Previous release changes: changed the document title to 3Dfps, added icon.png as the site icon only, and restyled arena floor/walls/platforms with cold-color glowing edge outlines without adding floating lines. Previous release changes: added best-effort landscape orientation locking, reorganized the title screen, moved player name and mobile control preferences into the main settings, added movable-stick/sensitivity/right-tap settings, and made those preferences persist locally. Previous release changes: safer terrain-overlap spawn correction, more reliable code-screen scrolling, player-name entry, deferred terrain generation until START, and configurable max fire rate with a slower default medium rate. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
+<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.7.0. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.7.0 changes: implemented the accepted first 3Dfps planning-meeting features: random matchmaking lobby, member-lock countdown with offline mini-game and ready-up, synchronized five-second RULE phase, result/ranking view with random-match WP reward, connection-loss notice, animated ambient line UI treatment, floating terrain option, deterministic DYNAMIC hidden setting mode and rare time/date-weighted DYNAMIC rules. Previous release 1.6.5: added a dedicated immediate-loading screen for direct ?room= links so the room join state is shown before the normal top screen. Previous release 1.6.4: switched room sharing from /r/room paths to a query-string URL so GitHub Pages serves the main HTML directly without a 404 page. Previous release 1.6.2: restored the social-share subtitle metadata and kept the visible in-game version synchronized with the current version. Previous release 1.6.0: fixed local room-setting persistence and START-time upload, added animated two-color edge gradients, added a forward-facing requirement to GRAB, deleted empty rooms during cleanup, and added configurable kill-streak boost with synchronized per-player streak state and HUD countdown. Previous releases added route-aware social/share descriptions, metallic terrain variation, icon.png site icon support, the reorganized settings, safer spawn correction, deferred terrain generation, and max fire-rate settings. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
 <title>3Dfps</title>
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
@@ -918,10 +918,250 @@ html.roomJoinMode #roomJoinScreen{
   }
 
 }
+
+
+#ambientLines{
+  position:fixed;
+  inset:0;
+  z-index:2;
+  pointer-events:none;
+  overflow:hidden;
+  opacity:.34;
+  mix-blend-mode:screen;
+}
+
+.ambientLine{
+  position:absolute;
+  width:42vw;
+  height:2px;
+  border-radius:99px;
+  background:linear-gradient(90deg,transparent,rgba(84,221,255,.55),rgba(147,117,255,.65),transparent);
+  filter:blur(.15px);
+  opacity:.7;
+  transform-origin:center;
+  animation:ambientFloat var(--dur) linear infinite;
+  animation-delay:var(--delay);
+}
+
+@keyframes ambientFloat{
+  0%{transform:translate3d(var(--sx),var(--sy),0) rotate(var(--rot)) scaleX(.7);opacity:0;}
+  18%{opacity:.7;}
+  50%{transform:translate3d(calc(var(--sx) + 8vw),calc(var(--sy) - 6vh),0) rotate(calc(var(--rot) + 12deg)) scaleX(1);opacity:.75;}
+  82%{opacity:.48;}
+  100%{transform:translate3d(calc(var(--sx) + 18vw),calc(var(--sy) - 12vh),0) rotate(calc(var(--rot) + 24deg)) scaleX(.65);opacity:0;}
+}
+
+#roomMatchModal{
+  position:fixed;
+  inset:0;
+  z-index:210;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  background:rgba(0,0,0,.68);
+  backdrop-filter:blur(10px);
+  pointer-events:auto;
+}
+
+.roomMatchBox{
+  width:min(92vw,420px);
+  padding:22px;
+  border-radius:20px;
+  background:rgba(15,20,28,.97);
+  border:1px solid rgba(255,255,255,.14);
+  box-shadow:0 20px 80px rgba(0,0,0,.5);
+}
+
+#randomMatchScreen,#ruleScreen{
+  position:fixed;
+  inset:0;
+  z-index:70;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  background:radial-gradient(circle at 50% 30%,rgba(26,57,91,.92),rgba(5,9,15,.98) 70%);
+  color:#fff;
+  pointer-events:auto;
+}
+
+.lobbyCard,.ruleCard{
+  width:min(92vw,560px);
+  padding:24px;
+  border-radius:24px;
+  background:rgba(13,18,26,.84);
+  border:1px solid rgba(255,255,255,.13);
+  box-shadow:0 24px 100px rgba(0,0,0,.5);
+  text-align:center;
+  backdrop-filter:blur(18px);
+}
+
+.lobbyKicker{
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:2px;
+  opacity:.55;
+}
+
+.lobbyTitle,.ruleTitle{
+  margin-top:6px;
+  font-size:30px;
+  font-weight:900;
+}
+
+.lobbyPlayers{
+  margin-top:5px;
+  font-size:14px;
+  opacity:.7;
+}
+
+.matchingTimer{
+  margin:6px 0 12px;
+  font-size:18px;
+  font-variant-numeric:tabular-nums;
+  opacity:.8;
+}
+
+.miniGamePanel{
+  margin:12px auto;
+  padding:12px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.035);
+}
+
+.miniGameHeader{
+  display:flex;
+  justify-content:space-between;
+  font-size:11px;
+  opacity:.68;
+  letter-spacing:.5px;
+}
+
+#miniGameArea{
+  position:relative;
+  height:220px;
+  margin-top:8px;
+  border-radius:12px;
+  overflow:hidden;
+  background:radial-gradient(circle at 50% 50%,rgba(45,95,150,.2),rgba(0,0,0,.18));
+  border:1px solid rgba(255,255,255,.06);
+}
+
+#miniGameTarget{
+  position:absolute;
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  border:0;
+  background:radial-gradient(circle at 35% 35%,#fff,rgba(93,220,255,.95) 35%,rgba(124,105,255,.75) 70%,transparent 72%);
+  box-shadow:0 0 24px rgba(90,210,255,.5);
+  transform:translate(-50%,-50%);
+  pointer-events:auto;
+}
+
+#miniGameHint{
+  margin-top:8px;
+  font-size:11px;
+  opacity:.5;
+}
+
+#matchingStatusText{
+  min-height:20px;
+  margin:10px 0 4px;
+  font-size:13px;
+  opacity:.78;
+}
+
+.ruleRows{
+  margin-top:18px;
+  display:grid;
+  gap:7px;
+  text-align:left;
+}
+
+.ruleRow{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  padding:9px 12px;
+  border-radius:11px;
+  background:rgba(255,255,255,.055);
+  font-size:13px;
+}
+
+.ruleRow span:last-child{font-weight:900;}
+
+.ruleCountdown{
+  margin-top:18px;
+  font-size:58px;
+  font-weight:900;
+  line-height:1;
+  text-shadow:0 0 30px rgba(84,221,255,.5);
+}
+
+#connectionNotice{
+  position:fixed;
+  left:50%;
+  top:12px;
+  transform:translateX(-50%) translateY(-140%);
+  z-index:500;
+  padding:9px 14px;
+  border-radius:999px;
+  background:rgba(130,20,35,.92);
+  border:1px solid rgba(255,130,140,.45);
+  box-shadow:0 10px 40px rgba(0,0,0,.4);
+  color:#fff;
+  font-size:12px;
+  font-weight:900;
+  opacity:0;
+  transition:opacity .18s,transform .18s;
+  pointer-events:none;
+}
+
+#connectionNotice.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+
+.resultWp{
+  min-height:24px;
+  margin:0 0 10px;
+  font-size:18px;
+  font-weight:900;
+  color:#75e7ff;
+}
+
+.resultRanking{
+  max-height:180px;
+  overflow:auto;
+  margin:0 auto 16px;
+  padding:5px 0;
+  text-align:left;
+}
+
+.resultRankRow{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  padding:7px 10px;
+  border-radius:9px;
+  font-size:12px;
+}
+
+.resultRankRow:first-child{background:rgba(80,190,255,.13);}
+.resultRankRow span:last-child{font-variant-numeric:tabular-nums;font-weight:900;}
+
+.dynamicOption{grid-column:1 / span 3;font-size:14px;}
+.settingOptions.dynamicMode{grid-template-columns:repeat(4,1fr);}
+.dynamicStandard{grid-column:4;}
+
 </style>
 </head>
 
 <body>
+<div id="ambientLines" aria-hidden="true"></div>
 
 <div id="roomJoinScreen" aria-live="polite">
   <div class="roomJoinSpinner" aria-hidden="true"></div>
@@ -949,23 +1189,21 @@ html.roomJoinMode #roomJoinScreen{
     <h1 class="title">3D FPS</h1>
 
     <div class="subtitle">
-      v1.6.5
+      v1.7.0
     </div>
 
-    <input
-      id="matchCodeInput"
-      class="input"
-      maxlength="8"
-      placeholder="試合コード"
-      autocomplete="off"
-      spellcheck="false"
-    >
-
     <button
-      id="matchButton"
+      id="randomMatchButton"
       class="button"
     >
-      試合を作成/参加
+      ランダムマッチ
+    </button>
+
+    <button
+      id="roomMatchButton"
+      class="button secondary"
+    >
+      ルームマッチ
     </button>
 
     <button
@@ -986,6 +1224,22 @@ html.roomJoinMode #roomJoinScreen{
 
 </div>
 
+
+<div id="roomMatchModal">
+  <div class="roomMatchBox">
+    <h2 class="settingsTitle">ルームマッチ</h2>
+    <input
+      id="matchCodeInput"
+      class="input"
+      maxlength="8"
+      placeholder="試合コード（空欄で作成）"
+      autocomplete="off"
+      spellcheck="false"
+    >
+    <button id="matchButton" class="button">参加/作成</button>
+    <button id="closeRoomMatchButton" class="button secondary">閉じる</button>
+  </div>
+</div>
 
 <div id="playerSettingsModal">
   <div class="playerSettingsBox">
@@ -1039,6 +1293,36 @@ html.roomJoinMode #roomJoinScreen{
     <div id="qrUrlText"></div>
     <button id="shareUrlButton" class="button">リンクを共有</button>
     <button id="closeQrButton" class="button secondary">閉じる</button>
+  </div>
+</div>
+
+<div id="randomMatchScreen">
+  <div class="lobbyCard">
+    <div class="lobbyKicker">RANDOM MATCH</div>
+    <div class="lobbyTitle" id="matchingTitle">MATCHING...</div>
+    <div class="lobbyPlayers"><span id="matchingPlayerCount">0</span> / <span id="matchingMaxPlayers">8</span> PLAYERS</div>
+    <div class="matchingTimer" id="matchingTimer">--</div>
+    <div class="miniGamePanel">
+      <div class="miniGameHeader">
+        <span>MINI GAME</span>
+        <span>SCORE <b id="miniGameScore">0</b></span>
+      </div>
+      <div id="miniGameArea">
+        <button id="miniGameTarget" aria-label="ミニゲームターゲット"></button>
+      </div>
+      <div id="miniGameHint">待ち時間の暇つぶし。スコアは試合に影響しません。</div>
+    </div>
+    <div id="matchingStatusText">参加者を探しています…</div>
+    <button id="matchingActionButton" class="button secondary">マッチング終了を要求</button>
+  </div>
+</div>
+
+<div id="ruleScreen">
+  <div class="ruleCard">
+    <div class="lobbyKicker">RULE</div>
+    <div class="ruleTitle">今回のルール</div>
+    <div id="ruleRows" class="ruleRows"></div>
+    <div class="ruleCountdown" id="ruleCountdown">5</div>
   </div>
 </div>
 
@@ -1151,6 +1435,14 @@ html.roomJoinMode #roomJoinScreen{
         </div>
       </div>
 
+      <div class="settingRow" id="floatingTerrainRow">
+        <span class="settingLabel">宙に浮く地形</span>
+        <div class="settingOptions" data-setting="floatingTerrain">
+          <button class="settingOption selected" data-value="off">オフ</button>
+          <button class="settingOption" data-value="on">オン</button>
+        </div>
+      </div>
+
       <div class="settingRow">
         <span class="settingLabel">弾速</span>
         <div class="settingOptions" data-setting="bulletSpeed">
@@ -1242,6 +1534,8 @@ html.roomJoinMode #roomJoinScreen{
 
 </div>
 
+<div id="connectionNotice" aria-live="polite">● CONNECTION LOST</div>
+
 <div id="gameOver">
 
   <div class="gameOverBox">
@@ -1259,6 +1553,9 @@ html.roomJoinMode #roomJoinScreen{
     >
       ---
     </div>
+
+    <div id="resultWp" class="resultWp"></div>
+    <div id="resultRanking" class="resultRanking"></div>
 
     <button
       id="returnButton"
@@ -1294,7 +1591,12 @@ import {
   deleteDoc,
   onSnapshot,
   runTransaction,
-  serverTimestamp
+  serverTimestamp,
+  collection,
+  query,
+  where,
+  limit,
+  getDocs
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
 import * as THREE from
@@ -1415,6 +1717,7 @@ const MAX_HP = 100;
 const DEFAULT_SETTINGS = {
   terrainAmount: "medium",
   terrainHeight: "medium",
+  floatingTerrain: "off",
   bulletSpeed: "medium",
   fireRate: "medium",
   maxHp: 100,
@@ -1511,6 +1814,12 @@ const gameUI =
 
 const gameOver =
   document.getElementById("gameOver");
+
+const gameOverTitle =
+  document.getElementById("gameOverTitle");
+
+const gameOverText =
+  document.getElementById("gameOverText");
 
 const statusEl =
   document.getElementById("status");
@@ -7727,6 +8036,1160 @@ if(initialRouteCode){
   });
 }
 
+
+
+/* ================================================================
+   v1.7.0 FIRST PLANNING MEETING FEATURES
+   ================================================================ */
+
+const RANDOM_MAX_PLAYERS = 8;
+const RANDOM_MATCH_TIME = 20000;
+const PREPARE_TIME = 10000;
+const RULE_TIME = 5000;
+const MATCH_RESULT_DISPLAY = 10000;
+const DYNAMIC_TOP_VALUES = {
+  terrainAmount:"many",
+  terrainHeight:"high",
+  bulletSpeed:"fast",
+  fireRate:"fast",
+  hpRegen:"fast"
+};
+const DYNAMIC_BACKUPS = new Map();
+let matchMode = "room";
+let currentMatchData = null;
+let lastObservedStatus = null;
+let transitionBusy = false;
+let resultDeleteTimer = null;
+let randomMatchBusy = false;
+let miniGameRunning = false;
+let miniGameScoreValue = 0;
+let miniGameLastMove = 0;
+let audioContext = null;
+let ruleScreenVisible = false;
+let lastLobbyUiUpdate = 0;
+
+const randomMatchButton = document.getElementById("randomMatchButton");
+const roomMatchButton = document.getElementById("roomMatchButton");
+const closeRoomMatchButton = document.getElementById("closeRoomMatchButton");
+const roomMatchModal = document.getElementById("roomMatchModal");
+const randomMatchScreen = document.getElementById("randomMatchScreen");
+const matchingPlayerCount = document.getElementById("matchingPlayerCount");
+const matchingMaxPlayers = document.getElementById("matchingMaxPlayers");
+const matchingTimer = document.getElementById("matchingTimer");
+const matchingStatusText = document.getElementById("matchingStatusText");
+const matchingActionButton = document.getElementById("matchingActionButton");
+const miniGameArea = document.getElementById("miniGameArea");
+const miniGameTarget = document.getElementById("miniGameTarget");
+const miniGameScore = document.getElementById("miniGameScore");
+const ruleScreen = document.getElementById("ruleScreen");
+const ruleRows = document.getElementById("ruleRows");
+const ruleCountdown = document.getElementById("ruleCountdown");
+const connectionNotice = document.getElementById("connectionNotice");
+const resultWp = document.getElementById("resultWp");
+const resultRanking = document.getElementById("resultRanking");
+const floatingTerrainRow = document.getElementById("floatingTerrainRow");
+
+function showConnectionNotice(show = true){
+  if(!connectionNotice) return;
+  connectionNotice.classList.toggle("show",Boolean(show));
+  if(show) connectionNotice.textContent = navigator.onLine === false ? "● CONNECTION LOST" : "◌ RECONNECTING...";
+}
+
+window.addEventListener("offline",()=>showConnectionNotice(true));
+window.addEventListener("online",()=>showConnectionNotice(false));
+
+function prepareAudio(){
+  try{
+    if(!audioContext){
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if(audioContext.state === "suspended") audioContext.resume();
+  }catch(error){
+    audioContext = null;
+  }
+}
+
+function playNotifySound(frequency = 660, duration = .11){
+  try{
+    if(!audioContext) return false;
+    if(audioContext.state === "suspended") audioContext.resume();
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    osc.type = "sine";
+    osc.frequency.value = frequency;
+    gain.gain.setValueAtTime(.0001,audioContext.currentTime);
+    gain.gain.exponentialRampToValueAtTime(.09,audioContext.currentTime+.01);
+    gain.gain.exponentialRampToValueAtTime(.0001,audioContext.currentTime+duration);
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+    osc.start();
+    osc.stop(audioContext.currentTime+duration+.02);
+    return true;
+  }catch(error){
+    return false;
+  }
+}
+
+function notifyLobbyTransition(){
+  const played = playNotifySound(720,.13);
+  if(!played && navigator.vibrate) navigator.vibrate(80);
+}
+
+function initAmbientLines(){
+  const host = document.getElementById("ambientLines");
+  if(!host || host.children.length) return;
+  for(let i=0;i<15;i++){
+    const line = document.createElement("div");
+    line.className = "ambientLine";
+    line.style.setProperty("--sx",`${-20 + Math.random()*105}vw`);
+    line.style.setProperty("--sy",`${20 + Math.random()*78}vh`);
+    line.style.setProperty("--rot",`${-45 + Math.random()*90}deg`);
+    line.style.setProperty("--dur",`${9 + Math.random()*10}s`);
+    line.style.setProperty("--delay",`${-Math.random()*16}s`);
+    line.style.width = `${22 + Math.random()*28}vw`;
+    host.appendChild(line);
+  }
+}
+
+initAmbientLines();
+
+function loadLocalWP(){
+  try{
+    return Math.max(0,Number(localStorage.getItem("dfpsWP") || 0));
+  }catch(error){
+    return 0;
+  }
+}
+
+function addLocalWP(value){
+  const gain = Math.max(0,Number(value) || 0);
+  if(!gain) return loadLocalWP();
+  const next = loadLocalWP() + gain;
+  try{ localStorage.setItem("dfpsWP",String(next)); }catch(error){}
+  return next;
+}
+
+function formatSettingValue(key,value){
+  const maps = {
+    terrainAmount:{many:"多",medium:"中",few:"少",none:"なし",dynamic:"DYNAMIC"},
+    terrainHeight:{high:"高",medium:"中",low:"低",dynamic:"DYNAMIC"},
+    floatingTerrain:{on:"ON",off:"OFF"},
+    bulletSpeed:{infinite:"∞",fast:"速",medium:"中",slow:"遅",dynamic:"DYNAMIC"},
+    fireRate:{fast:"速",medium:"中",slow:"遅",dynamic:"DYNAMIC"},
+    maxHp:value=>String(value),
+    hpRegen:{fast:"速",medium:"中",slow:"遅",none:"なし",dynamic:"DYNAMIC"},
+    regenLock:value=>`${value}秒`,
+    killBoost:{on:"ON",off:"OFF"}
+  };
+  const entry = maps[key];
+  if(typeof entry === "function") return entry(value);
+  return entry?.[value] ?? String(value);
+}
+
+function renderRuleScreen(data){
+  const settings = normalizeSettings(data?.settings || DEFAULT_SETTINGS);
+  if(!ruleRows) return;
+  ruleRows.innerHTML = "";
+  const rows = [
+    ["地形",formatSettingValue("terrainAmount",settings.terrainAmount)],
+    ["高低差",formatSettingValue("terrainHeight",settings.terrainHeight)],
+    ["宙に浮く地形",formatSettingValue("floatingTerrain",settings.floatingTerrain)],
+    ["弾速",formatSettingValue("bulletSpeed",settings.bulletSpeed)],
+    ["最大連射速度",formatSettingValue("fireRate",settings.fireRate)],
+    ["最大HP",formatSettingValue("maxHp",settings.maxHp)],
+    ["HP自然回復",formatSettingValue("hpRegen",settings.hpRegen)],
+    ["連キルブースト",formatSettingValue("killBoost",settings.killBoost)],
+    ["プレイヤー",`${Object.keys(data?.players || {}).length}人`]
+  ];
+  for(const [label,value] of rows){
+    const row = document.createElement("div");
+    row.className = "ruleRow";
+    const a = document.createElement("span");
+    const b = document.createElement("span");
+    a.textContent = label;
+    b.textContent = value;
+    row.append(a,b);
+    ruleRows.appendChild(row);
+  }
+}
+
+function showRuleScreen(data){
+  ruleScreenVisible = true;
+  if(randomMatchScreen) randomMatchScreen.style.display = "none";
+  if(preStart) preStart.style.display = "none";
+  if(gameUI) gameUI.style.display = "none";
+  if(ruleScreen) ruleScreen.style.display = "flex";
+  renderRuleScreen(data);
+}
+
+function hideRuleScreen(){
+  ruleScreenVisible = false;
+  if(ruleScreen) ruleScreen.style.display = "none";
+}
+
+function deterministicNumber(seed){
+  let h = 2166136261 >>> 0;
+  const text = String(seed);
+  for(let i=0;i<text.length;i++){
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h,16777619) >>> 0;
+  }
+  return h / 4294967296;
+}
+
+function dailyDynamicProbability(key){
+  const now = new Date();
+  const day = Math.floor(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate())/86400000);
+  const dayPhase = deterministicNumber(`${day}:${key}`) * Math.PI * 2;
+  const hour = now.getHours() + now.getMinutes()/60 + now.getSeconds()/3600;
+  const wave = Math.pow(Math.max(0,Math.sin((hour/24)*Math.PI*2 + dayPhase)),8);
+  return .001 + .009 * wave;
+}
+
+function maybePickRareDynamic(settings){
+  const candidates = ["terrainAmount","terrainHeight","bulletSpeed","fireRate","hpRegen"];
+  const seeded = candidates
+    .map(key=>({key,p:dailyDynamicProbability(key),r:Math.random()}))
+    .filter(item=>item.r < item.p)
+    .sort((a,b)=>b.p-a.p);
+  if(seeded.length){
+    settings[seeded[0].key] = "dynamic";
+  }
+  return settings;
+}
+
+function weightedIndex(values,dayKey){
+  if(!values.length) return 0;
+  const seed = deterministicNumber(`${dayKey}:${new Date().toISOString().slice(0,10)}`);
+  const hour = new Date().getHours();
+  const offset = Math.sin((hour + seed*24)/24*Math.PI*2) * .18;
+  const raw = (Math.random() + offset + 1) % 1;
+  return Math.min(values.length-1,Math.floor(raw*values.length));
+}
+
+function chooseRandomRule(){
+  const settings = normalizeSettings(DEFAULT_SETTINGS);
+  const terrainAmounts = ["medium","medium","few","many","none"];
+  const terrainHeights = ["medium","medium","low","high"];
+  const bulletSpeeds = ["medium","medium","fast","slow","infinite"];
+  const fireRates = ["medium","medium","fast","slow"];
+  const hpRegen = ["none","none","slow","medium","fast"];
+  settings.terrainAmount = terrainAmounts[weightedIndex(terrainAmounts,"terrain")];
+  settings.terrainHeight = weightedIndex(terrainHeights,"height");
+  settings.terrainHeight = terrainHeights[settings.terrainHeight];
+  settings.bulletSpeed = bulletSpeeds[weightedIndex(bulletSpeeds,"bullet")];
+  settings.fireRate = fireRates[weightedIndex(fireRates,"fire")];
+  settings.maxHp = [100,100,125,150][weightedIndex([0,1,2,3],"hp")];
+  settings.hpRegen = hpRegen[weightedIndex(hpRegen,"regen")];
+  settings.regenLock = settings.hpRegen === "none" ? 0 : [0,1,2][weightedIndex([0,1,2],"regenLock")];
+  settings.killBoost = Math.random() < .28 ? "on" : "off";
+  settings.floatingTerrain = settings.terrainAmount !== "none" && Math.random() < .34 ? "on" : "off";
+  maybePickRareDynamic(settings);
+  return normalizeSettings(settings);
+}
+
+normalizeSettings = function(settings){
+  const source = settings && typeof settings === "object" ? settings : {};
+  const maxHp = clamp(Number(source.maxHp) || DEFAULT_SETTINGS.maxHp,1,9999);
+  const regenLock = clamp(Number(source.regenLock) || 0,0,9999);
+  const valid = (list,value,fallback) => list.includes(value) ? value : fallback;
+  return {
+    terrainAmount:valid(["many","medium","few","none","dynamic"],source.terrainAmount,DEFAULT_SETTINGS.terrainAmount),
+    terrainHeight:valid(["high","medium","low","dynamic"],source.terrainHeight,DEFAULT_SETTINGS.terrainHeight),
+    floatingTerrain:source.floatingTerrain === "on" ? "on" : DEFAULT_SETTINGS.floatingTerrain,
+    bulletSpeed:valid(["infinite","fast","medium","slow","dynamic"],source.bulletSpeed,DEFAULT_SETTINGS.bulletSpeed),
+    fireRate:valid(["fast","medium","slow","dynamic"],source.fireRate,DEFAULT_SETTINGS.fireRate),
+    maxHp,
+    hpRegen:valid(["fast","medium","slow","none","dynamic"],source.hpRegen,DEFAULT_SETTINGS.hpRegen),
+    regenLock,
+    killBoost:source.killBoost === "on" ? "on" : DEFAULT_SETTINGS.killBoost
+  };
+};
+
+getBulletSpeed = function(){
+  const setting = normalizeSettings(currentSettings).bulletSpeed;
+  if(setting === "infinite") return Infinity;
+  if(setting === "fast") return 70;
+  if(setting === "dynamic") return 140;
+  if(setting === "slow") return 24;
+  return BULLET_SPEED;
+};
+
+getFireInterval = function(){
+  const setting = normalizeSettings(currentSettings).fireRate;
+  let interval = FIRE_INTERVAL;
+  if(setting === "fast") interval = 260;
+  if(setting === "dynamic") interval = 130;
+  if(setting === "slow") interval = 500;
+  return interval / getBoostMultiplier();
+};
+
+getRegenRate = function(){
+  const setting = normalizeSettings(currentSettings).hpRegen;
+  if(setting === "fast") return 3;
+  if(setting === "dynamic") return 6;
+  if(setting === "medium") return 1.5;
+  if(setting === "slow") return .6;
+  return 0;
+};
+
+function getDynamicScale(setting,key){
+  if(setting !== "dynamic") return key === "height" ? 1 : 1;
+  if(key === "height") return 2.9;
+  return 2;
+}
+
+function roomSettingGroupIsDynamic(group){
+  return group?.dataset?.dynamicMode === "true";
+}
+
+function restoreDynamicGroup(group,key){
+  const backup = DYNAMIC_BACKUPS.get(key) || "medium";
+  DYNAMIC_BACKUPS.delete(key);
+  group.dataset.dynamicMode = "false";
+  group.classList.remove("dynamicMode");
+  const options = key === "terrainAmount" ? [["many","多"],["medium","中"],["few","少"],["none","なし"]]
+    : key === "terrainHeight" ? [["high","高"],["medium","中"],["low","低"]]
+    : key === "bulletSpeed" ? [["infinite","∞"],["fast","速"],["medium","中"],["slow","遅"]]
+    : key === "fireRate" ? [["fast","速"],["medium","中"],["slow","遅"]]
+    : [["fast","速"],["medium","中"],["slow","遅"],["none","なし"]];
+  group.innerHTML = "";
+  for(const [value,label] of options){
+    const button = document.createElement("button");
+    button.className = "settingOption";
+    button.dataset.value = value;
+    button.textContent = label;
+    if(value === backup) button.classList.add("selected");
+    group.appendChild(button);
+  }
+}
+
+function activateDynamicGroup(group,key){
+  const selected = group.querySelector(".settingOption.selected");
+  const backup = selected?.dataset?.value || DYNAMIC_TOP_VALUES[key] || "medium";
+  DYNAMIC_BACKUPS.set(key,backup);
+  group.dataset.dynamicMode = "true";
+  group.classList.add("dynamicMode");
+  group.innerHTML = "";
+  const dynamicButton = document.createElement("button");
+  dynamicButton.className = "settingOption selected dynamicOption";
+  dynamicButton.dataset.value = "dynamic";
+  dynamicButton.textContent = "DYNAMIC";
+  const standardButton = document.createElement("button");
+  standardButton.className = "settingOption dynamicStandard";
+  standardButton.dataset.value = "__standard";
+  standardButton.textContent = "標準…";
+  group.append(dynamicButton,standardButton);
+}
+
+function updateSettingsUI(settings){
+  const normalized = normalizeSettings(settings);
+  document.querySelectorAll("[data-setting]").forEach(group=>{
+    const key = group.dataset.setting;
+    const value = normalized[key];
+    if(value === "dynamic"){
+      if(!roomSettingGroupIsDynamic(group)) activateDynamicGroup(group,key);
+      return;
+    }
+    if(roomSettingGroupIsDynamic(group)) restoreDynamicGroup(group,key);
+    group.querySelectorAll(".settingOption").forEach(button=>button.classList.toggle("selected",button.dataset.value===value));
+  });
+  maxHpInput.value = String(normalized.maxHp);
+  regenLockInput.value = String(normalized.regenLock);
+  terrainHeightRow.classList.toggle("disabled",normalized.terrainAmount === "none");
+  floatingTerrainRow?.classList.toggle("disabled",normalized.terrainAmount === "none");
+  regenLockRow.classList.toggle("disabled",normalized.hpRegen === "none");
+}
+
+function readSettingsUI(){
+  const result = normalizeSettings(currentSettings || DEFAULT_SETTINGS);
+  document.querySelectorAll("[data-setting]").forEach(group=>{
+    const key = group.dataset.setting;
+    const selected = group.querySelector(".settingOption.selected");
+    if(selected && selected.dataset.value !== "__standard") result[key] = selected.dataset.value;
+  });
+  result.maxHp = clamp(Number(maxHpInput.value)||100,1,9999);
+  result.regenLock = clamp(Number(regenLockInput.value)||0,0,9999);
+  if(result.terrainAmount === "none") result.terrainHeight = "medium";
+  if(result.terrainAmount === "none") result.floatingTerrain = "off";
+  if(result.hpRegen === "none") result.regenLock = 0;
+  return normalizeSettings(result);
+}
+
+function openSettings(){
+  if(!matchRef || !isHost || matchHasStarted || matchMode !== "room") return;
+  currentSettings = loadSavedRoomSettings();
+  updateSettingsUI(currentSettings);
+  settingsModalOpen = true;
+  settingsModal.style.display = "flex";
+}
+
+function closeSettings(){
+  if(settingsModalOpen){
+    currentSettings = readSettingsUI();
+    saveRoomSettings(currentSettings);
+  }
+  settingsModalOpen = false;
+  settingsModal.style.display = "none";
+  updateSettingsUI(currentSettings || DEFAULT_SETTINGS);
+}
+
+function createArenaExtraPlatform(settings,platform,edgeColor){
+  const [width,height,depth,x,y,z] = platform;
+  return createBox(width,height,depth,x,y,z,createArenaMetalMaterial({color:0x233d58,metalness:.68,roughness:.29}),edgeColor);
+}
+
+createArena = function(settings = DEFAULT_SETTINGS){
+  if(!scene) return;
+  const normalized = normalizeSettings(settings);
+  const floorGeometry = new THREE.BoxGeometry(ARENA_SIZE,1,ARENA_SIZE);
+  const floorMaterial = createArenaMetalMaterial({color:0x172a3d,metalness:.68,roughness:.3});
+  const floor = new THREE.Mesh(floorGeometry,floorMaterial);
+  floor.position.y=-.5;
+  floor.receiveShadow=true;
+  floor.userData.isArena=true;
+  addNeonEdges(floor,0x55d9ff);
+  scene.add(floor);
+  colliders.push(floor);
+  const wallMaterial = createArenaMetalMaterial({color:0x101d31,metalness:.7,roughness:.28});
+  createBox(ARENA_SIZE,6,1,0,3,-ARENA_SIZE/2,wallMaterial,0x5fe4ff);
+  createBox(ARENA_SIZE,6,1,0,3,ARENA_SIZE/2,wallMaterial,0x8e7dff);
+  createBox(1,6,ARENA_SIZE,-ARENA_SIZE/2,3,0,wallMaterial,0x55d9ff);
+  createBox(1,6,ARENA_SIZE,ARENA_SIZE/2,3,0,wallMaterial,0xa078ff);
+  if(normalized.terrainAmount === "none") return;
+  const basePlatforms = [
+    [8,1.5,8,-15,.75,-10],[11,2,5,13,1,-8],[6,2.5,6,17,1.25,14],[10,1.5,5,-15,.75,15],
+    [5,2,12,0,1,17],[6,3.5,6,-15,1.75,-1],[7,4,7,4,2,-14],[7,4.5,7,16,2.25,2],
+    [5,.9,5,-4,.45,-5],[5,1.3,5,4,.65,-5],[5,1.7,5,10,.85,-5],[4,.7,4,-10,.35,-18],
+    [4,1.1,4,-4,.55,-18],[4,1.5,4,2,.75,-18],[4,1.9,4,8,.95,-18],[5,2.2,5,-18,1.1,8],
+    [6,2.8,5,5,1.4,8],[5,3.8,5,12,1.9,-17],[5,4.4,5,-5,2.2,18],[4,5,4,12,2.5,18],
+    [5,2.6,5,-20,1.3,-18],[5,3.2,5,20,1.6,-18],[6,2.2,4,-21,1.1,0],[6,3.8,4,21,1.9,0]
+  ];
+  const baseCount = normalized.terrainAmount === "many" ? basePlatforms.length : normalized.terrainAmount === "few" ? 7 : 14;
+  const amountCount = normalized.terrainAmount === "dynamic" ? basePlatforms.length * 2 : baseCount;
+  const heightScale = normalized.terrainHeight === "high" ? 1.45 : normalized.terrainHeight === "dynamic" ? 2.9 : normalized.terrainHeight === "low" ? .65 : 1;
+  let seed = 0;
+  for(const ch of String(currentMatchId || "")) seed = ((seed * 31) + ch.charCodeAt(0)) >>> 0;
+  const rand = ()=>{
+    seed = (Math.imul(seed,1664525)+1013904223)>>>0;
+    return seed/4294967296;
+  };
+  const count = Math.min(amountCount,basePlatforms.length);
+  for(let i=0;i<count;i++){
+    const [width,baseHeight,depth,x,baseY,z] = basePlatforms[i];
+    const height=Math.max(.45,baseHeight*heightScale);
+    const platform=createBox(width,height,depth,x,height/2,z,createArenaMetalMaterial({color:0x233d58,metalness:.66,roughness:.3}),i%2===0?0x55d9ff:0x9b7dff);
+    platform.userData.terrainPlatform=true;
+  }
+  if(normalized.terrainAmount === "dynamic"){
+    for(let i=count;i<Math.min(basePlatforms.length*2,48);i++){
+      const width=3.5+rand()*5.5;
+      const depth=3.5+rand()*5.5;
+      const height=.65+rand()*3.8;
+      const x=-25+rand()*50;
+      const z=-25+rand()*50;
+      const y=Math.max(height/2,.2 + rand()*(heightScale*4.8));
+      const platform=createArenaExtraPlatform(normalized,[width,height,depth,x,y,z],i%2===0?0x55d9ff:0x9b7dff);
+      platform.userData.terrainPlatform=true;
+    }
+  }
+  if(normalized.floatingTerrain === "on"){
+    const extraCount = normalized.terrainHeight === "high" || normalized.terrainHeight === "dynamic" ? 9 : 6;
+    for(let i=0;i<extraCount;i++){
+      const width=3.5+rand()*5;
+      const depth=3.5+rand()*5;
+      const height=.6+rand()*1.9;
+      const x=-23+rand()*46;
+      const z=-23+rand()*46;
+      const y=4.2+rand()*(normalized.terrainHeight === "dynamic" ? 11 : normalized.terrainHeight === "high" ? 8 : 5);
+      const platform=createArenaExtraPlatform(normalized,[width,height,depth,x,y,z],i%2===0?0x55d9ff:0x9b7dff);
+      platform.userData.terrainPlatform=true;
+    }
+  }
+};
+
+function createPlayerForMatch(user, settings, order, spawnOverride=null){
+  const spawn = spawnOverride || randomSpawn(settings);
+  return {
+    uid:user.uid,
+    name:getPlayerName(),
+    x:spawn.x,
+    y:spawn.y,
+    z:spawn.z,
+    yaw:0,
+    pitch:0,
+    hp:normalizeSettings(settings).maxHp,
+    kills:0,
+    killStreak:0,
+    lastKillAt:0,
+    alive:true,
+    lastActiveAt:Date.now(),
+    lastDamageAt:0,
+    matchEndRequested:false,
+    ready:false,
+    joinOrder:order
+  };
+}
+
+async function createMatch(requestedCode=""){
+  statusEl.textContent="試合を作成中…";
+  try{
+    const user=await ensureAuth();
+    let code=String(requestedCode || "").trim().toUpperCase();
+    if(!code){
+      for(let attempt=0;attempt<20;attempt++){
+        const candidate=randomCode();
+        const snap=await getDoc(doc(db,"matches",candidate));
+        if(!snap.exists()){ code=candidate; break; }
+      }
+    }
+    if(!code) throw new Error("試合コードを作成できませんでした。");
+    const settings=loadSavedRoomSettings();
+    const ref=doc(db,"matches",code);
+    await runTransaction(db,async transaction=>{
+      const snap=await transaction.get(ref);
+      if(snap.exists()) throw new Error("ALREADY_EXISTS");
+      transaction.set(ref,{
+        hostUid:user.uid,matchType:"room",status:"waiting",winnerUid:null,createdAt:serverTimestamp(),startedAt:null,
+        ruleStartedAt:null,ruleEndsAt:null,startedPlayerCount:1,settings,
+        playerOrder:[user.uid],players:{[user.uid]:createPlayerForMatch(user,settings,0)}
+      });
+    });
+    isHost=true;
+    matchMode="room";
+    await startMatch(code);
+  }catch(error){
+    console.error(error);
+    if(error?.message==="ALREADY_EXISTS"){ await joinMatch(requestedCode); return; }
+    statusEl.textContent="作成失敗："+getFriendlyError(error);
+  }
+}
+
+async function joinMatch(codeOverride=""){
+  const code=String(codeOverride || matchCodeInput.value || "").trim().toUpperCase();
+  if(!code){ await createMatch(""); return; }
+  if(directRoomJoin && roomJoinStatus) roomJoinStatus.textContent="試合を確認中…";
+  statusEl.textContent="試合を確認中…";
+  try{
+    const user=await ensureAuth();
+    const ref=doc(db,"matches",code);
+    const existing=await getDoc(ref);
+    if(!existing.exists()){ await createMatch(code); return; }
+    const existingData=existing.data();
+    if(existingData.status !== "waiting" || existingData.matchType === "random") throw new Error("STARTED");
+    await runTransaction(db,async transaction=>{
+      const snap=await transaction.get(ref);
+      if(!snap.exists()) throw new Error("NOT_FOUND");
+      const data=snap.data();
+      if(data.status!=="waiting" || data.matchType==="random") throw new Error("STARTED");
+      const players={...(data.players||{})};
+      if(players[user.uid]) return;
+      const playerOrder=Array.isArray(data.playerOrder)?[...data.playerOrder]:Object.keys(players);
+      if(Object.keys(players).length>=8) throw new Error("FULL");
+      players[user.uid]=createPlayerForMatch(user,normalizeSettings(data.settings),playerOrder.length);
+      playerOrder.push(user.uid);
+      players[user.uid].joinOrder=playerOrder.length-1;
+      transaction.update(ref,{players,playerOrder});
+    });
+    isHost=false; matchMode="room"; await startMatch(code);
+  }catch(error){
+    console.error(error);
+    const message=error?.message||"";
+    if(message==="NOT_FOUND"){ await createMatch(code); }
+    else if(message==="FULL"){ statusEl.textContent="その試合は満員だよ。"; if(directRoomJoin&&roomJoinStatus)roomJoinStatus.textContent="その試合は満員だよ。"; }
+    else if(message==="STARTED"){ statusEl.textContent="その試合はもう始まっているよ。"; if(directRoomJoin&&roomJoinStatus)roomJoinStatus.textContent="その試合はもう始まっているよ。"; }
+    else { statusEl.textContent="参加/作成失敗："+getFriendlyError(error); if(directRoomJoin&&roomJoinStatus)roomJoinStatus.textContent=statusEl.textContent; }
+  }
+}
+
+async function findOrCreateRandomMatch(){
+  if(randomMatchBusy) return;
+  randomMatchBusy=true;
+  try{
+    const user=await ensureAuth();
+    const candidates=await getDocs(query(collection(db,"matches"),where("status","==","matching"),limit(10)));
+    const sorted=candidates.docs
+      .map(snap=>({ref:snap.ref,data:snap.data()}))
+      .filter(item=>Number(item.data.matchingDeadline||0)>Date.now() && Object.keys(item.data.players||{}).length<RANDOM_MAX_PLAYERS)
+      .sort((a,b)=>Number(a.data.createdAt?.seconds||0)-Number(b.data.createdAt?.seconds||0));
+    for(const candidate of sorted){
+      try{
+        await runTransaction(db,async transaction=>{
+          const snap=await transaction.get(candidate.ref);
+          if(!snap.exists()) throw new Error("RETRY");
+          const data=snap.data();
+          const players={...(data.players||{})};
+          if(data.status!=="matching" || Number(data.matchingDeadline||0)<=Date.now() || Object.keys(players).length>=RANDOM_MAX_PLAYERS) throw new Error("RETRY");
+          if(!players[user.uid]){
+            const order=Array.isArray(data.playerOrder)?[...data.playerOrder]:Object.keys(players);
+            players[user.uid]=createPlayerForMatch(user,DEFAULT_SETTINGS,order.length);
+            order.push(user.uid);
+            players[user.uid].joinOrder=order.length-1;
+            transaction.update(candidate.ref,{players,playerOrder:order});
+          }
+        });
+        isHost=false; matchMode="random"; await startMatch(candidate.ref.id); return;
+      }catch(error){
+        if(error?.message!=="RETRY") throw error;
+      }
+    }
+    const code=randomCode(8);
+    const ref=doc(db,"matches",code);
+    const deadline=Date.now()+RANDOM_MATCH_TIME;
+    const player=createPlayerForMatch(user,DEFAULT_SETTINGS,0);
+    await runTransaction(db,async transaction=>{
+      const snap=await transaction.get(ref);
+      if(snap.exists()) throw new Error("RETRY_CREATE");
+      transaction.set(ref,{
+        hostUid:user.uid,matchType:"random",status:"matching",winnerUid:null,createdAt:serverTimestamp(),startedAt:null,
+        matchingDeadline:deadline,maxPlayers:RANDOM_MAX_PLAYERS,startedPlayerCount:1,settings:null,
+        playerOrder:[user.uid],players:{[user.uid]:player}
+      });
+    });
+    isHost=true; matchMode="random"; await startMatch(code);
+  }finally{
+    randomMatchBusy=false;
+  }
+}
+
+async function startRandomMatch(){
+  prepareAudio();
+  menu.style.display="none";
+  roomMatchModal.style.display="none";
+  randomMatchScreen.style.display="flex";
+  matchingMaxPlayers.textContent=String(RANDOM_MAX_PLAYERS);
+  matchingPlayerCount.textContent="1";
+  matchingTimer.textContent="--";
+  matchingStatusText.textContent="参加者を探しています…";
+  matchingActionButton.style.display="block";
+  startMiniGame();
+  try{
+    await findOrCreateRandomMatch();
+  }catch(error){
+    console.error("random matchmaking error",error);
+    stopMiniGame();
+    matchingStatusText.textContent="マッチングに失敗しました。";
+    statusEl.textContent="ランダムマッチ失敗："+getFriendlyError(error);
+  }
+}
+
+function openRoomMatch(){
+  roomMatchModal.style.display="flex";
+  matchCodeInput.value="";
+  setTimeout(()=>matchCodeInput.focus(),30);
+}
+
+function closeRoomMatch(){ roomMatchModal.style.display="none"; }
+
+function startMiniGame(){
+  miniGameRunning=true;
+  miniGameScoreValue=0;
+  miniGameScore.textContent="0";
+  moveMiniGameTarget();
+}
+
+function stopMiniGame(){ miniGameRunning=false; }
+
+function moveMiniGameTarget(){
+  if(!miniGameRunning) return;
+  const rect=miniGameArea.getBoundingClientRect();
+  const pad=24;
+  const x=pad+Math.random()*Math.max(1,rect.width-pad*2);
+  const y=pad+Math.random()*Math.max(1,rect.height-pad*2);
+  miniGameTarget.style.left=`${x}px`;
+  miniGameTarget.style.top=`${y}px`;
+  miniGameLastMove=performance.now();
+}
+
+miniGameTarget?.addEventListener("pointerdown",event=>{
+  event.preventDefault();
+  if(!miniGameRunning) return;
+  miniGameScoreValue++;
+  miniGameScore.textContent=String(miniGameScoreValue);
+  moveMiniGameTarget();
+});
+
+async function requestRandomFinish(){
+  if(!matchRef || matchMode!=="random" || !currentUser) return;
+  try{
+    await runTransaction(db,async transaction=>{
+      const snap=await transaction.get(matchRef);
+      if(!snap.exists()) return;
+      const data=snap.data();
+      if(data.status!=="matching") return;
+      const players={...(data.players||{})};
+      if(!players[currentUser.uid]) return;
+      players[currentUser.uid]={...players[currentUser.uid],matchEndRequested:true};
+      transaction.update(matchRef,{players});
+    });
+  }catch(error){ console.error("matching request error",error); }
+}
+
+async function requestPrepareReady(){
+  if(!matchRef || matchMode!=="random" || !currentUser) return;
+  try{
+    await runTransaction(db,async transaction=>{
+      const snap=await transaction.get(matchRef);
+      if(!snap.exists()) return;
+      const data=snap.data();
+      if(data.status!=="preparing") return;
+      const players={...(data.players||{})};
+      if(!players[currentUser.uid]) return;
+      players[currentUser.uid]={...players[currentUser.uid],ready:true};
+      transaction.update(matchRef,{players});
+    });
+  }catch(error){ console.error("ready request error",error); }
+}
+
+async function finalizeRandomMatch(){
+  if(!matchRef || matchMode!=="random" || transitionBusy) return;
+  transitionBusy=true;
+  try{
+    await runTransaction(db,async transaction=>{
+      const snap=await transaction.get(matchRef);
+      if(!snap.exists()) return;
+      const data=snap.data();
+      if(data.status!=="matching") return;
+      const players={...(data.players||{})};
+      const ids=Object.keys(players);
+      if(!ids.length) return;
+      const full=ids.length>=Number(data.maxPlayers||RANDOM_MAX_PLAYERS);
+      const expired=Number(data.matchingDeadline||0)>0 && Date.now()>=Number(data.matchingDeadline);
+      const allRequested=ids.every(uid=>players[uid]?.matchEndRequested===true);
+      if(!(full||expired||allRequested)) return;
+      const settings=chooseRandomRule();
+      Object.keys(players).forEach(uid=>players[uid]={...players[uid],ready:false,matchEndRequested:false});
+      transaction.update(matchRef,{status:"preparing",settings,players,membersLockedAt:Date.now(),readyDeadline:Date.now()+PREPARE_TIME,startedPlayerCount:ids.length});
+    });
+  }catch(error){ console.error("random finalize error",error); }
+  finally{ transitionBusy=false; }
+}
+
+async function advancePreparingToRule(){
+  if(!matchRef || matchMode!=="random" || transitionBusy || !currentMatchData || currentMatchData.status!=="preparing") return;
+  const players=currentMatchData.players||{};
+  const ids=Object.keys(players);
+  const allReady=ids.length>0 && ids.every(uid=>players[uid]?.ready===true);
+  const expired=Number(currentMatchData.readyDeadline||0)>0 && Date.now()>=Number(currentMatchData.readyDeadline);
+  if(!allReady && !expired) return;
+  transitionBusy=true;
+  try{
+    await runTransaction(db,async transaction=>{
+      const snap=await transaction.get(matchRef);
+      if(!snap.exists() || snap.data().status!=="preparing") return;
+      transaction.update(matchRef,{status:"rule",ruleStartedAt:Date.now(),ruleEndsAt:Date.now()+RULE_TIME});
+    });
+  }catch(error){ console.error("preparing advance error",error); }
+  finally{ transitionBusy=false; }
+}
+
+async function advanceRuleToActive(){
+  if(!matchRef || transitionBusy || !currentMatchData || currentMatchData.status!=="rule") return;
+  if(Date.now() < Number(currentMatchData.ruleEndsAt||0)) return;
+  transitionBusy=true;
+  try{
+    await runTransaction(db,async transaction=>{
+      const snap=await transaction.get(matchRef);
+      if(!snap.exists()) return;
+      const data=snap.data();
+      if(data.status!=="rule" || Date.now()<Number(data.ruleEndsAt||0)) return;
+      const settings=normalizeSettings(data.settings);
+      const players={...(data.players||{})};
+      for(const player of Object.values(players)){
+        const spawn=randomSpawn(settings);
+        player.x=spawn.x; player.y=spawn.y; player.z=spawn.z;
+        player.hp=settings.maxHp; player.alive=true; player.kills=0; player.killStreak=0; player.lastKillAt=0; player.lastDamageAt=0; player.lastActiveAt=Date.now(); player.ready=false; player.matchEndRequested=false;
+      }
+      transaction.update(matchRef,{players,settings,status:"active",winnerUid:null,startedAt:serverTimestamp(),startedProtectionUntil:Date.now()+START_PROTECTION_TIME,startedPlayerCount:Number(data.startedPlayerCount||Object.keys(players).length)});
+    });
+  }catch(error){ console.error("rule advance error",error); }
+  finally{ transitionBusy=false; }
+}
+
+function updateRandomScreen(data,now=Date.now()){
+  if(!data || matchMode!=="random" || !randomMatchScreen) return;
+  const players=data.players||{};
+  const count=Object.keys(players).length;
+  matchingPlayerCount.textContent=String(count);
+  matchingMaxPlayers.textContent=String(Number(data.maxPlayers||RANDOM_MAX_PLAYERS));
+  if(data.status==="matching"){
+    const remain=Math.max(0,Math.ceil((Number(data.matchingDeadline||0)-now)/1000));
+    matchingTimer.textContent=remain>0?`${remain}s`:"0s";
+    const reqCount=Object.values(players).filter(p=>p?.matchEndRequested).length;
+    matchingStatusText.textContent=reqCount?`${reqCount} / ${count} 人がマッチング終了を要求`:`参加者を探しています…`;
+    matchingActionButton.textContent=players[currentUser?.uid]?.matchEndRequested?"要求済み":"マッチング終了を要求";
+    matchingActionButton.style.opacity=players[currentUser?.uid]?.matchEndRequested ? ".55" : "1";
+    matchingActionButton.disabled=Boolean(players[currentUser?.uid]?.matchEndRequested);
+    return;
+  }
+  if(data.status==="preparing"){
+    const remain=Math.max(0,Math.ceil((Number(data.readyDeadline||0)-now)/1000)-1);
+    const readyCount=Object.values(players).filter(p=>p?.ready).length;
+    matchingTimer.textContent=`${remain}s`;
+    matchingStatusText.textContent=`メンバーが決定、${remain}秒後に強制スタート`;
+    matchingActionButton.textContent=players[currentUser?.uid]?.ready?"準備OK ✓":"準備OK";
+    matchingActionButton.disabled=Boolean(players[currentUser?.uid]?.ready);
+    matchingActionButton.style.opacity=players[currentUser?.uid]?.ready ? ".55" : "1";
+    if(readyCount===count && count>0) matchingStatusText.textContent="全員準備OK！まもなくRULE…";
+  }
+}
+
+function sortResultPlayers(players,order=[]){
+  return Object.entries(players||{}).sort((a,b)=>{
+    const ak=Number(a[1]?.kills||0), bk=Number(b[1]?.kills||0);
+    if(bk!==ak) return bk-ak;
+    const ao=order.indexOf(a[0]), bo=order.indexOf(b[0]);
+    return (ao<0?999999:ao)-(bo<0?999999:bo);
+  });
+}
+
+function showResult(data){
+  const players=data?.players||{};
+  const order=Array.isArray(data?.playerOrder)?data.playerOrder:[];
+  const winnerUid=data?.winnerUid || "";
+  gameOver.style.display="flex";
+  gameOverTitle.textContent = winnerUid===currentUser?.uid ? "VICTORY" : "RESULT";
+  preStart.style.display="none";
+  ruleScreen.style.display="none";
+  randomMatchScreen.style.display="none";
+  gameUI.style.display="none";
+  const winnerName=winnerUid && players[winnerUid]?.name ? players[winnerUid].name : "勝者なし";
+  gameOverText.textContent=winnerUid===currentUser?.uid ? "YOU WIN!" : `${winnerName} の勝利！`;
+  const random=data?.matchType==="random";
+  const gain=random && winnerUid===currentUser?.uid ? Number(data.startedPlayerCount||Object.keys(players).length) : 0;
+  resultWp.textContent=gain>0?`+${gain} WP`:random?"0 WP":"";
+  if(gain>0) addLocalWP(gain);
+  resultRanking.innerHTML="";
+  sortResultPlayers(players,order).forEach(([uid,player],index)=>{
+    const row=document.createElement("div");
+    row.className="resultRankRow";
+    const left=document.createElement("span");
+    const right=document.createElement("span");
+    left.textContent=`${index+1}位 ${uid===currentUser?.uid?"YOU":player.name||"PLAYER"}`;
+    right.textContent=`${Number(player.kills||0)} KILL${Number(player.kills||0)===1?"":"S"}`;
+    row.append(left,right);
+    resultRanking.appendChild(row);
+  });
+}
+
+function finishLocalGame(text,data=null){
+  if(gameEnded && !data) return;
+  gameEnded=true;
+  gameStarted=false;
+  if(data){
+    showResult(data);
+  }else{
+    gameOver.style.display="flex";
+    gameOverTitle.textContent="試合終了";
+    gameOverText.textContent=text || "試合終了";
+    resultWp.textContent="";
+    resultRanking.innerHTML="";
+    preStart.style.display="none";
+    randomMatchScreen.style.display="none";
+    ruleScreen.style.display="none";
+  }
+}
+
+async function startMatch(code){
+  currentMatchId=code;
+  matchRef=doc(db,"matches",code);
+  gameOver.style.display="none";
+  resultWp.textContent="";
+  resultRanking.innerHTML="";
+  gameStarted=true;
+  gameEnded=false;
+  matchHasStarted=false;
+  scene=null; camera=null; renderer=null; raycaster=null;
+  colliders.length=0;
+  neonEdgeMaterials.clear();
+  for(const uid of playerMeshes.keys()) removeRemoteMesh(uid);
+  for(const id of bullets.keys()) removeBullet(id);
+  currentMatchData=null;
+  lastObservedStatus=null;
+  if(unsubscribeMatch){ unsubscribeMatch(); unsubscribeMatch=null; }
+  const first=await getDoc(matchRef);
+  if(!first.exists()) throw new Error("試合が見つかりません。");
+  const firstData=first.data();
+  matchMode=firstData.matchType==="random"?"random":"room";
+  currentSettings=normalizeSettings(firstData.settings || DEFAULT_SETTINGS);
+  const me=firstData.players?.[currentUser.uid];
+  if(!me) throw new Error("プレイヤーデータがありません。");
+  localPlayer={...me};
+  localKills=Number(me.kills||0);
+  cameraState.yaw=Number(me.yaw||0); cameraState.pitch=Number(me.pitch||0);
+  roomText.textContent=code;
+  preStartRoomCode.textContent=code;
+  menu.style.display="none";
+  roomMatchModal.style.display="none";
+  if(directRoomJoin) returnToBaseUrl();
+  if(matchMode==="room"){
+    preStart.style.display=firstData.status==="waiting"?"flex":"none";
+    randomMatchScreen.style.display="none";
+  }else{
+    randomMatchScreen.style.display="flex";
+    preStart.style.display="none";
+    startMiniGame();
+  }
+  unsubscribeMatch=onSnapshot(matchRef,snapshot=>{
+    if(!snapshot.exists()){
+      showConnectionNotice(true);
+      if(gameEnded) return;
+      leaveCurrentMatch();
+      return;
+    }
+    showConnectionNotice(false);
+    const data=snapshot.data();
+    currentMatchData=data;
+    isHost=data.hostUid===currentUser.uid;
+    const previousStatus=lastObservedStatus;
+    lastObservedStatus=data.status;
+    currentSettings=normalizeSettings(data.settings || currentSettings || DEFAULT_SETTINGS);
+    const players=data.players||{};
+    const meLatest=players[currentUser.uid];
+    if(meLatest){ localPlayer={...localPlayer,...meLatest}; localKills=Number(meLatest.kills||0); }
+    playerCountText.textContent=String(Object.keys(players).length);
+    if(data.status==="active"){
+      matchHasStarted=true;
+      if(!scene){
+        setupScene();
+        createArena(currentSettings);
+        gameUI.style.display="block";
+        preStart.style.display="none";
+        randomMatchScreen.style.display="none";
+        hideRuleScreen();
+        setCameraFromPlayer();
+        liftPlayerOutOfTerrain(localPlayer,currentSettings);
+        grounded=true;
+      }
+      updateRemotePlayers(players);
+      updateScoreboard(players,data.playerOrder);
+      updateLocalHUD();
+      updateStartUI(data);
+    }else if(data.status==="matching" || data.status==="preparing"){
+      matchHasStarted=false;
+      gameUI.style.display="none";
+      hideRuleScreen();
+      preStart.style.display="none";
+      randomMatchScreen.style.display="flex";
+      if(previousStatus==="matching" && data.status==="preparing") notifyLobbyTransition();
+      updateRandomScreen(data);
+    }else if(data.status==="rule"){
+      matchHasStarted=false;
+      stopMiniGame();
+      gameUI.style.display="none";
+      preStart.style.display="none";
+      randomMatchScreen.style.display="none";
+      if(previousStatus!=="rule") notifyLobbyTransition();
+      showRuleScreen(data);
+    }else if(data.status==="waiting"){
+      matchHasStarted=false;
+      gameUI.style.display="none";
+      randomMatchScreen.style.display="none";
+      hideRuleScreen();
+      preStart.style.display="flex";
+      updateStartUI(data);
+    }else if(data.status==="ended"){
+      matchHasStarted=false;
+      stopMiniGame();
+      showResult(data);
+      if(isHost && !resultDeleteTimer){
+        resultDeleteTimer=setTimeout(()=>{resultDeleteTimer=null;deleteMatch();},MATCH_RESULT_DISPLAY);
+      }
+    }
+    checkMatchCleanup(data);
+  },error=>{
+    console.error(error);
+    showConnectionNotice(true);
+    if(gameStarted && !gameEnded) finishLocalGame("通信エラーが発生しました。");
+  });
+  if(!gameLoopStarted){ gameLoopStarted=true; requestAnimationFrame(gameLoop); }
+}
+
+function updateStartUI(data){
+  if(!data) return;
+  if(data.status!=="waiting"){
+    preStart.style.display="none";
+    gameUI.style.display=scene && data.status==="active"?"block":"none";
+    settingsModal.style.display="none";
+    settingsModalOpen=false;
+    return;
+  }
+  gameUI.style.display="none";
+  preStart.style.display="flex";
+  preStartRoomCode.textContent=currentMatchId||"----";
+  preStartText.textContent=isHost?"部屋主がSTARTを長押しして開始":"部屋主のSTART待ち";
+  startButton.style.opacity=isHost?"1":".35";
+  startButton.style.pointerEvents=isHost?"auto":"none";
+  settingsButton.style.opacity=isHost?"1":".35";
+  settingsButton.style.pointerEvents=isHost?"auto":"none";
+  updateSettingsUI(currentSettings);
+}
+
+function startMatchByHost(){
+  if(!isHost || !matchRef || matchHasStarted || matchMode!=="room") return;
+  runTransaction(db,async transaction=>{
+    const snap=await transaction.get(matchRef);
+    if(!snap.exists()) return;
+    const data=snap.data();
+    if(data.status!=="waiting") return;
+    const settings=normalizeSettings(readSettingsUI());
+    saveRoomSettings(settings);
+    const players={...(data.players||{})};
+    Object.values(players).forEach(player=>{
+      const spawn=randomSpawn(settings);
+      player.x=spawn.x; player.y=spawn.y; player.z=spawn.z;
+      player.hp=settings.maxHp; player.alive=true; player.kills=0; player.killStreak=0; player.lastKillAt=0; player.lastDamageAt=0; player.ready=false; player.matchEndRequested=false; player.lastActiveAt=Date.now();
+    });
+    transaction.update(matchRef,{players,settings,status:"rule",ruleStartedAt:Date.now(),ruleEndsAt:Date.now()+RULE_TIME,startedPlayerCount:Object.keys(players).length,winnerUid:null});
+  }).catch(error=>console.error("start error",error));
+}
+
+function updateRuleScreenCountdown(data,now){
+  if(!data || data.status!=="rule") return;
+  const remain=Math.max(0,Number(data.ruleEndsAt||0)-now);
+  const display=Math.max(0,Math.ceil(remain/1000));
+  if(ruleCountdown) ruleCountdown.textContent=String(display || 1);
+  if(remain<=0) advanceRuleToActive();
+}
+
+function updateRandomLobbyState(now){
+  if(!currentMatchData) return;
+  if(matchMode==="random"){
+    updateRandomScreen(currentMatchData,now);
+    if(currentMatchData.status==="matching") finalizeRandomMatch();
+    if(currentMatchData.status==="preparing") advancePreparingToRule();
+  }
+  if(currentMatchData.status==="rule") updateRuleScreenCountdown(currentMatchData,now);
+}
+
+function gameLoop(time){
+  const delta=Math.min((time-lastFrameTime)/1000,.05);
+  lastFrameTime=time;
+  updateStartProgress();
+  updateNeonEdges(time);
+  updateFireUI();
+  updateProtectionIndicator();
+  updateBoostIndicator();
+  updateRandomLobbyState(Date.now());
+  if(gameStarted && matchHasStarted && !gameEnded){
+    updateMovement(delta);
+    updateGrabAnimation(time);
+    if(mobileInput.firing) shoot();
+    updateBullets(delta,time);
+    regenerateLocalPlayer();
+    updateProtectionIndicator();
+    syncLocalPlayer();
+  }
+  if(renderer && scene && camera) renderer.render(scene,camera);
+  requestAnimationFrame(gameLoop);
+}
+
+async function leaveRoom(){
+  if(!matchRef || !currentUser){ leaveCurrentMatch(); return; }
+  const ref=matchRef;
+  try{
+    await runTransaction(db,async transaction=>{
+      const snap=await transaction.get(ref);
+      if(!snap.exists()) return;
+      const data=snap.data();
+      const players={...(data.players||{})};
+      if(!players[currentUser.uid]) return;
+      if(data.status!=="waiting" && data.status!=="matching" && data.status!=="preparing") return;
+      delete players[currentUser.uid];
+      const oldOrder=Array.isArray(data.playerOrder)?data.playerOrder:[];
+      const playerOrder=oldOrder.filter(id=>id!==currentUser.uid && players[id]);
+      if(!playerOrder.length){ transaction.delete(ref); return; }
+      const nextHost=data.hostUid===currentUser.uid?playerOrder[0]:data.hostUid;
+      Object.keys(players).forEach(id=>players[id]={...players[id],joinOrder:playerOrder.indexOf(id)});
+      transaction.update(ref,{players,playerOrder,hostUid:nextHost});
+    });
+  }catch(error){ console.error("leave room error",error); }
+  leaveCurrentMatch();
+}
+
+function leaveCurrentMatch(){
+  if(resultDeleteTimer){ clearTimeout(resultDeleteTimer); resultDeleteTimer=null; }
+  if(unsubscribeMatch){ unsubscribeMatch(); unsubscribeMatch=null; }
+  for(const uid of playerMeshes.keys()) removeRemoteMesh(uid);
+  for(const id of bullets.keys()) removeBullet(id);
+  stopMiniGame();
+  currentMatchId=null; matchRef=null; localPlayer=null; currentMatchData=null;
+  gameStarted=false; gameEnded=false; matchHasStarted=false; isHost=false; matchMode="room"; lastObservedStatus=null; transitionBusy=false;
+  spawnProtectionUntil=0; fireCooldownEnd=0; lastActivityAt=Date.now(); lastCleanupCheck=0; lastRegenTick=0;
+  gameUI.style.display="none"; preStart.style.display="none"; randomMatchScreen.style.display="none"; hideRuleScreen();
+  gameOver.style.display="none"; menu.style.display="flex"; roomMatchModal.style.display="none"; settingsModal.style.display="none"; qrModal.style.display="none";
+  settingsModalOpen=false; protectionIndicator.style.opacity="0"; if(boostIndicator)boostIndicator.style.display="none";
+  statusEl.textContent=""; matchCodeInput.value="";
+  document.documentElement.classList.remove("roomJoinMode");
+  returnToBaseUrl();
+}
+
+async function handleReturn(){
+  const wasHost=isHost;
+  const ref=matchRef;
+  await leaveRoom();
+  if(wasHost && ref){
+    try{
+      const snap=await getDoc(ref);
+      if(snap.exists() && snap.data().status!=="active") await deleteDoc(ref);
+    }catch(error){ console.error(error); }
+  }
+}
+
+/* Hidden DYNAMIC interaction: double-tap the highest non-infinite option. */
+document.querySelectorAll("[data-setting]").forEach(group=>{
+  let lastTap=0;
+  group.addEventListener("click",event=>{
+    const button=event.target.closest(".settingOption");
+    if(!button) return;
+    const key=group.dataset.setting;
+    if(key && DYNAMIC_TOP_VALUES[key] && !roomSettingGroupIsDynamic(group) && button.dataset.value===DYNAMIC_TOP_VALUES[key]){
+      const now=performance.now();
+      if(now-lastTap<430){
+        activateDynamicGroup(group,key);
+        currentSettings=readSettingsUI();
+        saveRoomSettings(currentSettings);
+        updateSettingsUI(currentSettings);
+        return;
+      }
+      lastTap=now;
+    }
+    if(button.dataset.value==="__standard"){
+      restoreDynamicGroup(group,key);
+      currentSettings=readSettingsUI();
+      saveRoomSettings(currentSettings);
+      updateSettingsUI(currentSettings);
+      return;
+    }
+    if(group.parentElement.classList.contains("disabled")) return;
+    group.querySelectorAll(".settingOption").forEach(item=>item.classList.remove("selected"));
+    button.classList.add("selected");
+    currentSettings=readSettingsUI();
+    saveRoomSettings(currentSettings);
+    terrainHeightRow.classList.toggle("disabled",currentSettings.terrainAmount==="none");
+    floatingTerrainRow?.classList.toggle("disabled",currentSettings.terrainAmount==="none");
+    regenLockRow.classList.toggle("disabled",currentSettings.hpRegen==="none");
+  });
+});
+
+[maxHpInput,regenLockInput].forEach(input=>input.addEventListener("input",()=>{
+  currentSettings=readSettingsUI();
+  saveRoomSettings(currentSettings);
+  terrainHeightRow.classList.toggle("disabled",currentSettings.terrainAmount==="none");
+  floatingTerrainRow?.classList.toggle("disabled",currentSettings.terrainAmount==="none");
+  regenLockRow.classList.toggle("disabled",currentSettings.hpRegen==="none");
+}));
+
+randomMatchButton?.addEventListener("click",startRandomMatch);
+roomMatchButton?.addEventListener("click",openRoomMatch);
+closeRoomMatchButton?.addEventListener("click",closeRoomMatch);
+roomMatchModal?.addEventListener("pointerdown",event=>{ if(event.target===roomMatchModal) closeRoomMatch(); });
+matchingActionButton?.addEventListener("click",()=>{
+  if(currentMatchData?.status==="matching") requestRandomFinish();
+  else if(currentMatchData?.status==="preparing") requestPrepareReady();
+});
+
+
 matchButton.addEventListener(
   "click",
   handleMatchButton
@@ -7820,34 +9283,6 @@ settingsModal.addEventListener(
   }
 );
 
-document
-  .querySelectorAll(".settingOptions")
-  .forEach(group => {
-    group
-      .querySelectorAll(".settingOption")
-      .forEach(button => {
-        button.addEventListener("click", () => {
-          if(!group.dataset.setting) return;
-          if(group.parentElement.classList.contains("disabled")) return;
-          group
-            .querySelectorAll(".settingOption")
-            .forEach(item => item.classList.remove("selected"));
-          button.classList.add("selected");
-          updateRoomSettingsFromUI();
-          terrainHeightRow.classList.toggle("disabled", currentSettings.terrainAmount === "none");
-          regenLockRow.classList.toggle("disabled", currentSettings.hpRegen === "none");
-        });
-      });
-  });
-
-
-[maxHpInput, regenLockInput].forEach(input => {
-  input.addEventListener("input", () => {
-    updateRoomSettingsFromUI();
-    terrainHeightRow.classList.toggle("disabled", currentSettings.terrainAmount === "none");
-    regenLockRow.classList.toggle("disabled", currentSettings.hpRegen === "none");
-  });
-});
 
 returnButton.addEventListener(
   "click",
