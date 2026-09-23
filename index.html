@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.7.1. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.7.1 changes: fixed top-menu tap/click interaction and restored distinct primary styling for Room Match. Release 1.7.0 changes: implemented the accepted first 3Dfps planning-meeting features: random matchmaking lobby, member-lock countdown with offline mini-game and ready-up, synchronized five-second RULE phase, result/ranking view with random-match WP reward, connection-loss notice, animated ambient line UI treatment, floating terrain option, deterministic DYNAMIC hidden setting mode and rare time/date-weighted DYNAMIC rules. Previous release 1.6.5: added a dedicated immediate-loading screen for direct ?room= links so the room join state is shown before the normal top screen. Previous release 1.6.4: switched room sharing from /r/room paths to a query-string URL so GitHub Pages serves the main HTML directly without a 404 page. Previous release 1.6.2: restored the social-share subtitle metadata and kept the visible in-game version synchronized with the current version. Previous release 1.6.0: fixed local room-setting persistence and START-time upload, added animated two-color edge gradients, added a forward-facing requirement to GRAB, deleted empty rooms during cleanup, and added configurable kill-streak boost with synchronized per-player streak state and HUD countdown. Previous releases added route-aware social/share descriptions, metallic terrain variation, icon.png site icon support, the reorganized settings, safer spawn correction, deferred terrain generation, and max fire-rate settings. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
+<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.7.1. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.7.1 changes: fixed top-menu touch/click interaction reliability and changed the room-match button to use the same primary color as random match while keeping Settings secondary gray. Previous release 1.7.0: implemented the accepted first 3Dfps planning-meeting features: random matchmaking lobby, member-lock countdown with offline mini-game and ready-up, synchronized five-second RULE phase, result/ranking view with random-match WP reward, connection-loss notice, animated ambient line UI treatment, floating terrain option, deterministic DYNAMIC hidden setting mode and rare time/date-weighted DYNAMIC rules. Previous release 1.6.5: added a dedicated immediate-loading screen for direct ?room= links so the room join state is shown before the normal top screen. Previous release 1.6.4: switched room sharing from /r/room paths to a query-string URL so GitHub Pages serves the main HTML directly without a 404 page. Previous release 1.6.2: restored the social-share subtitle metadata and kept the visible in-game version synchronized with the current version. Previous release 1.6.0: fixed local room-setting persistence and START-time upload, added animated two-color edge gradients, added a forward-facing requirement to GRAB, deleted empty rooms during cleanup, and added configurable kill-streak boost with synchronized per-player streak state and HUD countdown. Previous releases added route-aware social/share descriptions, metallic terrain variation, icon.png site icon support, the reorganized settings, safer spawn correction, deferred terrain generation, and max fire-rate settings. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
 <title>3Dfps</title>
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
@@ -80,9 +80,10 @@ canvas{
   overflow-x:hidden;
   -webkit-overflow-scrolling:touch;
   overscroll-behavior:contain;
-  touch-action:auto !important;
+  touch-action:pan-y !important;
   align-items:flex-start;
   padding:24px 0;
+  pointer-events:auto;
 }
 
 .menuBox{
@@ -95,6 +96,9 @@ canvas{
   border:1px solid rgba(255,255,255,.12);
   box-shadow:0 20px 80px rgba(0,0,0,.45);
   backdrop-filter:blur(18px);
+  position:relative;
+  z-index:101;
+  pointer-events:auto;
 }
 
 .title{
@@ -135,24 +139,23 @@ canvas{
   font-weight:700;
   margin-top:8px;
   cursor:pointer;
+  pointer-events:auto;
+  touch-action:manipulation;
+  position:relative;
+  z-index:102;
+  -webkit-tap-highlight-color:transparent;
 }
 
 .button.secondary{
   background:#2a3039;
 }
 
-.button:active{
-  transform:scale(.98);
-}
-
-#menu .button{
-  pointer-events:auto;
-  touch-action:manipulation;
-  -webkit-tap-highlight-color:transparent;
-}
-
 #roomMatchButton{
   background:#1976ff;
+}
+
+.button:active{
+  transform:scale(.98);
 }
 
 .info{
@@ -1211,7 +1214,7 @@ html.roomJoinMode #roomJoinScreen{
 
     <button
       id="roomMatchButton"
-      class="button"
+      class="button secondary"
     >
       ルームマッチ
     </button>
@@ -8049,7 +8052,7 @@ if(initialRouteCode){
 
 
 /* ================================================================
-   v1.7.1 FIRST PLANNING MEETING FEATURES
+   v1.7.0 FIRST PLANNING MEETING FEATURES
    ================================================================ */
 
 const RANDOM_MAX_PLAYERS = 8;
@@ -9340,6 +9343,21 @@ setupDesktopInput();
 setupMobileInput();
 
 setupStartButton();
+
+
+if(!directRoomJoin){
+  document.documentElement.classList.remove("roomJoinMode");
+  menu.style.display = "flex";
+  gameUI.style.display = "none";
+  preStart.style.display = "none";
+  randomMatchScreen.style.display = "none";
+  ruleScreen.style.display = "none";
+  gameOver.style.display = "none";
+  roomMatchModal.style.display = "none";
+  playerSettingsModal.style.display = "none";
+  settingsModal.style.display = "none";
+  qrModal.style.display = "none";
+}
 
 
 window.addEventListener(
