@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.9.0. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.7.0 changes: first-conference implementation pass — added Random Match and Room Match entry flow, shared random-match rules, matching wait lobby with offline mini game, all-player end-request / ready phase, synchronized RULE 5-second pre-match screen, RESULT screen with placement and random-match WP, temporary connection-loss notice, floating terrain room setting, DYNAMIC hidden setting via double-tap, date/time-shifted rare DYNAMIC selection, and retained all existing gameplay/settings/security behavior. The conference proposal to add decorative floating lines is intentionally excluded. Release 1.8.0 changes: random-match waiting timeout now starts only after at least 2 players are present and end requests are unavailable below 2 players; room-match button receives its own distinct visual treatment; replaced the simple target mini-game with three randomly selected 5-10 second offline mini-action stages, with per-stage best-time persistence. Release 1.9.0 changes: redesigned the three offline mini-action stages as short Mario-like side-scrolling courses with platforms, jumps, hazards, gaps, moving terrain on one course, goal flags, and stage-specific best-time persistence while retaining the existing random stage selection and matching flow. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
+<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.8.0. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.8.0 changes: random-match minimum-player countdown gate (countdown and end-request only after 2 players), visually distinct Room Match button, and replacement of the old target-click matching mini game with a 3-stage random mini action platformer with per-stage local best-time records. The conference proposal to add decorative floating lines remains intentionally excluded. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
 <title>3Dfps</title>
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
@@ -248,47 +248,124 @@ canvas{
 #miniGameBox{
   position:relative;
   width:min(84vw,430px);
-  height:min(44vh,280px);
-  min-height:190px;
+  height:min(46vh,300px);
+  min-height:220px;
   margin:10px 0;
   border:1px solid rgba(255,255,255,.12);
   border-radius:18px;
-  background:rgba(0,0,0,.25);
+  background:linear-gradient(180deg,rgba(20,27,39,.92),rgba(5,8,13,.98));
   overflow:hidden;
-  box-shadow:inset 0 0 55px rgba(0,0,0,.2);
+  box-shadow:inset 0 0 55px rgba(0,0,0,.25),0 14px 42px rgba(0,0,0,.2);
 }
 
 #miniGameTitle{
   position:absolute;
   left:14px;
-  top:12px;
+  top:10px;
+  z-index:3;
   font-size:12px;
   font-weight:900;
-  opacity:.58;
+  letter-spacing:.8px;
+  opacity:.62;
+}
+
+#miniGameStageLabel{
+  position:absolute;
+  left:14px;
+  top:28px;
+  z-index:3;
+  max-width:60%;
+  font-size:11px;
+  font-weight:800;
+  opacity:.82;
 }
 
 #miniGameScore{
   position:absolute;
   right:14px;
-  top:10px;
-  font-size:12px;
+  top:13px;
+  z-index:3;
+  font-size:11px;
   font-variant-numeric:tabular-nums;
   font-weight:900;
-  opacity:.7;
+  opacity:.74;
+  text-align:right;
 }
 
-#miniTarget{
+#miniGameCanvas{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+  touch-action:none;
+}
+
+#miniGameMessage{
   position:absolute;
   left:50%;
-  top:54%;
-  width:54px;
-  height:54px;
-  transform:translate(-50%,-50%);
-  border-radius:50%;
-  border:2px solid rgba(255,255,255,.7);
-  background:radial-gradient(circle at 35% 35%,rgba(255,255,255,.95),rgba(90,190,255,.38) 34%,rgba(120,90,255,.18) 70%,transparent 71%);
-  box-shadow:0 0 22px rgba(90,190,255,.42);
+  top:50%;
+  z-index:4;
+  transform:translate(-50%,-50%) scale(.96);
+  min-width:120px;
+  padding:10px 16px;
+  border-radius:12px;
+  background:rgba(4,7,12,.82);
+  border:1px solid rgba(255,255,255,.14);
+  box-shadow:0 10px 30px rgba(0,0,0,.3);
+  text-align:center;
+  font-size:14px;
+  font-weight:900;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .16s ease,transform .16s ease;
+}
+
+#miniGameMessage.show{
+  opacity:1;
+  transform:translate(-50%,-50%) scale(1);
+}
+
+#miniGameControls{
+  position:absolute;
+  left:10px;
+  right:10px;
+  bottom:10px;
+  z-index:5;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  pointer-events:none;
+}
+
+.miniControl{
+  width:42px;
+  height:36px;
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:10px;
+  background:rgba(8,13,22,.72);
+  color:#fff;
+  font-size:16px;
+  font-weight:900;
+  box-shadow:0 6px 18px rgba(0,0,0,.24);
   pointer-events:auto;
+  touch-action:none;
+}
+
+.miniControl:active{
+  transform:scale(.95);
+}
+
+.miniJumpControl{
+  width:70px;
+  margin-left:auto;
+  font-size:11px;
+  letter-spacing:.5px;
+}
+
+.roomMatchButton{
+  background:linear-gradient(135deg,#7847ff,#a047d7);
+  box-shadow:0 8px 22px rgba(130,70,255,.18);
 }
 
 #matchingReadyButton,
@@ -303,35 +380,6 @@ canvas{
 
 #matchingEndButton{
   background:#2a3039;
-}
-
-.roomMatchButton{
-  background:linear-gradient(135deg,#6f4cff,#a44cff);
-  box-shadow:0 10px 30px rgba(118,76,255,.22);
-}
-
-#miniGameCanvas{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  display:block;
-  touch-action:none;
-  user-select:none;
-  -webkit-user-select:none;
-}
-
-#miniGameHint{
-  position:absolute;
-  left:50%;
-  bottom:10px;
-  transform:translateX(-50%);
-  width:calc(100% - 28px);
-  text-align:center;
-  font-size:11px;
-  font-weight:700;
-  opacity:.58;
-  pointer-events:none;
 }
 
 #ruleScreen{
@@ -1241,7 +1289,7 @@ html.roomJoinMode #roomJoinScreen{
     <h1 class="title">3Dfps</h1>
 
     <div class="subtitle">
-      v1.9.0
+      v1.8.0
     </div>
 
     <button id="randomMatchButton" class="button">
@@ -1342,9 +1390,15 @@ html.roomJoinMode #roomJoinScreen{
   <div id="matchingStatus">他のプレイヤーを待っています…</div>
   <div id="miniGameBox">
     <div id="miniGameTitle">MINI ACTION</div>
-    <div id="miniGameScore">BEST --</div>
-    <canvas id="miniGameCanvas" aria-label="ミニアクションゲーム"></canvas>
-    <div id="miniGameHint">タップ / スワイプ / キーで操作</div>
+    <div id="miniGameStageLabel">STAGE 1 · NEON RUN</div>
+    <div id="miniGameScore">TIME 0.00s · BEST --</div>
+    <canvas id="miniGameCanvas" aria-label="マッチング待ちミニアクションゲーム"></canvas>
+    <div id="miniGameMessage" aria-live="polite"></div>
+    <div id="miniGameControls">
+      <button class="miniControl" data-mini-action="left" aria-label="左">◀</button>
+      <button class="miniControl" data-mini-action="right" aria-label="右">▶</button>
+      <button class="miniControl miniJumpControl" data-mini-action="jump" aria-label="ジャンプ">JUMP</button>
+    </div>
   </div>
   <button id="matchingReadyButton" class="button">準備OK</button>
   <button id="matchingEndButton" class="button secondary">マッチング終了を要求</button>
@@ -1720,18 +1774,13 @@ let roomMatchModalOpen = false;
 let matchType = "room";
 let latestMatchData = null;
 let matchingMiniScore = 0;
+let miniActionState = null;
+let miniActionInput = { left:false, right:false, jump:false, jumpPressed:false };
+let miniActionLastFrameTime = 0;
+let miniActionPreviousStage = 0;
 let matchingLastFinalizedState = false;
 let matchingNotificationPlayed = false;
 let miniGameStarted = false;
-let miniGameStage = null;
-let miniGameStageIndex = -1;
-let miniGameStartedAt = 0;
-let miniGameClearedAt = 0;
-let miniGameRunTime = 0;
-let miniGameBestTimes = {};
-let miniGamePointerId = null;
-let miniGamePointerStart = null;
-const miniInput = {left:false,right:false,jump:false,action:false};
 let ruleAdvanceInFlight = false;
 let lastRuleNotificationKey = "";
 let pendingResultDeleteTimer = null;
@@ -1767,6 +1816,7 @@ const CLEANUP_INTERVAL = 10000;
 const MAX_RANDOM_PLAYERS = 8;
 const RANDOM_MAX_WAIT = 30000;
 const MATCHING_FINALIZE_TIME = 10000;
+const MIN_RANDOM_PLAYERS_TO_START_COUNTDOWN = 2;
 const RULE_DURATION = 5000;
 
 const ARENA_SIZE = 70;
@@ -1961,11 +2011,17 @@ const matchingStatus =
 const miniGameScore =
   document.getElementById("miniGameScore");
 
+const miniGameStageLabel =
+  document.getElementById("miniGameStageLabel");
+
 const miniGameCanvas =
   document.getElementById("miniGameCanvas");
 
-const miniGameHint =
-  document.getElementById("miniGameHint");
+const miniGameMessage =
+  document.getElementById("miniGameMessage");
+
+const miniControlButtons =
+  document.querySelectorAll(".miniControl");
 
 const matchingReadyButton =
   document.getElementById("matchingReadyButton");
@@ -4266,10 +4322,13 @@ async function startRandomMatch(){
                 joinOrder:order.length
               };
               order.push(user.uid);
-              const matchingStartedAt = Object.keys(players).length >= 2
-                ? (data.matchingStartedAt || Date.now())
-                : (data.matchingStartedAt || null);
-              transaction.update(existingRef, {players, playerOrder:order, matchingStartedAt});
+              const matchUpdate = {players, playerOrder:order};
+              if(order.length >= MIN_RANDOM_PLAYERS_TO_START_COUNTDOWN && !data.matchingCountdownStartedAt){
+                matchUpdate.matchingCountdownStartedAt = Date.now();
+              }
+              transaction.update(existingRef, matchUpdate);
+            }else if(count >= MIN_RANDOM_PLAYERS_TO_START_COUNTDOWN && !data.matchingCountdownStartedAt){
+              transaction.update(existingRef, {matchingCountdownStartedAt:Date.now()});
             }
             transaction.update(queueRef,{updatedAt:serverTimestamp()});
             return {code:existingCode, host:data.hostUid === user.uid};
@@ -4311,7 +4370,7 @@ async function startRandomMatch(){
         players:{[user.uid]:player},
         matchingEndRequests:{},
         matchingFinalizedAt:null,
-        matchingStartedAt:null,
+        matchingCountdownStartedAt:null,
         readyPlayers:{},
         initialPlayerCount:1
       });
@@ -4334,7 +4393,9 @@ async function requestMatchingEnd(){
       const snap = await transaction.get(matchRef);
       if(!snap.exists()) return;
       const data = snap.data();
+      const playerCount = Object.keys(data.players || {}).length;
       if(data.status !== "waiting" || data.matchingFinalizedAt) return;
+      if(playerCount < MIN_RANDOM_PLAYERS_TO_START_COUNTDOWN || !data.matchingCountdownStartedAt) return;
       const matchingEndRequests = { ...(data.matchingEndRequests || {}) };
       matchingEndRequests[currentUser.uid] = true;
       transaction.update(matchRef,{matchingEndRequests});
@@ -4822,610 +4883,6 @@ function hidePreMatchScreens(){
   ruleScreen.style.display = "none";
 }
 
-const MINI_WORLD_UNIT_SCALE_BASE = 31;
-const MINI_PLAYER_WIDTH = .62;
-const MINI_PLAYER_HEIGHT = .9;
-const MINI_MOVE_SPEED = 5.8;
-const MINI_GROUND_ACCEL = 24;
-const MINI_AIR_ACCEL = 15;
-const MINI_FRICTION = 18;
-const MINI_JUMP_POWER = 7.75;
-const MINI_GRAVITY = 20.5;
-const MINI_DEATH_Y = -3.4;
-
-const MINI_STAGE_DEFS = [
-  {
-    id:"sunnyRun",
-    name:"SUNNY RUN",
-    hint:"左右で走る・中央タップでJUMP　旗まで駆け抜けろ！",
-    bestKey:"sunnyRun",
-    length:34.5,
-    spawnX:1.3,
-    spawnY:.08,
-    goalX:32.8,
-    theme:"day",
-    platforms:[
-      {x:0,w:5.5,y:0,h:.7},
-      {x:6.4,w:4.3,y:0,h:.7},
-      {x:11.3,w:4.2,y:.9,h:.7},
-      {x:16.0,w:4.7,y:0,h:.7},
-      {x:21.0,w:3.4,y:1.1,h:.7},
-      {x:25.0,w:3.9,y:0,h:.7},
-      {x:29.4,w:5.1,y:.75,h:.7}
-    ],
-    hazards:[
-      {x:4.15,w:.62,y:.02,h:.46,type:"spike"},
-      {x:7.95,w:.7,y:.02,h:.46,type:"spike"},
-      {x:13.05,w:.62,y:.92,h:.42,type:"spike"},
-      {x:17.85,w:.7,y:.02,h:.46,type:"spike"},
-      {x:22.15,w:.62,y:1.12,h:.42,type:"spike"},
-      {x:26.5,w:.65,y:.02,h:.46,type:"spike"},
-      {x:31.0,w:.68,y:.77,h:.44,type:"spike"}
-    ],
-    blocks:[
-      {x:8.9,y:0,w:.75,h:1.0},
-      {x:27.95,y:0,w:.7,h:1.05}
-    ]
-  },
-  {
-    id:"bluePeak",
-    name:"BLUE PEAK",
-    hint:"小さな足場を連続ジャンプ！　落ちたらすぐリスタート",
-    bestKey:"bluePeak",
-    length:37.5,
-    spawnX:1.1,
-    spawnY:.08,
-    goalX:35.6,
-    theme:"night",
-    platforms:[
-      {x:0,w:4.4,y:0,h:.7},
-      {x:5.2,w:3.0,y:1.0,h:.65},
-      {x:9.1,w:2.8,y:0,h:.65},
-      {x:12.8,w:3.4,y:1.55,h:.65},
-      {x:17.0,w:3.0,y:.65,h:.65},
-      {x:20.7,w:3.8,y:1.7,h:.65},
-      {x:25.4,w:3.1,y:.75,h:.65},
-      {x:29.2,w:2.9,y:1.95,h:.65},
-      {x:33.0,w:4.0,y:.55,h:.65}
-    ],
-    hazards:[
-      {x:7.05,w:.55,y:1.02,h:.4,type:"spike"},
-      {x:13.95,w:.55,y:1.57,h:.4,type:"spike"},
-      {x:18.05,w:.55,y:.67,h:.4,type:"spike"},
-      {x:21.85,w:.55,y:1.72,h:.4,type:"spike"},
-      {x:26.55,w:.55,y:.77,h:.4,type:"spike"},
-      {x:30.3,w:.55,y:1.97,h:.4,type:"spike"}
-    ],
-    blocks:[
-      {x:10.8,y:0,w:.58,h:1.15},
-      {x:23.85,y:0,w:.62,h:1.0},
-      {x:31.95,y:.55,w:.58,h:1.15}
-    ]
-  },
-  {
-    id:"movingSky",
-    name:"MOVING SKY",
-    hint:"動く足場を見極めて進め！　最後は大ジャンプ！",
-    bestKey:"movingSky",
-    length:39.5,
-    spawnX:1.2,
-    spawnY:.08,
-    goalX:37.3,
-    theme:"violet",
-    platforms:[
-      {x:0,w:5.0,y:0,h:.7},
-      {x:6.0,w:3.8,y:1.2,h:.65},
-      {x:11.2,w:2.8,y:2.0,h:.65},
-      {x:15.4,w:2.2,y:.8,h:.65, moving:{baseX:15.4,amp:1.65,speed:1.45,phase:0}},
-      {x:20.4,w:3.3,y:1.45,h:.65},
-      {x:24.9,w:2.7,y:2.25,h:.65, moving:{baseX:24.9,amp:1.15,speed:1.15,phase:1.4}},
-      {x:29.3,w:3.0,y:.75,h:.65},
-      {x:34.0,w:5.5,y:0,h:.7}
-    ],
-    hazards:[
-      {x:7.0,w:.52,y:1.22,h:.4,type:"spike"},
-      {x:12.9,w:.52,y:2.02,h:.4,type:"spike"},
-      {x:21.85,w:.52,y:1.47,h:.4,type:"spike"},
-      {x:25.9,w:.52,y:2.27,h:.4,type:"spike"},
-      {x:30.7,w:.55,y:.77,h:.4,type:"spike"},
-      {x:36.0,w:.58,y:.02,h:.46,type:"spike"}
-    ],
-    blocks:[
-      {x:4.05,y:0,w:.72,h:1.15},
-      {x:18.0,y:.8,w:.65,h:1.15},
-      {x:32.25,y:.75,w:.7,h:1.15}
-    ]
-  }
-];
-
-function loadMiniBestTimes(){
-  try{
-    const raw = localStorage.getItem("3dfps_mini_best_times_v1");
-    return raw ? JSON.parse(raw) || {} : {};
-  }catch(error){
-    return {};
-  }
-}
-
-function saveMiniBestTimes(){
-  try{
-    localStorage.setItem("3dfps_mini_best_times_v1", JSON.stringify(miniGameBestTimes));
-  }catch(error){}
-}
-
-function miniBestText(stage){
-  const value = Number(miniGameBestTimes[stage?.bestKey]);
-  return Number.isFinite(value) && value > 0 ? `BEST ${value.toFixed(2)}s` : "BEST --";
-}
-
-function miniCanvasSize(){
-  const rect = miniGameCanvas.getBoundingClientRect();
-  const dpr = Math.min(2, window.devicePixelRatio || 1);
-  const width = Math.max(240, Math.floor(rect.width || 360));
-  const height = Math.max(150, Math.floor(rect.height || 220));
-  const pixelWidth = Math.floor(width * dpr);
-  const pixelHeight = Math.floor(height * dpr);
-  if(miniGameCanvas.width !== pixelWidth || miniGameCanvas.height !== pixelHeight){
-    miniGameCanvas.width = pixelWidth;
-    miniGameCanvas.height = pixelHeight;
-  }
-  return {width,height,dpr};
-}
-
-function miniCloneStagePlatforms(stage){
-  return stage.platforms.map(platform => ({
-    ...platform,
-    baseX:platform.moving?.baseX ?? platform.x
-  }));
-}
-
-function resetMiniStage(stageIndex){
-  const stage = MINI_STAGE_DEFS[stageIndex];
-  miniGameStageIndex = stageIndex;
-  miniGameStage = {
-    ...stage,
-    platforms:miniCloneStagePlatforms(stage),
-    hazards:stage.hazards.map(item => ({...item})),
-    blocks:stage.blocks.map(item => ({...item})),
-    x:stage.spawnX,
-    y:stage.spawnY,
-    vx:0,
-    vy:0,
-    grounded:true,
-    elapsed:0,
-    cameraX:0,
-    lastFrameAt:performance.now(),
-    deathFlash:0,
-    goalPulse:0,
-    cleared:false,
-    resultTime:0,
-    resultText:"",
-    deaths:0,
-    jumpSquash:0
-  };
-  miniGameStartedAt = performance.now();
-  miniGameRunTime = 0;
-  miniGameClearedAt = 0;
-  miniGameStarted = true;
-  miniGameBestTimes = loadMiniBestTimes();
-  if(miniGameScore) miniGameScore.textContent = miniBestText(stage);
-  if(miniGameHint) miniGameHint.textContent = stage.hint;
-}
-
-function startMiniGame(forceNew=true){
-  miniGameBestTimes = loadMiniBestTimes();
-  let index = Math.floor(Math.random()*MINI_STAGE_DEFS.length);
-  if(!forceNew && miniGameStageIndex >= 0) index = miniGameStageIndex;
-  if(MINI_STAGE_DEFS.length > 1 && index === miniGameStageIndex && forceNew){
-    index = (index + 1 + Math.floor(Math.random()*(MINI_STAGE_DEFS.length-1))) % MINI_STAGE_DEFS.length;
-  }
-  resetMiniStage(index);
-}
-
-function stopMiniGame(){
-  miniGameStarted = false;
-  miniGameStage = null;
-  miniGameStartedAt = 0;
-  miniGameRunTime = 0;
-  miniGameClearedAt = 0;
-  miniInput.left = false;
-  miniInput.right = false;
-  miniInput.jump = false;
-  miniInput.action = false;
-}
-
-function miniRespawn(){
-  const stage = miniGameStage;
-  if(!stage || stage.cleared) return;
-  stage.deaths++;
-  stage.deathFlash = .32;
-  stage.x = stage.spawnX;
-  stage.y = stage.spawnY;
-  stage.vx = 0;
-  stage.vy = 0;
-  stage.grounded = true;
-  miniInput.jump = false;
-  miniInput.action = false;
-}
-
-function miniClear(time){
-  if(!miniGameStage || miniGameStage.cleared) return;
-  miniGameStage.cleared = true;
-  miniGameRunTime = time;
-  miniGameStage.resultTime = time;
-  const key = miniGameStage.bestKey;
-  const oldBest = Number(miniGameBestTimes[key]);
-  const newBest = !Number.isFinite(oldBest) || oldBest <= 0 || time < oldBest ? time : oldBest;
-  miniGameBestTimes[key] = newBest;
-  saveMiniBestTimes();
-  miniGameClearedAt = performance.now();
-  miniGameStage.resultText = `CLEAR ${time.toFixed(2)}s`;
-  if(miniGameScore) miniGameScore.textContent = `BEST ${newBest.toFixed(2)}s`;
-  if(miniGameHint) miniGameHint.textContent = `${miniGameStage.resultText}  •  もう一度！`;
-}
-
-function miniRestartAfterClear(now){
-  if(!miniGameStage || !miniGameStage.cleared || !miniGameClearedAt) return;
-  if(now - miniGameClearedAt < 1200) return;
-  startMiniGame(true);
-}
-
-function miniPlatformX(platform,time){
-  if(!platform.moving) return platform.x;
-  return platform.moving.baseX + Math.sin(time*0.001*platform.moving.speed + platform.moving.phase) * platform.moving.amp;
-}
-
-function miniWorldMetrics(width,height){
-  const scale = Math.max(20, Math.min(MINI_WORLD_UNIT_SCALE_BASE, height / 7.8));
-  const visibleWidth = width / scale;
-  return {scale,visibleWidth};
-}
-
-function miniIsHorizontallyOverlapping(ax,aw,bx,bw){
-  return ax < bx + bw && ax + aw > bx;
-}
-
-function miniGetLanding(stage,previousFeet,nextFeet,time){
-  let best = null;
-  for(const platform of stage.platforms){
-    const px = miniPlatformX(platform,time);
-    if(!miniIsHorizontallyOverlapping(stage.x-MINI_PLAYER_WIDTH/2,MINI_PLAYER_WIDTH,px,platform.w)) continue;
-    const top = platform.y;
-    if(previousFeet >= top - .04 && nextFeet <= top + .08 && stage.vy <= 0){
-      if(best === null || top > best) best = top;
-    }
-  }
-  return best;
-}
-
-function miniUpdateMovingPlatforms(stage,time){
-  for(const platform of stage.platforms){
-    platform.x = miniPlatformX(platform,time);
-  }
-}
-
-function miniCheckSolidBlock(stage,time){
-  const playerLeft = stage.x - MINI_PLAYER_WIDTH/2;
-  const playerRight = stage.x + MINI_PLAYER_WIDTH/2;
-  const playerBottom = stage.y;
-  const playerTop = stage.y + MINI_PLAYER_HEIGHT;
-  for(const block of stage.blocks){
-    const bx = block.x;
-    const by = block.y;
-    const br = bx + block.w;
-    const bt = by + block.h;
-    const horizontal = playerRight > bx && playerLeft < br;
-    const vertical = playerTop > by && playerBottom < bt;
-    if(!horizontal || !vertical) continue;
-
-    const oldBottom = stage.y;
-    const oldLeft = stage.x - MINI_PLAYER_WIDTH/2 - stage.vx * .025;
-    const oldRight = stage.x + MINI_PLAYER_WIDTH/2 - stage.vx * .025;
-    if(stage.vx > 0 && oldRight <= bx + .04){
-      stage.x = bx - MINI_PLAYER_WIDTH/2;
-      stage.vx = 0;
-    }else if(stage.vx < 0 && oldLeft >= br - .04){
-      stage.x = br + MINI_PLAYER_WIDTH/2;
-      stage.vx = 0;
-    }else if(oldBottom >= bt - .05 && stage.vy <= 0){
-      stage.y = bt;
-      stage.vy = 0;
-      stage.grounded = true;
-    }
-  }
-}
-
-function miniCheckHazards(stage){
-  const playerLeft = stage.x - MINI_PLAYER_WIDTH/2;
-  const playerRight = stage.x + MINI_PLAYER_WIDTH/2;
-  const playerBottom = stage.y;
-  const playerTop = stage.y + MINI_PLAYER_HEIGHT;
-  for(const hazard of stage.hazards){
-    const left = hazard.x;
-    const right = hazard.x + hazard.w;
-    const top = hazard.y + hazard.h;
-    if(playerRight > left && playerLeft < right && playerTop > hazard.y && playerBottom < top){
-      return true;
-    }
-  }
-  return false;
-}
-
-function miniUpdateCourse(dt,time){
-  const stage = miniGameStage;
-  if(!stage) return;
-  stage.elapsed += dt;
-  stage.goalPulse = (stage.goalPulse + dt * 3.4) % (Math.PI*2);
-  stage.deathFlash = Math.max(0,stage.deathFlash-dt);
-  stage.jumpSquash = Math.max(0,stage.jumpSquash-dt);
-
-  miniUpdateMovingPlatforms(stage,time);
-
-  const inputX = (miniInput.right ? 1 : 0) - (miniInput.left ? 1 : 0);
-  const accel = stage.grounded ? MINI_GROUND_ACCEL : MINI_AIR_ACCEL;
-  if(inputX !== 0){
-    stage.vx += inputX * accel * dt;
-    stage.vx = Math.max(-MINI_MOVE_SPEED,Math.min(MINI_MOVE_SPEED,stage.vx));
-  }else{
-    const drag = Math.min(1,MINI_FRICTION*dt);
-    stage.vx *= 1-drag;
-    if(Math.abs(stage.vx) < .05) stage.vx = 0;
-  }
-
-  if(miniInput.jump && stage.grounded){
-    stage.vy = MINI_JUMP_POWER;
-    stage.grounded = false;
-    stage.jumpSquash = .12;
-    miniInput.jump = false;
-    miniInput.action = false;
-  }
-
-  const previousFeet = stage.y;
-  stage.vy -= MINI_GRAVITY * dt;
-  stage.x += stage.vx * dt;
-  const nextFeet = stage.y + stage.vy * dt;
-  stage.grounded = false;
-  stage.y = nextFeet;
-
-  const landing = miniGetLanding(stage,previousFeet,stage.y,time);
-  if(landing !== null){
-    stage.y = landing;
-    stage.vy = 0;
-    stage.grounded = true;
-  }
-
-  miniCheckSolidBlock(stage,time);
-
-  if(miniCheckHazards(stage) || stage.y < MINI_DEATH_Y || stage.x < -.8 || stage.x > stage.length + 1){
-    miniRespawn();
-    return;
-  }
-
-  if(stage.x >= stage.goalX){
-    miniClear(stage.elapsed);
-  }
-}
-
-function miniDrawCloud(ctx,x,y,s,alpha){
-  ctx.fillStyle = `rgba(255,255,255,${alpha})`;
-  ctx.beginPath();
-  ctx.arc(x,y,15*s,0,Math.PI*2);
-  ctx.arc(x+18*s,y-5*s,19*s,0,Math.PI*2);
-  ctx.arc(x+40*s,y+1*s,14*s,0,Math.PI*2);
-  ctx.fill();
-}
-
-function drawMiniBackground(ctx,w,h,time,stage){
-  let top="#07182a";
-  let bottom="#04101a";
-  if(stage?.theme === "day"){
-    top="#102b44";
-    bottom="#06131d";
-  }else if(stage?.theme === "violet"){
-    top="#1c1236";
-    bottom="#060812";
-  }
-  const grad=ctx.createLinearGradient(0,0,0,h);
-  grad.addColorStop(0,top);
-  grad.addColorStop(1,bottom);
-  ctx.fillStyle=grad;
-  ctx.fillRect(0,0,w,h);
-
-  if(stage?.theme === "day"){
-    const sx=w*.82, sy=h*.22;
-    ctx.fillStyle="rgba(255,234,156,.17)";
-    ctx.beginPath();
-    ctx.arc(sx,sy,32,0,Math.PI*2);
-    ctx.fill();
-    miniDrawCloud(ctx,w*.16 + Math.sin(time*.00015)*8,h*.24,0.8,.08);
-    miniDrawCloud(ctx,w*.55 + Math.sin(time*.00012+1)*10,h*.32,0.6,.06);
-  }else{
-    for(let i=0;i<18;i++){
-      const x=(i*91 + time*.005*(i%3+1))%w;
-      const y=22+((i*37)%Math.max(40,h*.5));
-      const a=.16+((i*13)%6)*.02;
-      ctx.fillStyle=`rgba(195,220,255,${a})`;
-      ctx.fillRect(x,y,1.4,1.4);
-    }
-  }
-
-  const horizon = h*.67;
-  ctx.fillStyle = stage?.theme === "violet" ? "rgba(110,86,180,.13)" : "rgba(70,140,195,.12)";
-  ctx.beginPath();
-  ctx.moveTo(0,horizon);
-  for(let x=0;x<=w;x+=42){
-    const yy=horizon - 10 - Math.sin(x*.018 + time*.00015)*11;
-    ctx.lineTo(x,yy);
-  }
-  ctx.lineTo(w,h);
-  ctx.lineTo(0,h);
-  ctx.closePath();
-  ctx.fill();
-}
-
-function miniWorldToScreen(stage,worldX,worldY,width,height,metrics){
-  const scale=metrics.scale;
-  const cameraX=stage.cameraX;
-  const floorOffset=height-30;
-  const cameraY=-.1;
-  return {
-    x:(worldX-cameraX)*scale,
-    y:floorOffset-(worldY-cameraY)*scale
-  };
-}
-
-function drawMiniCourse(ctx,w,h,time,stage){
-  const metrics=miniWorldMetrics(w,h);
-  const scale=metrics.scale;
-  const maxCameraX=Math.max(0,stage.length-metrics.visibleWidth+.6);
-  const targetCameraX=Math.max(0,Math.min(maxCameraX,stage.x-metrics.visibleWidth*.30));
-  stage.cameraX += (targetCameraX-stage.cameraX)*.16;
-  if(Math.abs(targetCameraX-stage.cameraX)<.01) stage.cameraX=targetCameraX;
-
-  drawMiniBackground(ctx,w,h,time,stage);
-
-  const groundGlow=stage.theme === "violet" ? "rgba(178,128,255,.18)" : stage.theme === "day" ? "rgba(95,215,255,.20)" : "rgba(80,170,255,.20)";
-  for(const platform of stage.platforms){
-    const p=miniWorldToScreen(stage,platform.x,platform.y,width,height,metrics);
-    const ph=platform.h*scale;
-    ctx.fillStyle="rgba(12,19,30,.96)";
-    ctx.fillRect(p.x,p.y,w*0+platform.w*scale,ph);
-    ctx.fillStyle=groundGlow;
-    ctx.fillRect(p.x,p.y,platform.w*scale,Math.max(3,ph*.16));
-    ctx.strokeStyle=stage.theme === "violet" ? "rgba(194,152,255,.68)" : "rgba(103,210,255,.68)";
-    ctx.lineWidth=1;
-    ctx.strokeRect(p.x+.5,p.y+.5,platform.w*scale-1,ph-1);
-  }
-
-  for(const block of stage.blocks){
-    const p=miniWorldToScreen(stage,block.x,block.y+block.h,width,height,metrics);
-    const bh=block.h*scale;
-    ctx.fillStyle="rgba(14,23,36,.98)";
-    ctx.fillRect(p.x,p.y,block.w*scale,bh);
-    ctx.fillStyle=groundGlow;
-    ctx.fillRect(p.x,p.y,block.w*scale,Math.max(3,bh*.12));
-    ctx.strokeStyle=stage.theme === "violet" ? "rgba(194,152,255,.65)" : "rgba(103,210,255,.65)";
-    ctx.strokeRect(p.x+.5,p.y+.5,block.w*scale-1,bh-1);
-  }
-
-  for(const hazard of stage.hazards){
-    const base=miniWorldToScreen(stage,hazard.x,hazard.y,width,height,metrics);
-    const hw=hazard.w*scale;
-    const hh=hazard.h*scale;
-    ctx.fillStyle="rgba(255,92,130,.92)";
-    ctx.shadowBlur=14;
-    ctx.shadowColor="rgba(255,70,130,.55)";
-    ctx.beginPath();
-    const count=Math.max(1,Math.round(hazard.w/.18));
-    for(let i=0;i<count;i++){
-      const x0=base.x + hw*(i/count);
-      const x1=base.x + hw*((i+.5)/count);
-      const x2=base.x + hw*((i+1)/count);
-      ctx.moveTo(x0,base.y);
-      ctx.lineTo(x1,base.y-hh);
-      ctx.lineTo(x2,base.y);
-    }
-    ctx.fill();
-    ctx.shadowBlur=0;
-  }
-
-  const goal=miniWorldToScreen(stage,stage.goalX,0,width,height,metrics);
-  const poleH=52;
-  ctx.strokeStyle="rgba(255,255,255,.75)";
-  ctx.lineWidth=3;
-  ctx.beginPath();
-  ctx.moveTo(goal.x,goal.y);
-  ctx.lineTo(goal.x,goal.y-poleH);
-  ctx.stroke();
-  const flagWave=Math.sin(time*.008)*3;
-  ctx.fillStyle="rgba(150,235,255,.94)";
-  ctx.beginPath();
-  ctx.moveTo(goal.x,goal.y-poleH);
-  ctx.lineTo(goal.x+28+flagWave,goal.y-poleH+10);
-  ctx.lineTo(goal.x,goal.y-poleH+22);
-  ctx.closePath();
-  ctx.fill();
-
-  const player=miniWorldToScreen(stage,stage.x,stage.y,width,height,metrics);
-  const runBob=stage.grounded ? Math.sin(stage.elapsed*18)*2.2 : 0;
-  const squash=stage.jumpSquash>0 ? 1-stage.jumpSquash*.9 : 1;
-  const playerW=.62*scale;
-  const playerH=.9*scale*squash;
-  const px=player.x-playerW/2;
-  const py=player.y-playerH+runBob;
-  ctx.fillStyle="rgba(247,251,255,.97)";
-  ctx.shadowBlur=18;
-  ctx.shadowColor="rgba(110,195,255,.65)";
-  ctx.fillRect(px,py,playerW,playerH);
-  ctx.shadowBlur=0;
-  ctx.fillStyle="rgba(75,134,255,.95)";
-  ctx.fillRect(px,py+playerH*.56,playerW,playerH*.44);
-  ctx.fillStyle="rgba(255,255,255,.94)";
-  ctx.fillRect(px+playerW*.62,py+playerH*.22,playerW*.12,playerH*.12);
-
-  if(stage.deathFlash>0){
-    ctx.fillStyle=`rgba(255,70,110,${stage.deathFlash/.32*.2})`;
-    ctx.fillRect(0,0,w,h);
-  }
-
-  const distance=Math.max(0,stage.goalX-stage.x);
-  ctx.fillStyle="rgba(255,255,255,.38)";
-  ctx.font="700 10px system-ui,sans-serif";
-  ctx.textAlign="right";
-  ctx.fillText(`${distance.toFixed(1)}m TO GO`,w-14,h-12);
-  ctx.textAlign="left";
-}
-
-function drawMiniGame(time){
-  if(!miniGameCanvas || !miniGameStage) return;
-  const {width,height,dpr}=miniCanvasSize();
-  const ctx=miniGameCanvas.getContext("2d");
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-  ctx.clearRect(0,0,width,height);
-  const stage=miniGameStage;
-  drawMiniCourse(ctx,width,height,time,stage);
-
-  ctx.fillStyle="rgba(255,255,255,.94)";
-  ctx.font="900 13px system-ui,sans-serif";
-  ctx.textAlign="left";
-  ctx.fillText(`${stage.name}  •  STAGE ${miniGameStageIndex+1}/3`,14,24);
-  ctx.font="700 11px system-ui,sans-serif";
-  ctx.fillStyle="rgba(255,255,255,.52)";
-  ctx.fillText(`TIME ${stage.elapsed.toFixed(2)}s`,14,41);
-
-  if(stage.cleared){
-    ctx.fillStyle="rgba(4,10,18,.72)";
-    ctx.fillRect(0,0,width,height);
-    ctx.fillStyle="rgba(255,255,255,.98)";
-    ctx.font="900 28px system-ui,sans-serif";
-    ctx.textAlign="center";
-    ctx.fillText(stage.resultText,width/2,height/2-2);
-    ctx.font="700 12px system-ui,sans-serif";
-    ctx.fillStyle="rgba(255,255,255,.62)";
-    ctx.fillText(`BEST ${Number(miniGameBestTimes[stage.bestKey]).toFixed(2)}s`,width/2,height/2+23);
-    ctx.fillText("NEXT COURSE…",width/2,height/2+43);
-    ctx.textAlign="left";
-  }
-}
-
-function updateMiniGame(time){
-  if(!miniGameStarted || matchType !== "random" || !latestMatchData || latestMatchData.status !== "waiting" || latestMatchData.matchingFinalizedAt){
-    return;
-  }
-  if(!miniGameStage) startMiniGame(true);
-  if(!miniGameStage) return;
-  if(!miniGameBestTimes || !Object.keys(miniGameBestTimes).length) miniGameBestTimes=loadMiniBestTimes();
-  const now=performance.now();
-  const dt=Math.min(.05,Math.max(0,(now-(miniGameStage.lastFrameAt||now))/1000));
-  miniGameStage.lastFrameAt=now;
-  if(!miniGameStage.cleared){
-    miniUpdateCourse(dt,time);
-  }else{
-    miniRestartAfterClear(now);
-  }
-  drawMiniGame(time);
-}
-
 function updateMatchingUI(data){
   if(matchType !== "random"){
     matchingScreen.style.display = "none";
@@ -5434,38 +4891,36 @@ function updateMatchingUI(data){
 
   if(data.status === "waiting" && !data.matchingFinalizedAt){
     matchingScreen.style.display = "flex";
+    ensureMiniActionGameStarted();
     menu.style.display = "none";
     gameUI.style.display = "none";
     preStart.style.display = "none";
     ruleScreen.style.display = "none";
 
-    if(!miniGameStarted) startMiniGame(true);
     const players = data.players || {};
     const count = Object.keys(players).length;
     matchingCount.textContent = `${count} / ${MAX_RANDOM_PLAYERS} PLAYERS`;
 
-    const timerStartedAt = Number(data.matchingStartedAt || 0);
-    const timerHasStarted = count >= 2 && timerStartedAt > 0;
-    const remain = timerHasStarted
-      ? Math.max(0, RANDOM_MAX_WAIT - (Date.now() - timerStartedAt))
-      : RANDOM_MAX_WAIT;
-    matchingTimer.textContent = timerHasStarted
-      ? String(Math.ceil(remain / 1000))
-      : "--";
-    if(count < 2){
-      matchingStatus.textContent = "2人以上になるとカウント開始";
+    const countdownStartedAt = Number(data.matchingCountdownStartedAt || 0);
+    const countdownReady = count >= MIN_RANDOM_PLAYERS_TO_START_COUNTDOWN && countdownStartedAt > 0;
+
+    if(!countdownReady){
+      matchingTimer.textContent = "—";
+      matchingStatus.textContent = "あと1人でカウント開始";
+      matchingEndButton.style.display = "none";
     }else{
+      const remain = Math.max(0, RANDOM_MAX_WAIT - (Date.now() - countdownStartedAt));
+      matchingTimer.textContent = String(Math.ceil(remain / 1000));
       matchingStatus.textContent = count >= MAX_RANDOM_PLAYERS
         ? "メンバーが決定しました…"
         : "他のプレイヤーを待っています…";
-    }
 
-    const requested = Boolean((data.matchingEndRequests || {})[currentUser.uid]);
-    matchingEndButton.style.display = count >= 2 ? "block" : "none";
-    matchingEndButton.textContent = requested
-      ? "マッチング終了を要求済み"
-      : "マッチング終了を要求";
-    matchingEndButton.disabled = count < 2 || requested;
+      matchingEndButton.style.display = "block";
+      matchingEndButton.textContent = (data.matchingEndRequests || {})[currentUser.uid]
+        ? "マッチング終了を要求済み"
+        : "マッチング終了を要求";
+      matchingEndButton.disabled = Boolean((data.matchingEndRequests || {})[currentUser.uid]);
+    }
     matchingReadyButton.style.display = "none";
     return;
   }
@@ -5518,6 +4973,7 @@ function updateRuleUI(data){
   }
 
   matchingScreen.style.display = "none";
+  stopMiniActionGame();
   preStart.style.display = "none";
   gameUI.style.display = "none";
   menu.style.display = "none";
@@ -7661,9 +7117,20 @@ async function finalizeRandomMatchIfNeeded(){
 
       const players = { ...(data.players || {}) };
       const count = Object.keys(players).length;
-      if(count < 2) return;
-      const startedMillis = Number(data.matchingStartedAt || 0);
-      const timedOut = startedMillis > 0 && Date.now() - startedMillis >= RANDOM_MAX_WAIT;
+      if(count < MIN_RANDOM_PLAYERS_TO_START_COUNTDOWN){
+        if(data.matchingCountdownStartedAt || Object.keys(data.matchingEndRequests || {}).length){
+          transaction.update(matchRef,{matchingCountdownStartedAt:null,matchingEndRequests:{}});
+        }
+        return;
+      }
+
+      if(!data.matchingCountdownStartedAt){
+        transaction.update(matchRef,{matchingCountdownStartedAt:Date.now(),matchingEndRequests:{}});
+        return;
+      }
+
+      const countdownStartedMillis = Number(data.matchingCountdownStartedAt || 0);
+      const timedOut = Date.now() - countdownStartedMillis >= RANDOM_MAX_WAIT;
       const full = count >= MAX_RANDOM_PLAYERS;
       const allRequested = allMatchingEndRequested(data);
       if(!(timedOut || full || allRequested)) return;
@@ -8135,8 +7602,7 @@ async function leaveRoom(){
           {
             players,
             playerOrder,
-            hostUid: nextHost,
-            ...(data.matchType === "random" && playerOrder.length < 2 ? {matchingStartedAt:null} : {})
+            hostUid: nextHost
           }
         );
       }
@@ -8226,12 +7692,8 @@ function leaveCurrentMatch(){
   matchingLastFinalizedState = false;
   matchingNotificationPlayed = false;
   miniGameStarted = false;
-  miniGameStage = null;
-  miniGameStageIndex = -1;
-  miniGameStartedAt = 0;
-  miniGameClearedAt = 0;
-  miniGameRunTime = 0;
   matchingMiniScore = 0;
+  stopMiniActionGame();
   wpEarned = 0;
   resultPlayersSnapshot = null;
   resultPlayerOrder = [];
@@ -8241,7 +7703,8 @@ function leaveCurrentMatch(){
     pendingResultDeleteTimer = null;
   }
   setConnectionStatus(false);
-  if(miniGameScore) miniGameScore.textContent = "BEST --";
+  if(miniGameScore) miniGameScore.textContent = "TIME 0.00s · BEST --";
+  if(miniGameStageLabel) miniGameStageLabel.textContent = "STAGE --";
   if(ruleCountdown) ruleCountdown.textContent = "5";
   hidePreMatchScreens();
 
@@ -8999,7 +8462,7 @@ function gameLoop(
 
   updateStartProgress();
   updateNeonEdges(time);
-  updateMiniGame(time);
+  updateMiniActionGame(delta,time);
 
   if(latestMatchData){
     if(latestMatchData.status === "waiting" && matchType === "random") updateMatchingUI(latestMatchData);
@@ -9374,82 +8837,513 @@ matchingReadyButton.addEventListener(
   setRandomReady
 );
 
-function miniCanvasPoint(event){
+function miniActionIsVisible(){
+  return Boolean(
+    matchingScreen &&
+    matchingScreen.style.display === "flex" &&
+    matchType === "random" &&
+    latestMatchData &&
+    latestMatchData.status === "waiting" &&
+    !gameEnded
+  );
+}
+
+const MINI_ACTION_STAGES = [
+  {
+    id:1,
+    name:"NEON RUN",
+    worldWidth:1360,
+    start:{x:42,y:188},
+    goalX:1290,
+    platforms:[
+      {x:0,y:220,w:300,h:40},
+      {x:350,y:198,w:170,h:20},
+      {x:570,y:220,w:230,h:40},
+      {x:840,y:186,w:165,h:20},
+      {x:1030,y:220,w:170,h:40},
+      {x:1225,y:198,w:135,h:20}
+    ],
+    hazards:[
+      {x:438,y:180,w:24,h:18},
+      {x:664,y:201,w:24,h:19},
+      {x:1104,y:201,w:24,h:19}
+    ]
+  },
+  {
+    id:2,
+    name:"SKY STEP",
+    worldWidth:1380,
+    start:{x:42,y:188},
+    goalX:1300,
+    platforms:[
+      {x:0,y:220,w:230,h:40},
+      {x:275,y:190,w:115,h:20},
+      {x:430,y:158,w:115,h:20},
+      {x:585,y:190,w:105,h:20},
+      {x:730,y:142,w:125,h:20},
+      {x:905,y:176,w:125,h:20},
+      {x:1070,y:132,w:125,h:20},
+      {x:1235,y:186,w:145,h:20}
+    ],
+    hazards:[
+      {x:330,y:172,w:20,h:18},
+      {x:630,y:172,w:20,h:18},
+      {x:955,y:158,w:20,h:18}
+    ]
+  },
+  {
+    id:3,
+    name:"PILLAR DASH",
+    worldWidth:1480,
+    start:{x:42,y:188},
+    goalX:1410,
+    platforms:[
+      {x:0,y:220,w:1480,h:40}
+    ],
+    hazards:[
+      {x:250,y:198,w:26,h:22},
+      {x:420,y:198,w:26,h:22},
+      {x:600,y:198,w:26,h:22},
+      {x:800,y:198,w:26,h:22},
+      {x:1010,y:198,w:26,h:22},
+      {x:1210,y:198,w:26,h:22},
+      {x:1325,y:198,w:26,h:22}
+    ],
+    ceilings:[
+      {x:460,y:112,w:150,h:18},
+      {x:840,y:126,w:160,h:18},
+      {x:1110,y:108,w:145,h:18}
+    ]
+  }
+];
+
+function getMiniBestKey(stageId){
+  return `3Dfps_mini_action_best_stage_${stageId}`;
+}
+
+function getMiniBestTime(stageId){
+  try{
+    const value = Number(localStorage.getItem(getMiniBestKey(stageId)));
+    return Number.isFinite(value) && value > 0 ? value : null;
+  }catch(error){
+    return null;
+  }
+}
+
+function saveMiniBestTime(stageId,time){
+  const previous = getMiniBestTime(stageId);
+  if(previous !== null && previous <= time) return false;
+  try{
+    localStorage.setItem(getMiniBestKey(stageId), String(time));
+    return true;
+  }catch(error){
+    return previous === null;
+  }
+}
+
+function chooseMiniActionStage(){
+  if(MINI_ACTION_STAGES.length === 1) return MINI_ACTION_STAGES[0];
+  let next = MINI_ACTION_STAGES[Math.floor(Math.random() * MINI_ACTION_STAGES.length)];
+  if(miniActionPreviousStage && MINI_ACTION_STAGES.length > 1){
+    let guard = 0;
+    while(next.id === miniActionPreviousStage && guard++ < 8){
+      next = MINI_ACTION_STAGES[Math.floor(Math.random() * MINI_ACTION_STAGES.length)];
+    }
+  }
+  miniActionPreviousStage = next.id;
+  return next;
+}
+
+function resizeMiniActionCanvas(){
+  if(!miniGameCanvas) return;
   const rect = miniGameCanvas.getBoundingClientRect();
+  const dpr = Math.min(2,window.devicePixelRatio || 1);
+  const width = Math.max(1,Math.floor(rect.width * dpr));
+  const height = Math.max(1,Math.floor(rect.height * dpr));
+  if(miniGameCanvas.width !== width || miniGameCanvas.height !== height){
+    miniGameCanvas.width = width;
+    miniGameCanvas.height = height;
+  }
+}
+
+function showMiniActionMessage(text){
+  if(!miniGameMessage) return;
+  miniGameMessage.textContent = text;
+  miniGameMessage.classList.add("show");
+}
+
+function hideMiniActionMessage(){
+  if(!miniGameMessage) return;
+  miniGameMessage.textContent = "";
+  miniGameMessage.classList.remove("show");
+}
+
+function updateMiniActionLabels(){
+  if(!miniActionState || !miniGameStageLabel || !miniGameScore) return;
+  const stage = miniActionState.stage;
+  const best = getMiniBestTime(stage.id);
+  const time = Math.max(0,miniActionState.elapsed || 0);
+  miniGameStageLabel.textContent = `STAGE ${stage.id} · ${stage.name}`;
+  miniGameScore.textContent = `TIME ${time.toFixed(2)}s · BEST ${best === null ? "--" : best.toFixed(2) + "s"}`;
+}
+
+function startMiniActionStage(stage = chooseMiniActionStage()){
+  if(!miniGameCanvas) return;
+  resizeMiniActionCanvas();
+  const start = stage.start;
+  miniActionState = {
+    active:true,
+    stage,
+    x:start.x,
+    y:start.y,
+    vx:0,
+    vy:0,
+    width:16,
+    height:22,
+    onGround:false,
+    coyote:0,
+    jumpBuffer:0,
+    startTime:performance.now(),
+    elapsed:0,
+    flashUntil:0,
+    clearPending:false
+  };
+  miniGameStarted = true;
+  miniActionLastFrameTime = performance.now();
+  hideMiniActionMessage();
+  updateMiniActionLabels();
+}
+
+function ensureMiniActionGameStarted(){
+  if(!miniActionState || !miniActionState.active){
+    startMiniActionStage();
+  }
+}
+
+function stopMiniActionGame(){
+  if(miniActionState) miniActionState.active = false;
+  miniActionState = null;
+  miniActionLastFrameTime = 0;
+  miniActionInput.left = false;
+  miniActionInput.right = false;
+  miniActionInput.jump = false;
+  miniActionInput.jumpPressed = false;
+  miniGameStarted = false;
+  if(miniGameMessage) miniGameMessage.classList.remove("show");
+}
+
+function miniActionWorldToScreen(state,worldX,worldY,viewW,viewH){
+  const targetCamera = Math.max(0,Math.min(
+    state.stage.worldWidth - 720,
+    state.x - 180
+  ));
   return {
-    x:event.clientX - rect.left,
-    y:event.clientY - rect.top
+    x:(worldX - targetCamera) * viewW / 720,
+    y:worldY * viewH / 260
   };
 }
 
-miniGameCanvas.addEventListener("pointerdown", event => {
-  event.preventDefault();
-  if(!gameStarted || matchType !== "random" || !latestMatchData || latestMatchData.status !== "waiting" || latestMatchData.matchingFinalizedAt || !miniGameStarted) return;
-  miniGamePointerId = event.pointerId;
-  miniGamePointerStart = miniCanvasPoint(event);
-  try{ miniGameCanvas.setPointerCapture(event.pointerId); }catch(error){}
-  const point = miniGamePointerStart;
-  const width = Math.max(1,miniGameCanvas.clientWidth);
-  if(point.x < width / 3){
-    miniInput.left = true;
-    miniInput.right = false;
-  }else if(point.x > width * 2 / 3){
-    miniInput.right = true;
-    miniInput.left = false;
-  }else{
-    miniInput.jump = true;
-    miniInput.action = true;
-  }
-});
+function miniActionRectHit(a,b){
+  return a.x < b.x + b.w &&
+    a.x + a.width > b.x &&
+    a.y < b.y + b.h &&
+    a.y + a.height > b.y;
+}
 
-miniGameCanvas.addEventListener("pointermove", event => {
-  if(event.pointerId !== miniGamePointerId || !miniGamePointerStart) return;
-  event.preventDefault();
-  const point = miniCanvasPoint(event);
-  const dx = point.x - miniGamePointerStart.x;
-  const dy = point.y - miniGamePointerStart.y;
-  if(Math.abs(dx) > 18 || Math.abs(dy) > 18){
-    if(Math.abs(dx) >= Math.abs(dy)){
-      miniInput.left = dx < 0;
-      miniInput.right = dx > 0;
-      miniInput.jump = false;
-    }else{
-      miniInput.jump = dy < 0;
-      miniInput.action = true;
+function resetMiniActionStage(message=""){ 
+  if(!miniActionState || !miniActionState.active) return;
+  const stage = miniActionState.stage;
+  const start = stage.start;
+  miniActionState.x = start.x;
+  miniActionState.y = start.y;
+  miniActionState.vx = 0;
+  miniActionState.vy = 0;
+  miniActionState.onGround = false;
+  miniActionState.coyote = 0;
+  miniActionState.jumpBuffer = 0;
+  miniActionState.startTime = performance.now();
+  miniActionState.elapsed = 0;
+  miniActionState.clearPending = false;
+  miniActionState.flashUntil = performance.now() + 160;
+  if(message){
+    showMiniActionMessage(message);
+    setTimeout(() => {
+      if(miniActionState && miniActionState.active) hideMiniActionMessage();
+    },400);
+  }else{
+    hideMiniActionMessage();
+  }
+  updateMiniActionLabels();
+}
+
+function completeMiniActionStage(){
+  if(!miniActionState || !miniActionState.active || miniActionState.clearPending) return;
+  miniActionState.clearPending = true;
+  const state = miniActionState;
+  state.elapsed = (performance.now() - state.startTime) / 1000;
+  const isBest = saveMiniBestTime(state.stage.id,state.elapsed);
+  updateMiniActionLabels();
+  showMiniActionMessage(isBest ? `NEW BEST  ${state.elapsed.toFixed(2)}s` : `CLEAR  ${state.elapsed.toFixed(2)}s`);
+  setTimeout(() => {
+    if(!miniActionState || miniActionState !== state || !miniActionState.active) return;
+    if(!miniActionIsVisible()) return;
+    startMiniActionStage();
+  },850);
+}
+
+function updateMiniActionGame(delta,time){
+  if(!miniActionState || !miniActionState.active) return;
+  if(!miniActionIsVisible()){
+    stopMiniActionGame();
+    return;
+  }
+
+  const state = miniActionState;
+  const stage = state.stage;
+  const clampedDelta = Math.min(.035,Math.max(.001,delta));
+  if(state.clearPending){
+    drawMiniActionGame();
+    return;
+  }
+
+  if(miniActionInput.jumpPressed){
+    state.jumpBuffer = .12;
+    miniActionInput.jumpPressed = false;
+  }else{
+    state.jumpBuffer = Math.max(0,state.jumpBuffer - clampedDelta);
+  }
+
+  const horizontal = Number(miniActionInput.right) - Number(miniActionInput.left);
+  const targetSpeed = 190;
+  const accel = 980;
+  if(horizontal !== 0){
+    state.vx += (horizontal * targetSpeed - state.vx) * Math.min(1,accel * clampedDelta / Math.max(1,targetSpeed));
+  }else{
+    state.vx *= Math.max(0,1 - 10 * clampedDelta);
+    if(Math.abs(state.vx) < 2) state.vx = 0;
+  }
+
+  if(state.onGround) state.coyote = .1;
+  else state.coyote = Math.max(0,state.coyote - clampedDelta);
+
+  if(state.jumpBuffer > 0 && state.coyote > 0){
+    state.vy = -455;
+    state.onGround = false;
+    state.coyote = 0;
+    state.jumpBuffer = 0;
+  }
+
+  const previousBottom = state.y + state.height;
+  const previousX = state.x;
+  state.x += state.vx * clampedDelta;
+  state.x = Math.max(0,Math.min(stage.worldWidth - state.width,state.x));
+  state.vy += 1180 * clampedDelta;
+  state.y += state.vy * clampedDelta;
+  state.onGround = false;
+
+  for(const platform of stage.platforms){
+    const horizontalOverlap = state.x + state.width > platform.x && state.x < platform.x + platform.w;
+    if(!horizontalOverlap) continue;
+    if(state.vy >= 0 && previousBottom <= platform.y + 5 && state.y + state.height >= platform.y){
+      state.y = platform.y - state.height;
+      state.vy = 0;
+      state.onGround = true;
     }
   }
-});
 
-function releaseMiniPointer(event){
-  if(event.pointerId !== miniGamePointerId) return;
-  miniInput.left = false;
-  miniInput.right = false;
-  miniInput.jump = false;
-  miniInput.action = false;
-  miniGamePointerId = null;
-  miniGamePointerStart = null;
-}
-miniGameCanvas.addEventListener("pointerup", releaseMiniPointer);
-miniGameCanvas.addEventListener("pointercancel", releaseMiniPointer);
+  if(state.x < previousX && state.vx > 0) state.vx = 0;
 
-window.addEventListener("keydown", event => {
-  if(!miniGameStarted || matchType !== "random") return;
-  if(["ArrowLeft","a","A"].includes(event.key)) miniInput.left = true;
-  if(["ArrowRight","d","D"].includes(event.key)) miniInput.right = true;
-  if(["Space","ArrowUp","w","W"].includes(event.key)){
-    miniInput.jump = true;
-    miniInput.action = true;
-    event.preventDefault();
+  for(const hazard of stage.hazards || []){
+    const hitRect = {x:state.x,y:state.y,width:state.width,height:state.height};
+    if(miniActionRectHit(hitRect,hazard)){
+      resetMiniActionStage("TRY AGAIN!");
+      drawMiniActionGame();
+      return;
+    }
   }
-  if(["Enter","e","E"].includes(event.key)) miniInput.action = true;
+
+  if(state.y > 290){
+    resetMiniActionStage("MISS!");
+    drawMiniActionGame();
+    return;
+  }
+
+  if(state.x + state.width >= stage.goalX){
+    completeMiniActionStage();
+    drawMiniActionGame();
+    return;
+  }
+
+  state.elapsed = (performance.now() - state.startTime) / 1000;
+  updateMiniActionLabels();
+  drawMiniActionGame();
+}
+
+function drawMiniActionGame(){
+  if(!miniGameCanvas || !miniActionState) return;
+  resizeMiniActionCanvas();
+  const ctx = miniGameCanvas.getContext("2d");
+  if(!ctx) return;
+  const width = miniGameCanvas.clientWidth || 420;
+  const height = miniGameCanvas.clientHeight || 260;
+  const sx = width / 720;
+  const sy = height / 260;
+  ctx.setTransform(
+    (miniGameCanvas.width / Math.max(1,width)) * sx,
+    0,
+    0,
+    (miniGameCanvas.height / Math.max(1,height)) * sy,
+    0,
+    0
+  );
+  ctx.clearRect(0,0,720,260);
+
+  const bg = ctx.createLinearGradient(0,0,0,260);
+  bg.addColorStop(0,"#111c2b");
+  bg.addColorStop(.62,"#07101b");
+  bg.addColorStop(1,"#02050a");
+  ctx.fillStyle = bg;
+  ctx.fillRect(0,0,720,260);
+
+  const camera = Math.max(0,Math.min(miniActionState.stage.worldWidth - 720,miniActionState.x - 180));
+  const stage = miniActionState.stage;
+
+  ctx.save();
+  ctx.translate(-camera,0);
+
+  for(let i=0;i<12;i++){
+    const px = camera + ((i * 127 + stage.id * 53) % 760) - 20;
+    const py = 48 + ((i * 31 + stage.id * 17) % 105);
+    ctx.fillStyle = "rgba(150,195,255,.13)";
+    ctx.beginPath();
+    ctx.arc(px,py,(i % 3) + 1,0,Math.PI*2);
+    ctx.fill();
+  }
+
+  for(const platform of stage.platforms){
+    const grad = ctx.createLinearGradient(0,platform.y,0,platform.y + platform.h);
+    grad.addColorStop(0,"#28394f");
+    grad.addColorStop(1,"#0c1624");
+    ctx.fillStyle = grad;
+    ctx.fillRect(platform.x,platform.y,platform.w,platform.h);
+    ctx.strokeStyle = "rgba(103,196,255,.84)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(platform.x,platform.y + .5);
+    ctx.lineTo(platform.x + platform.w,platform.y + .5);
+    ctx.stroke();
+  }
+
+  for(const ceiling of stage.ceilings || []){
+    ctx.fillStyle = "#1a2a3d";
+    ctx.fillRect(ceiling.x,ceiling.y,ceiling.w,ceiling.h);
+    ctx.strokeStyle = "rgba(161,108,255,.56)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(ceiling.x,ceiling.y + ceiling.h - .5);
+    ctx.lineTo(ceiling.x + ceiling.w,ceiling.y + ceiling.h - .5);
+    ctx.stroke();
+  }
+
+  for(const hazard of stage.hazards || []){
+    ctx.fillStyle = "#7f335f";
+    ctx.beginPath();
+    ctx.moveTo(hazard.x,hazard.y + hazard.h);
+    ctx.lineTo(hazard.x + hazard.w / 2,hazard.y);
+    ctx.lineTo(hazard.x + hazard.w,hazard.y + hazard.h);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,132,203,.72)";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  const goalX = stage.goalX;
+  ctx.strokeStyle = "rgba(170,221,255,.95)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(goalX,178);
+  ctx.lineTo(goalX,220);
+  ctx.stroke();
+  ctx.fillStyle = "rgba(116,207,255,.86)";
+  ctx.beginPath();
+  ctx.moveTo(goalX + 1,178);
+  ctx.lineTo(goalX + 34,188);
+  ctx.lineTo(goalX + 1,198);
+  ctx.closePath();
+  ctx.fill();
+
+  const p = miniActionState;
+  const playerGrad = ctx.createLinearGradient(p.x,p.y,p.x,p.y + p.height);
+  playerGrad.addColorStop(0,"#e7f4ff");
+  playerGrad.addColorStop(.28,"#79c9ff");
+  playerGrad.addColorStop(1,"#3b5bff");
+  ctx.fillStyle = playerGrad;
+  ctx.fillRect(p.x,p.y,p.width,p.height);
+  ctx.fillStyle = "rgba(7,22,41,.9)";
+  ctx.fillRect(p.x + 3,p.y + 5,p.width - 6,5);
+
+  ctx.restore();
+
+  if(miniActionState.flashUntil > performance.now()){
+    const alpha = Math.max(0,(miniActionState.flashUntil - performance.now()) / 160) * .35;
+    ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+    ctx.fillRect(0,0,720,260);
+  }
+}
+
+function bindMiniActionControl(button,action){
+  const press = event => {
+    event.preventDefault();
+    if(!miniActionIsVisible()) return;
+    if(action === "jump"){
+      miniActionInput.jump = true;
+      miniActionInput.jumpPressed = true;
+    }else{
+      miniActionInput[action] = true;
+    }
+  };
+  const release = event => {
+    event.preventDefault();
+    if(action === "jump") miniActionInput.jump = false;
+    else miniActionInput[action] = false;
+  };
+  button.addEventListener("pointerdown",press);
+  button.addEventListener("pointerup",release);
+  button.addEventListener("pointercancel",release);
+  button.addEventListener("pointerleave",release);
+}
+
+miniControlButtons.forEach(button => bindMiniActionControl(button,button.dataset.miniAction));
+
+window.addEventListener("keydown",event => {
+  if(!miniActionIsVisible()) return;
+  if(event.code === "ArrowLeft" || event.code === "KeyA"){
+    event.preventDefault();
+    miniActionInput.left = true;
+  }
+  if(event.code === "ArrowRight" || event.code === "KeyD"){
+    event.preventDefault();
+    miniActionInput.right = true;
+  }
+  if(event.code === "Space" || event.code === "ArrowUp" || event.code === "KeyW"){
+    event.preventDefault();
+    miniActionInput.jump = true;
+    miniActionInput.jumpPressed = true;
+  }
+  if(event.code === "KeyR"){
+    event.preventDefault();
+    resetMiniActionStage();
+  }
 });
 
-window.addEventListener("keyup", event => {
-  if(["ArrowLeft","a","A"].includes(event.key)) miniInput.left = false;
-  if(["ArrowRight","d","D"].includes(event.key)) miniInput.right = false;
-  if(["Space","ArrowUp","w","W"].includes(event.key)) miniInput.jump = false;
-  if(["Enter","e","E"].includes(event.key)) miniInput.action = false;
+window.addEventListener("keyup",event => {
+  if(event.code === "ArrowLeft" || event.code === "KeyA") miniActionInput.left = false;
+  if(event.code === "ArrowRight" || event.code === "KeyD") miniActionInput.right = false;
+  if(event.code === "Space" || event.code === "ArrowUp" || event.code === "KeyW") miniActionInput.jump = false;
 });
+
+window.addEventListener("resize",resizeMiniActionCanvas);
 
 shareCodeButton.addEventListener(
   "click",
