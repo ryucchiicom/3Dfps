@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.7.0. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.7.0 changes: first-conference implementation pass — added Random Match and Room Match entry flow, shared random-match rules, matching wait lobby with offline mini game, all-player end-request / ready phase, synchronized RULE 5-second pre-match screen, RESULT screen with placement and random-match WP, temporary connection-loss notice, floating terrain room setting, DYNAMIC hidden setting via double-tap, date/time-shifted rare DYNAMIC selection, and retained all existing gameplay/settings/security behavior. The conference proposal to add decorative floating lines is intentionally excluded. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
+<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.8.0. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.8.0 changes: random matchmaking now waits for at least two players before the matching countdown starts, matching-end requests are disabled, Room Match has a distinct color, and the matching mini game is replaced by three randomly selected short mini-action stages with per-stage local best-time records. Release 1.7.0 changes: first-conference implementation pass — added Random Match and Room Match entry flow, shared random-match rules, matching wait lobby with offline mini game, all-player end-request / ready phase, synchronized RULE 5-second pre-match screen, RESULT screen with placement and random-match WP, temporary connection-loss notice, floating terrain room setting, DYNAMIC hidden setting via double-tap, date/time-shifted rare DYNAMIC selection, and retained all existing gameplay/settings/security behavior. The conference proposal to add decorative floating lines is intentionally excluded. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
 <title>3Dfps</title>
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
@@ -245,50 +245,121 @@ canvas{
   opacity:.82;
 }
 
+#roomMatchButton{
+  background:linear-gradient(135deg,#7b48ff,#a44cff);
+  box-shadow:0 0 24px rgba(140,78,255,.16);
+}
+
+#roomMatchButton:active{
+  background:linear-gradient(135deg,#6e3ee8,#963eea);
+}
+
 #miniGameBox{
   position:relative;
-  width:min(84vw,430px);
-  height:min(44vh,280px);
-  min-height:190px;
+  width:min(92vw,470px);
+  height:min(48vh,300px);
+  min-height:210px;
   margin:10px 0;
   border:1px solid rgba(255,255,255,.12);
   border-radius:18px;
-  background:rgba(0,0,0,.25);
+  background:rgba(0,0,0,.28);
   overflow:hidden;
-  box-shadow:inset 0 0 55px rgba(0,0,0,.2);
+  box-shadow:inset 0 0 55px rgba(0,0,0,.2),0 0 28px rgba(58,118,255,.08);
+  touch-action:none;
 }
 
 #miniGameTitle{
   position:absolute;
   left:14px;
-  top:12px;
+  top:10px;
   font-size:12px;
   font-weight:900;
+  letter-spacing:1px;
   opacity:.58;
+  z-index:2;
 }
 
-#miniGameScore{
+#miniGameStageName{
+  position:absolute;
+  left:14px;
+  top:29px;
+  font-size:16px;
+  font-weight:900;
+  z-index:2;
+}
+
+#miniGameTimer{
   position:absolute;
   right:14px;
   top:10px;
-  font-size:12px;
+  font-size:17px;
   font-variant-numeric:tabular-nums;
   font-weight:900;
-  opacity:.7;
+  z-index:2;
 }
 
-#miniTarget{
+#miniGameBest{
+  position:absolute;
+  right:14px;
+  top:32px;
+  font-size:11px;
+  font-variant-numeric:tabular-nums;
+  font-weight:800;
+  opacity:.58;
+  z-index:2;
+}
+
+#miniGameCanvas{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+}
+
+#miniActionButton{
+  position:absolute;
+  right:14px;
+  bottom:14px;
+  min-width:105px;
+  height:42px;
+  padding:0 16px;
+  border:1px solid rgba(255,255,255,.24);
+  border-radius:13px;
+  color:#fff;
+  background:rgba(22,32,48,.82);
+  backdrop-filter:blur(10px);
+  font-size:14px;
+  font-weight:900;
+  box-shadow:0 8px 24px rgba(0,0,0,.25);
+  z-index:3;
+  touch-action:none;
+}
+
+#miniActionButton:active{
+  transform:scale(.96);
+}
+
+#miniGameMessage{
   position:absolute;
   left:50%;
-  top:54%;
-  width:54px;
-  height:54px;
+  top:52%;
   transform:translate(-50%,-50%);
-  border-radius:50%;
-  border:2px solid rgba(255,255,255,.7);
-  background:radial-gradient(circle at 35% 35%,rgba(255,255,255,.95),rgba(90,190,255,.38) 34%,rgba(120,90,255,.18) 70%,transparent 71%);
-  box-shadow:0 0 22px rgba(90,190,255,.42);
-  pointer-events:auto;
+  min-width:180px;
+  text-align:center;
+  font-size:24px;
+  font-weight:1000;
+  letter-spacing:1px;
+  text-shadow:0 4px 24px rgba(0,0,0,.65);
+  z-index:4;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .15s,transform .15s;
+}
+
+#miniGameMessage.show{
+  opacity:1;
+  transform:translate(-50%,-50%) scale(1.02);
 }
 
 #matchingReadyButton,
@@ -1212,7 +1283,7 @@ html.roomJoinMode #roomJoinScreen{
     <h1 class="title">3Dfps</h1>
 
     <div class="subtitle">
-      v1.7.0
+      v1.8.0
     </div>
 
     <button id="randomMatchButton" class="button">
@@ -1312,9 +1383,13 @@ html.roomJoinMode #roomJoinScreen{
   <div id="matchingTimer">30</div>
   <div id="matchingStatus">他のプレイヤーを待っています…</div>
   <div id="miniGameBox">
-    <div id="miniGameTitle">MINI GAME</div>
-    <div id="miniGameScore">SCORE 0</div>
-    <button id="miniTarget" aria-label="ミニゲームのターゲット"></button>
+    <div id="miniGameTitle">MINI ACTION</div>
+    <div id="miniGameStageName">STAGE</div>
+    <div id="miniGameTimer">0.00s</div>
+    <div id="miniGameBest">BEST --</div>
+    <canvas id="miniGameCanvas" width="420" height="220" aria-label="ミニアクションゲーム"></canvas>
+    <button id="miniActionButton" type="button">ACTION</button>
+    <div id="miniGameMessage"></div>
   </div>
   <button id="matchingReadyButton" class="button">準備OK</button>
   <button id="matchingEndButton" class="button secondary">マッチング終了を要求</button>
@@ -1691,6 +1766,12 @@ let matchType = "room";
 let latestMatchData = null;
 let matchingMiniScore = 0;
 let matchingLastFinalizedState = false;
+let miniActionState = null;
+let miniActionStageIndex = -1;
+let miniActionLastUpdate = 0;
+let miniActionClearTimer = 0;
+let miniActionInputDown = false;
+let miniActionKeyLock = false;
 let matchingNotificationPlayed = false;
 let miniGameStarted = false;
 let ruleAdvanceInFlight = false;
@@ -1728,6 +1809,8 @@ const CLEANUP_INTERVAL = 10000;
 const MAX_RANDOM_PLAYERS = 8;
 const RANDOM_MAX_WAIT = 30000;
 const MATCHING_FINALIZE_TIME = 10000;
+const MATCHING_MIN_PLAYERS = 2;
+const MINI_BEST_KEY = "3DfpsMiniBestTimesV1";
 const RULE_DURATION = 5000;
 
 const ARENA_SIZE = 70;
@@ -1922,8 +2005,23 @@ const matchingStatus =
 const miniGameScore =
   document.getElementById("miniGameScore");
 
-const miniTarget =
-  document.getElementById("miniTarget");
+const miniGameStageName =
+  document.getElementById("miniGameStageName");
+
+const miniGameTimer =
+  document.getElementById("miniGameTimer");
+
+const miniGameBest =
+  document.getElementById("miniGameBest");
+
+const miniGameCanvas =
+  document.getElementById("miniGameCanvas");
+
+const miniActionButton =
+  document.getElementById("miniActionButton");
+
+const miniGameMessage =
+  document.getElementById("miniGameMessage");
 
 const matchingReadyButton =
   document.getElementById("matchingReadyButton");
@@ -2358,6 +2456,205 @@ function getMatchCreatedMillis(data){
 function getMatchingFinalizedMillis(data){
   if(typeof data?.matchingFinalizedAt === "number") return data.matchingFinalizedAt;
   return 0;
+}
+
+function getMatchingTimerStartMillis(data){
+  if(typeof data?.matchingTimerStartedAt === "number") return data.matchingTimerStartedAt;
+  return 0;
+}
+
+function getMiniBestTimes(){
+  try{
+    const raw=localStorage.getItem(MINI_BEST_KEY);
+    const parsed=raw?JSON.parse(raw):{};
+    return parsed&&typeof parsed==="object"?parsed:{};
+  }catch(error){
+    return {};
+  }
+}
+
+function getMiniBestTime(stageIndex){
+  const value=Number(getMiniBestTimes()[String(stageIndex)]);
+  return Number.isFinite(value)&&value>0?value:null;
+}
+
+function saveMiniBestTime(stageIndex,timeSeconds){
+  try{
+    const bestTimes=getMiniBestTimes();
+    const previous=Number(bestTimes[String(stageIndex)]);
+    if(!Number.isFinite(previous)||previous<=0||timeSeconds<previous){
+      bestTimes[String(stageIndex)]=Number(timeSeconds.toFixed(2));
+      localStorage.setItem(MINI_BEST_KEY,JSON.stringify(bestTimes));
+      return bestTimes[String(stageIndex)];
+    }
+    return previous;
+  }catch(error){
+    return timeSeconds;
+  }
+}
+
+const MINI_ACTION_STAGES=[
+  {name:"JUMP RUN",action:"JUMP",hint:"障害物をジャンプで越えよう"},
+  {name:"LANE SHIFT",action:"SHIFT",hint:"タップで上下のレーンを切り替えよう"},
+  {name:"GATE FLIP",action:"FLIP",hint:"タップで上昇してゲートを抜けよう"}
+];
+
+function miniRandomStageIndex(){
+  let next=Math.floor(Math.random()*MINI_ACTION_STAGES.length);
+  if(MINI_ACTION_STAGES.length>1&&next===miniActionStageIndex){
+    next=(next+1+Math.floor(Math.random()*(MINI_ACTION_STAGES.length-1)))%MINI_ACTION_STAGES.length;
+  }
+  return next;
+}
+
+function resizeMiniCanvas(){
+  if(!miniGameCanvas)return;
+  const ratio=Math.max(1,Math.min(2,window.devicePixelRatio||1));
+  const width=420,height=220;
+  if(miniGameCanvas.width!==width*ratio||miniGameCanvas.height!==height*ratio){
+    miniGameCanvas.width=width*ratio;
+    miniGameCanvas.height=height*ratio;
+  }
+}
+
+function miniCanvasContext(){
+  if(!miniGameCanvas)return null;
+  const ctx=miniGameCanvas.getContext("2d");
+  if(!ctx)return null;
+  const ratio=miniGameCanvas.width/420;
+  ctx.setTransform(ratio,0,0,ratio,0,0);
+  return ctx;
+}
+
+function setMiniMessage(text,show){
+  if(!miniGameMessage)return;
+  miniGameMessage.textContent=text||"";
+  miniGameMessage.classList.toggle("show",Boolean(show));
+}
+
+function updateMiniBestUI(){
+  if(!miniGameBest)return;
+  const best=miniActionStageIndex>=0?getMiniBestTime(miniActionStageIndex):null;
+  miniGameBest.textContent=best?`BEST ${best.toFixed(2)}s`:"BEST --";
+}
+
+function startMiniActionGame(forceNewStage=false){
+  if(!latestMatchData||matchType!=="random"||latestMatchData.status!=="waiting"||latestMatchData.matchingFinalizedAt)return;
+  if(miniActionState&&!forceNewStage)return;
+  if(miniActionClearTimer){clearTimeout(miniActionClearTimer);miniActionClearTimer=0;}
+  resizeMiniCanvas();
+  miniActionStageIndex=miniRandomStageIndex();
+  miniActionState={
+    stage:miniActionStageIndex,elapsed:0,distance:0,done:false,failed:false,
+    lane:0,laneVisual:0,y:0,vy:0,flipVelocity:0,
+    obstacles:miniActionStageIndex===0
+      ? [{x:190,w:24,h:26},{x:360,w:30,h:32},{x:555,w:24,h:28},{x:730,w:34,h:38},{x:930,w:28,h:30},{x:1120,w:38,h:42}]
+      : miniActionStageIndex===1
+        ? [{x:170,lane:0},{x:315,lane:1},{x:465,lane:0},{x:610,lane:1},{x:770,lane:0},{x:915,lane:1},{x:1060,lane:0}]
+        : [{x:170,gapY:72},{x:340,gapY:132},{x:510,gapY:82},{x:680,gapY:140},{x:850,gapY:78},{x:1020,gapY:136}]
+  };
+  miniGameStarted=true;
+  miniActionLastUpdate=performance.now();
+  matchingMiniScore=0;
+  if(miniGameStageName)miniGameStageName.textContent=`STAGE ${miniActionStageIndex+1} • ${MINI_ACTION_STAGES[miniActionStageIndex].name}`;
+  if(miniActionButton)miniActionButton.textContent=MINI_ACTION_STAGES[miniActionStageIndex].action;
+  if(miniGameTimer)miniGameTimer.textContent="0.00s";
+  updateMiniBestUI();
+  setMiniMessage("",false);
+}
+
+function miniActionInput(){
+  if(!latestMatchData||matchType!=="random"||latestMatchData.status!=="waiting"||latestMatchData.matchingFinalizedAt)return;
+  if(!miniActionState||miniActionState.done||miniActionState.failed)return;
+  if(miniActionStageIndex===0){
+    if(miniActionState.y<=0.001)miniActionState.vy=410;
+  }else if(miniActionStageIndex===1){
+    miniActionState.lane=miniActionState.lane===0?1:0;
+  }else{
+    miniActionState.flipVelocity=-330;
+  }
+}
+
+function miniFail(message="MISS!"){
+  if(!miniActionState||miniActionState.failed||miniActionState.done)return;
+  miniActionState.failed=true;
+  setMiniMessage(message,true);
+  miniActionClearTimer=setTimeout(()=>{
+    miniActionClearTimer=0;
+    if(latestMatchData&&latestMatchData.status==="waiting"&&!latestMatchData.matchingFinalizedAt)startMiniActionGame(true);
+  },420);
+}
+
+function miniClear(){
+  if(!miniActionState||miniActionState.failed||miniActionState.done)return;
+  miniActionState.done=true;
+  const timeSeconds=miniActionState.elapsed;
+  const previousBest=getMiniBestTime(miniActionStageIndex);
+  saveMiniBestTime(miniActionStageIndex,timeSeconds);
+  const newRecord=!previousBest||timeSeconds<previousBest;
+  if(miniGameTimer)miniGameTimer.textContent=`${timeSeconds.toFixed(2)}s`;
+  updateMiniBestUI();
+  setMiniMessage(newRecord?`CLEAR! ${timeSeconds.toFixed(2)}s • NEW BEST`:`CLEAR! ${timeSeconds.toFixed(2)}s`,true);
+  miniActionClearTimer=setTimeout(()=>{
+    miniActionClearTimer=0;
+    if(latestMatchData&&latestMatchData.status==="waiting"&&!latestMatchData.matchingFinalizedAt)startMiniActionGame(true);
+  },850);
+}
+
+function drawMiniActionGame(){
+  resizeMiniCanvas();
+  const ctx=miniCanvasContext();
+  if(!ctx)return;
+  const W=420,H=220,stage=miniActionStageIndex,state=miniActionState;
+  ctx.clearRect(0,0,W,H);
+  const bg=ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,"rgba(10,24,43,1)");
+  bg.addColorStop(1,"rgba(3,7,13,1)");
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  if(!state)return;
+  const cameraX=Math.max(0,state.distance-70);
+  if(stage===0){
+    const groundY=176;
+    ctx.fillStyle="rgba(16,40,64,.92)";ctx.fillRect(0,groundY,W,H-groundY);
+    ctx.strokeStyle="rgba(90,190,255,.72)";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,groundY);ctx.lineTo(W,groundY);ctx.stroke();
+    for(const o of state.obstacles){const x=o.x-cameraX;if(x<-60||x>W+60)continue;ctx.fillStyle="rgba(255,90,130,.82)";ctx.shadowBlur=16;ctx.shadowColor="rgba(255,90,130,.55)";ctx.fillRect(x,groundY-o.h,o.w,o.h);ctx.shadowBlur=0;}
+    const py=groundY-20-state.y;
+    ctx.fillStyle="rgba(120,210,255,.98)";ctx.shadowBlur=18;ctx.shadowColor="rgba(80,180,255,.65)";ctx.fillRect(52,py,18,20);ctx.shadowBlur=0;
+  }else if(stage===1){
+    const laneY=[86,150];
+    for(let i=0;i<2;i++){ctx.strokeStyle=i===state.lane?"rgba(120,220,255,.7)":"rgba(110,150,185,.26)";ctx.lineWidth=i===state.lane?3:1;ctx.beginPath();ctx.moveTo(0,laneY[i]);ctx.lineTo(W,laneY[i]);ctx.stroke();}
+    for(const o of state.obstacles){const x=o.x-cameraX;if(x<-40||x>W+40)continue;const y=laneY[o.lane]-22;ctx.fillStyle="rgba(255,180,80,.88)";ctx.shadowBlur=15;ctx.shadowColor="rgba(255,160,60,.48)";ctx.fillRect(x,y,26,44);ctx.shadowBlur=0;}
+    const currentLaneY=laneY[0]+(laneY[1]-laneY[0])*state.laneVisual;
+    ctx.fillStyle="rgba(150,255,230,.98)";ctx.shadowBlur=18;ctx.shadowColor="rgba(100,255,220,.6)";ctx.beginPath();ctx.arc(61,currentLaneY,10,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+  }else{
+    for(let i=0;i<6;i++){const x=115+i*63;ctx.strokeStyle="rgba(90,155,205,.18)";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x,48);ctx.lineTo(x,184);ctx.stroke();}
+    for(const o of state.obstacles){const x=o.x-cameraX;if(x<-80||x>W+80)continue;const gapY=o.gapY;ctx.fillStyle="rgba(215,95,255,.8)";ctx.shadowBlur=14;ctx.shadowColor="rgba(210,95,255,.45)";ctx.fillRect(x,44,20,Math.max(1,gapY-30));ctx.fillRect(x,gapY+30,20,H-(gapY+30)-30);ctx.shadowBlur=0;}
+    const py=112+state.y;ctx.fillStyle="rgba(220,255,255,.98)";ctx.shadowBlur=18;ctx.shadowColor="rgba(150,240,255,.65)";ctx.beginPath();ctx.arc(60,py,10,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+  }
+  ctx.fillStyle="rgba(255,255,255,.45)";ctx.font="700 11px Arial";ctx.fillText(MINI_ACTION_STAGES[stage].hint,14,204);
+}
+
+function updateMiniActionGame(delta){
+  if(!miniActionState||!latestMatchData||matchType!=="random"||latestMatchData.status!=="waiting"||latestMatchData.matchingFinalizedAt)return;
+  const state=miniActionState;
+  if(state.done||state.failed){drawMiniActionGame();return;}
+  state.elapsed+=delta;
+  if(miniGameTimer)miniGameTimer.textContent=`${state.elapsed.toFixed(2)}s`;
+  if(miniActionStageIndex===0){
+    state.distance+=185*delta;state.y+=state.vy*delta;state.vy-=920*delta;if(state.y<0){state.y=0;state.vy=0;}
+    for(const o of state.obstacles){const playerLeft=state.distance+10,playerRight=state.distance+28;if(playerRight>o.x&&playerLeft<o.x+o.w&&state.y<o.h+4){miniFail();break;}}
+    if(state.distance>=1280)miniClear();
+  }else if(miniActionStageIndex===1){
+    state.distance+=165*delta;const targetLane=state.lane===0?0:1;state.laneVisual+=(targetLane-state.laneVisual)*Math.min(1,delta*11);const laneY=[86,150];const currentY=laneY[0]+(laneY[1]-laneY[0])*state.laneVisual;
+    for(const o of state.obstacles){const x=o.x-state.distance;if(x<30&&x>-20&&Math.abs(currentY-laneY[o.lane])<22){miniFail();break;}}
+    if(state.distance>=1120)miniClear();
+  }else{
+    state.distance+=160*delta;state.y+=state.flipVelocity*delta;state.flipVelocity+=760*delta;state.y=Math.max(-54,Math.min(54,state.y));const playerY=112+state.y;
+    for(const o of state.obstacles){const x=o.x-state.distance;if(x<58&&x>16&&(playerY-10<o.gapY-26||playerY+10>o.gapY+26)){miniFail();break;}}
+    if(playerY<48||playerY>178)miniFail();
+    if(state.distance>=1120)miniClear();
+  }
+  drawMiniActionGame();
 }
 
 function allMatchingEndRequested(data){
@@ -4224,7 +4521,13 @@ async function startRandomMatch(){
                 joinOrder:order.length
               };
               order.push(user.uid);
-              transaction.update(existingRef, {players, playerOrder:order});
+              const nextCount = Object.keys(players).length;
+              const matchingTimerStartedAt = typeof data.matchingTimerStartedAt === "number"
+                ? data.matchingTimerStartedAt
+                : (nextCount >= MATCHING_MIN_PLAYERS ? Date.now() : null);
+              transaction.update(existingRef,{players,playerOrder:order,matchingTimerStartedAt});
+            }else if(Object.keys(players).length>=MATCHING_MIN_PLAYERS&&typeof data.matchingTimerStartedAt!=="number"){
+              transaction.update(existingRef,{matchingTimerStartedAt:Date.now()});
             }
             transaction.update(queueRef,{updatedAt:serverTimestamp()});
             return {code:existingCode, host:data.hostUid === user.uid};
@@ -4266,6 +4569,7 @@ async function startRandomMatch(){
         players:{[user.uid]:player},
         matchingEndRequests:{},
         matchingFinalizedAt:null,
+        matchingTimerStartedAt:null,
         readyPlayers:{},
         initialPlayerCount:1
       });
@@ -4282,22 +4586,8 @@ async function startRandomMatch(){
 }
 
 async function requestMatchingEnd(){
-  if(!matchRef || matchType !== "random" || !latestMatchData) return;
-  try{
-    await runTransaction(db, async transaction => {
-      const snap = await transaction.get(matchRef);
-      if(!snap.exists()) return;
-      const data = snap.data();
-      if(data.status !== "waiting" || data.matchingFinalizedAt) return;
-      const matchingEndRequests = { ...(data.matchingEndRequests || {}) };
-      matchingEndRequests[currentUser.uid] = true;
-      transaction.update(matchRef,{matchingEndRequests});
-    });
-  }catch(error){
-    console.error("matching end request error", error);
-  }
+  return;
 }
-
 async function handleMatchButton(){
   const code = matchCodeInput.value.trim().toUpperCase();
   roomMatchModalOpen = false;
@@ -4402,6 +4692,10 @@ async function startMatch(
   matchingNotificationPlayed = false;
   matchingMiniScore = 0;
   miniGameStarted = false;
+  miniActionState = null;
+  miniActionStageIndex = -1;
+  miniActionInputDown = false;
+  if(miniActionClearTimer){ clearTimeout(miniActionClearTimer); miniActionClearTimer = 0; }
   ruleAdvanceInFlight = false;
   latestMatchData = null;
   wpEarned = 0;
@@ -4793,22 +5087,32 @@ function updateMatchingUI(data){
     const count = Object.keys(players).length;
     matchingCount.textContent = `${count} / ${MAX_RANDOM_PLAYERS} PLAYERS`;
 
-    const remain = Math.max(0, RANDOM_MAX_WAIT - (Date.now() - getMatchCreatedMillis(data)));
-    matchingTimer.textContent = String(Math.ceil(remain / 1000));
-    matchingStatus.textContent = count >= MAX_RANDOM_PLAYERS
-      ? "メンバーが決定しました…"
-      : "他のプレイヤーを待っています…";
+    const timerStartedAt = getMatchingTimerStartMillis(data);
+    if(count < MATCHING_MIN_PLAYERS || !timerStartedAt){
+      matchingTimer.textContent = "--";
+      matchingStatus.textContent = count < MATCHING_MIN_PLAYERS
+        ? `2人以上になるまで開始カウントは進みません (${count}/${MATCHING_MIN_PLAYERS})`
+        : "開始カウントを準備しています…";
+    }else{
+      const remain = Math.max(0, RANDOM_MAX_WAIT - (Date.now() - timerStartedAt));
+      matchingTimer.textContent = String(Math.ceil(remain / 1000));
+      matchingStatus.textContent = count >= MAX_RANDOM_PLAYERS
+        ? "メンバーが決定しました…"
+        : "他のプレイヤーを待っています…";
+    }
 
-    matchingEndButton.style.display = "block";
-    matchingEndButton.textContent = (data.matchingEndRequests || {})[currentUser.uid]
-      ? "マッチング終了を要求済み"
-      : "マッチング終了を要求";
-    matchingEndButton.disabled = Boolean((data.matchingEndRequests || {})[currentUser.uid]);
+    matchingEndButton.style.display = "none";
+    matchingEndButton.disabled = true;
     matchingReadyButton.style.display = "none";
+    startMiniActionGame();
     return;
   }
 
   if(data.status === "waiting" && data.matchingFinalizedAt){
+    miniActionState = null;
+    miniGameStarted = false;
+    if(miniActionClearTimer){ clearTimeout(miniActionClearTimer); miniActionClearTimer = 0; }
+    setMiniMessage("", false);
     matchingScreen.style.display = "flex";
     menu.style.display = "none";
     gameUI.style.display = "none";
@@ -6999,11 +7303,20 @@ async function finalizeRandomMatchIfNeeded(){
 
       const players = { ...(data.players || {}) };
       const count = Object.keys(players).length;
-      const createdMillis = getMatchCreatedMillis(data);
-      const timedOut = Date.now() - createdMillis >= RANDOM_MAX_WAIT;
+      const now = Date.now();
+      if(count < MATCHING_MIN_PLAYERS){
+        if(typeof data.matchingTimerStartedAt === "number") transaction.update(matchRef,{matchingTimerStartedAt:null});
+        return;
+      }
+      let matchingTimerStartedAt = getMatchingTimerStartMillis(data);
+      if(!matchingTimerStartedAt){
+        matchingTimerStartedAt = now;
+        transaction.update(matchRef,{matchingTimerStartedAt});
+        return;
+      }
+      const timedOut = now - matchingTimerStartedAt >= RANDOM_MAX_WAIT;
       const full = count >= MAX_RANDOM_PLAYERS;
-      const allRequested = allMatchingEndRequested(data);
-      if(!(timedOut || full || allRequested)) return;
+      if(!(timedOut || full)) return;
 
       const settings = pickRandomMatchSettings();
       for(const player of Object.values(players)){
@@ -7026,6 +7339,7 @@ async function finalizeRandomMatchIfNeeded(){
         settings,
         initialPlayerCount: count,
         matchingFinalizedAt: Date.now(),
+        matchingTimerStartedAt: null,
         readyPlayers: {},
         status: "waiting"
       });
@@ -7563,6 +7877,10 @@ function leaveCurrentMatch(){
   matchingNotificationPlayed = false;
   miniGameStarted = false;
   matchingMiniScore = 0;
+  miniActionState = null;
+  miniActionStageIndex = -1;
+  miniActionInputDown = false;
+  if(miniActionClearTimer){ clearTimeout(miniActionClearTimer); miniActionClearTimer = 0; }
   wpEarned = 0;
   resultPlayersSnapshot = null;
   resultPlayerOrder = [];
@@ -7572,7 +7890,11 @@ function leaveCurrentMatch(){
     pendingResultDeleteTimer = null;
   }
   setConnectionStatus(false);
-  if(miniGameScore) miniGameScore.textContent = "SCORE 0";
+  if(miniGameScore) miniGameScore.textContent = "";
+  if(miniGameStageName) miniGameStageName.textContent = "STAGE";
+  if(miniGameTimer) miniGameTimer.textContent = "0.00s";
+  if(miniGameBest) miniGameBest.textContent = "BEST --";
+  setMiniMessage("", false);
   if(ruleCountdown) ruleCountdown.textContent = "5";
   hidePreMatchScreens();
 
@@ -8336,6 +8658,10 @@ function gameLoop(
     if(latestMatchData.status === "rule") updateRuleUI(latestMatchData);
   }
 
+  if(latestMatchData?.status === "waiting" && matchType === "random" && !latestMatchData.matchingFinalizedAt){
+    updateMiniActionGame(delta);
+  }
+
   if(
     latestMatchData &&
     matchType === "random" &&
@@ -8704,20 +9030,40 @@ matchingReadyButton.addEventListener(
   setRandomReady
 );
 
-miniTarget.addEventListener(
+miniActionButton.addEventListener(
   "pointerdown",
   event => {
     event.preventDefault();
-    if(!gameStarted || matchType !== "random" || !latestMatchData || latestMatchData.status !== "waiting" || latestMatchData.matchingFinalizedAt) return;
-    matchingMiniScore++;
-    miniGameScore.textContent = `SCORE ${matchingMiniScore}`;
-    const box = document.getElementById("miniGameBox");
-    const x = 40 + Math.random() * Math.max(1, box.clientWidth - 80);
-    const y = 58 + Math.random() * Math.max(1, box.clientHeight - 90);
-    miniTarget.style.left = `${x}px`;
-    miniTarget.style.top = `${y}px`;
-    miniTarget.style.transform = "translate(-50%,-50%) scale(.86)";
-    setTimeout(() => { miniTarget.style.transform = "translate(-50%,-50%) scale(1)"; }, 70);
+    miniActionInput();
+  }
+);
+
+miniGameCanvas.addEventListener(
+  "pointerdown",
+  event => {
+    event.preventDefault();
+    miniActionInput();
+  }
+);
+
+document.addEventListener(
+  "keydown",
+  event => {
+    if(event.code !== "Space" && event.code !== "ArrowUp") return;
+    if(latestMatchData?.status === "waiting" && matchType === "random" && !latestMatchData.matchingFinalizedAt){
+      event.preventDefault();
+      if(!miniActionKeyLock){
+        miniActionKeyLock=true;
+        miniActionInput();
+      }
+    }
+  }
+);
+
+document.addEventListener(
+  "keyup",
+  event => {
+    if(event.code === "Space" || event.code === "ArrowUp") miniActionKeyLock=false;
   }
 );
 
