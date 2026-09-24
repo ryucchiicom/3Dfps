@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: Firebase Online Battle HTML. Current version 1.7.0. On future updates, change the version here and in the visible subtitle; keep this comment invisible to players and update it every release. Release 1.7.0 changes: added random matchmaking, the room-match popup, a fully offline matchmaking mini-game, synchronized member-finalization and Ready countdown, the 5-second RULE phase, random-match WP result rewards, time/date-weighted random rules with rare DYNAMIC rules, optional floating terrain, and connection-loss notices. The previously discussed decorative floating-line UI is intentionally not implemented. Release 1.6.5 changes: added a dedicated immediate-loading screen for direct ?room= links so the room join state is shown before the normal top screen. Release 1.6.4 changes: switched room sharing from /r/room paths to a query-string URL so GitHub Pages serves the main HTML directly without a 404 page. Release 1.6.2 changes: restored the social-share subtitle metadata and kept the visible in-game version synchronized with the current version. Release 1.6.0 changes: fixed local room-setting persistence and START-time upload, added animated two-color edge gradients, added a forward-facing requirement to GRAB, deleted empty rooms during cleanup, and added configurable kill-streak boost with synchronized per-player streak state and HUD countdown. Previous release changes: added route-aware social/share descriptions for the original site and room links, and improved arena floor/wall/platform metal materials with subtle per-surface highlight variation while keeping the cold-color glowing edge treatment and avoiding floating lines. Previous release changes: changed the document title to 3Dfps, added icon.png as the site icon only, and restyled arena floor/walls/platforms with cold-color glowing edge outlines without adding floating lines. Previous release changes: added best-effort landscape orientation locking, reorganized the title screen, moved player name and mobile control preferences into the main settings, added movable-stick/sensitivity/right-tap settings, and made those preferences persist locally. Previous release changes: safer terrain-overlap spawn correction, more reliable code-screen scrolling, player-name entry, deferred terrain generation until START, and configurable max fire rate with a slower default medium rate. Future GPT edits must update this tracker whenever the version changes. Choose major/minor/patch increments based on update size. -->
+<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.7.0. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.7.0 changes: first-conference implementation pass — added Random Match and Room Match entry flow, shared random-match rules, matching wait lobby with offline mini game, all-player end-request / ready phase, synchronized RULE 5-second pre-match screen, RESULT screen with placement and random-match WP, temporary connection-loss notice, floating terrain room setting, DYNAMIC hidden setting via double-tap, date/time-shifted rare DYNAMIC selection, and retained all existing gameplay/settings/security behavior. The conference proposal to add decorative floating lines is intentionally excluded. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
 <title>3Dfps</title>
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
@@ -158,6 +158,269 @@ canvas{
   text-align:center;
   color:#ffce66;
   font-size:14px;
+}
+
+
+#roomMatchModal,
+#matchingScreen,
+#ruleScreen,
+#connectionStatus{
+  position:fixed;
+}
+
+#roomMatchModal{
+  inset:0;
+  z-index:210;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  background:rgba(0,0,0,.68);
+  backdrop-filter:blur(10px);
+  pointer-events:auto;
+}
+
+.roomMatchBox{
+  width:min(92vw,430px);
+  padding:22px;
+  border-radius:20px;
+  background:rgba(15,20,28,.97);
+  border:1px solid rgba(255,255,255,.13);
+  box-shadow:0 20px 80px rgba(0,0,0,.5);
+}
+
+.roomMatchTitle{
+  margin:0 0 8px;
+  text-align:center;
+  font-size:22px;
+  font-weight:900;
+}
+
+.roomMatchHint{
+  text-align:center;
+  margin-bottom:16px;
+  font-size:12px;
+  opacity:.65;
+  line-height:1.5;
+}
+
+#matchingScreen{
+  inset:0;
+  z-index:70;
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  padding:20px;
+  background:
+    radial-gradient(circle at 50% 30%,rgba(38,86,134,.86) 0%,rgba(12,19,29,.97) 46%,rgba(2,5,8,1) 100%);
+  color:#fff;
+  overflow:hidden;
+  pointer-events:auto;
+}
+
+.matchingTitle{
+  font-size:32px;
+  font-weight:900;
+  letter-spacing:1px;
+}
+
+#matchingCount{
+  font-size:15px;
+  opacity:.78;
+}
+
+#matchingTimer{
+  font-variant-numeric:tabular-nums;
+  font-size:42px;
+  font-weight:900;
+  line-height:1;
+}
+
+#matchingStatus{
+  min-height:22px;
+  text-align:center;
+  font-size:13px;
+  opacity:.82;
+}
+
+#miniGameBox{
+  position:relative;
+  width:min(84vw,430px);
+  height:min(44vh,280px);
+  min-height:190px;
+  margin:10px 0;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:18px;
+  background:rgba(0,0,0,.25);
+  overflow:hidden;
+  box-shadow:inset 0 0 55px rgba(0,0,0,.2);
+}
+
+#miniGameTitle{
+  position:absolute;
+  left:14px;
+  top:12px;
+  font-size:12px;
+  font-weight:900;
+  opacity:.58;
+}
+
+#miniGameScore{
+  position:absolute;
+  right:14px;
+  top:10px;
+  font-size:12px;
+  font-variant-numeric:tabular-nums;
+  font-weight:900;
+  opacity:.7;
+}
+
+#miniTarget{
+  position:absolute;
+  left:50%;
+  top:54%;
+  width:54px;
+  height:54px;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  border:2px solid rgba(255,255,255,.7);
+  background:radial-gradient(circle at 35% 35%,rgba(255,255,255,.95),rgba(90,190,255,.38) 34%,rgba(120,90,255,.18) 70%,transparent 71%);
+  box-shadow:0 0 22px rgba(90,190,255,.42);
+  pointer-events:auto;
+}
+
+#matchingReadyButton,
+#matchingEndButton{
+  width:min(84vw,430px);
+  margin-top:4px;
+}
+
+#matchingReadyButton{
+  display:none;
+}
+
+#matchingEndButton{
+  background:#2a3039;
+}
+
+#ruleScreen{
+  inset:0;
+  z-index:75;
+  display:none;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+  padding:24px;
+  color:#fff;
+  text-align:center;
+  background:
+    radial-gradient(circle at 50% 34%,rgba(44,88,140,.82) 0%,rgba(13,20,30,.97) 46%,rgba(2,5,8,1) 100%);
+}
+
+.ruleKicker{
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:3px;
+  opacity:.58;
+}
+
+.ruleTitle{
+  font-size:38px;
+  font-weight:900;
+  letter-spacing:2px;
+}
+
+#ruleDetails{
+  width:min(88vw,460px);
+  padding:16px 18px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(0,0,0,.28);
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px 16px;
+  text-align:left;
+  font-size:13px;
+}
+
+.ruleValue{
+  text-align:right;
+  font-weight:900;
+}
+
+#ruleCountdown{
+  margin-top:6px;
+  font-size:72px;
+  line-height:1;
+  font-weight:900;
+  font-variant-numeric:tabular-nums;
+  text-shadow:0 10px 30px rgba(0,0,0,.35);
+}
+
+#connectionStatus{
+  left:50%;
+  top:10px;
+  transform:translateX(-50%) translateY(-12px);
+  z-index:500;
+  display:none;
+  padding:7px 12px;
+  border-radius:999px;
+  background:rgba(120,55,10,.92);
+  border:1px solid rgba(255,195,90,.5);
+  color:#fff3da;
+  font-size:12px;
+  font-weight:900;
+  box-shadow:0 8px 25px rgba(0,0,0,.35);
+}
+
+.resultRanking{
+  margin:0 auto 16px;
+  width:min(100%,360px);
+  padding:10px;
+  border-radius:14px;
+  background:rgba(255,255,255,.05);
+}
+
+.resultRankRow{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  padding:7px 6px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+  font-size:13px;
+}
+
+.resultRankRow:last-child{border-bottom:0;}
+
+#wpEarned{
+  min-height:26px;
+  margin-bottom:14px;
+  font-size:23px;
+  font-weight:900;
+  color:#ffd86b;
+  text-shadow:0 0 16px rgba(255,208,80,.25);
+}
+
+.settingOptions.dynamicMode .settingOption.dynamicOption{
+  display:block;
+  grid-column:span 3;
+}
+
+.settingOptions.dynamicMode .settingOption.standardOption{
+  display:block;
+  grid-column:span 1;
+}
+
+.settingOptions.dynamicMode .settingOption.normalOption{
+  display:none;
+}
+
+.settingOption.dynamicOption,
+.settingOption.standardOption{
+  display:none;
 }
 
 #roomJoinScreen{
@@ -736,197 +999,6 @@ html.roomJoinMode #roomJoinScreen{
   color:white;
 }
 
-#roomMatchModal,
-#randomMatchScreen,
-#ruleScreen{
-  position:fixed;
-  inset:0;
-  z-index:45;
-  display:none;
-  justify-content:center;
-  align-items:center;
-  padding:18px;
-  background:rgba(3,7,16,.78);
-  backdrop-filter:blur(12px);
-  color:#fff;
-}
-
-.roomMatchBox,
-.randomMatchBox,
-.ruleBox{
-  width:min(92vw,520px);
-  max-height:88vh;
-  overflow:auto;
-  padding:24px;
-  border-radius:22px;
-  background:rgba(13,18,28,.96);
-  border:1px solid rgba(125,205,255,.18);
-  box-shadow:0 24px 90px rgba(0,0,0,.55),0 0 50px rgba(60,150,255,.08);
-  text-align:center;
-}
-
-.roomMatchTitle,
-.randomMatchTitle{
-  font-size:25px;
-  font-weight:900;
-  letter-spacing:.04em;
-}
-
-.roomMatchHint{
-  margin:10px 0 16px;
-  font-size:12px;
-  line-height:1.65;
-  opacity:.68;
-}
-
-.randomMatchTitle{
-  font-size:28px;
-  letter-spacing:.12em;
-}
-
-#randomMatchCount{
-  margin-top:7px;
-  font-size:18px;
-  font-weight:800;
-}
-
-#randomMatchTimer{
-  margin-top:3px;
-  font-variant-numeric:tabular-nums;
-  font-size:13px;
-  opacity:.62;
-}
-
-.randomFound{
-  min-height:42px;
-  margin:13px 0 8px;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-size:16px;
-  font-weight:900;
-}
-
-#miniGameArea{
-  margin:14px 0;
-  padding:10px;
-  border-radius:16px;
-  border:1px solid rgba(255,255,255,.10);
-  background:rgba(255,255,255,.025);
-}
-
-.miniGameHeader{
-  display:flex;
-  justify-content:space-between;
-  gap:10px;
-  margin-bottom:8px;
-  font-size:11px;
-  font-weight:900;
-  letter-spacing:.08em;
-  opacity:.72;
-}
-
-#miniGameField{
-  position:relative;
-  height:190px;
-  overflow:hidden;
-  border-radius:12px;
-  background:radial-gradient(circle at 50% 45%,rgba(70,145,255,.10),rgba(255,255,255,.015) 55%,rgba(0,0,0,.16));
-}
-
-#miniTarget{
-  position:absolute;
-  width:34px;
-  height:34px;
-  margin:-17px 0 0 -17px;
-  border-radius:50%;
-  border:2px solid rgba(180,235,255,.88);
-  background:rgba(50,155,255,.22);
-  box-shadow:0 0 20px rgba(75,190,255,.45);
-  padding:0;
-}
-
-#randomForceText{
-  min-height:20px;
-  margin:8px 0;
-  font-size:13px;
-  font-weight:800;
-  opacity:.8;
-}
-
-#ruleScreen{
-  z-index:46;
-}
-
-.ruleSmallTitle{
-  font-size:13px;
-  font-weight:900;
-  letter-spacing:.28em;
-  opacity:.64;
-}
-
-.ruleTitle{
-  margin-top:8px;
-  font-size:30px;
-  font-weight:950;
-  letter-spacing:.08em;
-}
-
-.ruleDetails{
-  margin:16px auto 6px;
-  max-width:420px;
-  font-size:14px;
-  line-height:2;
-  opacity:.88;
-}
-
-.ruleCountdown{
-  margin-top:6px;
-  font-size:72px;
-  line-height:1;
-  font-weight:1000;
-  font-variant-numeric:tabular-nums;
-  text-shadow:0 0 30px rgba(100,190,255,.28);
-}
-
-#connectionStatus{
-  position:fixed;
-  top:14px;
-  left:50%;
-  transform:translateX(-50%);
-  z-index:90;
-  display:none;
-  padding:8px 13px;
-  border-radius:999px;
-  border:1px solid rgba(255,120,120,.28);
-  background:rgba(70,15,20,.82);
-  color:#fff;
-  font-size:11px;
-  font-weight:900;
-  letter-spacing:.05em;
-  box-shadow:0 10px 35px rgba(0,0,0,.35);
-}
-
-.settingOptions.dynamicMode{
-  grid-template-columns:repeat(4,1fr);
-}
-
-.settingOption.dynamicWide{
-  grid-column:span 3;
-}
-
-.settingOption.dynamicReset{
-  grid-column:span 1;
-}
-
-.gameOverWp{
-  margin-top:-8px;
-  margin-bottom:18px;
-  font-size:17px;
-  font-weight:900;
-  letter-spacing:.03em;
-}
-
 .gameOverBox{
   width:min(88vw,430px);
   padding:28px;
@@ -1137,15 +1209,26 @@ html.roomJoinMode #roomJoinScreen{
 
   <div class="menuBox">
 
-    <h1 class="title">3D FPS</h1>
+    <h1 class="title">3Dfps</h1>
 
     <div class="subtitle">
       v1.7.0
     </div>
 
-    <button id="randomMatchButton" class="button">ランダムマッチ</button>
-    <button id="roomMatchButton" class="button secondary">ルームマッチ</button>
-    <button id="playerSettingsButton" class="button secondary">設定</button>
+    <button id="randomMatchButton" class="button">
+      ランダムマッチ
+    </button>
+
+    <button id="roomMatchButton" class="button secondary">
+      ルームマッチ
+    </button>
+
+    <button
+      id="playerSettingsButton"
+      class="button secondary"
+    >
+      設定
+    </button>
 
     <div id="status"></div>
 
@@ -1160,45 +1243,13 @@ html.roomJoinMode #roomJoinScreen{
 
 <div id="roomMatchModal">
   <div class="roomMatchBox">
-    <div class="roomMatchTitle">ルームマッチ</div>
-    <div class="roomMatchHint">ルームコードを入力して参加<br>空欄なら新しいルームを作成</div>
-    <input id="matchCodeInput" class="input" maxlength="8" placeholder="試合コード" autocomplete="off" spellcheck="false">
-    <button id="matchButton" class="button">参加/作成</button>
-    <button id="closeRoomMatchButton" class="button secondary">閉じる</button>
+    <h2 class="roomMatchTitle">ルームマッチ</h2>
+    <div class="roomMatchHint">部屋を作るなら空欄のまま、参加するならルームコードを入力してね。</div>
+    <input id="matchCodeInput" class="input" maxlength="8" placeholder="試合コード（空欄で作成）" autocomplete="off" spellcheck="false">
+    <button id="roomMatchJoinButton" class="button">参加/作成</button>
+    <button id="roomMatchCloseButton" class="button secondary">閉じる</button>
   </div>
 </div>
-
-<div id="randomMatchScreen">
-  <div class="randomMatchBox">
-    <div class="randomMatchTitle">MATCHING...</div>
-    <div id="randomMatchCount">0 / 8 PLAYERS</div>
-    <div id="randomMatchTimer">00:00</div>
-    <div id="randomMatchFound" class="randomFound">メンバーを探しています…</div>
-
-    <div id="miniGameArea">
-      <div class="miniGameHeader"><span>MINI GAME</span><span id="miniGameScore">SCORE 0</span></div>
-      <div id="miniGameField">
-        <button id="miniTarget" aria-label="ターゲット"></button>
-      </div>
-    </div>
-
-    <div id="randomForceText"><span id="randomForceLabel">メンバーが決まるまでお待ちください</span> <span id="randomForceCountdown"></span></div>
-    <button id="randomRequestButton" class="button secondary">マッチング終了を要求</button>
-    <button id="randomReadyButton" class="button" style="display:none">準備OK</button>
-    <button id="cancelRandomButton" class="button secondary">マッチングをキャンセル</button>
-  </div>
-</div>
-
-<div id="ruleScreen">
-  <div class="ruleBox">
-    <div class="ruleSmallTitle">RULE</div>
-    <div id="ruleTitle" class="ruleTitle">STANDARD</div>
-    <div id="ruleDetails" class="ruleDetails"></div>
-    <div id="ruleCountdown" class="ruleCountdown">5</div>
-  </div>
-</div>
-
-<div id="connectionStatus">CONNECTION LOST</div>
 
 <div id="playerSettingsModal">
   <div class="playerSettingsBox">
@@ -1254,6 +1305,29 @@ html.roomJoinMode #roomJoinScreen{
     <button id="closeQrButton" class="button secondary">閉じる</button>
   </div>
 </div>
+
+<div id="matchingScreen">
+  <div class="matchingTitle">MATCHING...</div>
+  <div id="matchingCount">0 / 8 PLAYERS</div>
+  <div id="matchingTimer">30</div>
+  <div id="matchingStatus">他のプレイヤーを待っています…</div>
+  <div id="miniGameBox">
+    <div id="miniGameTitle">MINI GAME</div>
+    <div id="miniGameScore">SCORE 0</div>
+    <button id="miniTarget" aria-label="ミニゲームのターゲット"></button>
+  </div>
+  <button id="matchingReadyButton" class="button">準備OK</button>
+  <button id="matchingEndButton" class="button secondary">マッチング終了を要求</button>
+</div>
+
+<div id="ruleScreen">
+  <div class="ruleKicker">3Dfps</div>
+  <div class="ruleTitle">RULE</div>
+  <div id="ruleDetails"></div>
+  <div id="ruleCountdown">5</div>
+</div>
+
+<div id="connectionStatus">通信が不安定です。再接続しています…</div>
 
 <div id="gameUI">
 
@@ -1348,27 +1422,31 @@ html.roomJoinMode #roomJoinScreen{
       <div class="settingRow" id="terrainAmountRow">
         <span class="settingLabel">地形の量</span>
         <div class="settingOptions" data-setting="terrainAmount">
-          <button class="settingOption" data-value="many">多</button>
-          <button class="settingOption selected" data-value="medium">中</button>
-          <button class="settingOption" data-value="few">少</button>
-          <button class="settingOption" data-value="none">なし</button>
+          <button class="settingOption normalOption" data-value="many">多</button>
+          <button class="settingOption selected normalOption" data-value="medium">中</button>
+          <button class="settingOption normalOption" data-value="few">少</button>
+          <button class="settingOption normalOption" data-value="none">なし</button>
+          <button class="settingOption dynamicOption" data-value="dynamic">DYNAMIC</button>
+          <button class="settingOption standardOption" data-value="standard">標準…</button>
         </div>
       </div>
 
       <div class="settingRow" id="terrainHeightRow">
         <span class="settingLabel">地形の高低差</span>
         <div class="settingOptions" data-setting="terrainHeight">
-          <button class="settingOption" data-value="high">高</button>
-          <button class="settingOption selected" data-value="medium">中</button>
-          <button class="settingOption" data-value="low">低</button>
+          <button class="settingOption normalOption" data-value="high">高</button>
+          <button class="settingOption selected normalOption" data-value="medium">中</button>
+          <button class="settingOption normalOption" data-value="low">低</button>
+          <button class="settingOption dynamicOption" data-value="dynamic">DYNAMIC</button>
+          <button class="settingOption standardOption" data-value="standard">標準…</button>
         </div>
       </div>
 
-      <div class="settingRow" id="floatingTerrainRow">
+      <div class="settingRow">
         <span class="settingLabel">宙に浮く地形</span>
         <div class="settingOptions" data-setting="floatingTerrain">
-          <button class="settingOption selected" data-value="off">オフ</button>
-          <button class="settingOption" data-value="on">オン</button>
+          <button class="settingOption selected normalOption" data-value="off">オフ</button>
+          <button class="settingOption normalOption" data-value="on">オン</button>
         </div>
       </div>
 
@@ -1385,9 +1463,11 @@ html.roomJoinMode #roomJoinScreen{
       <div class="settingRow">
         <span class="settingLabel">最大連射速度</span>
         <div class="settingOptions" data-setting="fireRate">
-          <button class="settingOption" data-value="fast">速</button>
-          <button class="settingOption selected" data-value="medium">中</button>
-          <button class="settingOption" data-value="slow">遅</button>
+          <button class="settingOption normalOption" data-value="fast">速</button>
+          <button class="settingOption selected normalOption" data-value="medium">中</button>
+          <button class="settingOption normalOption" data-value="slow">遅</button>
+          <button class="settingOption dynamicOption" data-value="dynamic">DYNAMIC</button>
+          <button class="settingOption standardOption" data-value="standard">標準…</button>
         </div>
       </div>
 
@@ -1481,7 +1561,8 @@ html.roomJoinMode #roomJoinScreen{
       ---
     </div>
 
-    <div id="gameOverWp" class="gameOverWp"></div>
+    <div id="resultRanking" class="resultRanking"></div>
+    <div id="wpEarned"></div>
 
     <button
       id="returnButton"
@@ -1587,20 +1668,6 @@ let lastFrameTime =
 
 let gameLoopStarted = false;
 
-let matchMode = "room";
-let randomQueueRef = null;
-let randomQueueUnsubscribe = null;
-let randomMatchJoinedAt = 0;
-let randomMatchingActive = false;
-let randomWasFound = false;
-let randomMatchForceStartAt = 0;
-let randomReady = false;
-let randomMiniScore = 0;
-let lastRandomQueueResolve = 0;
-let lastRuleAdvanceAttempt = 0;
-let awardedCurrentMatchWp = false;
-let latestMatchData = null;
-
 let startHoldStart = null;
 
 let startHolding = false;
@@ -1619,6 +1686,22 @@ let lastCleanupCheck = 0;
 let lastRegenTick = 0;
 let currentSettings = null;
 let settingsModalOpen = false;
+let roomMatchModalOpen = false;
+let matchType = "room";
+let latestMatchData = null;
+let matchingMiniScore = 0;
+let matchingLastFinalizedState = false;
+let matchingNotificationPlayed = false;
+let miniGameStarted = false;
+let ruleAdvanceInFlight = false;
+let lastRuleNotificationKey = "";
+let pendingResultDeleteTimer = null;
+let connectionStatusVisible = false;
+let wpEarned = 0;
+let matchInitialPlayerCount = 0;
+let resultPlayersSnapshot = null;
+let resultPlayerOrder = [];
+let lastRandomFinalizeCheck = 0;
 
 let bulletIdCounter = 0;
 
@@ -1642,12 +1725,10 @@ const KILL_BOOST_DURATION = 10000;
 const INACTIVE_MATCH_TIME = 60 * 1000;
 const MAX_MATCH_AGE = 24 * 60 * 60 * 1000;
 const CLEANUP_INTERVAL = 10000;
-const RANDOM_MAX_PLAYERS = 8;
-const RANDOM_MAX_WAIT = 15000;
-const RANDOM_STALE_ENTRY = 45000;
-const RANDOM_FORCE_START = 10000;
-const RULE_PHASE_TIME = 5000;
-const RANDOM_QUEUE_PATH = "__random_queue__";
+const MAX_RANDOM_PLAYERS = 8;
+const RANDOM_MAX_WAIT = 30000;
+const MATCHING_FINALIZE_TIME = 10000;
+const RULE_DURATION = 5000;
 
 const ARENA_SIZE = 70;
 
@@ -1664,7 +1745,8 @@ const DEFAULT_SETTINGS = {
   hpRegen: "none",
   regenLock: 0,
   killBoost: "off",
-  floatingTerrain: "off"
+  floatingTerrain: "off",
+  mapSeed: 0
 };
 
 
@@ -1750,35 +1832,17 @@ const bullets = new Map();
 const menu =
   document.getElementById("menu");
 
-const randomMatchButton = document.getElementById("randomMatchButton");
-const roomMatchButton = document.getElementById("roomMatchButton");
-const roomMatchModal = document.getElementById("roomMatchModal");
-const closeRoomMatchButton = document.getElementById("closeRoomMatchButton");
-const randomMatchScreen = document.getElementById("randomMatchScreen");
-const randomMatchCount = document.getElementById("randomMatchCount");
-const randomMatchTimer = document.getElementById("randomMatchTimer");
-const randomMatchFound = document.getElementById("randomMatchFound");
-const randomForceLabel = document.getElementById("randomForceLabel");
-const randomForceCountdown = document.getElementById("randomForceCountdown");
-const randomRequestButton = document.getElementById("randomRequestButton");
-const randomReadyButton = document.getElementById("randomReadyButton");
-const cancelRandomButton = document.getElementById("cancelRandomButton");
-const miniGameScore = document.getElementById("miniGameScore");
-const miniTarget = document.getElementById("miniTarget");
-const miniGameField = document.getElementById("miniGameField");
-const ruleScreen = document.getElementById("ruleScreen");
-const ruleTitle = document.getElementById("ruleTitle");
-const ruleDetails = document.getElementById("ruleDetails");
-const ruleCountdown = document.getElementById("ruleCountdown");
-const connectionStatus = document.getElementById("connectionStatus");
-
 const gameUI =
   document.getElementById("gameUI");
 
 const gameOver =
   document.getElementById("gameOver");
 
-const gameOverWp = document.getElementById("gameOverWp");
+const resultRanking =
+  document.getElementById("resultRanking");
+
+const wpEarnedEl =
+  document.getElementById("wpEarned");
 
 const statusEl =
   document.getElementById("status");
@@ -1798,8 +1862,23 @@ const matchCodeInput =
 const playerNameInput =
   document.getElementById("playerNameInput");
 
+const randomMatchButton =
+  document.getElementById("randomMatchButton");
+
+const roomMatchButton =
+  document.getElementById("roomMatchButton");
+
+const roomMatchModal =
+  document.getElementById("roomMatchModal");
+
+const roomMatchJoinButton =
+  document.getElementById("roomMatchJoinButton");
+
+const roomMatchCloseButton =
+  document.getElementById("roomMatchCloseButton");
+
 const matchButton =
-  document.getElementById("matchButton");
+  roomMatchJoinButton;
 
 const roomText =
   document.getElementById("roomText");
@@ -1827,6 +1906,42 @@ const scoreBoard =
 
 const killMessage =
   document.getElementById("killMessage");
+
+const matchingScreen =
+  document.getElementById("matchingScreen");
+
+const matchingCount =
+  document.getElementById("matchingCount");
+
+const matchingTimer =
+  document.getElementById("matchingTimer");
+
+const matchingStatus =
+  document.getElementById("matchingStatus");
+
+const miniGameScore =
+  document.getElementById("miniGameScore");
+
+const miniTarget =
+  document.getElementById("miniTarget");
+
+const matchingReadyButton =
+  document.getElementById("matchingReadyButton");
+
+const matchingEndButton =
+  document.getElementById("matchingEndButton");
+
+const ruleScreen =
+  document.getElementById("ruleScreen");
+
+const ruleDetails =
+  document.getElementById("ruleDetails");
+
+const ruleCountdown =
+  document.getElementById("ruleCountdown");
+
+const connectionStatus =
+  document.getElementById("connectionStatus");
 
 const preStart =
   document.getElementById("preStart");
@@ -1906,8 +2021,6 @@ const regenLockInput =
 
 const terrainHeightRow =
   document.getElementById("terrainHeightRow");
-
-const floatingTerrainRow = document.getElementById("floatingTerrainRow");
 
 const regenRow =
   document.getElementById("regenRow");
@@ -2007,7 +2120,7 @@ function closePlayerSettings(){
 }
 
 loadPlayerSettings();
-setupDynamicSettingOptions();
+updatePlayerSettingsUI();
 
 
 function normalizeSettings(settings){
@@ -2050,7 +2163,7 @@ function normalizeSettings(settings){
         : DEFAULT_SETTINGS.fireRate,
     maxHp,
     hpRegen:
-      ["fast","medium","slow","none","dynamic"].includes(source.hpRegen)
+      ["fast","medium","slow","none"].includes(source.hpRegen)
         ? source.hpRegen
         : DEFAULT_SETTINGS.hpRegen,
     regenLock,
@@ -2061,16 +2174,197 @@ function normalizeSettings(settings){
     floatingTerrain:
       source.floatingTerrain === "on"
         ? "on"
-        : DEFAULT_SETTINGS.floatingTerrain
+        : DEFAULT_SETTINGS.floatingTerrain,
+    mapSeed:
+      Number.isFinite(Number(source.mapSeed))
+        ? Math.floor(Number(source.mapSeed))
+        : 0
   };
 }
 
-function getDynamicTerrainCount(baseCount){
-  return Math.max(baseCount, Math.min(40, Math.round(baseCount * 1.8)));
+function isDynamicSettingValue(value){
+  return value === "dynamic";
 }
 
-function getDynamicHeightScale(){
-  return 2.7;
+function setDynamicGroupVisual(group, active){
+  if(!group) return;
+  group.classList.toggle("dynamicMode", active);
+}
+
+function applyDynamicSelectionToGroup(group, topValue){
+  if(!group) return;
+  group.dataset.standardValue = topValue;
+  group.classList.add("dynamicMode");
+  group.querySelectorAll(".settingOption").forEach(button => {
+    const value = button.dataset.value;
+    if(value === "dynamic") button.classList.add("selected");
+    else if(value === "standard") button.classList.remove("selected");
+    else button.classList.remove("selected");
+  });
+}
+
+function restoreStandardSelection(group){
+  if(!group) return;
+  const fallback = group.dataset.standardValue ||
+    (group.dataset.setting === "terrainAmount" ? "medium" :
+      group.dataset.setting === "terrainHeight" ? "medium" : "medium");
+  group.classList.remove("dynamicMode");
+  group.querySelectorAll(".settingOption").forEach(button => {
+    const value = button.dataset.value;
+    button.classList.toggle("selected", value === fallback);
+  });
+}
+
+
+function hashString(value){
+  let hash = 2166136261;
+  const textValue = String(value);
+  for(let i = 0; i < textValue.length; i++){
+    hash ^= textValue.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function getDynamicChance(now = new Date()){
+  const dayKey = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
+  const seed = hashString(dayKey) / 0xffffffff;
+  const peakPhase = seed * Math.PI * 2;
+  const dayFraction =
+    (now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600) / 24;
+  const phase = dayFraction * Math.PI * 2;
+  const x = Math.max(0, (Math.cos(phase - peakPhase) + 1) / 2);
+  return .01 * Math.pow(x, 8);
+}
+
+function pickWeighted(values, weights){
+  const total = weights.reduce((sum,w) => sum + w, 0);
+  let r = Math.random() * total;
+  for(let i=0;i<values.length;i++){
+    r -= weights[i];
+    if(r <= 0) return values[i];
+  }
+  return values[values.length - 1];
+}
+
+function pickRandomMatchSettings(){
+  const dynamicChance = getDynamicChance();
+  const settings = {
+    terrainAmount: pickWeighted(["many","medium","few","none"],[18,50,24,8]),
+    terrainHeight: pickWeighted(["high","medium","low"],[20,55,25]),
+    bulletSpeed: pickWeighted(["infinite","fast","medium","slow"],[8,27,45,20]),
+    fireRate: pickWeighted(["fast","medium","slow"],[24,51,25]),
+    maxHp: pickWeighted([80,100,150],[22,56,22]),
+    hpRegen: pickWeighted(["fast","medium","slow","none"],[8,17,20,55]),
+    regenLock: 0,
+    killBoost: Math.random() < .45 ? "on" : "off",
+    floatingTerrain: Math.random() < .28 ? "on" : "off",
+    mapSeed: Math.floor(Math.random() * 2147483647)
+  };
+
+  if(Math.random() < dynamicChance){
+    const candidates = ["terrainAmount","terrainHeight","fireRate"];
+    const target = candidates[Math.floor(Math.random() * candidates.length)];
+    settings[target] = "dynamic";
+  }
+
+  if(settings.terrainAmount === "none"){
+    settings.terrainHeight = "medium";
+    settings.floatingTerrain = "off";
+  }
+
+  return normalizeSettings(settings);
+}
+
+function formatSettingLabel(key, value){
+  if(key === "terrainAmount") return ({many:"多",medium:"中",few:"少",none:"なし",dynamic:"DYNAMIC"})[value] || value;
+  if(key === "terrainHeight") return ({high:"高",medium:"中",low:"低",dynamic:"DYNAMIC"})[value] || value;
+  if(key === "bulletSpeed") return ({infinite:"∞",fast:"速",medium:"中",slow:"遅"})[value] || value;
+  if(key === "fireRate") return ({fast:"速",medium:"中",slow:"遅",dynamic:"DYNAMIC"})[value] || value;
+  if(key === "hpRegen") return ({fast:"速",medium:"中",slow:"遅",none:"なし"})[value] || value;
+  if(key === "floatingTerrain") return value === "on" ? "ON" : "OFF";
+  if(key === "killBoost") return value === "on" ? "ON" : "OFF";
+  return String(value);
+}
+
+function buildRuleDetails(data){
+  const settings = normalizeSettings(data.settings);
+  const players = Object.keys(data.players || {}).length;
+  const entries = [
+    ["プレイヤー", `${players}人`],
+    ["地形", formatSettingLabel("terrainAmount", settings.terrainAmount)],
+    ["高低差", formatSettingLabel("terrainHeight", settings.terrainHeight)],
+    ["宙に浮く地形", formatSettingLabel("floatingTerrain", settings.floatingTerrain)],
+    ["弾速", formatSettingLabel("bulletSpeed", settings.bulletSpeed)],
+    ["最大連射", formatSettingLabel("fireRate", settings.fireRate)],
+    ["最大HP", String(settings.maxHp)],
+    ["HP回復", formatSettingLabel("hpRegen", settings.hpRegen)],
+    ["連キルブースト", formatSettingLabel("killBoost", settings.killBoost)]
+  ];
+  ruleDetails.innerHTML = entries.map(([k,v]) => `<div>${k}</div><div class="ruleValue">${v}</div>`).join("");
+}
+
+function notifyMatchTransition(){
+  try{
+    if(navigator.vibrate){
+      const audioContext = window.AudioContext || window.webkitAudioContext;
+      if(audioContext){
+        const ctx = new audioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = 720;
+        gain.gain.value = .035;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + .08);
+        setTimeout(() => ctx.close?.(), 180);
+      } else {
+        navigator.vibrate(70);
+      }
+    } else {
+      const audioContext = window.AudioContext || window.webkitAudioContext;
+      if(audioContext){
+        const ctx = new audioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.frequency.value = 720;
+        gain.gain.value = .035;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + .08);
+        setTimeout(() => ctx.close?.(), 180);
+      }
+    }
+  }catch(error){
+    try{ navigator.vibrate?.(70); }catch(_error){}
+  }
+}
+
+function setConnectionStatus(visible){
+  if(!connectionStatus) return;
+  connectionStatusVisible = Boolean(visible);
+  connectionStatus.style.display = connectionStatusVisible ? "block" : "none";
+}
+
+function getMatchCreatedMillis(data){
+  if(data?.createdAt && typeof data.createdAt.toMillis === "function") return data.createdAt.toMillis();
+  if(typeof data?.createdAt === "number") return data.createdAt;
+  return Date.now();
+}
+
+function getMatchingFinalizedMillis(data){
+  if(typeof data?.matchingFinalizedAt === "number") return data.matchingFinalizedAt;
+  return 0;
+}
+
+function allMatchingEndRequested(data){
+  const players = Object.keys(data?.players || {});
+  if(players.length === 0) return false;
+  const requests = data.matchingEndRequests || {};
+  return players.every(uid => requests[uid]);
 }
 
 function getBulletSpeed(){
@@ -2138,76 +2432,7 @@ function getRegenRate(){
   if(setting === "fast") return 3;
   if(setting === "medium") return 1.5;
   if(setting === "slow") return .6;
-  if(setting === "dynamic") return 6;
   return 0;
-}
-
-
-function applyDynamicOptionPresentation(group, value){
-  const dynamicWide = group.querySelector(".dynamicWide");
-  const dynamicReset = group.querySelector(".dynamicReset");
-  if(!dynamicWide || !dynamicReset) return;
-  const isDynamic = value === "dynamic";
-  group.classList.toggle("dynamicMode", isDynamic);
-  group.querySelectorAll(".settingOption").forEach(button => {
-    if(button === dynamicWide || button === dynamicReset) return;
-    button.style.display = isDynamic ? "none" : "";
-  });
-  dynamicWide.style.display = isDynamic ? "block" : "none";
-  dynamicReset.style.display = isDynamic ? "block" : "none";
-}
-
-function setupDynamicSettingOptions(){
-  const capable = new Set(["terrainAmount","terrainHeight","fireRate","hpRegen"]);
-  const highest = {terrainAmount:"many",terrainHeight:"high",fireRate:"fast",hpRegen:"fast"};
-  document.querySelectorAll(".settingOptions[data-setting]").forEach(group => {
-    const key = group.dataset.setting;
-    if(!capable.has(key) || group.querySelector(".dynamicWide")) return;
-    const normalButtons = Array.from(group.querySelectorAll(".settingOption"));
-    const wide = document.createElement("button");
-    wide.type = "button";
-    wide.className = "settingOption dynamicWide";
-    wide.dataset.value = "dynamic";
-    wide.textContent = "DYNAMIC";
-    wide.style.display = "none";
-    const reset = document.createElement("button");
-    reset.type = "button";
-    reset.className = "settingOption dynamicReset";
-    reset.textContent = "標準…";
-    reset.style.display = "none";
-    group.appendChild(wide);
-    group.appendChild(reset);
-
-    let lastButton = null;
-    let lastTap = 0;
-    const selectValue = value => {
-      group.querySelectorAll(".settingOption").forEach(item => item.classList.remove("selected"));
-      if(value === "dynamic") wide.classList.add("selected");
-      else {
-        const target = group.querySelector(`.settingOption[data-value="${value}"]`);
-        if(target) target.classList.add("selected");
-      }
-      applyDynamicOptionPresentation(group,value);
-      updateRoomSettingsFromUI();
-      terrainHeightRow.classList.toggle("disabled", currentSettings.terrainAmount === "none");
-      regenLockRow.classList.toggle("disabled", currentSettings.hpRegen === "none");
-    };
-    normalButtons.forEach(button => {
-      button.addEventListener("click",()=>{
-        if(group.parentElement.classList.contains("disabled")) return;
-        const now = Date.now();
-        if(button.dataset.value === highest[key] && lastButton === button && now-lastTap < 420){
-          selectValue("dynamic");
-        }else{
-          lastTap = now;
-          lastButton = button;
-          selectValue(button.dataset.value);
-        }
-      });
-    });
-    wide.addEventListener("click",()=>selectValue("dynamic"));
-    reset.addEventListener("click",()=>selectValue(highest[key]));
-  });
 }
 
 function updateSettingsUI(settings){
@@ -2225,16 +2450,29 @@ function updateSettingsUI(settings){
       const value =
         normalized[key];
 
+      const isDynamic = value === "dynamic";
+      const isDynamicCapable = ["terrainAmount","terrainHeight","fireRate"].includes(key);
+
+      if(isDynamicCapable && isDynamic){
+        group.classList.add("dynamicMode");
+        if(!group.dataset.standardValue){
+          group.dataset.standardValue =
+            key === "terrainAmount" ? "many" :
+            key === "terrainHeight" ? "high" : "fast";
+        }
+      }else if(isDynamicCapable){
+        group.classList.remove("dynamicMode");
+        group.dataset.standardValue = value;
+      }
+
       group
-        .querySelectorAll(".settingOption[data-value]")
+        .querySelectorAll(".settingOption")
         .forEach(button => {
           button.classList.toggle(
             "selected",
             button.dataset.value === value
           );
         });
-
-      applyDynamicOptionPresentation(group, value);
 
     });
 
@@ -2252,9 +2490,8 @@ function updateSettingsUI(settings){
     terrainDisabled
   );
 
-  if(floatingTerrainRow){
-    floatingTerrainRow.classList.toggle("disabled", terrainDisabled);
-  }
+  const floatingRow = document.querySelector('[data-setting="floatingTerrain"]')?.parentElement;
+  if(floatingRow) floatingRow.classList.toggle("disabled", terrainDisabled);
 
   const regenDisabled =
     normalized.hpRegen === "none";
@@ -2439,6 +2676,106 @@ function rebuildArena(settings){
   createArena(settings);
 }
 
+
+const BASE_TERRAIN_PLATFORMS = [
+  [8,1.5,8,-15,.75,-10],
+  [11,2,5,13,1,-8],
+  [6,2.5,6,17,1.25,14],
+  [10,1.5,5,-15,.75,15],
+  [5,2,12,0,1,17],
+  [6,3.5,6,-15,1.75,-1],
+  [7,4,7,4,2,-14],
+  [7,4.5,7,16,2.25,2],
+  [5,.9,5,-4,.45,-5],
+  [5,1.3,5,4,.65,-5],
+  [5,1.7,5,10,.85,-5],
+  [4,.7,4,-10,.35,-18],
+  [4,1.1,4,-4,.55,-18],
+  [4,1.5,4,2,.75,-18],
+  [4,1.9,4,8,.95,-18],
+  [5,2.2,5,-18,1.1,8],
+  [6,2.8,5,5,1.4,8],
+  [5,3.8,5,12,1.9,-17],
+  [5,4.4,5,-5,2.2,18],
+  [4,5,4,12,2.5,18],
+  [5,2.6,5,-20,1.3,-18],
+  [5,3.2,5,20,1.6,-18],
+  [6,2.2,4,-21,1.1,0],
+  [6,3.8,4,21,1.9,0]
+];
+
+const EXTRA_DYNAMIC_PLATFORMS = [
+  [6,1.8,5,-25,0,-11],
+  [5,2.6,5,24,0,-10],
+  [7,2.1,4,-23,0,5],
+  [5,3.1,6,24,0,7],
+  [6,2.4,5,-18,0,-7],
+  [5,3.6,5,18,0,-7],
+  [4,2.2,7,-8,0,-23],
+  [4,2.9,7,8,0,-23],
+  [4,3.4,7,-8,0,23],
+  [4,4.0,7,8,0,23],
+  [5,2.8,4,-28,0,14],
+  [5,3.5,4,28,0,14],
+  [6,2.0,6,-27,0,-2],
+  [6,2.8,6,27,0,-2],
+  [6,2.2,5,-26,0,22],
+  [6,3.2,5,26,0,22],
+  [4,4.2,4,-13,0,12],
+  [4,5.0,4,13,0,12],
+  [5,2.4,5,-2,0,-13],
+  [5,3.0,5,2,0,-13],
+  [4,3.0,4,-13,0,-12],
+  [4,3.8,4,13,0,-12],
+  [6,2.0,4,-20,0,15],
+  [6,2.7,4,20,0,15]
+];
+
+function terrainFloatOffset(index, settings){
+  if(normalizeSettings(settings).floatingTerrain !== "on") return 0;
+  const seed = Number(normalizeSettings(settings).mapSeed || 0);
+  const wave = Math.sin(index * 12.9898 + seed * .00137);
+  const wave2 = Math.sin(index * 4.217 + seed * .00231 + 1.7);
+  return 2.8 + (wave * .5 + .5) * 4.2 + (wave2 * .5 + .5) * 1.6;
+}
+
+function getTerrainPlatformSpecs(settings = DEFAULT_SETTINGS){
+  const normalized = normalizeSettings(settings);
+  if(normalized.terrainAmount === "none") return [];
+
+  const all = normalized.terrainAmount === "dynamic"
+    ? BASE_TERRAIN_PLATFORMS.concat(EXTRA_DYNAMIC_PLATFORMS)
+    : BASE_TERRAIN_PLATFORMS;
+
+  const amountCount =
+    normalized.terrainAmount === "many" ? BASE_TERRAIN_PLATFORMS.length :
+    normalized.terrainAmount === "few" ? 7 :
+    normalized.terrainAmount === "medium" ? 14 :
+    all.length;
+
+  const heightScale =
+    normalized.terrainHeight === "high" ? 1.45 :
+    normalized.terrainHeight === "low" ? .65 :
+    normalized.terrainHeight === "dynamic" ? 2.9 :
+    1;
+
+  return all.slice(0, Math.min(amountCount, all.length)).map((spec,index) => {
+    const [width, baseHeight, depth, x, _baseY, z] = spec;
+    const height = Math.max(.45, baseHeight * heightScale);
+    const floatOffset = terrainFloatOffset(index, normalized);
+    return {
+      width,
+      height,
+      depth,
+      x,
+      z,
+      centerY: height / 2 + floatOffset,
+      topY: height + floatOffset,
+      floatOffset
+    };
+  });
+}
+
 function randomCode(length = 6){
 
   const chars =
@@ -2469,65 +2806,15 @@ function randomCode(length = 6){
 
 function getTerrainSpawnY(x, z, settings){
 
-  const normalized = normalizeSettings(settings);
-
-  if(normalized.terrainAmount === "none") return PLAYER_HEIGHT;
-
-  const platforms = [
-    [8,1.5,8,-15,.75,-10],
-    [11,2,5,13,1,-8],
-    [6,2.5,6,17,1.25,14],
-    [10,1.5,5,-15,.75,15],
-    [5,2,12,0,1,17],
-    [6,3.5,6,-15,1.75,-1],
-    [7,4,7,4,2,-14],
-    [7,4.5,7,16,2.25,2],
-    [5,.9,5,-4,.45,-5],
-    [5,1.3,5,4,.65,-5],
-    [5,1.7,5,10,.85,-5],
-    [4,.7,4,-10,.35,-18],
-    [4,1.1,4,-4,.55,-18],
-    [4,1.5,4,2,.75,-18],
-    [4,1.9,4,8,.95,-18],
-    [5,2.2,5,-18,1.1,8],
-    [6,2.8,5,5,1.4,8],
-    [5,3.8,5,12,1.9,-17],
-    [5,4.4,5,-5,2.2,18],
-    [4,5,4,12,2.5,18],
-    [5,2.6,5,-20,1.3,-18],
-    [5,3.2,5,20,1.6,-18],
-    [6,2.2,4,-21,1.1,0],
-    [6,3.8,4,21,1.9,0]
-  ];
-
-  const amountCount =
-    normalized.terrainAmount === "many"
-      ? platforms.length
-      : normalized.terrainAmount === "few"
-        ? 7
-        : normalized.terrainAmount === "dynamic"
-          ? getDynamicTerrainCount(14)
-          : 14;
-
-  const heightScale =
-    normalized.terrainHeight === "high"
-      ? 1.45
-      : normalized.terrainHeight === "low"
-        ? .65
-        : normalized.terrainHeight === "dynamic"
-          ? getDynamicHeightScale()
-          : 1;
-
+  const specs = getTerrainPlatformSpecs(settings);
   let top = 0;
 
-  for(let i=0; i<Math.min(amountCount, platforms.length); i++){
-    const [width, baseHeight, depth, px, baseY, pz] = platforms[i];
-    const height = Math.max(.45, baseHeight * heightScale);
+  for(const spec of specs){
     if(
-      Math.abs(x - px) <= width / 2 &&
-      Math.abs(z - pz) <= depth / 2
+      Math.abs(x - spec.x) <= spec.width / 2 &&
+      Math.abs(z - spec.z) <= spec.depth / 2
     ){
-      top = Math.max(top, height);
+      top = Math.max(top, spec.topY);
     }
   }
 
@@ -3085,66 +3372,20 @@ function createArena(settings = DEFAULT_SETTINGS){
     });
 
 
-  const platforms = [
-    [8,1.5,8,-15,.75,-10],
-    [11,2,5,13,1,-8],
-    [6,2.5,6,17,1.25,14],
-    [10,1.5,5,-15,.75,15],
-    [5,2,12,0,1,17],
-    [6,3.5,6,-15,1.75,-1],
-    [7,4,7,4,2,-14],
-    [7,4.5,7,16,2.25,2],
-    [5,.9,5,-4,.45,-5],
-    [5,1.3,5,4,.65,-5],
-    [5,1.7,5,10,.85,-5],
-    [4,.7,4,-10,.35,-18],
-    [4,1.1,4,-4,.55,-18],
-    [4,1.5,4,2,.75,-18],
-    [4,1.9,4,8,.95,-18],
-    [5,2.2,5,-18,1.1,8],
-    [6,2.8,5,5,1.4,8],
-    [5,3.8,5,12,1.9,-17],
-    [5,4.4,5,-5,2.2,18],
-    [4,5,4,12,2.5,18],
-    [5,2.6,5,-20,1.3,-18],
-    [5,3.2,5,20,1.6,-18],
-    [6,2.2,4,-21,1.1,0],
-    [6,3.8,4,21,1.9,0]
-  ];
+  const platformSpecs = getTerrainPlatformSpecs(normalized);
 
-  const amountCount =
-    normalized.terrainAmount === "many"
-      ? platforms.length
-      : normalized.terrainAmount === "few"
-        ? 7
-        : normalized.terrainAmount === "dynamic"
-          ? getDynamicTerrainCount(14)
-          : 14;
+  for(let i = 0; i < platformSpecs.length; i++){
 
-  const heightScale =
-    normalized.terrainHeight === "high"
-      ? 1.45
-      : normalized.terrainHeight === "low"
-        ? .65
-        : normalized.terrainHeight === "dynamic"
-          ? getDynamicHeightScale()
-          : 1;
-
-  for(let i = 0; i < Math.min(amountCount, platforms.length); i++){
-
-    const [width, baseHeight, depth, x, baseY, z] = platforms[i];
-
-    const height =
-      Math.max(.45, baseHeight * heightScale);
+    const spec = platformSpecs[i];
 
     const platform =
       createBox(
-        width,
-        height,
-        depth,
-        x,
-        height / 2,
-        z,
+        spec.width,
+        spec.height,
+        spec.depth,
+        spec.x,
+        spec.centerY,
+        spec.z,
         obstacleMaterial,
         i % 2 === 0
           ? 0x55d9ff
@@ -3152,33 +3393,6 @@ function createArena(settings = DEFAULT_SETTINGS){
       );
 
     platform.userData.terrainPlatform = true;
-  }
-
-  if(normalized.terrainAmount === "dynamic") {
-    for(let i = platforms.length; i < amountCount; i++) {
-      const width = 4 + Math.random() * 4;
-      const depth = 4 + Math.random() * 5;
-      const height = .8 + Math.random() * 3.6;
-      const x = (Math.random() - .5) * (ARENA_SIZE - 20);
-      const z = (Math.random() - .5) * (ARENA_SIZE - 20);
-      const platform = createBox(width, height, depth, x, height / 2, z, obstacleMaterial, i % 2 === 0 ? 0x55d9ff : 0x9b7dff);
-      platform.userData.terrainPlatform = true;
-    }
-  }
-
-  if(normalized.floatingTerrain === "on") {
-    const floatingPlatforms = [
-      [7,1.2,6,-14,7,-11], [6,1.6,7,1,9,-14], [8,1.4,5,15,6,-6],
-      [5,2.0,5,-7,11,6], [7,1.1,6,10,8,10], [5,1.5,5,-17,12,13],
-      [6,1.3,7,20,11,16], [5,1.8,5,-1,6,19]
-    ];
-    const floatingCount = normalized.terrainAmount === "few" ? 3 : (normalized.terrainAmount === "many" || normalized.terrainAmount === "dynamic" ? floatingPlatforms.length : 5);
-    const floatingHeightScale = normalized.terrainHeight === "high" ? 1.25 : normalized.terrainHeight === "low" ? .75 : normalized.terrainHeight === "dynamic" ? 1.7 : 1;
-    for(let i=0;i<floatingCount;i++){
-      const [width,height,depth,x,y,z] = floatingPlatforms[i];
-      const platform = createBox(width,height*floatingHeightScale,depth,x,y,z,obstacleMaterial,i%2===0 ? 0x55d9ff : 0x9b7dff);
-      platform.userData.terrainPlatform = true;
-    }
   }
 
 }
@@ -3548,7 +3762,7 @@ async function createMatch(
         0,
 
       hp:
-        normalizeSettings(currentSettings).maxHp,
+        normalizeSettings(loadSavedRoomSettings()).maxHp,
 
       kills:
         0,
@@ -3622,9 +3836,8 @@ async function createMatch(
               null,
 
             settings:
-              loadSavedRoomSettings(),
-
-            mode:
+              { ...DEFAULT_SETTINGS, ...loadSavedRoomSettings(), mapSeed: Math.floor(Math.random() * 2147483647) },
+            matchType:
               "room",
 
             playerOrder:[
@@ -3650,8 +3863,7 @@ async function createMatch(
 
 
     await startMatch(
-      code,
-      "room"
+      code
     );
 
 
@@ -3781,7 +3993,7 @@ async function joinMatch(
           snap.data();
 
 
-        if(data.status !== "waiting"){
+        if(data.status !== "waiting" || data.matchingFinalizedAt){
           throw new Error("STARTED");
         }
 
@@ -3899,8 +4111,7 @@ async function joinMatch(
 
 
     await startMatch(
-      code,
-      "room"
+      code
     );
 
 
@@ -3963,29 +4174,140 @@ function getPlayerName(){
   return name || makeDefaultPlayerName();
 }
 
-async function handleMatchButton(){
 
-  
-  const code =
-    matchCodeInput.value
-      .trim()
-      .toUpperCase();
+async function startRandomMatch(){
 
-
-  if(code){
-
-    await joinMatch(
-      code
-    );
-
-  }else{
-
-    await createMatch(
-      ""
-    );
-
+  if(gameStarted || currentMatchId){
+    return;
   }
 
+  statusEl.textContent = "マッチング中…";
+  try{
+    const user = await ensureAuth();
+    const queueRef = doc(db, "matchmaking", "global");
+
+    const result = await runTransaction(db, async transaction => {
+      const queueSnap = await transaction.get(queueRef);
+      let existingCode = queueSnap.exists() ? queueSnap.data().matchCode : "";
+
+      if(existingCode){
+        const existingRef = doc(db, "matches", existingCode);
+        const matchSnap = await transaction.get(existingRef);
+        if(matchSnap.exists()){
+          const data = matchSnap.data();
+          const players = { ...(data.players || {}) };
+          const count = Object.keys(players).length;
+          const canJoin = data.status === "waiting" &&
+            data.matchType === "random" &&
+            !data.matchingFinalizedAt &&
+            count < MAX_RANDOM_PLAYERS;
+
+          if(canJoin){
+            if(!players[user.uid]){
+              const spawn = randomSpawn(DEFAULT_SETTINGS);
+              const order = Array.isArray(data.playerOrder) ? [...data.playerOrder] : Object.keys(players);
+              players[user.uid] = {
+                uid:user.uid,
+                name:getPlayerName(),
+                x:spawn.x,
+                y:spawn.y,
+                z:spawn.z,
+                yaw:0,
+                pitch:0,
+                hp:DEFAULT_SETTINGS.maxHp,
+                kills:0,
+                killStreak:0,
+                lastKillAt:0,
+                alive:true,
+                lastActiveAt:Date.now(),
+                lastDamageAt:0,
+                joinOrder:order.length
+              };
+              order.push(user.uid);
+              transaction.update(existingRef, {players, playerOrder:order});
+            }
+            transaction.update(queueRef,{updatedAt:serverTimestamp()});
+            return {code:existingCode, host:data.hostUid === user.uid};
+          }
+        }
+      }
+
+      const newCode = randomCode();
+      const newRef = doc(db, "matches", newCode);
+      const spawn = randomSpawn(DEFAULT_SETTINGS);
+      const player = {
+        uid:user.uid,
+        name:getPlayerName(),
+        x:spawn.x,
+        y:spawn.y,
+        z:spawn.z,
+        yaw:0,
+        pitch:0,
+        hp:DEFAULT_SETTINGS.maxHp,
+        kills:0,
+        killStreak:0,
+        lastKillAt:0,
+        alive:true,
+        lastActiveAt:Date.now(),
+        lastDamageAt:0,
+        joinOrder:0
+      };
+
+      transaction.set(newRef, {
+        hostUid:user.uid,
+        status:"waiting",
+        matchType:"random",
+        winnerUid:null,
+        createdAt:serverTimestamp(),
+        startedAt:null,
+        ruleStartedAt:null,
+        settings:{...DEFAULT_SETTINGS,mapSeed:Math.floor(Math.random()*2147483647)},
+        playerOrder:[user.uid],
+        players:{[user.uid]:player},
+        matchingEndRequests:{},
+        matchingFinalizedAt:null,
+        readyPlayers:{},
+        initialPlayerCount:1
+      });
+      transaction.set(queueRef,{matchCode:newCode,updatedAt:serverTimestamp()});
+      return {code:newCode,host:true};
+    });
+
+    isHost = result.host;
+    await startMatch(result.code);
+  }catch(error){
+    console.error("random match error", error);
+    statusEl.textContent = "ランダムマッチ失敗：" + getFriendlyError(error);
+  }
+}
+
+async function requestMatchingEnd(){
+  if(!matchRef || matchType !== "random" || !latestMatchData) return;
+  try{
+    await runTransaction(db, async transaction => {
+      const snap = await transaction.get(matchRef);
+      if(!snap.exists()) return;
+      const data = snap.data();
+      if(data.status !== "waiting" || data.matchingFinalizedAt) return;
+      const matchingEndRequests = { ...(data.matchingEndRequests || {}) };
+      matchingEndRequests[currentUser.uid] = true;
+      transaction.update(matchRef,{matchingEndRequests});
+    });
+  }catch(error){
+    console.error("matching end request error", error);
+  }
+}
+
+async function handleMatchButton(){
+  const code = matchCodeInput.value.trim().toUpperCase();
+  roomMatchModalOpen = false;
+  roomMatchModal.style.display = "none";
+
+  if(code){
+    await joinMatch(code);
+  }else{
+    await createMatch("");
+  }
 }
 
 
@@ -4027,15 +4349,11 @@ function getFriendlyError(error){
 
 
 async function startMatch(
-  code,
-  modeOverride = "room"
+  code
 ){
 
   currentMatchId =
     code;
-
-  matchMode = modeOverride;
-  awardedCurrentMatchWp = false;
 
   matchRef =
     doc(
@@ -4047,9 +4365,6 @@ async function startMatch(
 
   menu.style.display =
     "none";
-  if(roomMatchModal) roomMatchModal.style.display = "none";
-  if(randomMatchScreen) randomMatchScreen.style.display = "none";
-  if(ruleScreen) ruleScreen.style.display = "none";
 
   gameUI.style.display =
     "none";
@@ -4083,6 +4398,16 @@ async function startMatch(
 
   matchHasStarted =
     false;
+  matchingLastFinalizedState = false;
+  matchingNotificationPlayed = false;
+  matchingMiniScore = 0;
+  miniGameStarted = false;
+  ruleAdvanceInFlight = false;
+  latestMatchData = null;
+  wpEarned = 0;
+  resultPlayersSnapshot = null;
+  resultPlayerOrder = [];
+  lastRandomFinalizeCheck = 0;
 
 
   velocityY =
@@ -4126,8 +4451,8 @@ async function startMatch(
         const data =
           snapshot.data();
 
-        latestMatchData = data;
-        clearConnectionStatus();
+        setConnectionStatus(false);
+        matchType = data.matchType === "random" ? "random" : "room";
 
         isHost =
           data.hostUid === currentUser.uid;
@@ -4210,26 +4535,18 @@ async function startMatch(
         const wasStarted =
           matchHasStarted;
 
-        if(data.status === "matchingFound" && matchMode === "random") {
-          if(!randomWasFound){
-            randomWasFound = true;
-            randomMatchForceStartAt = Number(data.forceStartAt || 0);
-            notifyMatchFound().catch(()=>{});
-          }
-          updateRandomFoundUI(data);
-          maybeAdvanceRandomMatch(data);
-        }
-
-        if(data.status === "rule") {
-          matchHasStarted = false;
-          maybeAdvanceRulePhase(data);
-        }
-
-        if(data.status === "active") {
+        if(
+          data.status ===
+          "active"
+        ){
           matchHasStarted = true;
         }
 
-        if(data.status === "active" && !wasStarted) {
+        if(
+          data.status ===
+          "active" &&
+          !wasStarted
+        ){
 
           if(!scene){
             setupScene();
@@ -4242,19 +4559,37 @@ async function startMatch(
           }
 
           if(localPlayer){
-            const beforeY = Number(localPlayer.y) || PLAYER_HEIGHT;
-            liftPlayerOutOfTerrain(localPlayer,currentSettings);
-            if(Number(localPlayer.y)>beforeY){ velocityY=0; grounded=true; }
+            const beforeY =
+              Number(localPlayer.y) || PLAYER_HEIGHT;
+
+            liftPlayerOutOfTerrain(
+              localPlayer,
+              currentSettings
+            );
+
+            if(
+              Number(localPlayer.y) > beforeY
+            ){
+              velocityY = 0;
+              grounded = true;
+            }
           }
 
-          const startedAt = data.startedAt;
-          spawnProtectionUntil = Date.now()+START_PROTECTION_TIME;
+          const startedAt =
+            data.startedAt;
+
+          spawnProtectionUntil =
+            Date.now() + START_PROTECTION_TIME;
+
           if(startedAt){
-            const serverMillis = startedAt.toMillis ? startedAt.toMillis() : Date.now();
-            spawnProtectionUntil = serverMillis + START_PROTECTION_TIME;
-          }
+            const serverMillis =
+              startedAt.toMillis
+                ? startedAt.toMillis()
+                : Date.now();
 
-          if(matchMode === "random") removeOwnRandomQueueEntry();
+            spawnProtectionUntil =
+              serverMillis + START_PROTECTION_TIME;
+          }
         }
 
         updateStartUI(
@@ -4282,11 +4617,25 @@ async function startMatch(
               : "勝者";
 
 
+          const resultWp =
+            matchType === "random" && winner === currentUser.uid
+              ? Number(data.initialPlayerCount || Object.keys(players).length || 0)
+              : 0;
+
+          wpEarned = resultWp;
           finishLocalGame(
-            winner === currentUser.uid ? "YOU WIN!" : winnerName + " の勝利！",
-            { winnerUid: winner, players, startingPlayerCount: Number(data.startingPlayerCount || Object.keys(players).length) }
+            winner === currentUser.uid
+              ? "YOU WIN!"
+              : winnerName + " の勝利！",
+            data
           );
 
+          if(isHost){
+            if(pendingResultDeleteTimer) clearTimeout(pendingResultDeleteTimer);
+            pendingResultDeleteTimer = setTimeout(() => {
+              deleteMatch();
+            }, 7000);
+          }
 
         }
 
@@ -4297,10 +4646,14 @@ async function startMatch(
         console.error(
           error
         );
+        setConnectionStatus(true);
 
         if(gameStarted){
-          setConnectionStatus("CONNECTION LOST");
-          finishLocalGame("通信エラーが発生しました。");
+
+          finishLocalGame(
+            "通信エラーが発生しました。"
+          );
+
         }
 
       }
@@ -4342,6 +4695,9 @@ async function loadLocalPlayer(){
 
   const data =
     snap.data();
+
+  matchType = data.matchType === "random" ? "random" : "room";
+  matchInitialPlayerCount = Number(data.initialPlayerCount || Object.keys(data.players || {}).length || 0);
 
   currentSettings =
     isHost && data.status === "waiting"
@@ -4414,53 +4770,144 @@ async function loadLocalPlayer(){
 }
 
 
+function hidePreMatchScreens(){
+  preStart.style.display = "none";
+  matchingScreen.style.display = "none";
+  ruleScreen.style.display = "none";
+}
+
+function updateMatchingUI(data){
+  if(matchType !== "random"){
+    matchingScreen.style.display = "none";
+    return;
+  }
+
+  if(data.status === "waiting" && !data.matchingFinalizedAt){
+    matchingScreen.style.display = "flex";
+    menu.style.display = "none";
+    gameUI.style.display = "none";
+    preStart.style.display = "none";
+    ruleScreen.style.display = "none";
+
+    const players = data.players || {};
+    const count = Object.keys(players).length;
+    matchingCount.textContent = `${count} / ${MAX_RANDOM_PLAYERS} PLAYERS`;
+
+    const remain = Math.max(0, RANDOM_MAX_WAIT - (Date.now() - getMatchCreatedMillis(data)));
+    matchingTimer.textContent = String(Math.ceil(remain / 1000));
+    matchingStatus.textContent = count >= MAX_RANDOM_PLAYERS
+      ? "メンバーが決定しました…"
+      : "他のプレイヤーを待っています…";
+
+    matchingEndButton.style.display = "block";
+    matchingEndButton.textContent = (data.matchingEndRequests || {})[currentUser.uid]
+      ? "マッチング終了を要求済み"
+      : "マッチング終了を要求";
+    matchingEndButton.disabled = Boolean((data.matchingEndRequests || {})[currentUser.uid]);
+    matchingReadyButton.style.display = "none";
+    return;
+  }
+
+  if(data.status === "waiting" && data.matchingFinalizedAt){
+    matchingScreen.style.display = "flex";
+    menu.style.display = "none";
+    gameUI.style.display = "none";
+    preStart.style.display = "none";
+    ruleScreen.style.display = "none";
+
+    const count = Object.keys(data.players || {}).length;
+    matchingCount.textContent = `${count} PLAYERS`;
+    const remain = Math.max(0, MATCHING_FINALIZE_TIME - (Date.now() - Number(data.matchingFinalizedAt)));
+    const displaySeconds = Math.max(0, Math.ceil(remain / 1000) - 1);
+    matchingTimer.textContent = String(displaySeconds);
+
+    const readyPlayers = data.readyPlayers || {};
+    const ready = Boolean(readyPlayers[currentUser.uid]);
+    matchingStatus.textContent = ready
+      ? "✓ 準備OK　他のプレイヤーを待っています…"
+      : `メンバーが決定、${displaySeconds}秒後に強制スタート`;
+
+    matchingEndButton.style.display = "none";
+    matchingReadyButton.style.display = "block";
+    matchingReadyButton.textContent = ready ? "✓ 準備OK" : "準備OK";
+    matchingReadyButton.disabled = ready;
+
+    if(!matchingLastFinalizedState){
+      matchingLastFinalizedState = true;
+      if(!matchingNotificationPlayed){
+        matchingNotificationPlayed = true;
+        notifyMatchTransition();
+      }
+    }
+
+    const players = Object.keys(data.players || {});
+    const allReady = players.length > 0 && players.every(uid => readyPlayers[uid]);
+    if(allReady || remain <= 0) beginRulePhaseForRandom();
+    return;
+  }
+
+  matchingScreen.style.display = "none";
+}
+
+function updateRuleUI(data){
+  if(!data || data.status !== "rule"){
+    ruleScreen.style.display = "none";
+    return;
+  }
+
+  matchingScreen.style.display = "none";
+  preStart.style.display = "none";
+  gameUI.style.display = "none";
+  menu.style.display = "none";
+  ruleScreen.style.display = "flex";
+
+  buildRuleDetails(data);
+  const started = Number(data.ruleStartedAt || Date.now());
+  const remain = Math.max(0, RULE_DURATION - (Date.now() - started));
+  ruleCountdown.textContent = String(Math.max(0, Math.ceil(remain / 1000)));
+  if(remain <= 0) activateRulePhase();
+}
+
 function updateStartUI(data){
 
-  if(data.status === "matchingFound" && matchMode === "random"){
-    preStart.style.display="none";
-    gameUI.style.display="none";
-    randomMatchScreen.style.display="flex";
-    ruleScreen.style.display="none";
-    updateRandomFoundUI(data);
+  latestMatchData = data;
+  matchType = data.matchType === "random" ? "random" : "room";
+
+  if(data.status === "active"){
+    hidePreMatchScreens();
+    if(scene) gameUI.style.display = "block";
+    gameUI.classList.remove("preStartMode");
+    settingsModal.style.display = "none";
+    settingsModalOpen = false;
     return;
   }
 
   if(data.status === "rule"){
-    preStart.style.display="none";
-    randomMatchScreen.style.display="none";
-    gameUI.style.display="none";
-    ruleScreen.style.display="flex";
-    showRuleScreen(data);
+    updateRuleUI(data);
     return;
   }
 
-  if(data.status === "active"){
-    preStart.style.display="none";
-    randomMatchScreen.style.display="none";
-    ruleScreen.style.display="none";
-    if(scene) gameUI.style.display="block";
-    gameUI.classList.remove("preStartMode");
-    settingsModal.style.display="none";
-    settingsModalOpen=false;
+  if(matchType === "random"){
+    updateMatchingUI(data);
     return;
   }
 
-  if(data.status !== "waiting"){
-    preStart.style.display="none";
-    randomMatchScreen.style.display="none";
-    ruleScreen.style.display="none";
-    if(scene) gameUI.style.display="block";
-    return;
-  }
+  gameUI.classList.remove("preStartMode");
+  gameUI.style.display = "none";
+  matchingScreen.style.display = "none";
+  ruleScreen.style.display = "none";
+  preStart.style.display = "flex";
 
-  gameUI.style.display="none";
-  preStart.style.display="flex";
-  preStartRoomCode.textContent=currentMatchId || "----";
-  preStartText.textContent=isHost ? "部屋主がSTARTを長押しして開始" : "部屋主のSTART待ち";
-  startButton.style.opacity=isHost ? "1" : ".35";
-  startButton.style.pointerEvents=isHost ? "auto" : "none";
-  settingsButton.style.opacity=isHost ? "1" : ".35";
-  settingsButton.style.pointerEvents=isHost ? "auto" : "none";
+  preStartRoomCode.textContent = currentMatchId || "----";
+  preStartText.textContent = isHost
+    ? "部屋主がSTARTを長押しして開始"
+    : "部屋主のSTART待ち";
+
+  startButton.style.opacity = isHost ? "1" : ".35";
+  startButton.style.pointerEvents = isHost ? "auto" : "none";
+  settingsButton.style.opacity = isHost ? "1" : ".35";
+  settingsButton.style.pointerEvents = isHost ? "auto" : "none";
+
   updateSettingsUI(currentSettings);
 }
 
@@ -6293,7 +6740,10 @@ async function applyBulletDamage(
                 winnerUid:
                   alivePlayers.length === 1
                     ? alivePlayers[0].uid
-                    : null
+                    : null,
+
+                endedAt:
+                  Date.now()
 
               }
             );
@@ -6474,205 +6924,192 @@ function shoot(){
 }
 
 
-
-function formatRuleSetting(settings){
-  const s=normalizeSettings(settings);
-  const terrain={many:"多",medium:"中",few:"少",none:"なし",dynamic:"DYNAMIC"};
-  const height={high:"高",medium:"中",low:"低",dynamic:"DYNAMIC"};
-  const speed={infinite:"∞",fast:"速",medium:"中",slow:"遅"};
-  const fire={fast:"速",medium:"中",slow:"遅",dynamic:"DYNAMIC"};
-  const regen={fast:"速",medium:"中",slow:"遅",none:"なし",dynamic:"DYNAMIC"};
-  return `地形 ${terrain[s.terrainAmount]} / 高低差 ${height[s.terrainHeight]} / 浮遊地形 ${s.floatingTerrain === "on" ? "ON" : "OFF"}<br>弾速 ${speed[s.bulletSpeed]} / 連射 ${fire[s.fireRate]} / 最大HP ${s.maxHp}<br>自然回復 ${regen[s.hpRegen]} / 連キルブースト ${s.killBoost === "on" ? "ON" : "OFF"}`;
-}
-
-function showRuleScreen(data){
-  ruleTitle.textContent=data.ruleName || (matchMode === "random" ? "RANDOM RULE" : "ROOM RULE");
-  ruleDetails.innerHTML=formatRuleSetting(data.settings) + `<br>プレイヤー ${Object.keys(data.players || {}).length}人`;
-  const left=Math.max(0,Number(data.ruleEndsAt||0)-Date.now());
-  ruleCountdown.textContent=String(Math.max(0,Math.ceil(left/1000)));
-}
-
-async function maybeAdvanceRulePhase(data){
-  if(!matchRef || data.status !== "rule") return;
-  const endAt=Number(data.ruleEndsAt||0);
-  if(!endAt || Date.now()<endAt) return;
-  if(Date.now()-lastRuleAdvanceAttempt<700) return;
-  lastRuleAdvanceAttempt=Date.now();
-  try{
-    await runTransaction(db,async transaction=>{
-      const snap=await transaction.get(matchRef);
-      if(!snap.exists()) return;
-      const latest=snap.data();
-      if(latest.status !== "rule" || Date.now()<Number(latest.ruleEndsAt||0)) return;
-      transaction.update(matchRef,{status:"active",phase:"active",startedAt:serverTimestamp(),startedProtectionUntil:Date.now()+START_PROTECTION_TIME});
-    });
-  }catch(error){ console.error("rule advance error",error); }
-}
-
 function startMatchByHost(){
 
   if(
     !isHost ||
     !matchRef ||
-    matchHasStarted
+    matchHasStarted ||
+    matchType !== "room"
   ){
-
     return;
-
   }
-
 
   runTransaction(
     db,
     async transaction => {
 
-      const snap =
-        await transaction.get(
-          matchRef
-        );
+      const snap = await transaction.get(matchRef);
+      if(!snap.exists()) return;
 
+      const data = snap.data();
+      if(data.status !== "waiting" || data.matchingFinalizedAt) return;
 
-      if(
-        !snap.exists()
-      ){
+      const players = { ...(data.players || {}) };
+      const settings = normalizeSettings({
+        ...readSettingsUI(),
+        mapSeed: Math.floor(Math.random() * 2147483647)
+      });
 
-        return;
-
+      for(const player of Object.values(players)){
+        const spawn = randomSpawn(settings);
+        spawn.y = getTerrainSpawnY(spawn.x, spawn.z, settings);
+        player.x = spawn.x;
+        player.y = spawn.y;
+        player.z = spawn.z;
+        player.hp = settings.maxHp;
+        player.alive = true;
+        player.kills = 0;
+        player.killStreak = 0;
+        player.lastKillAt = 0;
+        player.lastDamageAt = 0;
+        player.lastActiveAt = Date.now();
       }
 
-
-      const data =
-        snap.data();
-
-
-      if(
-        data.status !==
-        "waiting"
-      ){
-
-        return;
-
-      }
-
-
-      const players =
-        {
-          ...(data.players || {})
-        };
-
-      const settings =
-        normalizeSettings(
-          isHost ? readSettingsUI() : data.settings
-        );
-
-      currentSettings =
-        settings;
-
-
-      for(
-        const player
-        of Object.values(players)
-      ){
-
-        const spawn =
-          randomSpawn(settings);
-
-        spawn.y =
-          getTerrainSpawnY(
-            spawn.x,
-            spawn.z,
-            settings
-          );
-
-        player.x =
-          spawn.x;
-
-        player.y =
-          spawn.y;
-
-        player.z =
-          spawn.z;
-
-        player.hp =
-          settings.maxHp;
-
-        player.alive =
-          true;
-
-        player.kills =
-          0;
-
-        player.killStreak =
-          0;
-
-        player.lastKillAt =
-          0;
-
-        player.lastDamageAt =
-          0;
-
-        player.lastActiveAt =
-          Date.now();
-
-      }
-
-
-      const ruleStartedAt = Date.now();
-
-      transaction.update(
-        matchRef,
-        {
-
-          players,
-
-          settings,
-
-          status:
-            "rule",
-
-          phase:
-            "rule",
-
-          ruleStartedAt,
-
-          ruleEndsAt:
-            ruleStartedAt + RULE_PHASE_TIME,
-
-          winnerUid:
-            null,
-
-          startingPlayerCount:
-            Object.keys(players).length,
-
-          startedAt:
-            null,
-
-          startedProtectionUntil:
-            null,
-
-          readyUids:
-            []
-
-        }
-
-      );
-
+      transaction.update(matchRef, {
+        players,
+        settings,
+        initialPlayerCount: Object.keys(players).length,
+        status: "rule",
+        ruleStartedAt: Date.now(),
+        winnerUid: null,
+        startedAt: null,
+        startedProtectionUntil: null
+      });
     }
-
-  ).catch(
-    error => {
-
-      console.error(
-        "start error",
-        error
-      );
-
-    }
-
-  );
-
+  ).catch(error => {
+    console.error("start error", error);
+  });
 }
 
+async function finalizeRandomMatchIfNeeded(){
+
+  if(
+    !matchRef ||
+    matchType !== "random" ||
+    gameEnded
+  ) return;
+
+  try{
+    await runTransaction(db, async transaction => {
+      const snap = await transaction.get(matchRef);
+      if(!snap.exists()) return;
+      const data = snap.data();
+      if(data.status !== "waiting" || data.matchingFinalizedAt) return;
+
+      const players = { ...(data.players || {}) };
+      const count = Object.keys(players).length;
+      const createdMillis = getMatchCreatedMillis(data);
+      const timedOut = Date.now() - createdMillis >= RANDOM_MAX_WAIT;
+      const full = count >= MAX_RANDOM_PLAYERS;
+      const allRequested = allMatchingEndRequested(data);
+      if(!(timedOut || full || allRequested)) return;
+
+      const settings = pickRandomMatchSettings();
+      for(const player of Object.values(players)){
+        const spawn = randomSpawn(settings);
+        spawn.y = getTerrainSpawnY(spawn.x, spawn.z, settings);
+        player.x = spawn.x;
+        player.y = spawn.y;
+        player.z = spawn.z;
+        player.hp = settings.maxHp;
+        player.alive = true;
+        player.kills = 0;
+        player.killStreak = 0;
+        player.lastKillAt = 0;
+        player.lastDamageAt = 0;
+        player.lastActiveAt = Date.now();
+      }
+
+      transaction.update(matchRef, {
+        players,
+        settings,
+        initialPlayerCount: count,
+        matchingFinalizedAt: Date.now(),
+        readyPlayers: {},
+        status: "waiting"
+      });
+    });
+  }catch(error){
+    console.error("random matchmaking finalize error", error);
+  }
+}
+
+async function setRandomReady(){
+  if(!matchRef || matchType !== "random" || !latestMatchData?.matchingFinalizedAt) return;
+  try{
+    await runTransaction(db, async transaction => {
+      const snap = await transaction.get(matchRef);
+      if(!snap.exists()) return;
+      const data = snap.data();
+      if(data.status !== "waiting" || !data.matchingFinalizedAt) return;
+      const players = data.players || {};
+      const readyPlayers = { ...(data.readyPlayers || {}) };
+      readyPlayers[currentUser.uid] = true;
+      transaction.update(matchRef, { readyPlayers });
+    });
+  }catch(error){
+    console.error("ready error", error);
+  }
+}
+
+async function beginRulePhaseForRandom(){
+  if(!matchRef || matchType !== "random" || ruleAdvanceInFlight) return;
+  ruleAdvanceInFlight = true;
+  try{
+    await runTransaction(db, async transaction => {
+      const snap = await transaction.get(matchRef);
+      if(!snap.exists()) return;
+      const data = snap.data();
+      if(data.status !== "waiting" || !data.matchingFinalizedAt) return;
+
+      const players = Object.keys(data.players || {});
+      const ready = data.readyPlayers || {};
+      const allReady = players.length > 0 && players.every(uid => ready[uid]);
+      const remain = MATCHING_FINALIZE_TIME - (Date.now() - Number(data.matchingFinalizedAt));
+      if(!allReady && remain > 0) return;
+
+      transaction.update(matchRef, {
+        status: "rule",
+        ruleStartedAt: Date.now(),
+        winnerUid: null
+      });
+    });
+  }catch(error){
+    console.error("random rule transition error", error);
+  }finally{
+    ruleAdvanceInFlight = false;
+  }
+}
+
+async function activateRulePhase(){
+  if(!matchRef || ruleAdvanceInFlight) return;
+  const data = latestMatchData;
+  if(!data || data.status !== "rule") return;
+  const started = Number(data.ruleStartedAt || 0);
+  if(!started || Date.now() - started < RULE_DURATION) return;
+
+  ruleAdvanceInFlight = true;
+  try{
+    await runTransaction(db, async transaction => {
+      const snap = await transaction.get(matchRef);
+      if(!snap.exists()) return;
+      const latest = snap.data();
+      if(latest.status !== "rule") return;
+      const latestStarted = Number(latest.ruleStartedAt || 0);
+      if(latestStarted && Date.now() - latestStarted < RULE_DURATION) return;
+      transaction.update(matchRef, {
+        status: "active",
+        startedAt: serverTimestamp(),
+        startedProtectionUntil: Date.now() + START_PROTECTION_TIME
+      });
+    });
+  }catch(error){
+    console.error("rule activation error", error);
+  }finally{
+    ruleAdvanceInFlight = false;
+  }
+}
 
 function updateStartProgress(){
 
@@ -6789,6 +7226,17 @@ async function checkMatchCleanup(
   }
 
   if(
+    data.status === "ended"
+  ){
+    const endedMillis =
+      typeof data.endedAt === "number" ? data.endedAt : 0;
+    if(endedMillis > 0 && now - endedMillis >= 9000){
+      try{ await deleteDoc(matchRef); }catch(error){ console.error("ended cleanup error", error); }
+    }
+    return;
+  }
+
+  if(
     createdMillis > 0 &&
     now - createdMillis >=
       MAX_MATCH_AGE
@@ -6863,7 +7311,7 @@ async function checkMatchCleanup(
 
 function finishLocalGame(
   text,
-  resultData = null
+  data = latestMatchData
 ){
 
   if(gameEnded){
@@ -6872,29 +7320,48 @@ function finishLocalGame(
 
   gameEnded = true;
   gameStarted = false;
+  matchHasStarted = false;
 
   gameOverText.textContent = text;
-  gameOverWp.textContent = "";
+  wpEarnedEl.textContent = wpEarned > 0 ? `+${wpEarned} WP` : "";
 
-  if(resultData && matchMode === "random"){
-    const count = Number(resultData.startingPlayerCount || Object.keys(resultData.players || {}).length || 0);
-    if(resultData.winnerUid === currentUser.uid && !awardedCurrentMatchWp && count > 0){
-      const oldWp = Number(localStorage.getItem("dfpsWP") || 0);
-      const newWp = oldWp + count;
-      try{ localStorage.setItem("dfpsWP",String(newWp)); }catch(error){}
-      gameOverWp.textContent = `+${count} WP  ｜  TOTAL ${newWp} WP`;
-      awardedCurrentMatchWp = true;
-    }else if(resultData.winnerUid){
-      gameOverWp.textContent = `参加人数 ${count}人`;
-    }
-  }
+  const players = data?.players || resultPlayersSnapshot || {};
+  resultPlayersSnapshot = players;
+  resultPlayerOrder = Array.isArray(data?.playerOrder)
+    ? data.playerOrder
+    : [];
+
+  const entries = Object.entries(players).sort((a,b) => {
+    const pa = a[1] || {};
+    const pb = b[1] || {};
+    const aliveDiff = Number(Boolean(pb.alive)) - Number(Boolean(pa.alive));
+    if(aliveDiff) return aliveDiff;
+    const killsDiff = Number(pb.kills || 0) - Number(pa.kills || 0);
+    if(killsDiff) return killsDiff;
+    const ao = resultPlayerOrder.indexOf(a[0]);
+    const bo = resultPlayerOrder.indexOf(b[0]);
+    return (ao < 0 ? 9999 : ao) - (bo < 0 ? 9999 : bo);
+  });
+
+  resultRanking.innerHTML = entries.map(([uid,player],index) => {
+    const name = uid === currentUser?.uid ? "YOU" : (player.name || uid.slice(-4));
+    return `<div class="resultRankRow"><span>${index + 1}位　${escapeHtml(name)}</span><span>${Number(player.kills || 0)} K</span></div>`;
+  }).join("");
 
   gameOver.style.display = "flex";
   preStart.style.display = "none";
-  randomMatchScreen.style.display = "none";
+  matchingScreen.style.display = "none";
   ruleScreen.style.display = "none";
 }
 
+function escapeHtml(value){
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
 
 async function deleteMatch(){
 
@@ -6914,6 +7381,20 @@ async function deleteMatch(){
     await deleteDoc(
       ref
     );
+
+    if(matchType === "random"){
+      try{
+        const queueRef = doc(db,"matchmaking","global");
+        await runTransaction(db, async transaction => {
+          const snap = await transaction.get(queueRef);
+          if(snap.exists() && snap.data().matchCode === currentMatchId){
+            transaction.delete(queueRef);
+          }
+        });
+      }catch(error){
+        console.error("queue cleanup error", error);
+      }
+    }
 
   }catch(error){
 
@@ -6941,24 +7422,43 @@ async function leaveRoom(){
     await runTransaction(
       db,
       async transaction => {
-        const snap = await transaction.get(ref);
-        if(!snap.exists()) return;
 
-        const data = snap.data();
-        const players = { ...(data.players || {}) };
-        if(!players[uid]) return;
+        const snap =
+          await transaction.get(ref);
+
+        if(!snap.exists()){
+          return;
+        }
+
+        const data =
+          snap.data();
+
+        if(data.status !== "waiting"){
+          return;
+        }
+
+        const players =
+          { ...(data.players || {}) };
 
         delete players[uid];
 
-        const oldOrder = Array.isArray(data.playerOrder)
-          ? data.playerOrder
-          : Object.keys(players);
-        const playerOrder = oldOrder.filter(id => id !== uid);
+        const oldOrder =
+          Array.isArray(data.playerOrder)
+            ? data.playerOrder
+            : Object.keys(players);
+
+        const playerOrder =
+          oldOrder.filter(id => id !== uid);
 
         if(playerOrder.length === 0){
           transaction.delete(ref);
           return;
         }
+
+        const nextHost =
+          data.hostUid === uid
+            ? playerOrder[0]
+            : data.hostUid;
 
         Object.keys(players).forEach(id => {
           players[id] = {
@@ -6967,22 +7467,20 @@ async function leaveRoom(){
           };
         });
 
-        const nextHost = data.hostUid === uid
-          ? playerOrder[0]
-          : data.hostUid;
-
-        transaction.update(ref,{
-          players,
-          playerOrder,
-          hostUid: nextHost
-        });
+        transaction.update(
+          ref,
+          {
+            players,
+            playerOrder,
+            hostUid: nextHost
+          }
+        );
       }
     );
   }catch(error){
     console.error("leave room error", error);
   }
 
-  await removeOwnRandomQueueEntry();
   leaveCurrentMatch();
 }
 
@@ -7060,6 +7558,23 @@ function leaveCurrentMatch(){
 
   lastRegenTick =
     0;
+  latestMatchData = null;
+  matchingLastFinalizedState = false;
+  matchingNotificationPlayed = false;
+  miniGameStarted = false;
+  matchingMiniScore = 0;
+  wpEarned = 0;
+  resultPlayersSnapshot = null;
+  resultPlayerOrder = [];
+  lastRandomFinalizeCheck = 0;
+  if(pendingResultDeleteTimer){
+    clearTimeout(pendingResultDeleteTimer);
+    pendingResultDeleteTimer = null;
+  }
+  setConnectionStatus(false);
+  if(miniGameScore) miniGameScore.textContent = "SCORE 0";
+  if(ruleCountdown) ruleCountdown.textContent = "5";
+  hidePreMatchScreens();
 
 
   gameUI.style.display =
@@ -7074,17 +7589,6 @@ function leaveCurrentMatch(){
 
   menu.style.display =
     "flex";
-  if(roomMatchModal) roomMatchModal.style.display = "none";
-  if(randomMatchScreen) randomMatchScreen.style.display = "none";
-  if(ruleScreen) ruleScreen.style.display = "none";
-  latestMatchData = null;
-  randomMatchingActive = false;
-  randomWasFound = false;
-  randomMatchForceStartAt = 0;
-  randomReady = false;
-  randomMiniScore = 0;
-  if(randomQueueUnsubscribe){ randomQueueUnsubscribe(); randomQueueUnsubscribe = null; }
-  randomQueueRef = null;
 
   if(roomJoinScreen){
     roomJoinScreen.style.display = "none";
@@ -7103,6 +7607,8 @@ function leaveCurrentMatch(){
 
   qrModal.style.display =
     "none";
+  roomMatchModal.style.display = "none";
+  roomMatchModalOpen = false;
 
   settingsModalOpen =
     false;
@@ -7117,7 +7623,38 @@ function leaveCurrentMatch(){
 
 
 async function handleReturn(){
-  await leaveRoom();
+
+  const wasHost =
+    isHost;
+
+  const ref =
+    matchRef;
+
+
+  leaveCurrentMatch();
+
+
+  if(
+    wasHost &&
+    ref
+  ){
+
+    try{
+
+      await deleteDoc(
+        ref
+      );
+
+    }catch(error){
+
+      console.error(
+        error
+      );
+
+    }
+
+  }
+
 }
 
 
@@ -7793,19 +8330,22 @@ function gameLoop(
 
   updateStartProgress();
   updateNeonEdges(time);
-  updateRandomMatchScreen();
-  if(latestMatchData?.status === "rule") {
-    showRuleScreen(latestMatchData);
-    maybeAdvanceRulePhase(latestMatchData);
-  }
-  if(randomMatchingActive && !currentMatchId) {
-    tryResolveRandomQueue();
-  }
-  if(latestMatchData?.status === "matchingFound" && matchMode === "random") {
-    updateRandomFoundUI(latestMatchData);
-    maybeAdvanceRandomMatch(latestMatchData);
+
+  if(latestMatchData){
+    if(latestMatchData.status === "waiting" && matchType === "random") updateMatchingUI(latestMatchData);
+    if(latestMatchData.status === "rule") updateRuleUI(latestMatchData);
   }
 
+  if(
+    latestMatchData &&
+    matchType === "random" &&
+    latestMatchData.status === "waiting" &&
+    !latestMatchData.matchingFinalizedAt &&
+    time - lastRandomFinalizeCheck >= 450
+  ){
+    lastRandomFinalizeCheck = time;
+    finalizeRandomMatchIfNeeded();
+  }
 
   updateFireUI();
   updateProtectionIndicator();
@@ -7988,7 +8528,6 @@ function getRegenRateFromSettings(settings){
   if(settings.hpRegen === "fast") return 3;
   if(settings.hpRegen === "medium") return 1.5;
   if(settings.hpRegen === "slow") return .6;
-  if(settings.hpRegen === "dynamic") return 6;
   return 0;
 }
 
@@ -8060,321 +8599,12 @@ async function syncLocalPlayer(){
       "sync error",
       error
     );
+    setConnectionStatus(true);
 
   }
 
 }
 
-
-
-function setConnectionStatus(message = "CONNECTION LOST"){
-  if(!connectionStatus) return;
-  connectionStatus.textContent = message;
-  connectionStatus.style.display = "block";
-  lastConnectionErrorAt = Date.now();
-}
-
-function clearConnectionStatus(){
-  if(!connectionStatus) return;
-  connectionStatus.style.display = "none";
-  lastConnectionGoodAt = Date.now();
-}
-
-window.addEventListener("online", clearConnectionStatus);
-window.addEventListener("offline",()=>setConnectionStatus("CONNECTION LOST"));
-
-function updateRandomMatchScreen(){
-  if(!randomMatchingActive || randomMatchScreen.style.display === "none") return;
-  const elapsed = Math.max(0, Date.now() - randomMatchJoinedAt);
-  const seconds = Math.floor(elapsed/1000);
-  randomMatchTimer.textContent = `${String(Math.floor(seconds/60)).padStart(2,"0")}:${String(seconds%60).padStart(2,"0")}`;
-  if(randomWasFound && randomMatchForceStartAt){
-    const left = Math.max(0, randomMatchForceStartAt - Date.now());
-    randomForceCountdown.textContent = String(Math.max(0,Math.min(9,Math.floor(left/1000))));
-  }
-  moveMiniTarget();
-}
-
-function moveMiniTarget(){
-  if(!miniTarget || !miniGameField || !randomMatchingActive || randomWasFound) return;
-  const rect = miniGameField.getBoundingClientRect();
-  if(rect.width < 40 || rect.height < 40) return;
-  if(!miniTarget.dataset.ready){
-    const x = 18 + Math.random()*Math.max(18,rect.width-36);
-    const y = 18 + Math.random()*Math.max(18,rect.height-36);
-    miniTarget.style.left = `${x}px`;
-    miniTarget.style.top = `${y}px`;
-    miniTarget.dataset.ready = "1";
-  }
-}
-
-function resetMiniTarget(){
-  if(miniTarget) miniTarget.dataset.ready = "";
-}
-
-function renderMiniScore(){
-  if(miniGameScore) miniGameScore.textContent = `SCORE ${randomMiniScore}`;
-}
-
-async function notifyMatchFound(){
-  try{
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if(AudioCtx){
-      const ctx = new AudioCtx();
-      if(ctx.state === "suspended") await ctx.resume().catch(()=>{});
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(660,ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(990,ctx.currentTime+.1);
-      gain.gain.setValueAtTime(.0001,ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(.075,ctx.currentTime+.015);
-      gain.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+.15);
-      osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime+.16);
-      return;
-    }
-  }catch(error){}
-  try{ if(navigator.vibrate) navigator.vibrate([40,35,80]); }catch(error){}
-}
-
-function updateRandomFoundUI(data){
-  const players = data.players || {};
-  const count = Object.keys(players).length;
-  const ids = Array.isArray(data.playerOrder) ? data.playerOrder : Object.keys(players);
-  const readyUids = Array.isArray(data.readyUids) ? data.readyUids : [];
-  const found = data.status === "matchingFound";
-  randomMatchCount.textContent = `${count} / ${RANDOM_MAX_PLAYERS} PLAYERS`;
-  if(found){
-    randomMatchFound.textContent = "メンバーが決定！";
-    randomForceLabel.textContent = "メンバーが決定、";
-    randomForceCountdown.textContent = String(Math.max(0,Math.min(9,Math.floor((Number(data.forceStartAt||0)-Date.now())/1000))));
-    randomReadyButton.style.display = "block";
-    randomRequestButton.style.display = "none";
-    randomReady = readyUids.includes(currentUser.uid);
-    randomReadyButton.textContent = randomReady ? "✓ 準備OK" : "準備OK";
-    randomReadyButton.classList.toggle("secondary",randomReady);
-    maybeAdvanceRandomMatch(data);
-  }else{
-    randomMatchFound.textContent = "メンバーを探しています…";
-    randomForceLabel.textContent = "メンバーが決まるまでお待ちください";
-    randomReadyButton.style.display = "none";
-    randomRequestButton.style.display = "block";
-    randomForceCountdown.textContent = "";
-  }
-  const me = data.entries?.[currentUser.uid];
-  randomRequestButton.textContent = me?.requestEnd ? "✓ 終了要求済み" : "マッチング終了を要求";
-  if(data.forceStartAt) randomMatchForceStartAt = Number(data.forceStartAt);
-}
-
-async function setRandomReadyState(value){
-  if(!matchRef || !currentUser) return;
-  randomReady = value;
-  try{
-    await runTransaction(db,async transaction=>{
-      const snap = await transaction.get(matchRef);
-      if(!snap.exists()) return;
-      const data = snap.data();
-      if(data.status !== "matchingFound") return;
-      const ready = Array.isArray(data.readyUids) ? [...data.readyUids] : [];
-      const index = ready.indexOf(currentUser.uid);
-      if(value && index < 0) ready.push(currentUser.uid);
-      if(!value && index >= 0) ready.splice(index,1);
-      transaction.update(matchRef,{readyUids:ready});
-    });
-  }catch(error){ console.error("ready state error",error); }
-}
-
-async function maybeAdvanceRandomMatch(data){
-  if(!matchRef || !currentUser || data.status !== "matchingFound") return;
-  const players = data.players || {};
-  const ids = Array.isArray(data.playerOrder) ? data.playerOrder : Object.keys(players);
-  const ready = new Set(Array.isArray(data.readyUids) ? data.readyUids : []);
-  const allReady = ids.length > 0 && ids.every(id=>ready.has(id));
-  const forceAt = Number(data.forceStartAt || 0);
-  if(!allReady && (!forceAt || Date.now() < forceAt)) return;
-  try{
-    await runTransaction(db,async transaction=>{
-      const snap = await transaction.get(matchRef);
-      if(!snap.exists()) return;
-      const latest = snap.data();
-      if(latest.status !== "matchingFound") return;
-      const latestPlayers = latest.players || {};
-      const latestIds = Array.isArray(latest.playerOrder) ? latest.playerOrder : Object.keys(latestPlayers);
-      const latestReady = new Set(Array.isArray(latest.readyUids) ? latest.readyUids : []);
-      const latestAllReady = latestIds.length > 0 && latestIds.every(id=>latestReady.has(id));
-      const latestForce = Number(latest.forceStartAt || 0);
-      if(!latestAllReady && (!latestForce || Date.now() < latestForce)) return;
-      const now = Date.now();
-      transaction.update(matchRef,{status:"rule",phase:"rule",ruleStartedAt:now,ruleEndsAt:now+RULE_PHASE_TIME});
-    });
-  }catch(error){ console.error("random phase error",error); }
-}
-
-function dynamicWaveChance(now=Date.now()){
-  const dayIndex = Math.floor(now/86400000);
-  const date = new Date(now);
-  const hour = date.getHours()+date.getMinutes()/60;
-  const phase = ((dayIndex * 1.61803398875) % 1) * Math.PI * 2;
-  const wave = .5 + .5*Math.sin(hour/24*Math.PI*2 + phase);
-  return .0005 + .0095*Math.pow(Math.max(0,wave),4);
-}
-
-function chooseWeighted(items,weights){
-  const total = weights.reduce((a,b)=>a+b,0);
-  let r = Math.random()*total;
-  for(let i=0;i<items.length;i++){ r -= weights[i]; if(r <= 0) return items[i]; }
-  return items[items.length-1];
-}
-
-function chooseRandomSettings(){
-  const base = {...DEFAULT_SETTINGS};
-  const hour = new Date().getHours();
-  const day = new Date().getDate();
-  const shift = (hour + day*3) % 4;
-  const presets = [
-    {name:"STANDARD",settings:{...base}},
-    {name:"HIGH SPEED",settings:{...base,bulletSpeed:"fast",fireRate:"fast"}},
-    {name:"TERRAIN",settings:{...base,terrainAmount:"many",terrainHeight:"high"}},
-    {name:"RECOVERY",settings:{...base,hpRegen:"medium",regenLock:1}}
-  ];
-  const weights = presets.map((_,i)=>1+((i+shift)%4)*.08);
-  let picked = chooseWeighted(presets,weights);
-  if(Math.random() < dynamicWaveChance()){
-    const key = ["terrainAmount","terrainHeight","fireRate","hpRegen"][Math.floor(Math.random()*4)];
-    picked = {name:"DYNAMIC",settings:{...picked.settings,[key]:"dynamic"}};
-  }
-  if(Math.random() < .5) picked.settings.floatingTerrain = "on";
-  return {name:picked.name,settings:normalizeSettings(picked.settings)};
-}
-
-async function removeOwnRandomQueueEntry(){
-  if(!randomQueueRef || !currentUser) return;
-  try{
-    await runTransaction(db,async transaction=>{
-      const snap = await transaction.get(randomQueueRef);
-      if(!snap.exists()) return;
-      const entries = {...(snap.data().entries || {})};
-      if(entries[currentUser.uid]){ delete entries[currentUser.uid]; transaction.update(randomQueueRef,{entries}); }
-    });
-  }catch(error){ console.error("queue cleanup error",error); }
-}
-
-async function cancelRandomMatch(){
-  randomMatchingActive=false;
-  if(randomQueueUnsubscribe){ randomQueueUnsubscribe(); randomQueueUnsubscribe=null; }
-  await removeOwnRandomQueueEntry();
-  randomQueueRef=null;
-  randomWasFound=false;
-  randomMatchForceStartAt=0;
-  randomReady=false;
-  randomMiniScore=0;
-  randomMatchScreen.style.display="none";
-  menu.style.display="flex";
-  statusEl.textContent="";
-}
-
-async function enterRandomMatch(){
-  if(randomMatchingActive) return;
-  try{
-    await ensureAuth();
-    randomMatchingActive=true;
-    randomWasFound=false;
-    randomMatchJoinedAt=Date.now();
-    randomMiniScore=0;
-    renderMiniScore(); resetMiniTarget();
-    randomMatchScreen.style.display="flex";
-    menu.style.display="none";
-    roomMatchModal.style.display="none";
-    randomMatchFound.textContent="メンバーを探しています…";
-    randomRequestButton.style.display="block";
-    randomReadyButton.style.display="none";
-    randomQueueRef=doc(db,"matches",RANDOM_QUEUE_PATH);
-    const uid=currentUser.uid;
-    await runTransaction(db,async transaction=>{
-      const snap=await transaction.get(randomQueueRef);
-      const data=snap.exists()?snap.data():{};
-      const entries={...(data.entries||{})};
-      const now=Date.now();
-      for(const [id,e] of Object.entries(entries)) if(!e || now-Number(e.joinedAt||0)>RANDOM_STALE_ENTRY) delete entries[id];
-      entries[uid]={uid,name:getPlayerName(),joinedAt:now,requestEnd:false,matchId:null};
-      transaction.set(randomQueueRef,{entries},{merge:true});
-    });
-    if(randomQueueUnsubscribe) randomQueueUnsubscribe();
-    randomQueueUnsubscribe=onSnapshot(randomQueueRef,snap=>{
-      if(!snap.exists()) return;
-      const data=snap.data();
-      const entries=data.entries||{};
-      const me=entries[uid];
-      const available=Object.values(entries).filter(e=>e && !e.matchId);
-      randomMatchCount.textContent=`${available.length} / ${RANDOM_MAX_PLAYERS} PLAYERS`;
-      if(me?.matchId && !currentMatchId){
-        startMatch(me.matchId,"random").catch(error=>{ console.error(error); setConnectionStatus("MATCHMAKING ERROR"); });
-      }else if(!currentMatchId){
-        tryResolveRandomQueue();
-      }
-    },error=>{ console.error(error); setConnectionStatus("CONNECTION LOST"); });
-    await tryResolveRandomQueue();
-  }catch(error){
-    console.error(error);
-    randomMatchingActive=false;
-    randomMatchScreen.style.display="none";
-    menu.style.display="flex";
-    statusEl.textContent="ランダムマッチ失敗："+getFriendlyError(error);
-  }
-}
-
-async function requestRandomEnd(){
-  if(!randomQueueRef || !currentUser || currentMatchId) return;
-  try{
-    await runTransaction(db,async transaction=>{
-      const snap=await transaction.get(randomQueueRef);
-      if(!snap.exists()) return;
-      const entries={...(snap.data().entries||{})};
-      const me=entries[currentUser.uid];
-      if(!me) return;
-      me.requestEnd=!Boolean(me.requestEnd);
-      entries[currentUser.uid]=me;
-      transaction.update(randomQueueRef,{entries});
-    });
-    await tryResolveRandomQueue();
-  }catch(error){ console.error("request end error",error); }
-}
-
-async function tryResolveRandomQueue(){
-  if(!randomQueueRef || Date.now()-lastRandomQueueResolve < 1000) return;
-  lastRandomQueueResolve=Date.now();
-  try{
-    await runTransaction(db,async transaction=>{
-      const queueSnap=await transaction.get(randomQueueRef);
-      const queue=queueSnap.exists()?queueSnap.data():{};
-      const entries={...(queue.entries||{})};
-      const now=Date.now();
-      for(const [id,e] of Object.entries(entries)) if(!e || !e.joinedAt || now-Number(e.joinedAt)>RANDOM_STALE_ENTRY) delete entries[id];
-      const available=Object.values(entries).filter(e=>e && !e.matchId).sort((a,b)=>Number(a.joinedAt)-Number(b.joinedAt));
-      if(available.length<2){ transaction.set(randomQueueRef,{entries},{merge:true}); return; }
-      const oldestAge=now-Number(available[0].joinedAt||now);
-      const allRequested=available.every(e=>Boolean(e.requestEnd));
-      if(available.length<RANDOM_MAX_PLAYERS && oldestAge<RANDOM_MAX_WAIT && !allRequested){
-        transaction.set(randomQueueRef,{entries},{merge:true}); return;
-      }
-      const selected=available.slice(0,RANDOM_MAX_PLAYERS);
-      const matchId=randomCode(8)+String(Math.floor(Math.random()*90+10));
-      const matchDocRef=doc(db,"matches",matchId);
-      const existingMatch=await transaction.get(matchDocRef);
-      if(existingMatch.exists()) return;
-      const picked=chooseRandomSettings();
-      const players={};
-      const order=selected.map(e=>e.uid);
-      selected.forEach((entry,index)=>{
-        const spawn=randomSpawn(picked.settings);
-        players[entry.uid]={uid:entry.uid,name:entry.name || ("P-"+entry.uid.slice(-4)),x:spawn.x,y:spawn.y,z:spawn.z,yaw:0,pitch:0,hp:picked.settings.maxHp,kills:0,killStreak:0,lastKillAt:0,alive:true,lastActiveAt:Date.now(),lastDamageAt:0,joinOrder:index};
-        entries[entry.uid]={...entries[entry.uid],matchId};
-      });
-      transaction.set(matchDocRef,{hostUid:order[0],mode:"random",status:"matchingFound",phase:"matchingFound",winnerUid:null,createdAt:serverTimestamp(),startedAt:null,ruleName:picked.name,settings:picked.settings,playerOrder:order,players,readyUids:[],forceStartAt:now+RANDOM_FORCE_START,startingPlayerCount:selected.length});
-      transaction.set(randomQueueRef,{entries},{merge:true});
-    });
-  }catch(error){ console.error("queue resolve error",error); }
-}
 
 function updatePageDescription(isRoomPage){
 
@@ -8426,9 +8656,69 @@ if(initialRouteCode){
   });
 }
 
-matchButton.addEventListener(
+randomMatchButton.addEventListener(
+  "click",
+  startRandomMatch
+);
+
+roomMatchButton.addEventListener(
+  "click",
+  () => {
+    roomMatchModalOpen = true;
+    roomMatchModal.style.display = "flex";
+    matchCodeInput.value = "";
+    setTimeout(() => matchCodeInput.focus(), 50);
+  }
+);
+
+roomMatchJoinButton.addEventListener(
   "click",
   handleMatchButton
+);
+
+roomMatchCloseButton.addEventListener(
+  "click",
+  () => {
+    roomMatchModalOpen = false;
+    roomMatchModal.style.display = "none";
+  }
+);
+
+roomMatchModal.addEventListener(
+  "pointerdown",
+  event => {
+    if(event.target === roomMatchModal){
+      roomMatchModalOpen = false;
+      roomMatchModal.style.display = "none";
+    }
+  }
+);
+
+matchingEndButton.addEventListener(
+  "click",
+  requestMatchingEnd
+);
+
+matchingReadyButton.addEventListener(
+  "click",
+  setRandomReady
+);
+
+miniTarget.addEventListener(
+  "pointerdown",
+  event => {
+    event.preventDefault();
+    if(!gameStarted || matchType !== "random" || !latestMatchData || latestMatchData.status !== "waiting" || latestMatchData.matchingFinalizedAt) return;
+    matchingMiniScore++;
+    miniGameScore.textContent = `SCORE ${matchingMiniScore}`;
+    const box = document.getElementById("miniGameBox");
+    const x = 40 + Math.random() * Math.max(1, box.clientWidth - 80);
+    const y = 58 + Math.random() * Math.max(1, box.clientHeight - 90);
+    miniTarget.style.left = `${x}px`;
+    miniTarget.style.top = `${y}px`;
+    miniTarget.style.transform = "translate(-50%,-50%) scale(.86)";
+    setTimeout(() => { miniTarget.style.transform = "translate(-50%,-50%) scale(1)"; }, 70);
+  }
 );
 
 shareCodeButton.addEventListener(
@@ -8504,7 +8794,6 @@ playerNameInput.addEventListener(
   }
 );
 
-
 closeSettingsButton.addEventListener(
   "click",
   closeSettings
@@ -8519,34 +8808,70 @@ settingsModal.addEventListener(
   }
 );
 
-document
-  .querySelectorAll(".settingOptions")
-  .forEach(group => {
-    group
-      .querySelectorAll(".settingOption")
-      .forEach(button => {
-        button.addEventListener("click", () => {
-          if(!group.dataset.setting) return;
-          if(["terrainAmount","terrainHeight","fireRate","hpRegen"].includes(group.dataset.setting)) return;
-          if(group.parentElement.classList.contains("disabled")) return;
-          if(["terrainAmount","terrainHeight","fireRate","hpRegen"].includes(group.dataset.setting)) return;
-          group
-            .querySelectorAll(".settingOption")
-            .forEach(item => item.classList.remove("selected"));
-          button.classList.add("selected");
-          updateRoomSettingsFromUI();
-          terrainHeightRow.classList.toggle("disabled", currentSettings.terrainAmount === "none");
-          regenLockRow.classList.toggle("disabled", currentSettings.hpRegen === "none");
-        });
-      });
-  });
+// Room-setting buttons. The three selected top-level choices can be double-tapped to enter DYNAMIC.
+const dynamicTopValues = {
+  terrainAmount: "many",
+  terrainHeight: "high",
+  fireRate: "fast"
+};
+const lastDynamicTap = new Map();
 
+document
+  .querySelectorAll(".settingOptions[data-setting]")
+  .forEach(group => {
+    group.querySelectorAll(".settingOption").forEach(button => {
+      button.addEventListener("pointerdown", () => {
+        const key = group.dataset.setting;
+        if(!["terrainAmount","terrainHeight","fireRate"].includes(key)) return;
+        if(group.parentElement.classList.contains("disabled")) return;
+        const value = button.dataset.value;
+        if(value !== dynamicTopValues[key]) return;
+        const now = performance.now();
+        const last = lastDynamicTap.get(group) || 0;
+        if(now - last <= 320){
+          applyDynamicSelectionToGroup(group, value);
+          updateRoomSettingsFromUI();
+          lastDynamicTap.set(group, 0);
+        }else{
+          lastDynamicTap.set(group, now);
+        }
+      });
+
+      button.addEventListener("click", () => {
+        if(!group.dataset.setting) return;
+        if(group.parentElement.classList.contains("disabled")) return;
+        const key = group.dataset.setting;
+        const value = button.dataset.value;
+
+        if(value === "standard"){
+          restoreStandardSelection(group);
+          updateRoomSettingsFromUI();
+          updateSettingsUI(currentSettings);
+          return;
+        }
+
+        if(value === "dynamic"){
+          applyDynamicSelectionToGroup(group, dynamicTopValues[key] || "medium");
+          updateRoomSettingsFromUI();
+          return;
+        }
+
+        group.classList.remove("dynamicMode");
+        group.dataset.standardValue = value;
+        group.querySelectorAll(".settingOption").forEach(item => {
+          item.classList.toggle("selected", item.dataset.value === value);
+        });
+        updateRoomSettingsFromUI();
+      });
+    });
+  });
 
 [maxHpInput, regenLockInput].forEach(input => {
   input.addEventListener("input", () => {
     updateRoomSettingsFromUI();
     terrainHeightRow.classList.toggle("disabled", currentSettings.terrainAmount === "none");
-    if(floatingTerrainRow) floatingTerrainRow.classList.toggle("disabled", currentSettings.terrainAmount === "none");
+    const floatingRow = document.querySelector('[data-setting="floatingTerrain"]')?.parentElement;
+    if(floatingRow) floatingRow.classList.toggle("disabled", currentSettings.terrainAmount === "none");
     regenLockRow.classList.toggle("disabled", currentSettings.hpRegen === "none");
   });
 });
@@ -8556,51 +8881,25 @@ returnButton.addEventListener(
   handleReturn
 );
 
-
-
-
 matchCodeInput.addEventListener(
   "input",
   () => {
-
-    matchCodeInput.value =
-      matchCodeInput.value
-        .replace(
-          /[^A-Za-z0-9]/g,
-          ""
-        )
-        .toUpperCase();
-
+    matchCodeInput.value = matchCodeInput.value
+      .replace(/[^A-Za-z0-9]/g, "")
+      .toUpperCase();
   }
 );
-
 
 matchCodeInput.addEventListener(
   "keydown",
   event => {
-
-    if(
-      event.key ===
-      "Enter"
-    ){
-
-      handleMatchButton();
-
+    if(event.key === "Enter") handleMatchButton();
+    if(event.key === "Escape"){
+      roomMatchModal.style.display = "none";
+      roomMatchModalOpen = false;
     }
-
   }
 );
-
-
-randomMatchButton.addEventListener("click", enterRandomMatch);
-roomMatchButton.addEventListener("click",()=>{ roomMatchModal.style.display="flex"; matchCodeInput.focus?.(); });
-closeRoomMatchButton.addEventListener("click",()=>{ roomMatchModal.style.display="none"; });
-roomMatchModal.addEventListener("pointerdown",event=>{ if(event.target===roomMatchModal) roomMatchModal.style.display="none"; });
-randomRequestButton.addEventListener("click",requestRandomEnd);
-randomReadyButton.addEventListener("click",()=>setRandomReadyState(!randomReady));
-cancelRandomButton.addEventListener("click",()=>{ if(currentMatchId && matchMode==="random") handleReturn(); else cancelRandomMatch(); });
-miniTarget.addEventListener("click",event=>{ event.preventDefault(); if(!randomMatchingActive || randomWasFound) return; randomMiniScore++; renderMiniScore(); resetMiniTarget(); });
-miniGameField.addEventListener("pointerdown",event=>{ if(event.target===miniGameField && randomMatchingActive && !randomWasFound){ randomMiniScore++; renderMiniScore(); resetMiniTarget(); } });
 
 setupDesktopInput();
 
@@ -8612,14 +8911,21 @@ setupStartButton();
 window.addEventListener(
   "beforeunload",
   () => {
+
     if(
       isHost &&
       matchRef &&
-      matchMode === "room" &&
-      latestMatchData?.status === "waiting"
+      matchType === "room"
     ){
-      deleteDoc(matchRef).catch(() => {});
+
+      deleteDoc(
+        matchRef
+      ).catch(
+        () => {}
+      );
+
     }
+
   }
 );
 
