@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.8.2. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.8.2 changes: fixed mini-action portrait layout and landscape control placement, aligned the goal flag to the goal platform, randomized the mini-action stage after a miss, and synchronized same-room players on the same mini-action stage as faded runners. The conference proposal to add decorative floating lines remains intentionally excluded. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
+<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.9.0. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.9.0 changes: fixed the mini-action layout on portrait and landscape touch screens, moved the matching controls above the mini game in landscape, corrected the goal flag placement, randomized the mini-action stage after a miss, synchronized same-stage players as translucent ghosts, and polished the random-match button to match the room-match button style. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
 <title>3Dfps</title>
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
@@ -247,10 +247,10 @@ canvas{
 
 #miniGameBox{
   position:relative;
-  width:min(84vw,430px);
-  height:min(46vh,300px);
-  min-height:220px;
-  margin:10px 0;
+  width:min(94vw,430px);
+  height:min(44svh,300px);
+  min-height:180px;
+  margin:6px 0;
   border:1px solid rgba(255,255,255,.12);
   border-radius:18px;
   background:linear-gradient(180deg,rgba(20,27,39,.92),rgba(5,8,13,.98));
@@ -377,8 +377,9 @@ canvas{
 
 #matchingReadyButton,
 #matchingEndButton{
-  width:min(84vw,430px);
+  width:min(94vw,430px);
   margin-top:4px;
+  flex:0 0 auto;
 }
 
 #matchingReadyButton{
@@ -389,14 +390,19 @@ canvas{
   background:#2a3039;
 }
 
-/* Mini-action responsive layout fixes */
-@media (orientation:portrait){
+#randomMatchButton{
+  background:linear-gradient(135deg,#1976ff,#3f8fff);
+  box-shadow:0 8px 22px rgba(25,118,255,.18);
+}
+
+@media (orientation:portrait) and (pointer:coarse){
   #matchingScreen{
     justify-content:flex-start;
     align-items:center;
-    gap:7px;
-    padding:14px 10px max(10px,env(safe-area-inset-bottom));
-    overflow:hidden;
+    gap:6px;
+    padding:12px 10px calc(12px + env(safe-area-inset-bottom));
+    overflow-y:auto;
+    overscroll-behavior:contain;
   }
 
   .matchingTitle{
@@ -405,92 +411,70 @@ canvas{
   }
 
   #matchingCount{
-    font-size:14px;
+    font-size:13px;
   }
 
   #matchingTimer{
-    font-size:30px;
+    font-size:34px;
   }
 
   #matchingStatus{
+    min-height:18px;
     font-size:12px;
-    min-height:20px;
-    max-width:94vw;
   }
 
   #miniGameBox{
-    width:min(96vw,520px);
-    height:min(58vh,420px);
-    min-height:0;
-    max-height:calc(100vh - 190px);
-    margin:4px 0 3px;
-    flex:1 1 auto;
+    width:min(94vw,430px);
+    height:min(42svh,290px);
+    min-height:170px;
+    margin:2px auto;
+    flex:0 1 auto;
   }
 
   #matchingReadyButton,
   #matchingEndButton{
-    width:min(96vw,520px);
-    height:44px;
-    min-height:44px;
-    margin:0;
-    flex:0 0 44px;
+    width:min(94vw,430px);
+    height:42px;
+    margin:2px auto 0;
   }
 }
 
-@media (orientation:landscape){
+@media (orientation:landscape) and (pointer:coarse){
   #matchingScreen{
     justify-content:flex-start;
-    align-items:stretch;
-    padding:0;
-    gap:0;
+    align-items:center;
+    gap:4px;
+    padding:6px 10px calc(6px + env(safe-area-inset-bottom));
+    overflow:hidden;
   }
 
   .matchingTitle{
-    position:absolute;
-    left:max(10px,env(safe-area-inset-left));
-    top:max(7px,env(safe-area-inset-top));
-    z-index:20;
-    font-size:13px;
-    letter-spacing:1.5px;
-    opacity:.68;
-    line-height:1;
-    pointer-events:none;
+    font-size:15px;
+    line-height:18px;
+    letter-spacing:1px;
+    opacity:.75;
   }
 
   #matchingCount,
   #matchingTimer,
   #matchingStatus{
-    display:none;
-  }
-
-  #miniGameBox{
-    position:absolute;
-    left:10px;
-    right:10px;
-    top:34px;
-    bottom:8px;
-    width:auto;
-    height:auto;
-    min-height:0;
-    max-height:none;
-    margin:0;
+    display:none !important;
   }
 
   #matchingReadyButton,
   #matchingEndButton{
-    position:absolute;
-    top:max(4px,env(safe-area-inset-top));
-    right:max(10px,env(safe-area-inset-right));
-    z-index:25;
-    width:auto;
-    min-width:120px;
-    height:32px;
-    min-height:32px;
-    margin:0;
-    padding:0 12px;
-    font-size:12px;
-    border-radius:9px;
-    flex:none;
+    width:min(90vw,430px);
+    height:38px;
+    margin:0 auto;
+  }
+
+  #miniGameBox{
+    width:min(94vw,720px);
+    height:calc(100svh - 58px);
+    min-height:140px;
+    max-height:calc(100svh - 58px);
+    margin:3px auto 0;
+    flex:1 1 auto;
   }
 }
 
@@ -1401,7 +1385,7 @@ html.roomJoinMode #roomJoinScreen{
     <h1 class="title">3Dfps</h1>
 
     <div class="subtitle">
-      v1.8.2
+      v1.9.0
     </div>
 
     <button id="randomMatchButton" class="button">
@@ -1899,8 +1883,8 @@ let miniTouchState = {
 };
 let miniActionLastFrameTime = 0;
 let miniActionPreviousStage = 0;
-let miniActionLastSyncAt = 0;
-let miniActionSyncInFlight = false;
+let miniLastNetworkUpdate = 0;
+let miniNetworkSyncing = false;
 let matchingLastFinalizedState = false;
 let matchingNotificationPlayed = false;
 let miniGameStarted = false;
@@ -4448,6 +4432,10 @@ async function startRandomMatch(){
                 alive:true,
                 lastActiveAt:Date.now(),
                 lastDamageAt:0,
+                miniActive:false,
+                miniStageId:null,
+                miniX:0,
+                miniY:0,
                 joinOrder:order.length
               };
               order.push(user.uid);
@@ -4483,6 +4471,10 @@ async function startRandomMatch(){
         alive:true,
         lastActiveAt:Date.now(),
         lastDamageAt:0,
+        miniActive:false,
+        miniStageId:null,
+        miniX:0,
+        miniY:0,
         joinOrder:0
       };
 
@@ -7822,8 +7814,6 @@ function leaveCurrentMatch(){
   matchingNotificationPlayed = false;
   miniGameStarted = false;
   matchingMiniScore = 0;
-  miniActionLastSyncAt = 0;
-  miniActionSyncInFlight = false;
   stopMiniActionGame();
   wpEarned = 0;
   resultPlayersSnapshot = null;
@@ -9109,42 +9099,6 @@ function hideMiniActionMessage(){
   miniGameMessage.classList.remove("show");
 }
 
-async function publishMiniActionState(force=false){
-  if(
-    !matchRef ||
-    matchType !== "random" ||
-    !currentUser ||
-    !miniActionState ||
-    !miniActionState.active
-  ) return;
-
-  const now = Date.now();
-  if(!force && now - miniActionLastSyncAt < 400) return;
-  if(miniActionSyncInFlight) return;
-
-  miniActionLastSyncAt = now;
-  miniActionSyncInFlight = true;
-
-  const stageId = miniActionState.stage.id;
-  const x = Number(miniActionState.x) || 0;
-  const y = Number(miniActionState.y) || 0;
-  const updatedAt = now;
-
-  try{
-    await updateDoc(matchRef,{
-      [`players.${currentUser.uid}.miniStageId`]:stageId,
-      [`players.${currentUser.uid}.miniX`]:x,
-      [`players.${currentUser.uid}.miniY`]:y,
-      [`players.${currentUser.uid}.miniActive`]:true,
-      [`players.${currentUser.uid}.miniUpdatedAt`]:updatedAt
-    });
-  }catch(error){
-    console.warn("mini action sync skipped",error);
-  }finally{
-    miniActionSyncInFlight = false;
-  }
-}
-
 function updateMiniActionLabels(){
   if(!miniActionState || !miniGameStageLabel || !miniGameScore) return;
   const stage = miniActionState.stage;
@@ -9152,6 +9106,41 @@ function updateMiniActionLabels(){
   const time = Math.max(0,miniActionState.elapsed || 0);
   miniGameStageLabel.textContent = `STAGE ${stage.id} · ${stage.name}`;
   miniGameScore.textContent = `TIME ${time.toFixed(2)}s · BEST ${best === null ? "--" : best.toFixed(2) + "s"}`;
+}
+
+async function syncMiniActionState(force=false){
+  if(!matchRef || matchType !== "random" || !currentUser || gameEnded || !miniActionState?.active) return;
+  const now = performance.now();
+  if(!force && (now - miniLastNetworkUpdate < 150 || miniNetworkSyncing)) return;
+  miniLastNetworkUpdate = now;
+  miniNetworkSyncing = true;
+  const state = miniActionState;
+  try{
+    await updateDoc(matchRef,{
+      [`players.${currentUser.uid}.miniActive`]:true,
+      [`players.${currentUser.uid}.miniStageId`]:state.stage.id,
+      [`players.${currentUser.uid}.miniX`]:state.x,
+      [`players.${currentUser.uid}.miniY`]:state.y
+    });
+  }catch(error){
+    console.error("mini action sync error",error);
+  }finally{
+    miniNetworkSyncing = false;
+  }
+}
+
+async function clearMiniActionRemoteState(){
+  if(!matchRef || matchType !== "random" || !currentUser) return;
+  try{
+    await updateDoc(matchRef,{
+      [`players.${currentUser.uid}.miniActive`]:false,
+      [`players.${currentUser.uid}.miniStageId`]:null,
+      [`players.${currentUser.uid}.miniX`]:0,
+      [`players.${currentUser.uid}.miniY`]:0
+    });
+  }catch(error){
+    console.error("mini action clear error",error);
+  }
 }
 
 function startMiniActionStage(stage = chooseMiniActionStage()){
@@ -9186,7 +9175,7 @@ function startMiniActionStage(stage = chooseMiniActionStage()){
   miniActionLastFrameTime = performance.now();
   hideMiniActionMessage();
   updateMiniActionLabels();
-  publishMiniActionState(true);
+  syncMiniActionState(true);
 }
 
 function ensureMiniActionGameStarted(){
@@ -9196,6 +9185,13 @@ function ensureMiniActionGameStarted(){
 }
 
 function stopMiniActionGame(){
+  const shouldClearRemote = Boolean(
+    miniActionState?.active &&
+    matchType === "random" &&
+    matchRef &&
+    currentUser
+  );
+  if(shouldClearRemote) clearMiniActionRemoteState();
   if(miniActionState) miniActionState.active = false;
   miniActionState = null;
   miniActionLastFrameTime = 0;
@@ -9228,10 +9224,11 @@ function miniActionRectHit(a,b){
     a.y + a.height > b.y;
 }
 
-function resetMiniActionStage(message=""){ 
+function resetMiniActionStage(message="",randomizeStage=false){ 
   if(!miniActionState || !miniActionState.active) return;
-  const stage = miniActionState.stage;
+  const stage = randomizeStage ? chooseMiniActionStage() : miniActionState.stage;
   const start = stage.start;
+  miniActionState.stage = stage;
   miniActionState.x = start.x;
   miniActionState.y = start.y;
   miniActionState.vx = 0;
@@ -9252,20 +9249,7 @@ function resetMiniActionStage(message=""){
     hideMiniActionMessage();
   }
   updateMiniActionLabels();
-  publishMiniActionState(true);
-}
-
-function failMiniActionStage(message="MISS!"){
-  if(!miniActionState || !miniActionState.active) return;
-  const state = miniActionState;
-  state.clearPending = true;
-  state.flashUntil = performance.now() + 160;
-  showMiniActionMessage(message);
-  setTimeout(() => {
-    if(!miniActionState || miniActionState !== state || !miniActionState.active) return;
-    if(!miniActionIsVisible()) return;
-    startMiniActionStage(chooseMiniActionStage());
-  },420);
+  syncMiniActionState(true);
 }
 
 function completeMiniActionStage(){
@@ -9294,7 +9278,6 @@ function updateMiniActionGame(delta,time){
   const stage = state.stage;
   const clampedDelta = Math.min(.035,Math.max(.001,delta));
   if(state.clearPending){
-    publishMiniActionState(false);
     drawMiniActionGame();
     return;
   }
@@ -9349,14 +9332,14 @@ function updateMiniActionGame(delta,time){
   for(const hazard of stage.hazards || []){
     const hitRect = {x:state.x,y:state.y,width:state.width,height:state.height};
     if(miniActionRectHit(hitRect,hazard)){
-      failMiniActionStage("TRY AGAIN!");
+      resetMiniActionStage("TRY AGAIN!",true);
       drawMiniActionGame();
       return;
     }
   }
 
   if(state.y > 290){
-    failMiniActionStage("MISS!");
+    resetMiniActionStage("MISS!",true);
     drawMiniActionGame();
     return;
   }
@@ -9368,58 +9351,37 @@ function updateMiniActionGame(delta,time){
   }
 
   state.elapsed = (performance.now() - state.startTime) / 1000;
+  syncMiniActionState();
   updateMiniActionLabels();
-  publishMiniActionState(false);
   drawMiniActionGame();
 }
 
-function drawMiniRemotePlayers(ctx,stage,camera){
-  const players = latestMatchData?.players || {};
-  const now = Date.now();
-
-  for(const [uid,player] of Object.entries(players)){
-    if(uid === currentUser?.uid) continue;
+function drawMiniActionRemotePlayers(ctx,stage,camera,now){
+  if(!latestMatchData?.players || !currentUser) return;
+  for(const [uid,player] of Object.entries(latestMatchData.players)){
+    if(uid === currentUser.uid) continue;
+    if(!player?.miniActive) continue;
     if(Number(player.miniStageId) !== Number(stage.id)) continue;
-    if(player.miniActive === false) continue;
-
-    const updatedAt = Number(player.miniUpdatedAt || 0);
-    if(!updatedAt || now - updatedAt > 3000) continue;
-
     const x = Number(player.miniX);
     const y = Number(player.miniY);
     if(!Number.isFinite(x) || !Number.isFinite(y)) continue;
 
+    const alpha = 0.34;
+    const width = 16;
+    const height = 22;
+    const playerGrad = ctx.createLinearGradient(x,y,x,y + height);
+    playerGrad.addColorStop(0,"#ffffff");
+    playerGrad.addColorStop(.28,"#79c9ff");
+    playerGrad.addColorStop(1,"#3b5bff");
+
     ctx.save();
-    ctx.globalAlpha = .24;
-
-    const bodyGrad = ctx.createLinearGradient(x,y,x,y + 22);
-    bodyGrad.addColorStop(0,"#f4fbff");
-    bodyGrad.addColorStop(.3,"#86d6ff");
-    bodyGrad.addColorStop(1,"#7288ff");
-    ctx.fillStyle = bodyGrad;
-    ctx.fillRect(x,y,16,22);
-
-    ctx.fillStyle = "#dff6ff";
-    ctx.beginPath();
-    ctx.arc(x + 8,y - 3,5,0,Math.PI * 2);
-    ctx.fill();
-
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = playerGrad;
+    ctx.fillRect(x,y,width,height);
+    ctx.fillStyle = "rgba(7,22,41,.9)";
+    ctx.fillRect(x + 3,y + 5,width - 6,5);
     ctx.restore();
   }
-}
-
-function getMiniGoalPlatform(stage){
-  const candidates = (stage.platforms || []).filter(platform =>
-    stage.goalX >= platform.x - 2 &&
-    stage.goalX <= platform.x + platform.w + 2
-  );
-
-  if(candidates.length === 0){
-    return {y:220};
-  }
-
-  candidates.sort((a,b) => a.y - b.y);
-  return candidates[0];
 }
 
 function drawMiniActionGame(){
@@ -9502,31 +9464,27 @@ function drawMiniActionGame(){
   }
 
   const goalX = stage.goalX;
-  const goalPlatform = getMiniGoalPlatform(stage);
-  const flagBaseY = goalPlatform.y;
-  const flagTopY = Math.max(42,flagBaseY - 48);
-
+  const goalPlatform = stage.platforms.find(platform =>
+    goalX >= platform.x && goalX <= platform.x + platform.w
+  ) || stage.platforms[stage.platforms.length - 1];
+  const goalGroundY = Number(goalPlatform?.y ?? 220);
+  const flagTopY = goalGroundY - 42;
+  const flagBottomY = goalGroundY;
   ctx.strokeStyle = "rgba(170,221,255,.95)";
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(goalX,flagBaseY);
-  ctx.lineTo(goalX,flagTopY);
+  ctx.moveTo(goalX,flagTopY);
+  ctx.lineTo(goalX,flagBottomY);
   ctx.stroke();
-
-  ctx.fillStyle = "rgba(116,207,255,.92)";
+  ctx.fillStyle = "rgba(116,207,255,.86)";
   ctx.beginPath();
-  ctx.moveTo(goalX + 1,flagTopY + 2);
-  ctx.lineTo(goalX + 30,flagTopY + 11);
+  ctx.moveTo(goalX + 1,flagTopY);
+  ctx.lineTo(goalX + 34,flagTopY + 10);
   ctx.lineTo(goalX + 1,flagTopY + 20);
   ctx.closePath();
   ctx.fill();
 
-  ctx.fillStyle = "rgba(220,247,255,.95)";
-  ctx.beginPath();
-  ctx.arc(goalX,flagBaseY,3,0,Math.PI * 2);
-  ctx.fill();
-
-  drawMiniRemotePlayers(ctx,stage,camera);
+  drawMiniActionRemotePlayers(ctx,stage,camera,performance.now());
 
   const p = miniActionState;
   const playerGrad = ctx.createLinearGradient(p.x,p.y,p.x,p.y + p.height);
