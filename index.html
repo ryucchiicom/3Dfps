@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.9.0. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.9.0 changes: fixed the mini-action layout on portrait and landscape touch screens, moved the matching controls above the mini game in landscape, corrected the goal flag placement, randomized the mini-action stage after a miss, synchronized same-stage players as translucent ghosts, and polished the random-match button to match the room-match button style. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
+<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.9.1. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.9.1 changes: fixed portrait mini-action rendering so the game keeps its native aspect ratio instead of vertically stretching, and changed floating terrain so only some terrain platforms float while adding extra vertical height variation. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
 <title>3Dfps</title>
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
@@ -1385,7 +1385,7 @@ html.roomJoinMode #roomJoinScreen{
     <h1 class="title">3Dfps</h1>
 
     <div class="subtitle">
-      v1.9.0
+      v1.9.1
     </div>
 
     <button id="randomMatchButton" class="button">
@@ -2943,8 +2943,14 @@ const EXTRA_DYNAMIC_PLATFORMS = [
 ];
 
 function terrainFloatOffset(index, settings){
-  if(normalizeSettings(settings).floatingTerrain !== "on") return 0;
-  const seed = Number(normalizeSettings(settings).mapSeed || 0);
+  const normalized = normalizeSettings(settings);
+  if(normalized.floatingTerrain !== "on") return 0;
+
+  const seed = Number(normalized.mapSeed || 0);
+  const randomValue = Math.sin(seed * .00017 + index * 12.9898) * 43758.5453;
+  const chance = randomValue - Math.floor(randomValue);
+  if(chance > .34) return 0;
+
   const wave = Math.sin(index * 12.9898 + seed * .00137);
   const wave2 = Math.sin(index * 4.217 + seed * .00231 + 1.7);
   return 2.8 + (wave * .5 + .5) * 4.2 + (wave2 * .5 + .5) * 1.6;
@@ -9391,17 +9397,24 @@ function drawMiniActionGame(){
   if(!ctx) return;
   const width = miniGameCanvas.clientWidth || 420;
   const height = miniGameCanvas.clientHeight || 260;
-  const sx = width / 720;
-  const sy = height / 260;
+  const pixelScaleX = miniGameCanvas.width / Math.max(1,width);
+  const pixelScaleY = miniGameCanvas.height / Math.max(1,height);
+  const scale = Math.min(width / 720, height / 260);
+  const drawWidth = 720 * scale;
+  const drawHeight = 260 * scale;
+  const offsetX = (width - drawWidth) / 2;
+  const offsetY = (height - drawHeight) / 2;
+
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.clearRect(0,0,miniGameCanvas.width,miniGameCanvas.height);
   ctx.setTransform(
-    (miniGameCanvas.width / Math.max(1,width)) * sx,
+    pixelScaleX * scale,
     0,
     0,
-    (miniGameCanvas.height / Math.max(1,height)) * sy,
-    0,
-    0
+    pixelScaleY * scale,
+    pixelScaleX * offsetX,
+    pixelScaleY * offsetY
   );
-  ctx.clearRect(0,0,720,260);
 
   const bg = ctx.createLinearGradient(0,0,0,260);
   bg.addColorStop(0,"#111c2b");
