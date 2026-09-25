@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.8.0. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.8.0 changes: random-match minimum-player countdown gate (countdown and end-request only after 2 players), visually distinct Room Match button, and replacement of the old target-click matching mini game with a 3-stage random mini action platformer with per-stage local best-time records. The conference proposal to add decorative floating lines remains intentionally excluded. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
+<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.8.1. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.8.1 changes: replaced the mini action game's mobile button controls with a two-zone touch layout: right-side tap jumps, while a left-side touch creates a short vertical control line and horizontal movement is determined by the finger position relative to that line. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
 <title>3Dfps</title>
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
@@ -1394,11 +1394,6 @@ html.roomJoinMode #roomJoinScreen{
     <div id="miniGameScore">TIME 0.00s · BEST --</div>
     <canvas id="miniGameCanvas" aria-label="マッチング待ちミニアクションゲーム"></canvas>
     <div id="miniGameMessage" aria-live="polite"></div>
-    <div id="miniGameControls">
-      <button class="miniControl" data-mini-action="left" aria-label="左">◀</button>
-      <button class="miniControl" data-mini-action="right" aria-label="右">▶</button>
-      <button class="miniControl miniJumpControl" data-mini-action="jump" aria-label="ジャンプ">JUMP</button>
-    </div>
   </div>
   <button id="matchingReadyButton" class="button">準備OK</button>
   <button id="matchingEndButton" class="button secondary">マッチング終了を要求</button>
@@ -1776,6 +1771,12 @@ let latestMatchData = null;
 let matchingMiniScore = 0;
 let miniActionState = null;
 let miniActionInput = { left:false, right:false, jump:false, jumpPressed:false };
+let miniActionTouch = {
+  leftPointerId:null,
+  rightPointerId:null,
+  leftAnchorX:0,
+  leftAnchorY:0
+};
 let miniActionLastFrameTime = 0;
 let miniActionPreviousStage = 0;
 let matchingLastFinalizedState = false;
@@ -9028,6 +9029,10 @@ function stopMiniActionGame(){
   miniActionInput.right = false;
   miniActionInput.jump = false;
   miniActionInput.jumpPressed = false;
+  miniActionTouch.leftPointerId = null;
+  miniActionTouch.rightPointerId = null;
+  miniActionTouch.leftAnchorX = 0;
+  miniActionTouch.leftAnchorY = 0;
   miniGameStarted = false;
   if(miniGameMessage) miniGameMessage.classList.remove("show");
 }
@@ -9285,6 +9290,24 @@ function drawMiniActionGame(){
 
   ctx.restore();
 
+  // This short vertical line is the temporary 2D control guide created at the left-side touch point.
+  if(miniActionTouch.leftPointerId !== null){
+    const anchorX = miniActionTouch.leftAnchorX;
+    const anchorY = miniActionTouch.leftAnchorY;
+    const pulse = .78 + .12 * Math.sin(performance.now() / 180);
+    ctx.save();
+    ctx.shadowColor = `rgba(125,211,252,${.32 * pulse})`;
+    ctx.shadowBlur = 8;
+    ctx.strokeStyle = `rgba(203,239,255,${.9 * pulse})`;
+    ctx.lineWidth = 2.2;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(anchorX,Math.max(18,anchorY - 22));
+    ctx.lineTo(anchorX,Math.min(242,anchorY + 22));
+    ctx.stroke();
+    ctx.restore();
+  }
+
   if(miniActionState.flashUntil > performance.now()){
     const alpha = Math.max(0,(miniActionState.flashUntil - performance.now()) / 160) * .35;
     ctx.fillStyle = `rgba(255,255,255,${alpha})`;
@@ -9292,29 +9315,93 @@ function drawMiniActionGame(){
   }
 }
 
-function bindMiniActionControl(button,action){
-  const press = event => {
-    event.preventDefault();
-    if(!miniActionIsVisible()) return;
-    if(action === "jump"){
-      miniActionInput.jump = true;
-      miniActionInput.jumpPressed = true;
-    }else{
-      miniActionInput[action] = true;
-    }
+function miniActionTouchPosition(event){
+  const rect = miniGameCanvas.getBoundingClientRect();
+  return {
+    x:clamp((event.clientX - rect.left) * 720 / Math.max(1,rect.width),0,720),
+    y:clamp((event.clientY - rect.top) * 260 / Math.max(1,rect.height),0,260)
   };
-  const release = event => {
-    event.preventDefault();
-    if(action === "jump") miniActionInput.jump = false;
-    else miniActionInput[action] = false;
-  };
-  button.addEventListener("pointerdown",press);
-  button.addEventListener("pointerup",release);
-  button.addEventListener("pointercancel",release);
-  button.addEventListener("pointerleave",release);
 }
 
-miniControlButtons.forEach(button => bindMiniActionControl(button,button.dataset.miniAction));
+function setupMiniActionTouchControls(){
+  if(!miniGameCanvas) return;
+
+  const clearPointer = event => {
+    if(event.pointerId === miniActionTouch.leftPointerId){
+      miniActionTouch.leftPointerId = null;
+      miniActionInput.left = false;
+      miniActionInput.right = false;
+    }
+    if(event.pointerId === miniActionTouch.rightPointerId){
+      miniActionTouch.rightPointerId = null;
+      miniActionInput.jump = false;
+    }
+  };
+
+  miniGameCanvas.addEventListener("pointerdown",event => {
+    if(!miniActionIsVisible()) return;
+    event.preventDefault();
+
+    const rect = miniGameCanvas.getBoundingClientRect();
+    const isLeft = event.clientX - rect.left < rect.width / 2;
+    const point = miniActionTouchPosition(event);
+
+    if(isLeft){
+      if(miniActionTouch.leftPointerId !== null) return;
+      miniActionTouch.leftPointerId = event.pointerId;
+      miniActionTouch.leftAnchorX = point.x;
+      miniActionTouch.leftAnchorY = point.y;
+      miniActionInput.left = false;
+      miniActionInput.right = false;
+      try{
+        miniGameCanvas.setPointerCapture(event.pointerId);
+      }catch(error){}
+      markActivity();
+      return;
+    }
+
+    if(miniActionTouch.rightPointerId !== null) return;
+    miniActionTouch.rightPointerId = event.pointerId;
+    miniActionInput.jump = true;
+    miniActionInput.jumpPressed = true;
+    try{
+      miniGameCanvas.setPointerCapture(event.pointerId);
+    }catch(error){}
+    markActivity();
+  });
+
+  miniGameCanvas.addEventListener("pointermove",event => {
+    if(!miniActionIsVisible()) return;
+    if(event.pointerId !== miniActionTouch.leftPointerId) return;
+    event.preventDefault();
+
+    const point = miniActionTouchPosition(event);
+    const difference = point.x - miniActionTouch.leftAnchorX;
+    miniActionInput.left = difference < 0;
+    miniActionInput.right = difference > 0;
+    markActivity();
+  });
+
+  miniGameCanvas.addEventListener("pointerup",event => {
+    if(!miniActionIsVisible()) return;
+    event.preventDefault();
+    clearPointer(event);
+    try{
+      miniGameCanvas.releasePointerCapture(event.pointerId);
+    }catch(error){}
+  });
+
+  miniGameCanvas.addEventListener("pointercancel",event => {
+    clearPointer(event);
+    try{
+      miniGameCanvas.releasePointerCapture(event.pointerId);
+    }catch(error){}
+  });
+
+  miniGameCanvas.addEventListener("lostpointercapture",clearPointer);
+}
+
+setupMiniActionTouchControls();
 
 window.addEventListener("keydown",event => {
   if(!miniActionIsVisible()) return;
