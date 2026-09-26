@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.9.1. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.9.1 changes: fixed portrait mini-action rendering so the game keeps its native aspect ratio instead of vertically stretching, and changed floating terrain so only some terrain platforms float while adding extra vertical height variation. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
+<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.9.2. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.9.1 changes: fixed portrait mini-action rendering so the game keeps its native aspect ratio instead of vertically stretching, and changed floating terrain so only some terrain platforms float while adding extra vertical height variation. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
 <title>3Dfps</title>
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
@@ -4747,12 +4747,21 @@ async function startMatch(
 
         if(me){
 
+          const {
+            x: _remoteX,
+            y: _remoteY,
+            z: _remoteZ,
+            yaw: _remoteYaw,
+            pitch: _remotePitch,
+            ...remoteState
+          } = me;
+
           localPlayer =
             {
 
               ...localPlayer,
 
-              ...me
+              ...remoteState
 
             };
 
