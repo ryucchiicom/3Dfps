@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.9.2. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.9.1 changes: fixed portrait mini-action rendering so the game keeps its native aspect ratio instead of vertically stretching, and changed floating terrain so only some terrain platforms float while adding extra vertical height variation. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
+<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.10.0. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.10.0 changes: added two mini-action stages with required leftward movement, reset mini-action hold/input state on death, and removed the confusing inverted purple platforms from stage 3. Release 1.9.1 changes: fixed portrait mini-action rendering so the game keeps its native aspect ratio instead of vertically stretching, and changed floating terrain so only some terrain platforms float while adding extra vertical height variation. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
 <title>3Dfps</title>
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
@@ -9049,52 +9049,54 @@ const MINI_ACTION_STAGES = [
   {
     id:4,
     name:"BACKTRACK",
-    worldWidth:1540,
+    worldWidth:1700,
     start:{x:42,y:188},
-    goalX:1470,
+    goalX:1620,
     platforms:[
-      {x:0,y:220,w:250,h:40},
-      {x:300,y:178,w:120,h:20},
-      {x:470,y:220,w:130,h:40},
-      {x:650,y:170,w:115,h:20},
-      {x:820,y:220,w:120,h:40},
-      {x:1000,y:156,w:125,h:20},
-      {x:1180,y:205,w:105,h:20},
-      {x:1320,y:170,w:220,h:20},
-      {x:1090,y:220,w:70,h:40}
+      {x:0,y:220,w:240,h:40},
+      {x:300,y:185,w:150,h:20},
+      {x:515,y:150,w:150,h:20},
+      {x:735,y:112,w:165,h:20},
+      {x:610,y:72,w:120,h:20},
+      {x:805,y:145,w:160,h:20},
+      {x:1040,y:105,w:150,h:20},
+      {x:1260,y:155,w:155,h:20},
+      {x:1490,y:115,w:210,h:20}
     ],
     hazards:[
-      {x:205,y:198,w:22,h:22},
-      {x:535,y:198,w:22,h:22},
-      {x:875,y:198,w:22,h:22},
-      {x:1240,y:183,w:22,h:22}
+      {x:350,y:167,w:22,h:18},
+      {x:565,y:132,w:22,h:18},
+      {x:850,y:127,w:22,h:18},
+      {x:1090,y:87,w:22,h:18},
+      {x:1315,y:137,w:22,h:18}
     ]
   },
   {
     id:5,
-    name:"LEFT LOOP",
-    worldWidth:1620,
+    name:"ZIGZAG",
+    worldWidth:1580,
     start:{x:42,y:188},
-    goalX:1540,
+    goalX:1510,
     platforms:[
-      {x:0,y:220,w:260,h:40},
-      {x:310,y:185,w:125,h:20},
-      {x:485,y:145,w:120,h:20},
-      {x:650,y:190,w:115,h:20},
-      {x:810,y:220,w:160,h:40},
-      {x:1030,y:170,w:125,h:20},
-      {x:1210,y:125,w:120,h:20},
-      {x:1380,y:180,w:90,h:20},
-      {x:1220,y:220,w:90,h:40},
-      {x:1060,y:220,w:70,h:40},
-      {x:900,y:180,w:70,h:20},
-      {x:1460,y:220,w:160,h:40}
+      {x:0,y:220,w:250,h:40},
+      {x:300,y:175,w:135,h:20},
+      {x:500,y:125,w:135,h:20},
+      {x:690,y:170,w:135,h:20},
+      {x:880,y:105,w:135,h:20},
+      {x:770,y:62,w:100,h:20},
+      {x:1000,y:150,w:145,h:20},
+      {x:900,y:95,w:100,h:20},
+      {x:1190,y:130,w:165,h:20},
+      {x:1400,y:175,w:180,h:20}
     ],
     hazards:[
-      {x:215,y:198,w:22,h:22},
-      {x:355,y:163,w:22,h:22},
-      {x:700,y:168,w:22,h:22},
-      {x:1430,y:158,w:22,h:22}
+      {x:340,y:157,w:22,h:18},
+      {x:540,y:107,w:22,h:18},
+      {x:730,y:152,w:22,h:18},
+      {x:925,y:87,w:22,h:18},
+      {x:1045,y:132,w:22,h:18},
+      {x:1235,y:112,w:22,h:18},
+      {x:1460,y:157,w:22,h:18}
     ]
   }
 ];
@@ -9297,7 +9299,6 @@ function resetMiniActionInputState(){
 
 function resetMiniActionStage(message="",randomizeStage=false){ 
   if(!miniActionState || !miniActionState.active) return;
-  resetMiniActionInputState();
   const stage = randomizeStage ? chooseMiniActionStage() : miniActionState.stage;
   const start = stage.start;
   miniActionState.stage = stage;
@@ -9404,6 +9405,7 @@ function updateMiniActionGame(delta,time){
   for(const hazard of stage.hazards || []){
     const hitRect = {x:state.x,y:state.y,width:state.width,height:state.height};
     if(miniActionRectHit(hitRect,hazard)){
+      resetMiniActionInputState();
       resetMiniActionStage("TRY AGAIN!",true);
       drawMiniActionGame();
       return;
@@ -9411,6 +9413,7 @@ function updateMiniActionGame(delta,time){
   }
 
   if(state.y > 290){
+    resetMiniActionInputState();
     resetMiniActionStage("MISS!",true);
     drawMiniActionGame();
     return;
@@ -9518,18 +9521,7 @@ function drawMiniActionGame(){
     ctx.stroke();
   }
 
-  for(const ceiling of stage.ceilings || []){
-    ctx.fillStyle = "#1a2a3d";
-    ctx.fillRect(ceiling.x,ceiling.y,ceiling.w,ceiling.h);
-    ctx.strokeStyle = "rgba(161,108,255,.56)";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(ceiling.x,ceiling.y + ceiling.h - .5);
-    ctx.lineTo(ceiling.x + ceiling.w,ceiling.y + ceiling.h - .5);
-    ctx.stroke();
-  }
-
-  for(const hazard of stage.hazards || []){
+for(const hazard of stage.hazards || []){
     ctx.fillStyle = "#7f335f";
     ctx.beginPath();
     ctx.moveTo(hazard.x,hazard.y + hazard.h);
