@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.10.0. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.10.0 changes: added two mini-action stages with forced left/right route changes, reset all held mini-action inputs on death, and removed stage 3 confusing purple ceiling platforms. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
+<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.9.2. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.9.1 changes: fixed portrait mini-action rendering so the game keeps its native aspect ratio instead of vertically stretching, and changed floating terrain so only some terrain platforms float while adding extra vertical height variation. Previous release changes and exact legacy notes remain in the source history below this tracker. Release 1.10.0 changes: reset mini-action hold/touch input on death, added two leftward-required mini-action stages, and removed the stage 3 purple ceiling platforms. -->
 <title>3Dfps</title>
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
@@ -1385,7 +1385,7 @@ html.roomJoinMode #roomJoinScreen{
     <h1 class="title">3Dfps</h1>
 
     <div class="subtitle">
-      v1.10.0
+      v1.9.1
     </div>
 
     <button id="randomMatchButton" class="button">
@@ -9048,61 +9048,67 @@ const MINI_ACTION_STAGES = [
   },
   {
     id:4,
-    name:"BACKTRACK",
-    worldWidth:1420,
+    name:"BACKTRACK RUN",
+    worldWidth:1580,
     start:{x:42,y:188},
-    goalX:1360,
+    goalX:1510,
     platforms:[
-      {x:0,y:220,w:270,h:40},
-      {x:320,y:188,w:135,h:20},
-      {x:505,y:150,w:125,h:20},
-      {x:365,y:112,w:110,h:20},
-      {x:215,y:76,w:105,h:20},
-      {x:365,y:42,w:120,h:20},
-      {x:535,y:82,w:125,h:20},
-      {x:705,y:128,w:140,h:20},
-      {x:890,y:174,w:150,h:20},
-      {x:1080,y:220,w:150,h:40},
-      {x:1270,y:188,w:150,h:20}
+      {x:0,y:220,w:210,h:40},
+      {x:300,y:180,w:95,h:20},
+      {x:165,y:132,w:78,h:20},
+      {x:350,y:62,w:82,h:20},
+      {x:505,y:118,w:90,h:20},
+      {x:650,y:172,w:95,h:20},
+      {x:565,y:112,w:62,h:18},
+      {x:760,y:68,w:88,h:20},
+      {x:915,y:132,w:95,h:20},
+      {x:835,y:78,w:60,h:18},
+      {x:1050,y:58,w:92,h:20},
+      {x:1190,y:118,w:98,h:20},
+      {x:1305,y:168,w:90,h:20},
+      {x:1235,y:112,w:55,h:18},
+      {x:1410,y:118,w:100,h:20},
+      {x:1510,y:168,w:70,h:20}
     ],
     hazards:[
-      {x:382,y:94,w:20,h:18},
-      {x:246,y:58,w:20,h:18},
-      {x:570,y:64,w:20,h:18},
-      {x:760,y:110,w:20,h:18},
-      {x:950,y:156,w:20,h:18}
+      {x:325,y:160,w:22,h:20},
+      {x:525,y:98,w:22,h:20},
+      {x:690,y:150,w:22,h:20},
+      {x:940,y:112,w:22,h:20},
+      {x:1215,y:98,w:22,h:20},
+      {x:1435,y:98,w:22,h:20}
     ]
   },
   {
     id:5,
-    name:"ZIGZAG RETURN",
-    worldWidth:1500,
+    name:"LEFT TURN",
+    worldWidth:1640,
     start:{x:42,y:188},
-    goalX:1440,
+    goalX:1570,
     platforms:[
-      {x:0,y:220,w:250,h:40},
-      {x:300,y:190,w:120,h:20},
-      {x:470,y:150,w:125,h:20},
-      {x:335,y:108,w:105,h:20},
-      {x:185,y:70,w:110,h:20},
-      {x:40,y:110,w:95,h:20},
-      {x:185,y:150,w:105,h:20},
-      {x:355,y:190,w:125,h:20},
-      {x:535,y:150,w:120,h:20},
-      {x:705,y:110,w:125,h:20},
-      {x:875,y:150,w:120,h:20},
-      {x:1040,y:190,w:135,h:20},
-      {x:1220,y:220,w:140,h:40},
-      {x:1390,y:188,w:110,h:20}
+      {x:0,y:220,w:220,h:40},
+      {x:295,y:178,w:92,h:20},
+      {x:155,y:126,w:76,h:20},
+      {x:340,y:52,w:82,h:20},
+      {x:500,y:106,w:92,h:20},
+      {x:650,y:168,w:96,h:20},
+      {x:555,y:104,w:62,h:18},
+      {x:785,y:58,w:90,h:20},
+      {x:935,y:122,w:94,h:20},
+      {x:845,y:68,w:60,h:18},
+      {x:1065,y:48,w:92,h:20},
+      {x:1205,y:112,w:98,h:20},
+      {x:1320,y:170,w:90,h:20},
+      {x:1245,y:108,w:58,h:18},
+      {x:1435,y:96,w:92,h:20},
+      {x:1550,y:158,w:90,h:20}
     ],
     hazards:[
-      {x:330,y:172,w:20,h:18},
-      {x:510,y:132,w:20,h:18},
-      {x:220,y:52,w:20,h:18},
-      {x:375,y:172,w:20,h:18},
-      {x:750,y:92,w:20,h:18},
-      {x:920,y:132,w:20,h:18},
-      {x:1085,y:172,w:20,h:18}
+      {x:320,y:158,w:22,h:20},
+      {x:675,y:146,w:22,h:20},
+      {x:965,y:102,w:22,h:20},
+      {x:1350,y:148,w:22,h:20},
+      {x:1465,y:76,w:22,h:20}
     ]
   }
 ];
@@ -9295,6 +9301,13 @@ function miniActionRectHit(a,b){
 
 function resetMiniActionStage(message="",randomizeStage=false){ 
   if(!miniActionState || !miniActionState.active) return;
+  miniTouchState.movePointerId = null;
+  miniTouchState.jumpPointerId = null;
+  miniActionInput.left = false;
+  miniActionInput.right = false;
+  miniActionInput.jump = false;
+  miniActionInput.jumpPressed = false;
+  hideMiniTouchVisual();
   const stage = randomizeStage ? chooseMiniActionStage() : miniActionState.stage;
   const start = stage.start;
   miniActionState.stage = stage;
@@ -9309,16 +9322,6 @@ function resetMiniActionStage(message="",randomizeStage=false){
   miniActionState.elapsed = 0;
   miniActionState.clearPending = false;
   miniActionState.flashUntil = performance.now() + 160;
-
-  /* デス時は長押し・タッチ入力を完全にリセットする。 */
-  miniTouchState.movePointerId = null;
-  miniTouchState.jumpPointerId = null;
-  miniActionInput.left = false;
-  miniActionInput.right = false;
-  miniActionInput.jump = false;
-  miniActionInput.jumpPressed = false;
-  hideMiniTouchVisual();
-
   if(message){
     showMiniActionMessage(message);
     setTimeout(() => {
