@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.10.0. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.10.0 changes: reset mini-action touch long-press state on death, added two mini-action stages that require moving left, and removed the purple inverted-platform ceilings from stage 3. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
+<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.9.2. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.9.1 changes: fixed portrait mini-action rendering so the game keeps its native aspect ratio instead of vertically stretching, and changed floating terrain so only some terrain platforms float while adding extra vertical height variation. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
 <title>3Dfps</title>
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
@@ -1385,7 +1385,7 @@ html.roomJoinMode #roomJoinScreen{
     <h1 class="title">3Dfps</h1>
 
     <div class="subtitle">
-      v1.10.0
+      v1.9.1
     </div>
 
     <button id="randomMatchButton" class="button">
@@ -9049,51 +9049,52 @@ const MINI_ACTION_STAGES = [
   {
     id:4,
     name:"BACKTRACK",
-    worldWidth:1520,
-    start:{x:1445,y:188},
-    goalX:70,
-    goalDirection:"left",
+    worldWidth:1540,
+    start:{x:42,y:188},
+    goalX:1470,
     platforms:[
-      {x:1320,y:220,w:200,h:40},
-      {x:1110,y:186,w:150,h:20},
-      {x:900,y:220,w:160,h:40},
-      {x:700,y:154,w:150,h:20},
-      {x:470,y:204,w:150,h:20},
-      {x:230,y:160,w:160,h:20},
-      {x:0,y:220,w:150,h:40}
+      {x:0,y:220,w:250,h:40},
+      {x:300,y:178,w:120,h:20},
+      {x:470,y:220,w:130,h:40},
+      {x:650,y:170,w:115,h:20},
+      {x:820,y:220,w:120,h:40},
+      {x:1000,y:156,w:125,h:20},
+      {x:1180,y:205,w:105,h:20},
+      {x:1320,y:170,w:220,h:20},
+      {x:1090,y:220,w:70,h:40}
     ],
     hazards:[
-      {x:1240,y:168,w:24,h:18},
-      {x:950,y:201,w:26,h:19},
-      {x:760,y:136,w:24,h:18},
-      {x:520,y:186,w:24,h:18},
-      {x:295,y:142,w:24,h:18}
+      {x:205,y:198,w:22,h:22},
+      {x:535,y:198,w:22,h:22},
+      {x:875,y:198,w:22,h:22},
+      {x:1240,y:183,w:22,h:22}
     ]
   },
   {
     id:5,
-    name:"REVERSE RUN",
-    worldWidth:1600,
-    start:{x:1520,y:188},
-    goalX:60,
-    goalDirection:"left",
+    name:"LEFT LOOP",
+    worldWidth:1620,
+    start:{x:42,y:188},
+    goalX:1540,
     platforms:[
-      {x:1420,y:220,w:180,h:40},
-      {x:1210,y:176,w:145,h:20},
-      {x:1020,y:220,w:140,h:40},
-      {x:810,y:150,w:145,h:20},
-      {x:600,y:196,w:140,h:20},
-      {x:390,y:132,w:145,h:20},
-      {x:180,y:184,w:140,h:20},
-      {x:0,y:220,w:110,h:40}
+      {x:0,y:220,w:260,h:40},
+      {x:310,y:185,w:125,h:20},
+      {x:485,y:145,w:120,h:20},
+      {x:650,y:190,w:115,h:20},
+      {x:810,y:220,w:160,h:40},
+      {x:1030,y:170,w:125,h:20},
+      {x:1210,y:125,w:120,h:20},
+      {x:1380,y:180,w:90,h:20},
+      {x:1220,y:220,w:90,h:40},
+      {x:1060,y:220,w:70,h:40},
+      {x:900,y:180,w:70,h:20},
+      {x:1460,y:220,w:160,h:40}
     ],
     hazards:[
-      {x:1280,y:158,w:22,h:18},
-      {x:1070,y:201,w:24,h:19},
-      {x:865,y:132,w:24,h:18},
-      {x:650,y:178,w:24,h:18},
-      {x:430,y:114,w:24,h:18},
-      {x:220,y:166,w:24,h:18}
+      {x:215,y:198,w:22,h:22},
+      {x:355,y:163,w:22,h:22},
+      {x:700,y:168,w:22,h:22},
+      {x:1430,y:158,w:22,h:22}
     ]
   }
 ];
@@ -9284,8 +9285,19 @@ function miniActionRectHit(a,b){
     a.y + a.height > b.y;
 }
 
+function resetMiniActionInputState(){
+  miniActionInput.left = false;
+  miniActionInput.right = false;
+  miniActionInput.jump = false;
+  miniActionInput.jumpPressed = false;
+  miniTouchState.movePointerId = null;
+  miniTouchState.jumpPointerId = null;
+  hideMiniTouchVisual();
+}
+
 function resetMiniActionStage(message="",randomizeStage=false){ 
   if(!miniActionState || !miniActionState.active) return;
+  resetMiniActionInputState();
   const stage = randomizeStage ? chooseMiniActionStage() : miniActionState.stage;
   const start = stage.start;
   miniActionState.stage = stage;
@@ -9300,13 +9312,6 @@ function resetMiniActionStage(message="",randomizeStage=false){
   miniActionState.elapsed = 0;
   miniActionState.clearPending = false;
   miniActionState.flashUntil = performance.now() + 160;
-  miniTouchState.movePointerId = null;
-  miniTouchState.jumpPointerId = null;
-  miniActionInput.left = false;
-  miniActionInput.right = false;
-  miniActionInput.jump = false;
-  miniActionInput.jumpPressed = false;
-  hideMiniTouchVisual();
   if(message){
     showMiniActionMessage(message);
     setTimeout(() => {
@@ -9411,10 +9416,7 @@ function updateMiniActionGame(delta,time){
     return;
   }
 
-  const reachedGoal = stage.goalDirection === "left"
-    ? state.x <= stage.goalX
-    : state.x + state.width >= stage.goalX;
-  if(reachedGoal){
+  if(state.x + state.width >= stage.goalX){
     completeMiniActionStage();
     drawMiniActionGame();
     return;
