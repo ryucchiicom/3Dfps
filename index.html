@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.9.2. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.9.1 changes: fixed portrait mini-action rendering so the game keeps its native aspect ratio instead of vertically stretching, and changed floating terrain so only some terrain platforms float while adding extra vertical height variation. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
+<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.9.3. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.9.3 changes: reset mini-action hold/touch state on death, added two mini-action stages with required leftward movement, and removed the misleading inverted-purple ceiling shapes from Stage 3. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
 <title>3Dfps</title>
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
@@ -1385,7 +1385,7 @@ html.roomJoinMode #roomJoinScreen{
     <h1 class="title">3Dfps</h1>
 
     <div class="subtitle">
-      v1.9.1
+      v1.9.3
     </div>
 
     <button id="randomMatchButton" class="button">
@@ -9044,11 +9044,69 @@ const MINI_ACTION_STAGES = [
       {x:1010,y:198,w:26,h:22},
       {x:1210,y:198,w:26,h:22},
       {x:1325,y:198,w:26,h:22}
+    ]
+  },
+  {
+    id:4,
+    name:"BACKTRACK",
+    worldWidth:1540,
+    start:{x:42,y:188},
+    goalX:1480,
+    platforms:[
+      {x:0,y:220,w:260,h:40},
+      {x:320,y:188,w:120,h:20},
+      {x:500,y:150,w:120,h:20},
+      {x:680,y:188,w:130,h:20},
+      {x:520,y:108,w:100,h:20},
+      {x:350,y:145,w:100,h:20},
+      {x:420,y:210,w:190,h:20},
+      {x:790,y:220,w:230,h:40},
+      {x:1050,y:184,w:130,h:20},
+      {x:1210,y:145,w:130,h:20},
+      {x:1380,y:188,w:160,h:20}
     ],
-    ceilings:[
-      {x:460,y:112,w:150,h:18},
-      {x:840,y:126,w:160,h:18},
-      {x:1110,y:108,w:145,h:18}
+    hazards:[
+      {x:370,y:170,w:18,h:18},
+      {x:545,y:132,w:20,h:18},
+      {x:728,y:170,w:22,h:18},
+      {x:370,y:127,w:18,h:18},
+      {x:505,y:88,w:18,h:18},
+      {x:855,y:198,w:24,h:22},
+      {x:1100,y:166,w:20,h:18},
+      {x:1265,y:127,w:20,h:18}
+    ]
+  },
+  {
+    id:5,
+    name:"REVERSE ROUTE",
+    worldWidth:1620,
+    start:{x:42,y:188},
+    goalX:1550,
+    platforms:[
+      {x:0,y:220,w:280,h:40},
+      {x:340,y:190,w:120,h:20},
+      {x:520,y:145,w:120,h:20},
+      {x:700,y:180,w:120,h:20},
+      {x:520,y:98,w:105,h:20},
+      {x:360,y:135,w:110,h:20},
+      {x:610,y:190,w:145,h:20},
+      {x:700,y:220,w:300,h:40},
+      {x:1030,y:178,w:120,h:20},
+      {x:1190,y:138,w:120,h:20},
+      {x:1350,y:182,w:130,h:20},
+      {x:1500,y:220,w:120,h:40}
+    ],
+    hazards:[
+      {x:390,y:172,w:20,h:18},
+      {x:565,y:127,w:20,h:18},
+      {x:750,y:162,w:20,h:18},
+      {x:535,y:76,w:18,h:18},
+      {x:390,y:113,w:18,h:18},
+      {x:680,y:168,w:18,h:18},
+      {x:790,y:198,w:24,h:22},
+      {x:1070,y:160,w:20,h:18},
+      {x:1230,y:120,w:20,h:18},
+      {x:1390,y:164,w:20,h:18}
     ]
   }
 ];
@@ -9241,6 +9299,7 @@ function miniActionRectHit(a,b){
 
 function resetMiniActionStage(message="",randomizeStage=false){ 
   if(!miniActionState || !miniActionState.active) return;
+  if(randomizeStage) resetMiniActionTouchState();
   const stage = randomizeStage ? chooseMiniActionStage() : miniActionState.stage;
   const start = stage.start;
   miniActionState.stage = stage;
@@ -9530,6 +9589,24 @@ function drawMiniActionGame(){
 function hideMiniTouchVisual(){
   if(miniMoveGuide) miniMoveGuide.classList.remove("show");
   if(miniMoveCircle) miniMoveCircle.classList.remove("show");
+}
+
+function resetMiniActionTouchState(){
+  if(miniTouchZone){
+    if(miniTouchState.movePointerId !== null){
+      try{ miniTouchZone.releasePointerCapture(miniTouchState.movePointerId); }catch(error){}
+    }
+    if(miniTouchState.jumpPointerId !== null){
+      try{ miniTouchZone.releasePointerCapture(miniTouchState.jumpPointerId); }catch(error){}
+    }
+  }
+  miniTouchState.movePointerId = null;
+  miniTouchState.jumpPointerId = null;
+  miniActionInput.left = false;
+  miniActionInput.right = false;
+  miniActionInput.jump = false;
+  miniActionInput.jumpPressed = false;
+  hideMiniTouchVisual();
 }
 
 function updateMiniTouchVisual(){
