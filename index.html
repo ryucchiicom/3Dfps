@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.10.0. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.9.1 changes; Release 1.9.3 adds persistent mini-action course creation/testing/publishing and mini-game menus; Release 1.10.0 adds a persistent scrolling course editor with recent-tool palette plus acceleration/deceleration blocks: fixed portrait mini-action rendering so the game keeps its native aspect ratio instead of vertically stretching, and changed floating terrain so only some terrain platforms float while adding extra vertical height variation. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
+<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.9.5. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.9.5 changes: editor course-list screen, held menu behavior, stage scrolling, recent-block palette, dynamic goal height, and acceleration/deceleration blocks. Release 1.9.1 changes; Release 1.9.3 adds persistent mini-action course creation/testing/publishing and mini-game menus: fixed portrait mini-action rendering so the game keeps its native aspect ratio instead of vertically stretching, and changed floating terrain so only some terrain platforms float while adding extra vertical height variation. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
 <title>3Dfps</title>
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
@@ -432,10 +432,10 @@ canvas{
   bottom:0;
   z-index:11;
   display:none;
-  padding:6px 8px calc(6px + env(safe-area-inset-bottom));
-  border-radius:0;
-  background:rgba(5,9,15,.93);
+  height:58px;
+  padding:5px 6px 4px;
   border-top:1px solid rgba(255,255,255,.12);
+  background:rgba(5,9,15,.9);
   backdrop-filter:blur(9px);
   pointer-events:auto;
 }
@@ -445,112 +445,90 @@ canvas{
 }
 
 #miniGameBox.miniEditorMode #miniGameCanvas{
-  top:0;
-  bottom:auto;
-  height:calc(100% - 74px);
+  bottom:58px;
+  height:auto;
 }
 
 #miniGameBox.miniEditorMode #miniTouchZone{
   display:none !important;
 }
 
-#miniEditorQuickTools{
+#miniEditorRecentRow{
   display:grid;
-  grid-template-columns:minmax(54px,1fr) repeat(3,minmax(54px,1fr)) minmax(48px,1fr);
+  grid-template-columns:repeat(5,minmax(0,1fr));
   gap:4px;
-  width:100%;
+  height:34px;
 }
 
-.miniEditorTool,
-.miniEditorQuickTool,
-#miniEditorMoreButton{
+#miniEditorRecentTools{
+  display:contents;
+}
+
+.miniEditorTool{
   min-width:0;
-  height:32px;
-  padding:0 4px;
+  height:34px;
+  padding:0 3px;
   border:1px solid rgba(255,255,255,.14);
   border-radius:7px;
   background:rgba(255,255,255,.06);
   color:#fff;
   font-size:10px;
   font-weight:900;
-  touch-action:none;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
 }
 
-.miniEditorTool.selected,
-.miniEditorQuickTool.selected,
-#miniEditorMoreButton.selected{
+.miniEditorTool.selected{
   background:#1976ff;
   border-color:#67adff;
 }
 
-.miniEditorQuickTool.empty{
-  opacity:.22;
+#miniEditorMoreButton{
+  font-size:18px;
+  line-height:1;
 }
 
 #miniEditorAllTools{
   position:absolute;
-  left:8px;
-  right:8px;
-  bottom:calc(100% + 6px);
-  z-index:12;
+  left:6px;
+  right:6px;
+  bottom:64px;
   display:none;
-  grid-template-columns:repeat(4,1fr);
-  gap:5px;
-  padding:7px;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:4px;
+  padding:6px;
   border:1px solid rgba(255,255,255,.12);
-  border-radius:12px;
+  border-radius:10px;
   background:rgba(5,9,15,.96);
-  box-shadow:0 10px 30px rgba(0,0,0,.35);
+  box-shadow:0 12px 32px rgba(0,0,0,.32);
 }
 
 #miniEditorAllTools.show{
   display:grid;
 }
 
-#miniEditorAllTools .miniEditorTool{
-  height:34px;
-}
-
 #miniEditorScrollBar{
-  position:relative;
-  width:100%;
-  height:14px;
-  margin-top:4px;
-  border-radius:999px;
+  position:absolute;
+  left:8px;
+  right:8px;
+  bottom:42px;
+  height:8px;
+  border-radius:99px;
   background:rgba(255,255,255,.08);
-  border:1px solid rgba(255,255,255,.08);
+  overflow:visible;
   touch-action:none;
 }
 
 #miniEditorScrollThumb{
   position:absolute;
   left:0;
-  top:2px;
+  top:0;
+  width:52.94%;
   height:8px;
-  min-width:32px;
-  border-radius:999px;
-  background:rgba(111,190,255,.78);
-  box-shadow:0 0 9px rgba(80,170,255,.22);
-  touch-action:none;
-}
-
-#miniEditorHint{
-  margin-top:3px;
-  font-size:9px;
-  line-height:1.2;
-  opacity:.62;
-  text-align:center;
-}
-
-#miniGameBox.miniCourseListMode #miniGameCanvas,
-#miniGameBox.miniCourseListMode #miniGameStageLabel,
-#miniGameBox.miniCourseListMode #miniGameScore,
-#miniGameBox.miniCourseListMode #miniGameTitle,
-#miniGameBox.miniCourseListMode #miniTouchZone,
-#miniGameBox.miniCourseListMode #miniMenuButton,
-#miniGameBox.miniCourseListMode #miniEditorToolbar,
-#miniGameBox.miniCourseListMode #miniGameMessage{
-  display:none !important;
+  border-radius:99px;
+  background:rgba(145,194,255,.72);
+  box-shadow:0 0 10px rgba(80,160,255,.2);
 }
 
 #miniCourseListModal{
@@ -558,9 +536,10 @@ canvas{
   inset:0;
   z-index:25;
   display:none;
-  padding:0;
-  background:rgba(5,9,15,.96);
-  border-radius:18px;
+  padding:8px;
+  border-radius:16px;
+  background:rgba(5,9,15,.97);
+  border:0;
   pointer-events:auto;
   overflow:hidden;
 }
@@ -569,13 +548,23 @@ canvas{
   display:block;
 }
 
+#miniGameBox.miniCourseListMode #miniGameCanvas,
+#miniGameBox.miniCourseListMode #miniTouchZone,
+#miniGameBox.miniCourseListMode #miniGameMessage,
+#miniGameBox.miniCourseListMode #miniGameTitle,
+#miniGameBox.miniCourseListMode #miniGameStageLabel,
+#miniGameBox.miniCourseListMode #miniGameScore,
+#miniGameBox.miniCourseListMode #miniMenuButton,
+#miniGameBox.miniCourseListMode #miniEditorToolbar{
+  display:none !important;
+}
+
 #miniCourseListBox{
   width:100%;
   height:100%;
-  max-height:none;
   overflow:auto;
-  padding:12px;
-  border-radius:18px;
+  padding:8px;
+  border-radius:12px;
   background:transparent;
   border:0;
   box-shadow:none;
@@ -709,6 +698,17 @@ canvas{
 .roomMatchButton{
   background:linear-gradient(135deg,#7847ff,#a047d7);
   box-shadow:0 8px 22px rgba(130,70,255,.18);
+}
+
+#miniGameBox.miniCourseListMode{
+  width:min(94vw,430px);
+}
+
+@media (pointer:coarse){
+  #miniEditorAllTools .miniEditorTool{
+    height:32px;
+    font-size:9px;
+  }
 }
 
 #matchingReadyButton,
@@ -1721,7 +1721,7 @@ html.roomJoinMode #roomJoinScreen{
     <h1 class="title">3Dfps</h1>
 
     <div class="subtitle">
-      v1.10.0
+      v1.9.5
     </div>
 
     <button id="randomMatchButton" class="button">
@@ -1835,36 +1835,41 @@ html.roomJoinMode #roomJoinScreen{
     <div id="miniMenuOptions" aria-hidden="true"></div>
 
     <div id="miniEditorToolbar" aria-label="コース作成ツール">
-      <div id="miniEditorAllTools" aria-hidden="true"></div>
-      <div id="miniEditorQuickTools">
-        <button id="miniEditorEraseButton" class="miniEditorQuickTool selected" type="button" data-tool="erase">消去</button>
-        <button class="miniEditorQuickTool empty" type="button" data-recent-index="0">---</button>
-        <button class="miniEditorQuickTool empty" type="button" data-recent-index="1">---</button>
-        <button class="miniEditorQuickTool empty" type="button" data-recent-index="2">---</button>
-        <button id="miniEditorMoreButton" type="button" aria-expanded="false">･･･</button>
+      <div id="miniEditorAllTools" aria-hidden="true">
+        <button class="miniEditorTool" data-tool="terrain" type="button">地形</button>
+        <button class="miniEditorTool" data-tool="platform" type="button">足場</button>
+        <button class="miniEditorTool" data-tool="hazard" type="button">針</button>
+        <button class="miniEditorTool" data-tool="start" type="button">スタート</button>
+        <button class="miniEditorTool" data-tool="goal" type="button">ゴール</button>
+        <button class="miniEditorTool" data-tool="accelerator" type="button">加速ブロック</button>
+        <button class="miniEditorTool" data-tool="decelerator" type="button">減速ブロック</button>
       </div>
       <div id="miniEditorScrollBar" aria-label="ステージスクロール">
         <div id="miniEditorScrollThumb"></div>
       </div>
-      <div id="miniEditorHint">タップで配置、置いたものをドラッグで移動</div>
+      <div id="miniEditorRecentRow">
+        <button class="miniEditorTool miniEditorFixedTool" data-tool="erase" type="button">消去</button>
+        <div id="miniEditorRecentTools"></div>
+        <button id="miniEditorMoreButton" class="miniEditorTool" type="button" aria-label="すべてのブロック">…</button>
+      </div>
     </div>
-  </div>
 
-  <div id="miniCourseListModal" aria-hidden="true">
-    <div id="miniCourseListBox">
-      <div id="miniCourseListHeader">
-        <div class="miniCourseListTitle">コース一覧</div>
-        <button id="miniCourseListClose" type="button">閉じる</button>
-      </div>
-      <div id="miniCourseListDraftSection">
-        <div class="miniCourseListSectionTitle">自分のコース</div>
-        <div id="miniCourseListDrafts"></div>
-        <button id="miniNewCourseButton" type="button" class="miniCourseActionButton">＋ 新しいコース</button>
-      </div>
-      <div id="miniCourseListPublicSection">
-        <div class="miniCourseListSectionTitle">公開済み</div>
-        <div id="miniCourseListPublishedStatus"></div>
-        <div id="miniCourseListPublished"></div>
+    <div id="miniCourseListModal" aria-hidden="true">
+      <div id="miniCourseListBox">
+        <div id="miniCourseListHeader">
+          <div class="miniCourseListTitle">コース一覧</div>
+          <button id="miniCourseListClose" type="button">戻る</button>
+        </div>
+        <div id="miniCourseListDraftSection">
+          <div class="miniCourseListSectionTitle">自分のコース</div>
+          <div id="miniCourseListDrafts"></div>
+          <button id="miniNewCourseButton" type="button" class="miniCourseActionButton">＋ 新しいコース</button>
+        </div>
+        <div id="miniCourseListPublicSection">
+          <div class="miniCourseListSectionTitle">公開済み</div>
+          <div id="miniCourseListPublishedStatus"></div>
+          <div id="miniCourseListPublished"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -2264,14 +2269,13 @@ let miniNetworkSyncing = false;
 let miniMode = "play";
 let miniEditorCourseId = null;
 let miniEditorSelectedTool = "platform";
-let miniEditorRecentTools = [];
-let miniEditorToolsExpanded = false;
-let miniEditorScrollX = 0;
-let miniEditorScrollPointerId = null;
-let miniEditorScrollGrabOffset = 0;
-let miniPresenceLastSync = 0;
-let miniPresenceSyncing = false;
 let miniEditorDragging = null;
+let miniEditorCameraX = 0;
+let miniEditorRecentTools = ["platform","terrain","hazard"];
+let miniEditorScrollPointerId = null;
+let miniEditorScrollStartX = 0;
+let miniEditorScrollStartCameraX = 0;
+let miniPresenceLastUpdate = 0;
 let miniEditorTestMode = false;
 let miniEditorTestHashAtStart = "";
 let miniEditorTestStartTime = 0;
@@ -7941,7 +7945,11 @@ async function checkMatchCleanup(
     return;
   }
 
+  const localMiniActive=matchType === "random" && gameStarted && data.status === "waiting" && (miniMode === "play" || miniMode === "make" || miniCourseListOpen || miniEditorTestMode);
+  const localFresh=localMiniActive && lastActivityAt > 0 && now-lastActivityAt < INACTIVE_MATCH_TIME;
+
   const allInactive =
+    !localFresh &&
     players.every(
       player => {
 
@@ -8237,10 +8245,6 @@ function leaveCurrentMatch(){
   resultPlayersSnapshot = null;
   resultPlayerOrder = [];
   lastRandomFinalizeCheck = 0;
-  miniPresenceLastSync = 0;
-  miniPresenceSyncing = false;
-  miniEditorToolsExpanded = false;
-  miniEditorScrollPointerId = null;
   if(pendingResultDeleteTimer){
     clearTimeout(pendingResultDeleteTimer);
     pendingResultDeleteTimer = null;
@@ -9007,10 +9011,9 @@ function gameLoop(
   updateNeonEdges(time);
   updateMiniActionGame(delta,time);
 
-  if(latestMatchData && latestMatchData.status === "waiting" && matchType === "random") syncMiniPresence();
-
   if(latestMatchData){
     if(latestMatchData.status === "waiting" && matchType === "random") updateMatchingUI(latestMatchData);
+    if(latestMatchData.status === "waiting" && matchType === "random") syncMiniPresence();
     if(latestMatchData.status === "rule") updateRuleUI(latestMatchData);
   }
 
@@ -9401,7 +9404,7 @@ const MINI_ACTION_STAGES = [
     worldWidth:1360,
     start:{x:42,y:188},
     goalX:1290,
-    goalY:220,
+    goalY:198,
     platforms:[
       {x:0,y:220,w:300,h:40},
       {x:350,y:198,w:170,h:20},
@@ -9423,23 +9426,24 @@ const MINI_EDITOR_STORAGE_KEY = "3Dfps_mini_courses_v1";
 const MINI_EDITOR_VIEW_KEY = "3Dfps_mini_view_v1";
 const MINI_EDITOR_TEST_LIMIT = 15;
 const MINI_EDITOR_GRID = 20;
-const MINI_EDITOR_WORLD_WIDTH = 2160;
-const MINI_EDITOR_RECENT_KEY = "3Dfps_mini_recent_tools_v1";
+const MINI_EDITOR_VIEWPORT_WIDTH = 720;
+const MINI_EDITOR_WORLD_WIDTH = 1360;
+const MINI_EDITOR_ALLOWED_TOOLS = ["terrain","platform","hazard","start","goal","accelerator","decelerator"];
 
 const miniMenuButton = document.getElementById("miniMenuButton");
 const miniMenuOptions = document.getElementById("miniMenuOptions");
 const miniEditorToolbar = document.getElementById("miniEditorToolbar");
-const miniEditorHint = document.getElementById("miniEditorHint");
+const miniEditorAllTools = document.getElementById("miniEditorAllTools");
+const miniEditorRecentToolsContainer = document.getElementById("miniEditorRecentTools");
+const miniEditorMoreButton = document.getElementById("miniEditorMoreButton");
+const miniEditorScrollBar = document.getElementById("miniEditorScrollBar");
+const miniEditorScrollThumb = document.getElementById("miniEditorScrollThumb");
 const miniCourseListModal = document.getElementById("miniCourseListModal");
 const miniCourseListClose = document.getElementById("miniCourseListClose");
 const miniCourseListDrafts = document.getElementById("miniCourseListDrafts");
 const miniNewCourseButton = document.getElementById("miniNewCourseButton");
 const miniCourseListPublished = document.getElementById("miniCourseListPublished");
 const miniCourseListPublishedStatus = document.getElementById("miniCourseListPublishedStatus");
-const miniEditorAllTools = document.getElementById("miniEditorAllTools");
-const miniEditorMoreButton = document.getElementById("miniEditorMoreButton");
-const miniEditorScrollBar = document.getElementById("miniEditorScrollBar");
-const miniEditorScrollThumb = document.getElementById("miniEditorScrollThumb");
 
 function cloneMiniData(value){
   return JSON.parse(JSON.stringify(value));
@@ -9461,7 +9465,7 @@ function createDefaultMiniEditorCourse(){
       name:"MY COURSE",
       worldWidth:MINI_EDITOR_WORLD_WIDTH,
       start:{x:42,y:198},
-      goalX:2120,
+      goalX:680,
       goalY:220,
       platforms:[],
       terrain:[{x:0,y:220,w:MINI_EDITOR_WORLD_WIDTH,h:40}],
@@ -9475,40 +9479,45 @@ function createDefaultMiniEditorCourse(){
   };
 }
 
+function getMiniGoalSurfaceY(stage,goalX){
+  const surfaces=[
+    ...(Array.isArray(stage?.terrain)?stage.terrain:[]),
+    ...(Array.isArray(stage?.platforms)?stage.platforms:[]),
+    ...(Array.isArray(stage?.accelerators)?stage.accelerators:[]),
+    ...(Array.isArray(stage?.decelerators)?stage.decelerators:[])
+  ];
+  const hits=surfaces.filter(item=>goalX>=Number(item.x)&&goalX<=Number(item.x)+Number(item.w)&&Number.isFinite(Number(item.y)));
+  if(hits.length) return Math.min(...hits.map(item=>Number(item.y)));
+  return 220;
+}
+
 function normalizeMiniEditorStage(stage){
-  const source = stage || {};
-  const worldWidth = Math.max(720,Math.min(MINI_EDITOR_WORLD_WIDTH,Number(source.worldWidth) || MINI_EDITOR_WORLD_WIDTH));
-  const sourceStart = source.start && Number.isFinite(Number(source.start.x)) && Number.isFinite(Number(source.start.y))
-    ? {x:Math.max(0,Math.min(worldWidth-16,Number(source.start.x))),y:Math.max(0,Math.min(238,Number(source.start.y)))}
+  const source=stage||{};
+  const worldWidth=Math.max(MINI_EDITOR_WORLD_WIDTH,Number(source.worldWidth)||MINI_EDITOR_WORLD_WIDTH);
+  const cleanRectList=value=>Array.isArray(value)?value.map(item=>({
+    x:Math.max(0,Math.min(worldWidth-4,Number(item?.x)||0)),
+    y:Math.max(0,Math.min(256,Number(item?.y)||0)),
+    w:Math.max(4,Math.min(worldWidth,Number(item?.w)||4)),
+    h:Math.max(4,Math.min(260,Number(item?.h)||4))
+  })).filter(item=>Number.isFinite(item.x)&&Number.isFinite(item.y)&&item.w>0&&item.h>0):[];
+  const terrain=cleanRectList(source.terrain);
+  const platforms=cleanRectList(source.platforms);
+  const hazards=cleanRectList(source.hazards);
+  const accelerators=cleanRectList(source.accelerators);
+  const decelerators=cleanRectList(source.decelerators);
+  const start=source.start&&Number.isFinite(Number(source.start.x))&&Number.isFinite(Number(source.start.y))
+    ? {x:Math.max(0,Math.min(worldWidth-16,Number(source.start.x))),y:Math.max(30,Math.min(238,Number(source.start.y)))}
     : {x:42,y:198};
-  const cleanRectList = value => Array.isArray(value) ? value.map(item => ({
-    x:Number(item?.x) || 0,
-    y:Number(item?.y) || 0,
-    w:Math.max(4,Number(item?.w) || 4),
-    h:Math.max(4,Number(item?.h) || 4)
-  })).map(item => ({
-    ...item,
-    x:Math.max(0,Math.min(worldWidth-item.w,item.x)),
-    y:Math.max(0,Math.min(256-item.h,item.y))
-  })).filter(item => Number.isFinite(item.x) && Number.isFinite(item.y) && item.w > 0 && item.h > 0) : [];
-  const terrain = cleanRectList(source.terrain);
-  const platforms = cleanRectList(source.platforms);
-  const hazards = cleanRectList(source.hazards);
-  const accelerators = cleanRectList(source.accelerators);
-  const decelerators = cleanRectList(source.decelerators);
-  const oldGoalX = Number(source.goalX);
-  const oldGoalY = Number(source.goalY);
-  const goalSource = source.goal && Number.isFinite(Number(source.goal.x)) ? source.goal : null;
-  const goalX = goalSource ? Number(goalSource.x) : (Number.isFinite(oldGoalX) ? oldGoalX : worldWidth-40);
-  const goalY = goalSource && Number.isFinite(Number(goalSource.y)) ? Number(goalSource.y) : (Number.isFinite(oldGoalY) ? oldGoalY : 220);
+  const goalX=Math.max(16,Math.min(worldWidth-16,Number(source.goalX)||680));
+  const rawGoalY=Number(source.goalY);
+  const goalY=Number.isFinite(rawGoalY)?Math.max(0,Math.min(260,rawGoalY)):getMiniGoalSurfaceY({terrain,platforms,accelerators,decelerators},goalX);
   return {
-    id:source.id ?? "editor",
-    name:String(source.name || "MY COURSE").slice(0,24),
+    id:source.id??"editor",
+    name:String(source.name||"MY COURSE").slice(0,24),
     worldWidth,
-    start:sourceStart,
-    goal:{x:Math.max(16,Math.min(worldWidth-16,goalX)),y:Math.max(20,Math.min(238,goalY))},
-    goalX:Math.max(16,Math.min(worldWidth-16,goalX)),
-    goalY:Math.max(20,Math.min(238,goalY)),
+    start,
+    goalX,
+    goalY,
     platforms,
     terrain,
     hazards,
@@ -9528,16 +9537,11 @@ function miniStageForPhysics(stage){
 }
 
 function getMiniCollisionSurfaces(stage){
-  const terrain = Array.isArray(stage?.terrain) ? stage.terrain : [];
-  const platforms = Array.isArray(stage?.platforms) ? stage.platforms : [];
-  const accelerators = Array.isArray(stage?.accelerators) ? stage.accelerators : [];
-  const decelerators = Array.isArray(stage?.decelerators) ? stage.decelerators : [];
-  return [
-    ...terrain.map(item => ({...item,surfaceType:"terrain"})),
-    ...platforms.map(item => ({...item,surfaceType:"platform"})),
-    ...accelerators.map(item => ({...item,surfaceType:"accelerator",movementEffect:"accelerate"})),
-    ...decelerators.map(item => ({...item,surfaceType:"decelerator",movementEffect:"decelerate"}))
-  ];
+  const terrain=Array.isArray(stage?.terrain)?stage.terrain.map(item=>({...item,surfaceEffect:"normal"})):[];
+  const platforms=Array.isArray(stage?.platforms)?stage.platforms.map(item=>({...item,surfaceEffect:"normal"})):[];
+  const accelerators=Array.isArray(stage?.accelerators)?stage.accelerators.map(item=>({...item,surfaceEffect:"fast"})):[];
+  const decelerators=Array.isArray(stage?.decelerators)?stage.decelerators.map(item=>({...item,surfaceEffect:"slow"})):[];
+  return [...terrain,...platforms,...accelerators,...decelerators];
 }
 
 function hashMiniStage(stage){
@@ -9592,14 +9596,15 @@ function saveMiniCourses(courses){
 
 function loadMiniViewState(){
   try{
-    const value = JSON.parse(localStorage.getItem(MINI_EDITOR_VIEW_KEY) || "null");
-    if(value?.mode === "make" || value?.mode === "play") miniMode = value.mode;
-    if(value?.courseId) miniEditorCourseId = String(value.courseId);
-    if(Number.isFinite(Number(value?.scrollX))) miniEditorScrollX = Math.max(0,Number(value.scrollX));
-  }catch(error){}
-  try{
-    const recent = JSON.parse(localStorage.getItem(MINI_EDITOR_RECENT_KEY) || "[]");
-    if(Array.isArray(recent)) miniEditorRecentTools = recent.filter(tool => ["terrain","platform","hazard","start","goal","accelerator","decelerator"].includes(tool)).slice(0,3);
+    const value=JSON.parse(localStorage.getItem(MINI_EDITOR_VIEW_KEY)||"null");
+    if(value?.mode === "make" || value?.mode === "play") miniMode=value.mode;
+    if(value?.courseId) miniEditorCourseId=String(value.courseId);
+    if(Number.isFinite(Number(value?.cameraX))) miniEditorCameraX=Number(value.cameraX);
+    if(Array.isArray(value?.recentTools)){
+      const recent=value.recentTools.filter(tool=>MINI_EDITOR_ALLOWED_TOOLS.includes(tool));
+      const unique=[...new Set(recent)];
+      if(unique.length) miniEditorRecentTools=unique.slice(0,3);
+    }
   }catch(error){}
 }
 
@@ -9608,12 +9613,51 @@ function saveMiniViewState(){
     localStorage.setItem(MINI_EDITOR_VIEW_KEY,JSON.stringify({
       mode:miniMode,
       courseId:miniEditorCourseId,
-      scrollX:miniEditorScrollX
+      cameraX:miniEditorCameraX,
+      recentTools:miniEditorRecentTools
     }));
   }catch(error){}
-  try{
-    localStorage.setItem(MINI_EDITOR_RECENT_KEY,JSON.stringify(miniEditorRecentTools.slice(0,3)));
-  }catch(error){}
+}
+
+function rememberMiniEditorTool(tool){
+  if(!MINI_EDITOR_ALLOWED_TOOLS.includes(tool)) return;
+  miniEditorRecentTools=[tool,...miniEditorRecentTools.filter(item=>item!==tool)].slice(0,3);
+  saveMiniViewState();
+  renderMiniEditorRecentTools();
+}
+
+function renderMiniEditorRecentTools(){
+  if(!miniEditorRecentToolsContainer) return;
+  const labels={terrain:"地形",platform:"足場",hazard:"針",start:"スタート",goal:"ゴール",accelerator:"加速",decelerator:"減速"};
+  const recent=miniEditorRecentTools.length ? miniEditorRecentTools : ["platform","terrain","hazard"];
+  miniEditorRecentToolsContainer.innerHTML=recent.map(tool=>`<button class="miniEditorTool" data-tool="${tool}" type="button">${escapeHtml(labels[tool]||tool)}</button>`).join("");
+  miniEditorRecentToolsContainer.querySelectorAll(".miniEditorTool").forEach(button=>{
+    button.addEventListener("click",()=>selectMiniEditorTool(button.dataset.tool));
+  });
+  document.querySelectorAll("#miniEditorRecentRow .miniEditorTool").forEach(button=>button.classList.toggle("selected",button.dataset.tool===miniEditorSelectedTool));
+}
+
+function getMiniEditorCameraMax(){
+  const course=getCurrentMiniEditorCourse();
+  return Math.max(0,(Number(course?.stage?.worldWidth)||MINI_EDITOR_WORLD_WIDTH)-MINI_EDITOR_VIEWPORT_WIDTH);
+}
+
+function setMiniEditorCameraX(value,save=false){
+  miniEditorCameraX=Math.max(0,Math.min(getMiniEditorCameraMax(),Number(value)||0));
+  updateMiniEditorScrollBar();
+  drawMiniEditor();
+  if(save) saveMiniViewState();
+}
+
+function updateMiniEditorScrollBar(){
+  if(!miniEditorScrollBar||!miniEditorScrollThumb) return;
+  const worldWidth=Math.max(MINI_EDITOR_VIEWPORT_WIDTH,Number(getCurrentMiniEditorCourse()?.stage?.worldWidth)||MINI_EDITOR_WORLD_WIDTH);
+  const maxCamera=Math.max(0,worldWidth-MINI_EDITOR_VIEWPORT_WIDTH);
+  const trackWidth=miniEditorScrollBar.clientWidth||1;
+  const thumbPercent=Math.max(18,Math.min(100,MINI_EDITOR_VIEWPORT_WIDTH/worldWidth*100));
+  const leftPercent=maxCamera>0 ? miniEditorCameraX/maxCamera*(100-thumbPercent) : 0;
+  miniEditorScrollThumb.style.width=thumbPercent+"%";
+  miniEditorScrollThumb.style.left=leftPercent+"%";
 }
 
 function ensureMiniEditorCourse(){
@@ -9640,9 +9684,6 @@ function updateMiniEditorSave(course,clearVerification=true){
   if(!course) return;
   course.stage = normalizeMiniEditorStage(course.stage);
   course.stage.name = String(course.name || "MY COURSE").slice(0,24);
-  course.stage.goalX = Number(course.stage.goal?.x ?? course.stage.goalX);
-  course.stage.goalY = Number(course.stage.goal?.y ?? course.stage.goalY);
-  course.stage.goal = {x:course.stage.goalX,y:course.stage.goalY};
   course.name = course.stage.name;
   course.stage.id = "editor";
   course.updatedAt = Date.now();
@@ -9689,8 +9730,8 @@ function isValidMiniRuntimeStage(stage){
   if(!stage || !Number.isFinite(Number(stage.worldWidth)) || Number(stage.worldWidth) < 100) return false;
   if(!stage.start || !Number.isFinite(Number(stage.start.x)) || !Number.isFinite(Number(stage.start.y))) return false;
   if(!Number.isFinite(Number(stage.goalX))) return false;
-  const surfaces = [...(Array.isArray(stage.platforms) ? stage.platforms : []),...(Array.isArray(stage.terrain) ? stage.terrain : []),...(Array.isArray(stage.accelerators) ? stage.accelerators : []),...(Array.isArray(stage.decelerators) ? stage.decelerators : [])];
-  return surfaces.every(item => Number.isFinite(Number(item.x)) && Number.isFinite(Number(item.y)) && Number(item.w) > 0 && Number(item.h) > 0);
+  const surfaces=[...(Array.isArray(stage.platforms)?stage.platforms:[]),...(Array.isArray(stage.terrain)?stage.terrain:[]),...(Array.isArray(stage.accelerators)?stage.accelerators:[]),...(Array.isArray(stage.decelerators)?stage.decelerators:[])];
+  return surfaces.every(item=>Number.isFinite(Number(item.x))&&Number.isFinite(Number(item.y))&&Number(item.w)>0&&Number(item.h)>0)&&Number.isFinite(Number(stage.goalY));
 }
 
 function chooseRandomFrom(array,previousId=null){
@@ -9819,29 +9860,12 @@ async function syncMiniActionState(force=false){
       [`players.${currentUser.uid}.miniActive`]:true,
       [`players.${currentUser.uid}.miniStageId`]:String(state.stage.id),
       [`players.${currentUser.uid}.miniX`]:state.x,
-      [`players.${currentUser.uid}.miniY`]:state.y,
-      [`players.${currentUser.uid}.lastActiveAt`]:Date.now()
+      [`players.${currentUser.uid}.miniY`]:state.y
     });
   }catch(error){
     console.error("mini action sync error",error);
   }finally{
     miniNetworkSyncing = false;
-  }
-}
-
-async function syncMiniPresence(force=false){
-  if(!matchRef || matchType !== "random" || !currentUser || gameEnded || !latestMatchData || latestMatchData.status !== "waiting") return;
-  const now = Date.now();
-  if(!force && (now-miniPresenceLastSync<5000 || miniPresenceSyncing)) return;
-  miniPresenceLastSync = now;
-  miniPresenceSyncing = true;
-  try{
-    markActivity();
-    await updateDoc(matchRef,{[`players.${currentUser.uid}.lastActiveAt`]:lastActivityAt});
-  }catch(error){
-    console.error("mini presence sync error",error);
-  }finally{
-    miniPresenceSyncing = false;
   }
 }
 
@@ -9861,9 +9885,8 @@ async function clearMiniActionRemoteState(){
 
 function setMiniGameVisualMode(){
   if(!miniGameBox) return;
-  miniGameBox.classList.toggle("miniEditorMode",miniMode === "make" && !miniEditorTestMode && !miniCourseListOpen);
+  miniGameBox.classList.toggle("miniEditorMode",miniMode === "make" && !miniEditorTestMode);
   miniGameBox.classList.toggle("miniTestMode",miniEditorTestMode);
-  miniGameBox.classList.toggle("miniCourseListMode",miniCourseListOpen);
 }
 
 function startMiniActionStage(stage = chooseMiniActionStage()){
@@ -9887,7 +9910,7 @@ function startMiniActionStage(stage = chooseMiniActionStage()){
     elapsed:0,
     flashUntil:0,
     clearPending:false,
-    speedMultiplier:1
+    surfaceEffect:"normal"
   };
   resetMiniActionInputState();
   miniGameStarted = true;
@@ -9926,18 +9949,24 @@ function cancelMiniEditorTest(){
 }
 
 function ensureMiniEditorCourseUI(){
-  const course = getCurrentMiniEditorCourse();
+  const course=getCurrentMiniEditorCourse();
   document.querySelectorAll(".miniEditorTool").forEach(button=>{
-    button.classList.toggle("selected",button.dataset.tool === miniEditorSelectedTool);
+    button.classList.toggle("selected",button.dataset.tool===miniEditorSelectedTool);
   });
+  renderMiniEditorRecentTools();
+  updateMiniEditorScrollBar();
 }
 
 function ensureMiniEditorMode(){
-  markActivity();
-  syncMiniPresence(true);
-  const wasPlaying = miniMode === "play" && Boolean(miniActionState?.active);
-  miniMode = "make";
-  miniEditorTestMode = false;
+  const wasPlaying=miniMode === "play" && Boolean(miniActionState?.active);
+  miniMode="make";
+  miniEditorTestMode=false;
+  miniCourseListOpen=false;
+  if(miniCourseListModal){
+    miniCourseListModal.classList.remove("show");
+    miniCourseListModal.setAttribute("aria-hidden","true");
+  }
+  if(miniGameBox) miniGameBox.classList.remove("miniCourseListMode");
   stopMiniActionGame();
   if(wasPlaying) clearMiniActionRemoteState();
   ensureMiniEditorCourseUI();
@@ -9947,10 +9976,14 @@ function ensureMiniEditorMode(){
 }
 
 function ensureMiniPlayMode(startFresh=false){
-  markActivity();
-  syncMiniPresence(true);
-  miniMode = "play";
-  miniEditorTestMode = false;
+  miniMode="play";
+  miniEditorTestMode=false;
+  miniCourseListOpen=false;
+  if(miniCourseListModal){
+    miniCourseListModal.classList.remove("show");
+    miniCourseListModal.setAttribute("aria-hidden","true");
+  }
+  if(miniGameBox) miniGameBox.classList.remove("miniCourseListMode");
   if(startFresh || !miniActionState || !miniActionState.active){
     stopMiniActionGame();
     const stage = chooseMiniActionStage();
@@ -10039,7 +10072,7 @@ function resetMiniActionStage(message="",randomizeStage=false){
   miniActionState.startTime = performance.now();
   miniActionState.elapsed = 0;
   miniActionState.clearPending = false;
-  miniActionState.speedMultiplier = 1;
+  miniActionState.surfaceEffect = "normal";
   miniActionState.flashUntil = performance.now()+160;
   if(message){
     showMiniActionMessage(message);
@@ -10100,20 +10133,21 @@ function getMiniEditorCanvasTransform(){
   if(!miniGameCanvas) return null;
   const width = miniGameCanvas.clientWidth || 420;
   const height = miniGameCanvas.clientHeight || 260;
-  const scale = Math.min(width/720,height/260);
-  const drawWidth = 720*scale;
+  const scale = Math.min(width/MINI_EDITOR_VIEWPORT_WIDTH,height/260);
+  const drawWidth = MINI_EDITOR_VIEWPORT_WIDTH*scale;
   const drawHeight = 260*scale;
   return {width,height,scale,offsetX:(width-drawWidth)/2,offsetY:(height-drawHeight)/2};
 }
 
 function miniEditorPointerToWorld(event){
   const transform = getMiniEditorCanvasTransform();
-  if(!transform) return {x:miniEditorScrollX,y:0};
-  const rect = miniGameCanvas.getBoundingClientRect();
-  const px = event.clientX-rect.left;
-  const py = event.clientY-rect.top;
+  if(!transform) return {x:0,y:0};
+  const rect=miniGameCanvas.getBoundingClientRect();
+  const px=event.clientX-rect.left;
+  const py=event.clientY-rect.top;
+  const worldWidth=Number(getCurrentMiniEditorCourse()?.stage?.worldWidth)||MINI_EDITOR_WORLD_WIDTH;
   return {
-    x:Math.max(0,Math.min(MINI_EDITOR_WORLD_WIDTH,miniEditorScrollX+(px-transform.offsetX)/transform.scale)),
+    x:Math.max(0,Math.min(worldWidth,miniEditorCameraX+(px-transform.offsetX)/transform.scale)),
     y:Math.max(0,Math.min(260,(py-transform.offsetY)/transform.scale))
   };
 }
@@ -10122,93 +10156,22 @@ function snapMiniEditor(value,grid=MINI_EDITOR_GRID){
   return Math.round(value/grid)*grid;
 }
 
-function getMiniEditorToolDefinitions(){
-  return [
-    {tool:"terrain",label:"地形"},
-    {tool:"platform",label:"足場"},
-    {tool:"hazard",label:"針"},
-    {tool:"start",label:"スタート"},
-    {tool:"goal",label:"ゴール"},
-    {tool:"accelerator",label:"加速"},
-    {tool:"decelerator",label:"減速"}
-  ];
-}
-
-function getMiniEditorToolLabel(tool){
-  return getMiniEditorToolDefinitions().find(item=>item.tool===tool)?.label || "---";
-}
-
-function rememberMiniEditorTool(tool){
-  if(!getMiniEditorToolDefinitions().some(item=>item.tool===tool)) return;
-  miniEditorRecentTools=[tool,...miniEditorRecentTools.filter(item=>item!==tool)].slice(0,3);
-  saveMiniViewState();
-  renderMiniEditorToolTray();
-}
-
-function renderMiniEditorToolTray(){
-  document.querySelectorAll(".miniEditorQuickTool[data-recent-index]").forEach(button=>{
-    const index=Number(button.dataset.recentIndex);
-    const tool=miniEditorRecentTools[index] || "";
-    button.dataset.tool=tool;
-    button.textContent=tool ? getMiniEditorToolLabel(tool) : "---";
-    button.classList.toggle("empty",!tool);
-    button.classList.toggle("selected",Boolean(tool && tool===miniEditorSelectedTool));
-  });
-  const eraseButton=document.getElementById("miniEditorEraseButton");
-  if(eraseButton) eraseButton.classList.toggle("selected",miniEditorSelectedTool==="erase");
-  if(miniEditorMoreButton){
-    miniEditorMoreButton.classList.toggle("selected",miniEditorToolsExpanded);
-    miniEditorMoreButton.setAttribute("aria-expanded",String(miniEditorToolsExpanded));
-  }
-  if(miniEditorAllTools){
-    miniEditorAllTools.innerHTML=getMiniEditorToolDefinitions().map(item=>`<button type="button" class="miniEditorTool${item.tool===miniEditorSelectedTool ? " selected" : ""}" data-tool="${item.tool}">${escapeHtml(item.label)}</button>`).join("");
-    miniEditorAllTools.classList.toggle("show",miniEditorToolsExpanded);
-    miniEditorAllTools.setAttribute("aria-hidden",String(!miniEditorToolsExpanded));
-  }
-  updateMiniEditorScrollBar();
-}
-
-function updateMiniEditorScrollBar(){
-  if(!miniEditorScrollBar || !miniEditorScrollThumb) return;
-  const maxScroll=Math.max(0,MINI_EDITOR_WORLD_WIDTH-720);
-  miniEditorScrollX=Math.max(0,Math.min(maxScroll,miniEditorScrollX));
-  const width=miniEditorScrollBar.clientWidth || 1;
-  const thumbWidth=Math.max(32,width*Math.min(1,720/MINI_EDITOR_WORLD_WIDTH));
-  const travel=Math.max(0,width-thumbWidth);
-  miniEditorScrollThumb.style.width=`${thumbWidth}px`;
-  miniEditorScrollThumb.style.left=`${maxScroll>0 ? travel*(miniEditorScrollX/maxScroll) : 0}px`;
-}
-
-function setMiniEditorScrollFromClientX(clientX){
-  if(!miniEditorScrollBar || !miniEditorScrollThumb) return;
-  const rect=miniEditorScrollBar.getBoundingClientRect();
-  const width=rect.width || 1;
-  const thumbWidth=miniEditorScrollThumb.getBoundingClientRect().width || 32;
-  const travel=Math.max(0,width-thumbWidth);
-  const ratio=Math.max(0,Math.min(1,(clientX-rect.left-miniEditorScrollGrabOffset-thumbWidth/2)/Math.max(1,travel)));
-  miniEditorScrollX=Math.round(ratio*Math.max(0,MINI_EDITOR_WORLD_WIDTH-720));
-  updateMiniEditorScrollBar();
-  saveMiniViewState();
-  drawMiniEditor();
-}
-
 function getMiniEditorTarget(course,x,y){
-  const stage = course.stage;
-  const goalX=Number(stage.goalX ?? stage.goal?.x ?? 680);
-  const goalY=Number(stage.goalY ?? stage.goal?.y ?? 220);
-  if(Math.abs(x-goalX) <= 14 && Math.abs(y-goalY) <= 28) return {type:"goal"};
-  if(Math.abs(x-stage.start.x) <= 14 && Math.abs(y-stage.start.y) <= 18) return {type:"start"};
+  const stage=course.stage;
+  const currentGoalY=getMiniGoalSurfaceY(stage,stage.goalX);
+  if(Math.abs(x-stage.goalX)<=14 && Math.abs(y-currentGoalY)<=24) return {type:"goal"};
+  if(Math.abs(x-stage.start.x)<=14 && Math.abs(y-stage.start.y)<=18) return {type:"start"};
   const groups=[
     ["hazard",stage.hazards],
-    ["accelerator",stage.accelerators],
-    ["decelerator",stage.decelerators],
+    ["accelerator",stage.accelerators||[]],
+    ["decelerator",stage.decelerators||[]],
     ["platform",stage.platforms],
     ["terrain",stage.terrain]
   ];
   for(const [type,list] of groups){
     for(let i=list.length-1;i>=0;i--){
       const item=list[i];
-      if(x>=item.x && x<=item.x+item.w && y>=item.y && y<=item.y+item.h) return {type,index:i};
+      if(x>=item.x&&x<=item.x+item.w&&y>=item.y&&y<=item.y+item.h) return {type,index:i};
     }
   }
   return null;
@@ -10216,13 +10179,10 @@ function getMiniEditorTarget(course,x,y){
 
 function removeMiniEditorTarget(course,target){
   if(!target) return;
-  if(target.type === "goal") return;
-  if(target.type === "start") return;
-  if(target.type === "platform") course.stage.platforms.splice(target.index,1);
-  if(target.type === "terrain") course.stage.terrain.splice(target.index,1);
-  if(target.type === "hazard") course.stage.hazards.splice(target.index,1);
-  if(target.type === "accelerator") course.stage.accelerators.splice(target.index,1);
-  if(target.type === "decelerator") course.stage.decelerators.splice(target.index,1);
+  if(target.type === "goal" || target.type === "start") return;
+  const lists={platform:course.stage.platforms,terrain:course.stage.terrain,hazard:course.stage.hazards,accelerator:course.stage.accelerators,decelerator:course.stage.decelerators};
+  const list=lists[target.type];
+  if(list) list.splice(target.index,1);
 }
 
 function placeMiniEditorTool(course,x,y){
@@ -10231,43 +10191,29 @@ function placeMiniEditorTool(course,x,y){
   const sy=snapMiniEditor(y);
   const cell=MINI_EDITOR_GRID;
   const worldWidth=course.stage.worldWidth;
-  let placed=false;
-  if(tool === "platform"){
+  if(tool === "platform" || tool === "accelerator" || tool === "decelerator"){
     const px=Math.max(0,Math.min(worldWidth-cell,sx));
-    const py=Math.max(0,Math.min(240,sy));
-    const exists=course.stage.platforms.some(item=>item.x===px && item.y===py);
-    if(!exists){ course.stage.platforms.push({x:px,y:py,w:cell,h:cell}); placed=true; }
+    const py=Math.max(0,Math.min(260-cell,sy));
+    const key=tool === "platform" ? "platforms" : tool === "accelerator" ? "accelerators" : "decelerators";
+    const list=course.stage[key];
+    const exists=list.some(item=>item.x===px&&item.y===py);
+    if(!exists) list.push({x:px,y:py,w:cell,h:cell});
   }else if(tool === "terrain"){
     const px=Math.max(0,Math.min(worldWidth-cell,sx));
     const py=Math.max(0,Math.min(240,sy));
-    const exists=course.stage.terrain.some(item=>item.x===px && item.y===py);
-    if(!exists){ course.stage.terrain.push({x:px,y:py,w:cell,h:260-py}); placed=true; }
+    const exists=course.stage.terrain.some(item=>item.x===px&&item.y===py);
+    if(!exists) course.stage.terrain.push({x:px,y:py,w:cell,h:260-py});
   }else if(tool === "hazard"){
     const width=cell;
     const height=18;
     course.stage.hazards.push({x:Math.max(0,Math.min(worldWidth-width,sx)),y:Math.max(18,Math.min(242,sy-height)),w:width,h:height});
-    placed=true;
-  }else if(tool === "accelerator"){
-    const px=Math.max(0,Math.min(worldWidth-cell,sx));
-    const py=Math.max(0,Math.min(240,sy));
-    const exists=course.stage.accelerators.some(item=>item.x===px && item.y===py);
-    if(!exists){ course.stage.accelerators.push({x:px,y:py,w:cell,h:cell}); placed=true; }
-  }else if(tool === "decelerator"){
-    const px=Math.max(0,Math.min(worldWidth-cell,sx));
-    const py=Math.max(0,Math.min(240,sy));
-    const exists=course.stage.decelerators.some(item=>item.x===px && item.y===py);
-    if(!exists){ course.stage.decelerators.push({x:px,y:py,w:cell,h:cell}); placed=true; }
   }else if(tool === "start"){
-    course.stage.start={x:Math.max(0,Math.min(worldWidth-16,sx)),y:Math.max(0,Math.min(238,sy))};
-    placed=true;
+    course.stage.start={x:Math.max(0,Math.min(worldWidth-16,sx)),y:Math.max(30,Math.min(238,sy))};
   }else if(tool === "goal"){
     course.stage.goalX=Math.max(16,Math.min(worldWidth-16,sx));
-    course.stage.goalY=Math.max(20,Math.min(238,sy));
-    course.stage.goal={x:course.stage.goalX,y:course.stage.goalY};
-    placed=true;
+    course.stage.goalY=getMiniGoalSurfaceY(course.stage,course.stage.goalX);
   }
-  if(placed) rememberMiniEditorTool(tool);
-  return placed;
+  if(MINI_EDITOR_ALLOWED_TOOLS.includes(tool)) rememberMiniEditorTool(tool);
 }
 
 function moveMiniEditorTarget(course,target,x,y){
@@ -10276,16 +10222,16 @@ function moveMiniEditorTarget(course,target,x,y){
   const worldWidth=course.stage.worldWidth;
   if(target.type === "goal"){
     course.stage.goalX=Math.max(16,Math.min(worldWidth-16,sx));
-    course.stage.goalY=Math.max(20,Math.min(238,sy));
-    course.stage.goal={x:course.stage.goalX,y:course.stage.goalY};
+    course.stage.goalY=getMiniGoalSurfaceY(course.stage,course.stage.goalX);
     return;
   }
   if(target.type === "start"){
-    course.stage.start={x:Math.max(0,Math.min(worldWidth-16,sx)),y:Math.max(0,Math.min(238,sy))};
+    course.stage.start={x:Math.max(0,Math.min(worldWidth-16,sx)),y:Math.max(30,Math.min(238,sy))};
     return;
   }
-  const list = target.type === "platform" ? course.stage.platforms : target.type === "terrain" ? course.stage.terrain : target.type === "hazard" ? course.stage.hazards : target.type === "accelerator" ? course.stage.accelerators : course.stage.decelerators;
-  const item=list[target.index];
+  const lists={platform:course.stage.platforms,terrain:course.stage.terrain,hazard:course.stage.hazards,accelerator:course.stage.accelerators,decelerator:course.stage.decelerators};
+  const list=lists[target.type];
+  const item=list?.[target.index];
   if(!item) return;
   item.x=Math.max(0,Math.min(worldWidth-item.w,sx));
   item.y=Math.max(0,Math.min(248-item.h,sy));
@@ -10299,13 +10245,14 @@ function drawMiniEditor(){
   resizeMiniActionCanvas();
   const ctx=miniGameCanvas.getContext("2d");
   if(!ctx) return;
-  const width=miniGameCanvas.clientWidth || 420;
-  const height=miniGameCanvas.clientHeight || 260;
+  const width=miniGameCanvas.clientWidth||420;
+  const height=miniGameCanvas.clientHeight||260;
   const pixelScaleX=miniGameCanvas.width/Math.max(1,width);
   const pixelScaleY=miniGameCanvas.height/Math.max(1,height);
-  const scale=Math.min(width/720,height/260);
-  const offsetX=(width-720*scale)/2;
+  const scale=Math.min(width/MINI_EDITOR_VIEWPORT_WIDTH,height/260);
+  const offsetX=(width-MINI_EDITOR_VIEWPORT_WIDTH*scale)/2;
   const offsetY=(height-260*scale)/2;
+  miniEditorCameraX=Math.max(0,Math.min(Math.max(0,stage.worldWidth-MINI_EDITOR_VIEWPORT_WIDTH),miniEditorCameraX));
   ctx.setTransform(1,0,0,1,0,0);
   ctx.clearRect(0,0,miniGameCanvas.width,miniGameCanvas.height);
   ctx.setTransform(pixelScaleX*scale,0,0,pixelScaleY*scale,pixelScaleX*offsetX,pixelScaleY*offsetY);
@@ -10315,20 +10262,20 @@ function drawMiniEditor(){
   bg.addColorStop(.65,"#07111d");
   bg.addColorStop(1,"#02050a");
   ctx.fillStyle=bg;
-  ctx.fillRect(0,0,720,260);
+  ctx.fillRect(0,0,MINI_EDITOR_VIEWPORT_WIDTH,260);
 
   ctx.save();
-  ctx.translate(-miniEditorScrollX,0);
+  ctx.translate(-miniEditorCameraX,0);
 
   ctx.strokeStyle="rgba(255,255,255,.07)";
   ctx.lineWidth=1;
-  const startGrid=Math.floor(miniEditorScrollX/MINI_EDITOR_GRID)*MINI_EDITOR_GRID;
-  const endGrid=Math.min(stage.worldWidth,miniEditorScrollX+720+MINI_EDITOR_GRID);
-  for(let x=startGrid;x<=endGrid;x+=MINI_EDITOR_GRID){
+  const gridStart=Math.floor(miniEditorCameraX/MINI_EDITOR_GRID)*MINI_EDITOR_GRID;
+  const gridEnd=miniEditorCameraX+MINI_EDITOR_VIEWPORT_WIDTH+MINI_EDITOR_GRID;
+  for(let x=gridStart;x<=gridEnd;x+=MINI_EDITOR_GRID){
     ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,260);ctx.stroke();
   }
   for(let y=0;y<=260;y+=MINI_EDITOR_GRID){
-    ctx.beginPath();ctx.moveTo(miniEditorScrollX,y);ctx.lineTo(Math.min(stage.worldWidth,miniEditorScrollX+720),y);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(miniEditorCameraX,y);ctx.lineTo(miniEditorCameraX+MINI_EDITOR_VIEWPORT_WIDTH,y);ctx.stroke();
   }
 
   for(const item of stage.terrain){
@@ -10348,65 +10295,53 @@ function drawMiniEditor(){
     ctx.lineWidth=2;
     ctx.beginPath();ctx.moveTo(item.x,item.y+.5);ctx.lineTo(item.x+item.w,item.y+.5);ctx.stroke();
   }
-  for(const item of stage.accelerators){
-    ctx.fillStyle="rgba(255,151,56,.78)";
+  for(const item of stage.accelerators||[]){
+    ctx.fillStyle="rgba(64,180,100,.78)";
     ctx.fillRect(item.x,item.y,item.w,item.h);
-    ctx.strokeStyle="rgba(255,201,111,.95)";
-    ctx.lineWidth=2;
+    ctx.strokeStyle="rgba(125,255,164,.95)";ctx.lineWidth=2;
     ctx.beginPath();ctx.moveTo(item.x,item.y+.5);ctx.lineTo(item.x+item.w,item.y+.5);ctx.stroke();
-    ctx.fillStyle="#fff2d2";ctx.font="bold 12px Arial";ctx.fillText("+",item.x+6,item.y+14);
+    ctx.fillStyle="rgba(235,255,240,.92)";
+    ctx.beginPath();ctx.moveTo(item.x+5,item.y+14);ctx.lineTo(item.x+10,item.y+7);ctx.lineTo(item.x+10,item.y+11);ctx.lineTo(item.x+15,item.y+6);ctx.lineTo(item.x+15,item.y+13);ctx.lineTo(item.x+10,item.y+18);ctx.lineTo(item.x+10,item.y+14);ctx.closePath();ctx.fill();
   }
-  for(const item of stage.decelerators){
-    ctx.fillStyle="rgba(57,177,220,.78)";
+  for(const item of stage.decelerators||[]){
+    ctx.fillStyle="rgba(184,115,63,.78)";
     ctx.fillRect(item.x,item.y,item.w,item.h);
-    ctx.strokeStyle="rgba(145,231,255,.95)";
-    ctx.lineWidth=2;
+    ctx.strokeStyle="rgba(255,190,120,.95)";ctx.lineWidth=2;
     ctx.beginPath();ctx.moveTo(item.x,item.y+.5);ctx.lineTo(item.x+item.w,item.y+.5);ctx.stroke();
-    ctx.fillStyle="#e2fbff";ctx.font="bold 12px Arial";ctx.fillText("−",item.x+5,item.y+14);
+    ctx.fillStyle="rgba(255,245,235,.92)";
+    ctx.beginPath();ctx.moveTo(item.x+5,item.y+7);ctx.lineTo(item.x+10,item.y+13);ctx.lineTo(item.x+10,item.y+9);ctx.lineTo(item.x+15,item.y+14);ctx.lineTo(item.x+15,item.y+8);ctx.lineTo(item.x+10,item.y+3);ctx.lineTo(item.x+10,item.y+7);ctx.closePath();ctx.fill();
   }
   for(const item of stage.hazards){
     ctx.fillStyle="#8e3e70";
-    ctx.beginPath();
-    ctx.moveTo(item.x,item.y+item.h);
-    ctx.lineTo(item.x+item.w/2,item.y);
-    ctx.lineTo(item.x+item.w,item.y+item.h);
-    ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.moveTo(item.x,item.y+item.h);ctx.lineTo(item.x+item.w/2,item.y);ctx.lineTo(item.x+item.w,item.y+item.h);ctx.closePath();ctx.fill();
     ctx.strokeStyle="rgba(255,145,210,.9)";ctx.stroke();
   }
 
-  const goalX=Number(stage.goalX ?? stage.goal?.x ?? 680);
-  const goalY=Number(stage.goalY ?? stage.goal?.y ?? 220);
-  const flagTopY=Math.max(10,goalY-42);
-  ctx.strokeStyle="rgba(170,221,255,.95)";
-  ctx.lineWidth=2;
-  ctx.beginPath();ctx.moveTo(goalX,flagTopY);ctx.lineTo(goalX,goalY);ctx.stroke();
+  const goalX=stage.goalX;
+  const goalY=getMiniGoalSurfaceY(stage,goalX);
+  ctx.strokeStyle="rgba(170,221,255,.95)";ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(goalX,goalY-42);ctx.lineTo(goalX,goalY);ctx.stroke();
   ctx.fillStyle="rgba(116,207,255,.86)";
-  ctx.beginPath();
-  ctx.moveTo(goalX+1,flagTopY);ctx.lineTo(goalX+34,flagTopY+10);ctx.lineTo(goalX+1,flagTopY+20);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(goalX+1,goalY-42);ctx.lineTo(goalX+34,goalY-32);ctx.lineTo(goalX+1,goalY-22);ctx.closePath();ctx.fill();
 
   const target=miniEditorDragging;
   if(target){
     ctx.strokeStyle="rgba(255,255,255,.9)";
     ctx.lineWidth=2;
-    if(target.type === "goal") ctx.strokeRect(goalX-7,goalY-20,42,42);
+    if(target.type === "goal") ctx.strokeRect(goalX-7,goalY-49,42,56);
     else if(target.type === "start") ctx.strokeRect(stage.start.x-3,stage.start.y-3,22,28);
     else{
       const list=target.type === "platform" ? stage.platforms : target.type === "terrain" ? stage.terrain : target.type === "hazard" ? stage.hazards : target.type === "accelerator" ? stage.accelerators : stage.decelerators;
-      const item=list[target.index];
+      const item=list?.[target.index];
       if(item) ctx.strokeRect(item.x-3,item.y-3,item.w+6,item.h+6);
     }
   }
-
   ctx.restore();
 
   ctx.fillStyle="rgba(255,255,255,.62)";
   ctx.font="bold 10px Arial";
   ctx.fillText("EDITOR",8,14);
-  ctx.textAlign="right";
-  ctx.fillText(`${Math.round(miniEditorScrollX/20)+1} / ${Math.round(Math.max(0,stage.worldWidth-720)/20)+1}`,712,14);
-  ctx.textAlign="left";
   updateMiniEditorScrollBar();
-  renderMiniEditorToolTray();
 }
 
 function drawMiniActionGame(){
@@ -10459,22 +10394,6 @@ function drawMiniActionGame(){
     ctx.beginPath();ctx.moveTo(platform.x,platform.y+.5);ctx.lineTo(platform.x+platform.w,platform.y+.5);ctx.stroke();
   }
 
-  for(const item of stage.accelerators || []){
-    ctx.fillStyle="rgba(255,151,56,.62)";
-    ctx.fillRect(item.x,item.y,item.w,item.h);
-    ctx.strokeStyle="rgba(255,201,111,.9)";ctx.lineWidth=2;
-    ctx.beginPath();ctx.moveTo(item.x,item.y+.5);ctx.lineTo(item.x+item.w,item.y+.5);ctx.stroke();
-    ctx.fillStyle="#fff2d2";ctx.font="bold 12px Arial";ctx.fillText("+",item.x+6,item.y+14);
-  }
-
-  for(const item of stage.decelerators || []){
-    ctx.fillStyle="rgba(57,177,220,.62)";
-    ctx.fillRect(item.x,item.y,item.w,item.h);
-    ctx.strokeStyle="rgba(145,231,255,.9)";ctx.lineWidth=2;
-    ctx.beginPath();ctx.moveTo(item.x,item.y+.5);ctx.lineTo(item.x+item.w,item.y+.5);ctx.stroke();
-    ctx.fillStyle="#e2fbff";ctx.font="bold 12px Arial";ctx.fillText("−",item.x+5,item.y+14);
-  }
-
   for(const terrain of stage.terrain || []){
     ctx.fillStyle="rgba(80,115,150,.88)";
     ctx.fillRect(terrain.x,terrain.y,terrain.w,terrain.h);
@@ -10483,14 +10402,34 @@ function drawMiniActionGame(){
     ctx.beginPath();ctx.moveTo(terrain.x,terrain.y+.5);ctx.lineTo(terrain.x+terrain.w,terrain.y+.5);ctx.stroke();
   }
 
+  for(const block of stage.accelerators || []){
+    ctx.fillStyle="rgba(64,180,100,.78)";
+    ctx.fillRect(block.x,block.y,block.w,block.h);
+    ctx.strokeStyle="rgba(125,255,164,.95)";ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(block.x,block.y+.5);ctx.lineTo(block.x+block.w,block.y+.5);ctx.stroke();
+    ctx.fillStyle="rgba(235,255,240,.92)";
+    ctx.beginPath();ctx.moveTo(block.x+5,block.y+14);ctx.lineTo(block.x+10,block.y+7);ctx.lineTo(block.x+10,block.y+11);ctx.lineTo(block.x+15,block.y+6);ctx.lineTo(block.x+15,block.y+13);ctx.lineTo(block.x+10,block.y+18);ctx.lineTo(block.x+10,block.y+14);ctx.closePath();ctx.fill();
+  }
+
+  for(const block of stage.decelerators || []){
+    ctx.fillStyle="rgba(184,115,63,.78)";
+    ctx.fillRect(block.x,block.y,block.w,block.h);
+    ctx.strokeStyle="rgba(255,190,120,.95)";ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(block.x,block.y+.5);ctx.lineTo(block.x+block.w,block.y+.5);ctx.stroke();
+    ctx.fillStyle="rgba(255,245,235,.92)";
+    ctx.beginPath();ctx.moveTo(block.x+5,block.y+7);ctx.lineTo(block.x+10,block.y+13);ctx.lineTo(block.x+10,block.y+9);ctx.lineTo(block.x+15,block.y+14);ctx.lineTo(block.x+15,block.y+8);ctx.lineTo(block.x+10,block.y+3);ctx.lineTo(block.x+10,block.y+7);ctx.closePath();ctx.fill();
+  }
+
   for(const hazard of stage.hazards || []){
     ctx.fillStyle="#7f335f";
     ctx.beginPath();ctx.moveTo(hazard.x,hazard.y+hazard.h);ctx.lineTo(hazard.x+hazard.w/2,hazard.y);ctx.lineTo(hazard.x+hazard.w,hazard.y+hazard.h);ctx.closePath();ctx.fill();
     ctx.strokeStyle="rgba(255,132,203,.72)";ctx.lineWidth=1.5;ctx.stroke();
   }
 
-  const goalX=Number(stage.goalX ?? stage.goal?.x ?? 680);
-  const goalGroundY=Number(stage.goalY ?? stage.goal?.y ?? 220);
+  const goalX=stage.goalX;
+  const collisionSurfaces=getMiniCollisionSurfaces(stage);
+  const goalPlatform=collisionSurfaces.find(platform=>goalX>=platform.x && goalX<=platform.x+platform.w);
+  const goalGroundY=Number(goalPlatform?.y ?? stage.goalY ?? getMiniGoalSurfaceY(stage,goalX));
   const flagTopY=Math.max(18,goalGroundY-42);
   ctx.strokeStyle="rgba(170,221,255,.95)";ctx.lineWidth=2;
   ctx.beginPath();ctx.moveTo(goalX,flagTopY);ctx.lineTo(goalX,goalGroundY);ctx.stroke();
@@ -10696,6 +10635,8 @@ function setupMiniMenu(){
 
   miniMenuButton.addEventListener("pointerdown",event=>{
     event.preventDefault();
+    markActivity();
+    syncMiniPresence(true);
     miniMenuPointerId=event.pointerId;
     miniMenuOpenNow();
     miniMenuPickAt(event.clientX,event.clientY);
@@ -10713,60 +10654,78 @@ function setupMiniMenu(){
     event.preventDefault();
     const index=miniMenuOpen ? miniMenuPickAt(event.clientX,event.clientY) : -1;
     const action=index>=0 && miniMenuOptionsCache[index] ? miniMenuOptionsCache[index].action : null;
+    miniMenuPointerId=null;
     miniMenuClose();
     if(action) await miniMenuExecute(action);
   };
 
   miniMenuButton.addEventListener("pointerup",release,{passive:false});
-  miniMenuButton.addEventListener("pointercancel",release,{passive:false});
+  miniMenuButton.addEventListener("pointercancel",event=>{
+    if(event.pointerId===miniMenuPointerId){
+      event.preventDefault();
+      miniMenuClose();
+    }
+  },{passive:false});
   miniMenuButton.addEventListener("lostpointercapture",()=>{
     if(miniMenuPointerId!==null) miniMenuClose();
   });
 }
 
 function selectMiniEditorTool(tool){
-  if(tool!=="erase" && !getMiniEditorToolDefinitions().some(item=>item.tool===tool)) return;
+  if(tool !== "erase" && !MINI_EDITOR_ALLOWED_TOOLS.includes(tool)) return;
   miniEditorSelectedTool=tool;
-  miniEditorToolsExpanded=false;
-  renderMiniEditorToolTray();
-}
-
-function setupMiniEditorScrollBar(){
-  if(!miniEditorScrollBar) return;
-  const down=event=>{
-    event.preventDefault();
-    const rect=miniEditorScrollThumb?.getBoundingClientRect();
-    const insideThumb=rect && event.clientX>=rect.left && event.clientX<=rect.right;
-    miniEditorScrollPointerId=event.pointerId;
-    miniEditorScrollGrabOffset=insideThumb ? event.clientX-rect.left : (rect ? rect.width/2 : 0);
-    try{miniEditorScrollBar.setPointerCapture(event.pointerId);}catch(error){}
-    setMiniEditorScrollFromClientX(event.clientX);
-  };
-  const move=event=>{
-    if(event.pointerId!==miniEditorScrollPointerId) return;
-    event.preventDefault();
-    setMiniEditorScrollFromClientX(event.clientX);
-  };
-  const up=event=>{
-    if(event.pointerId!==miniEditorScrollPointerId) return;
-    event.preventDefault();
-    miniEditorScrollPointerId=null;
-    miniEditorScrollGrabOffset=0;
-    saveMiniViewState();
-  };
-  miniEditorScrollBar.addEventListener("pointerdown",down,{passive:false});
-  miniEditorScrollBar.addEventListener("pointermove",move,{passive:false});
-  miniEditorScrollBar.addEventListener("pointerup",up,{passive:false});
-  miniEditorScrollBar.addEventListener("pointercancel",up,{passive:false});
+  markActivity();
+  syncMiniPresence(true);
+  document.querySelectorAll(".miniEditorTool").forEach(button=>button.classList.toggle("selected",button.dataset.tool===tool));
+  if(tool !== "erase") rememberMiniEditorTool(tool);
+  if(miniEditorAllTools && tool !== "erase") miniEditorAllTools.classList.remove("show");
 }
 
 function setupMiniEditorControls(){
+  if(miniEditorMoreButton){
+    miniEditorMoreButton.addEventListener("pointerdown",event=>{
+      event.preventDefault();
+      const open=!miniEditorAllTools?.classList.contains("show");
+      miniEditorAllTools?.classList.toggle("show",open);
+      miniEditorAllTools?.setAttribute("aria-hidden",String(!open));
+    },{passive:false});
+  }
+
+  if(miniEditorScrollBar){
+    miniEditorScrollBar.addEventListener("pointerdown",event=>{
+      if(miniMode!=="make" || miniEditorTestMode) return;
+      event.preventDefault();
+      miniEditorScrollPointerId=event.pointerId;
+      miniEditorScrollStartX=event.clientX;
+      miniEditorScrollStartCameraX=miniEditorCameraX;
+      try{miniEditorScrollBar.setPointerCapture(event.pointerId);}catch(error){}
+    },{passive:false});
+    miniEditorScrollBar.addEventListener("pointermove",event=>{
+      if(event.pointerId!==miniEditorScrollPointerId) return;
+      event.preventDefault();
+      const worldMax=getMiniEditorCameraMax();
+      const track=miniEditorScrollBar.clientWidth||1;
+      const thumb=miniEditorScrollThumb?.getBoundingClientRect().width||1;
+      const usable=Math.max(1,track-thumb);
+      const ratio=worldMax/usable;
+      setMiniEditorCameraX(miniEditorScrollStartCameraX+(event.clientX-miniEditorScrollStartX)*ratio,false);
+    },{passive:false});
+    const end=event=>{
+      if(event.pointerId!==miniEditorScrollPointerId) return;
+      event.preventDefault();
+      miniEditorScrollPointerId=null;
+      saveMiniViewState();
+    };
+    miniEditorScrollBar.addEventListener("pointerup",end,{passive:false});
+    miniEditorScrollBar.addEventListener("pointercancel",end,{passive:false});
+  }
+
   if(miniGameCanvas){
     miniGameCanvas.addEventListener("pointerdown",event=>{
-      if(miniMode !== "make" || miniEditorTestMode || miniCourseListOpen) return;
-      markActivity();
-      syncMiniPresence();
+      if(miniMode!=="make" || miniEditorTestMode || miniCourseListOpen) return;
       event.preventDefault();
+      markActivity();
+      syncMiniPresence(true);
       const course=getCurrentMiniEditorCourse();
       const point=miniEditorPointerToWorld(event);
       const target=getMiniEditorTarget(course,point.x,point.y);
@@ -10784,16 +10743,14 @@ function setupMiniEditorControls(){
         drawMiniEditor();
         return;
       }
-      if(placeMiniEditorTool(course,point.x,point.y)){
-        updateMiniEditorSave(course,true);
-        drawMiniEditor();
-      }
+      placeMiniEditorTool(course,point.x,point.y);
+      updateMiniEditorSave(course,true);
+      drawMiniEditor();
     },{passive:false});
 
     miniGameCanvas.addEventListener("pointermove",event=>{
-      if(!miniEditorDragging || miniEditorDragging.pointerId!==event.pointerId || miniMode!=="make" || miniEditorTestMode || miniCourseListOpen) return;
+      if(!miniEditorDragging || miniEditorDragging.pointerId!==event.pointerId || miniMode!=="make" || miniEditorTestMode) return;
       event.preventDefault();
-      markActivity();
       const course=getCurrentMiniEditorCourse();
       const point=miniEditorPointerToWorld(event);
       moveMiniEditorTarget(course,miniEditorDragging,point.x,point.y);
@@ -10811,54 +10768,44 @@ function setupMiniEditorControls(){
     miniGameCanvas.addEventListener("pointerup",finishDrag,{passive:false});
     miniGameCanvas.addEventListener("pointercancel",finishDrag,{passive:false});
   }
+}
 
-  if(miniEditorMoreButton){
-    miniEditorMoreButton.addEventListener("click",event=>{
-      event.preventDefault();
-      miniEditorToolsExpanded=!miniEditorToolsExpanded;
-      renderMiniEditorToolTray();
-    });
+async function syncMiniPresence(force=false){
+  if(!matchRef || matchType!=="random" || !currentUser || !latestMatchData || latestMatchData.status!=="waiting" || !gameStarted) return;
+  const now=Date.now();
+  if(!force && now-miniPresenceLastUpdate<15000) return;
+  miniPresenceLastUpdate=now;
+  lastActivityAt=now;
+  if(localPlayer) localPlayer.lastActiveAt=now;
+  try{
+    await updateDoc(matchRef,{[`players.${currentUser.uid}.lastActiveAt`]:now});
+  }catch(error){
+    console.error("mini presence sync error",error);
   }
-  if(miniEditorAllTools){
-    miniEditorAllTools.addEventListener("click",event=>{
-      const button=event.target.closest?.("[data-tool]");
-      if(!button) return;
-      selectMiniEditorTool(button.dataset.tool);
-    });
-  }
-  document.querySelectorAll(".miniEditorQuickTool[data-recent-index], #miniEditorEraseButton").forEach(button=>button.addEventListener("click",event=>{
-    event.preventDefault();
-    const tool=button.id==="miniEditorEraseButton" ? "erase" : button.dataset.tool;
-    if(!tool) return;
-    selectMiniEditorTool(tool);
-  }));
-  setupMiniEditorScrollBar();
-  renderMiniEditorToolTray();
 }
 
 async function openMiniCourseList(){
-  markActivity();
-  syncMiniPresence(true);
+  miniMenuClose();
   miniCourseListOpen=true;
   if(miniGameBox) miniGameBox.classList.add("miniCourseListMode");
   if(miniCourseListModal){
     miniCourseListModal.classList.add("show");
     miniCourseListModal.setAttribute("aria-hidden","false");
   }
+  markActivity();
+  await syncMiniPresence(true);
   renderMiniCourseList();
   await renderMiniPublishedCourses();
 }
 
 function closeMiniCourseListModal(){
   miniCourseListOpen=false;
-  if(miniGameBox) miniGameBox.classList.remove("miniCourseListMode");
   if(miniCourseListModal){
     miniCourseListModal.classList.remove("show");
     miniCourseListModal.setAttribute("aria-hidden","true");
   }
-  setMiniGameVisualMode();
-  if(miniMode === "make" && !miniEditorTestMode) drawMiniEditor();
-  else if(miniActionState) drawMiniActionGame();
+  if(miniGameBox) miniGameBox.classList.remove("miniCourseListMode");
+  ensureMiniEditorMode();
 }
 
 function renderMiniCourseList(){
@@ -10974,7 +10921,7 @@ async function publishCurrentMiniCourse(){
 
 if(miniCourseListClose) miniCourseListClose.addEventListener("click",closeMiniCourseListModal);
 if(miniCourseListModal) miniCourseListModal.addEventListener("pointerdown",event=>{
-  event.stopPropagation();
+  if(event.target===miniCourseListModal) closeMiniCourseListModal();
 });
 if(miniCourseListDrafts) miniCourseListDrafts.addEventListener("click",async event=>{
   const main=event.target.closest?.("[data-course-id]");
@@ -11086,7 +11033,7 @@ function updateMiniActionGame(delta,time){
   }
 
   const horizontal=Number(miniActionInput.right)-Number(miniActionInput.left);
-  const targetSpeed=190 * Number(state.speedMultiplier || 1);
+  const targetSpeed=state.surfaceEffect === "fast" ? 300 : state.surfaceEffect === "slow" ? 105 : 190;
   const accel=980;
   if(horizontal!==0){
     state.vx += (horizontal*targetSpeed-state.vx)*Math.min(1,accel*clampedDelta/Math.max(1,targetSpeed));
@@ -11112,23 +11059,16 @@ function updateMiniActionGame(delta,time){
   state.vy+=1180*clampedDelta;
   state.y+=state.vy*clampedDelta;
   state.onGround=false;
-  let landingSurface=null;
 
   for(const platform of getMiniCollisionSurfaces(stage)){
     const horizontalOverlap=state.x+state.width>platform.x && state.x<platform.x+platform.w;
     if(!horizontalOverlap) continue;
     if(state.vy>=0 && previousBottom<=platform.y+5 && state.y+state.height>=platform.y){
-      if(!landingSurface || platform.y<landingSurface.y) landingSurface=platform;
       state.y=platform.y-state.height;
       state.vy=0;
       state.onGround=true;
+      state.surfaceEffect=platform.surfaceEffect || "normal";
     }
-  }
-
-  if(landingSurface){
-    if(landingSurface.movementEffect === "accelerate") state.speedMultiplier=1.75;
-    else if(landingSurface.movementEffect === "decelerate") state.speedMultiplier=.55;
-    else state.speedMultiplier=1;
   }
 
   if(state.x<previousX && state.vx>0) state.vx=0;
@@ -11149,10 +11089,7 @@ function updateMiniActionGame(delta,time){
     return;
   }
 
-  const goalX=Number(stage.goalX ?? stage.goal?.x ?? 680);
-  const goalY=Number(stage.goalY ?? stage.goal?.y ?? 220);
-  const playerFeet=state.y+state.height;
-  if(state.x+state.width>=goalX && Math.abs(playerFeet-goalY)<=28){
+  if(state.x+state.width>=stage.goalX){
     state.elapsed=(performance.now()-state.startTime)/1000;
     completeMiniActionStage();
     drawMiniActionGame();
@@ -11193,9 +11130,11 @@ function drawMiniActionRemotePlayers(ctx,stage,camera,now){
 
 setupMiniActionTouchControls();
 setupMiniMenu();
-loadMiniViewState();
 setupMiniEditorControls();
+loadMiniViewState();
 ensureMiniEditorCourse();
+renderMiniEditorRecentTools();
+updateMiniEditorScrollBar();
 
 window.addEventListener("keydown",event=>{
   if(!miniActionIsVisible()) return;
