@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.9.3. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.9.1 changes; Release 1.9.3 adds persistent mini-action course creation/testing/publishing and mini-game menus: fixed portrait mini-action rendering so the game keeps its native aspect ratio instead of vertically stretching, and changed floating terrain so only some terrain platforms float while adding extra vertical height variation. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
+<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.10.0. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.10.0 refines the mini-action menu/editor flow: the menu opens only on long-press, course lists are shown inside the mini-game frame, course naming/publishing move into the course list, test-play can be ended from the menu, editor tool behavior is aligned so terrain is the lower one-way surface and platforms use the stage-1 platform style on the grid, and mini-mode switching is guarded against matchmaking UI races. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
 <title>3Dfps</title>
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
@@ -449,6 +449,7 @@ canvas{
 }
 
 #miniEditorName{
+  display:none !important;
   width:100%;
   height:30px;
   margin-bottom:6px;
@@ -495,30 +496,32 @@ canvas{
 
 #miniCourseListModal{
   position:absolute;
-  inset:0;
+  inset:8px;
   z-index:25;
   display:none;
-  padding:18px;
-  background:rgba(0,0,0,.66);
+  padding:0;
+  background:rgba(5,9,15,.94);
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:14px;
   backdrop-filter:blur(10px);
   pointer-events:auto;
+  overflow:hidden;
 }
 
 #miniCourseListModal.show{
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  display:block;
 }
 
 #miniCourseListBox{
-  width:min(94vw,520px);
-  max-height:90%;
+  width:100%;
+  height:100%;
+  max-height:none;
   overflow:auto;
-  padding:16px;
-  border-radius:16px;
-  background:rgba(15,20,28,.97);
-  border:1px solid rgba(255,255,255,.14);
-  box-shadow:0 18px 70px rgba(0,0,0,.5);
+  padding:12px;
+  border-radius:14px;
+  background:transparent;
+  border:0;
+  box-shadow:none;
 }
 
 #miniCourseListHeader{
@@ -578,6 +581,19 @@ canvas{
   font-weight:900;
 }
 
+.miniCourseItemNameInput{
+  width:100%;
+  height:30px;
+  padding:0 8px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:8px;
+  background:rgba(255,255,255,.06);
+  color:#fff;
+  outline:none;
+  font-size:12px;
+  font-weight:800;
+}
+
 .miniCourseItemMeta{
   margin-top:3px;
   font-size:10px;
@@ -596,14 +612,25 @@ canvas{
   font-weight:900;
 }
 
-.miniCourseItem.current{
-  border-color:rgba(88,166,255,.6);
-  box-shadow:inset 0 0 0 1px rgba(88,166,255,.18);
+.miniCourseItemActions{
+  display:flex;
+  flex:0 0 auto;
+  gap:5px;
+  align-items:center;
+}
+
+.miniCoursePublishButton{
+  background:#1976ff !important;
 }
 
 .miniCourseVerified{
   margin-left:4px;
   color:#70ff9a;
+}
+
+.miniCourseItem.current{
+  border-color:rgba(88,166,255,.6);
+  box-shadow:inset 0 0 0 1px rgba(88,166,255,.18);
 }
 
 #miniCourseListPublishedStatus{
@@ -1648,7 +1675,7 @@ html.roomJoinMode #roomJoinScreen{
     <h1 class="title">3Dfps</h1>
 
     <div class="subtitle">
-      v1.9.3
+      v1.10.0
     </div>
 
     <button id="randomMatchButton" class="button">
@@ -1764,8 +1791,8 @@ html.roomJoinMode #roomJoinScreen{
     <div id="miniEditorToolbar" aria-label="コース作成ツール">
       <input id="miniEditorName" maxlength="24" placeholder="コース名" autocomplete="off" spellcheck="false">
       <div id="miniEditorTools">
-        <button class="miniEditorTool" data-tool="terrain">地形</button>
-        <button class="miniEditorTool selected" data-tool="platform">足場</button>
+        <button class="miniEditorTool selected" data-tool="terrain">地形</button>
+        <button class="miniEditorTool" data-tool="platform">足場</button>
         <button class="miniEditorTool" data-tool="hazard">針</button>
         <button class="miniEditorTool" data-tool="start">スタート</button>
         <button class="miniEditorTool" data-tool="goal">ゴール</button>
@@ -2188,7 +2215,7 @@ let miniLastNetworkUpdate = 0;
 let miniNetworkSyncing = false;
 let miniMode = "play";
 let miniEditorCourseId = null;
-let miniEditorSelectedTool = "platform";
+let miniEditorSelectedTool = "terrain";
 let miniEditorDragging = null;
 let miniEditorTestMode = false;
 let miniEditorTestHashAtStart = "";
@@ -2203,6 +2230,7 @@ let miniMenuLongPressTriggered = false;
 let miniMenuSelectedIndex = -1;
 let miniMenuOptionsCache = [];
 let miniCourseListOpen = false;
+let miniModeTransitioning = false;
 let matchingLastFinalizedState = false;
 let matchingNotificationPlayed = false;
 let miniGameStarted = false;
@@ -5007,7 +5035,7 @@ async function startMatch(
           snapshot.data();
 
         setConnectionStatus(false);
-        matchType = data.matchType === "random" ? "random" : "room";
+        if(data.matchType === "random" || data.matchType === "room") matchType = data.matchType;
 
         isHost =
           data.hostUid === currentUser.uid;
@@ -5348,7 +5376,7 @@ function updateMatchingUI(data){
 
   if(data.status === "waiting" && !data.matchingFinalizedAt){
     matchingScreen.style.display = "flex";
-    ensureMiniActionGameStarted();
+    if(!miniModeTransitioning) ensureMiniActionGameStarted();
     menu.style.display = "none";
     gameUI.style.display = "none";
     preStart.style.display = "none";
@@ -5446,7 +5474,7 @@ function updateRuleUI(data){
 function updateStartUI(data){
 
   latestMatchData = data;
-  matchType = data.matchType === "random" ? "random" : "room";
+  if(data.matchType === "random" || data.matchType === "room") matchType = data.matchType;
 
   if(data.status === "active"){
     hidePreMatchScreens();
@@ -9984,10 +10012,13 @@ function placeMiniEditorTool(course,x,y){
   const sy=snapMiniEditor(y);
   if(tool === "terrain"){
     const width=80;
-    course.stage.terrain.push({x:Math.max(0,Math.min(720-width,sx-width/2)),y:Math.max(20,Math.min(238,sy)),w:width,h:Math.max(22,260-Math.max(20,Math.min(238,sy)))});
+    const topY=Math.max(20,Math.min(238,sy));
+    course.stage.terrain.push({x:Math.max(0,Math.min(720-width,sx-width/2)),y:topY,w:width,h:Math.max(22,260-topY)});
   }else if(tool === "platform"){
-    const width=90;
-    course.stage.platforms.push({x:Math.max(0,Math.min(720-width,sx-width/2)),y:Math.max(18,Math.min(238,sy)),w:width,h:12});
+    const width=10;
+    const left=Math.max(0,Math.min(720-width,sx-width/2));
+    const top=Math.max(18,Math.min(248-12,sy));
+    course.stage.platforms.push({x:left,y:top,w:width,h:12});
   }else if(tool === "hazard"){
     const width=30;
     course.stage.hazards.push({x:Math.max(0,Math.min(720-width,sx-width/2)),y:Math.max(18,Math.min(236,sy-18)),w:width,h:18});
@@ -10012,7 +10043,8 @@ function moveMiniEditorTarget(course,target,x,y){
   const list = target.type === "platform" ? course.stage.platforms : target.type === "terrain" ? course.stage.terrain : course.stage.hazards;
   const item=list[target.index];
   if(!item) return;
-  item.x=Math.max(0,Math.min(720-item.w,sx-item.w/2));
+  if(target.type === "platform") item.x=Math.max(0,Math.min(720-item.w,sx-item.w/2));
+  else item.x=Math.max(0,Math.min(720-item.w,sx-item.w/2));
   item.y=Math.max(10,Math.min(248-item.h,sy));
   if(target.type === "terrain") item.h=Math.max(12,260-item.y);
 }
@@ -10290,9 +10322,11 @@ function miniMenuSetOptions(){
   if(miniMode === "play"){
     options=[{label:"リセット",action:"reset"},{label:"作る",action:"make"}];
   }else{
-    options=[{label:"テストプレイ",action:"test"},{label:"コース一覧",action:"list"},{label:"遊ぶ",action:"play"}];
-    const course=getCurrentMiniEditorCourse();
-    if(!miniEditorTestMode && isMiniCourseVerified(course)) options.push({label:"公開する",action:"publish"});
+    options=[
+      {label:miniEditorTestMode ? "テストプレイを終了" : "テストプレイ",action:miniEditorTestMode ? "testEnd" : "test"},
+      {label:"コース一覧",action:"list"},
+      {label:"遊ぶ",action:"play"}
+    ];
   }
   miniMenuOptions.innerHTML=options.map((option,index)=>`<button class="miniMenuOption" type="button" data-index="${index}">${escapeHtml(option.label)}</button>`).join("");
   miniMenuOptionsCache=options;
@@ -10346,11 +10380,29 @@ async function miniMenuExecute(action){
     return;
   }
   if(action === "make"){
-    ensureMiniEditorMode();
+    miniModeTransitioning = true;
+    try{ ensureMiniEditorMode(); }finally{ miniModeTransitioning = false; }
     return;
   }
   if(action === "test"){
-    startMiniEditorTest();
+    miniModeTransitioning = true;
+    try{ startMiniEditorTest(); }finally{ miniModeTransitioning = false; }
+    return;
+  }
+  if(action === "testEnd"){
+    miniModeTransitioning = true;
+    try{
+      miniEditorTestMode = false;
+      resetMiniActionInputState();
+      stopMiniActionGame();
+      miniMode = "make";
+      saveMiniViewState();
+      ensureMiniEditorCourseUI();
+      setMiniGameVisualMode();
+      drawMiniEditor();
+    }finally{
+      miniModeTransitioning = false;
+    }
     return;
   }
   if(action === "list"){
@@ -10358,11 +10410,8 @@ async function miniMenuExecute(action){
     return;
   }
   if(action === "play"){
-    ensureMiniPlayMode(true);
-    return;
-  }
-  if(action === "publish"){
-    await publishCurrentMiniCourse();
+    miniModeTransitioning = true;
+    try{ ensureMiniPlayMode(true); }finally{ miniModeTransitioning = false; }
     return;
   }
 }
@@ -10373,15 +10422,11 @@ function setupMiniMenu(){
     event.preventDefault();
     miniMenuPointerId=event.pointerId;
     miniMenuLongPressTriggered=false;
-    if(miniMode === "play"){
+    miniMenuHoldTimer=setTimeout(()=>{
+      miniMenuHoldTimer=null;
+      miniMenuLongPressTriggered=true;
       miniMenuOpenNow();
-    }else{
-      miniMenuHoldTimer=setTimeout(()=>{
-        miniMenuHoldTimer=null;
-        miniMenuLongPressTriggered=true;
-        miniMenuOpenNow();
-      },450);
-    }
+    },450);
     try{miniMenuButton.setPointerCapture(event.pointerId);}catch(error){}
   },{passive:false});
 
@@ -10502,12 +10547,16 @@ function renderMiniCourseList(){
   miniCourseListDrafts.innerHTML=courses.map(course=>{
     const verified=isMiniCourseVerified(course);
     const current=course.id===miniEditorCourseId;
+    const canPublish=verified;
     return `<div class="miniCourseItem${current ? " current" : ""}">`+
       `<div class="miniCourseItemMain" data-course-id="${escapeHtml(course.id)}">`+
-      `<div class="miniCourseItemName">${escapeHtml(course.name)}${verified ? '<span class="miniCourseVerified">✓</span>' : ''}</div>`+
-      `<div class="miniCourseItemMeta">${course.stage.platforms.length+course.stage.terrain.length+course.stage.hazards.length} ブロック</div>`+
+      `<input class="miniCourseItemNameInput" maxlength="24" value="${escapeHtml(course.name)}" data-course-name-id="${escapeHtml(course.id)}" autocomplete="off" spellcheck="false">`+
+      `<div class="miniCourseItemMeta">${course.stage.platforms.length+course.stage.terrain.length+course.stage.hazards.length} ブロック${verified ? '<span class="miniCourseVerified">✓</span>' : ''}</div>`+
       `</div>`+
+      `<div class="miniCourseItemActions">`+
+      (canPublish ? `<button type="button" class="miniCoursePublishButton" data-course-publish="${escapeHtml(course.id)}">公開する</button>` : "")+
       `<button type="button" data-course-delete="${escapeHtml(course.id)}">削除</button>`+
+      `</div>`+
       `</div>`;
   }).join("");
 }
@@ -10526,13 +10575,14 @@ async function renderMiniPublishedCourses(){
     miniCourseListPublishedStatus.textContent=own.length ? "" : "まだ公開していないコースはないよ。";
     miniCourseListPublished.innerHTML=own.map(item=>{
       const name=String(item.data.name || "PUBLIC COURSE").slice(0,24);
-      const revision=String(item.data.sourceRevisionHash || "");
       return `<div class="miniCourseItem">`+
         `<div class="miniCourseItemMain">`+
         `<div class="miniCourseItemName">${escapeHtml(name)}</div>`+
-        `<div class="miniCourseItemMeta">公開版 · ${escapeHtml(revision)}</div>`+
+        `<div class="miniCourseItemMeta">公開版</div>`+
         `</div>`+
+        `<div class="miniCourseItemActions">`+
         `<button type="button" data-public-delete="${escapeHtml(item.id)}">削除</button>`+
+        `</div>`+
         `</div>`;
     }).join("");
   }catch(error){
@@ -10580,9 +10630,34 @@ if(miniCourseListClose) miniCourseListClose.addEventListener("click",closeMiniCo
 if(miniCourseListModal) miniCourseListModal.addEventListener("pointerdown",event=>{
   if(event.target===miniCourseListModal) closeMiniCourseListModal();
 });
+if(miniCourseListDrafts) miniCourseListDrafts.addEventListener("input",event=>{
+  const input=event.target.closest?.("[data-course-name-id]");
+  if(!input) return;
+  const id=input.dataset.courseNameId;
+  const courses=getMiniCourses();
+  const course=courses.find(item=>item.id===id);
+  if(!course) return;
+  const name=String(input.value || "").slice(0,24) || "MY COURSE";
+  course.name=name;
+  course.stage.name=name;
+  updateMiniEditorSave(course,true);
+});
 if(miniCourseListDrafts) miniCourseListDrafts.addEventListener("click",event=>{
   const main=event.target.closest?.("[data-course-id]");
   const del=event.target.closest?.("[data-course-delete]");
+  const publish=event.target.closest?.("[data-course-publish]");
+  const nameInput=event.target.closest?.("[data-course-name-id]");
+  if(nameInput) return;
+  if(publish){
+    const id=publish.dataset.coursePublish;
+    const course=getMiniCourses().find(item=>item.id===id);
+    if(course && isMiniCourseVerified(course)){
+      miniEditorCourseId=id;
+      saveMiniViewState();
+      publishCurrentMiniCourse();
+    }
+    return;
+  }
   if(del){
     const id=del.dataset.courseDelete;
     const courses=getMiniCourses();
