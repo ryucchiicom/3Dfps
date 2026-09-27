@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.10.0. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.10.0 changes: expanded the random-match mini action into persistent Play/Create modes with a local course editor, local verification, Firebase publication and published-course play, added long-press menus, and reset mini-game hold states on death. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
+<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.10.0. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.10.0 changes: added the mini-game course creator, local course persistence, test validation/publication, Firebase public-course play, held-input reset on death, and long-press swipe menus. 2.0.0 is reserved for the public-release version. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
 <title>3Dfps</title>
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
@@ -395,274 +395,6 @@ canvas{
   box-shadow:0 8px 22px rgba(25,118,255,.18);
 }
 
-#miniModeMenuButton{
-  position:absolute;
-  top:10px;
-  right:10px;
-  z-index:30;
-  width:38px;
-  height:38px;
-  border:1px solid rgba(255,255,255,.2);
-  border-radius:12px;
-  background:rgba(5,10,18,.62);
-  color:#fff;
-  font-size:20px;
-  line-height:1;
-  font-weight:900;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  backdrop-filter:blur(10px);
-  touch-action:none;
-}
-
-#miniModeMenuOptions{
-  position:absolute;
-  top:52px;
-  right:10px;
-  z-index:31;
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  width:min(54vw,220px);
-  pointer-events:none;
-}
-
-.miniModeMenuOption{
-  width:100%;
-  min-height:40px;
-  padding:0 12px;
-  border:1px solid rgba(255,255,255,.16);
-  border-radius:11px;
-  background:rgba(8,14,22,.92);
-  color:#fff;
-  font-size:13px;
-  font-weight:900;
-  text-align:left;
-  opacity:0;
-  transform:translateY(-6px) scale(.97);
-  transition:opacity .12s ease,transform .12s ease,background .12s ease,border-color .12s ease;
-  pointer-events:none;
-  touch-action:none;
-}
-
-#miniModeMenuOptions.open{
-  pointer-events:auto;
-}
-
-#miniModeMenuOptions.open .miniModeMenuOption{
-  opacity:1;
-  transform:none;
-  pointer-events:auto;
-}
-
-.miniModeMenuOption.active{
-  background:rgba(36,116,255,.88);
-  border-color:rgba(140,205,255,.8);
-}
-
-.miniModeMenuOption.disabled{
-  opacity:.36 !important;
-}
-
-#miniEditorToolbar{
-  display:none;
-  width:min(94vw,720px);
-  flex:0 0 auto;
-  padding:9px;
-  border-radius:14px;
-  border:1px solid rgba(255,255,255,.12);
-  background:rgba(8,14,22,.75);
-  backdrop-filter:blur(10px);
-}
-
-.miniEditorCourseName{
-  width:100%;
-  height:38px;
-  padding:0 12px;
-  border:1px solid rgba(255,255,255,.14);
-  border-radius:10px;
-  background:rgba(255,255,255,.06);
-  color:#fff;
-  font-size:15px;
-  font-weight:800;
-  outline:none;
-  user-select:text;
-  -webkit-user-select:text;
-}
-
-#miniEditorTools{
-  display:flex;
-  gap:6px;
-  margin-top:7px;
-  overflow-x:auto;
-  padding-bottom:2px;
-}
-
-.miniEditorTool{
-  flex:0 0 auto;
-  min-width:72px;
-  height:36px;
-  padding:0 10px;
-  border:1px solid rgba(255,255,255,.14);
-  border-radius:9px;
-  background:rgba(255,255,255,.06);
-  color:#fff;
-  font-size:12px;
-  font-weight:900;
-  touch-action:none;
-}
-
-.miniEditorTool.selected{
-  background:#1976ff;
-  border-color:#6bb3ff;
-}
-
-.miniEditorHint{
-  margin-top:6px;
-  font-size:10px;
-  opacity:.58;
-  text-align:center;
-}
-
-.miniModeMenuButton:active{
-  transform:scale(.96);
-}
-
-#miniCourseModal{
-  position:absolute;
-  inset:0;
-  z-index:60;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  padding:18px;
-  background:rgba(0,0,0,.68);
-  backdrop-filter:blur(10px);
-}
-
-.miniCourseBox{
-  width:min(94vw,520px);
-  max-height:88vh;
-  overflow:auto;
-  padding:18px;
-  border-radius:18px;
-  background:rgba(15,20,28,.98);
-  border:1px solid rgba(255,255,255,.13);
-  box-shadow:0 20px 80px rgba(0,0,0,.5);
-}
-
-.miniCourseTitle{
-  font-size:22px;
-  font-weight:900;
-  text-align:center;
-  margin-bottom:14px;
-}
-
-.miniCourseSection{
-  margin-bottom:14px;
-}
-
-.miniCourseSectionTitle{
-  font-size:12px;
-  font-weight:900;
-  opacity:.62;
-  margin-bottom:7px;
-}
-
-.miniCourseEmpty{
-  padding:14px;
-  border-radius:10px;
-  background:rgba(255,255,255,.04);
-  font-size:12px;
-  opacity:.65;
-  text-align:center;
-}
-
-.miniCourseRow{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  padding:9px;
-  margin:5px 0;
-  border-radius:10px;
-  border:1px solid rgba(255,255,255,.08);
-  background:rgba(255,255,255,.04);
-}
-
-.miniCourseRowName{
-  flex:1;
-  min-width:0;
-  font-size:13px;
-  font-weight:800;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-}
-
-.miniCourseCheck{
-  font-size:13px;
-  font-weight:900;
-}
-
-.miniCourseAction{
-  flex:0 0 auto;
-  height:34px;
-  padding:0 10px;
-  border:1px solid rgba(255,255,255,.14);
-  border-radius:8px;
-  background:#1976ff;
-  color:#fff;
-  font-size:11px;
-  font-weight:900;
-}
-
-.miniCourseAction.danger{
-  background:#7b2f3f;
-}
-
-#matchingScreen.miniEditorMode{
-  justify-content:flex-start;
-  padding-top:52px;
-}
-
-#matchingScreen.miniEditorMode .matchingTitle,
-#matchingScreen.miniEditorMode #matchingCount,
-#matchingScreen.miniEditorMode #matchingTimer,
-#matchingScreen.miniEditorMode #matchingStatus,
-#matchingScreen.miniEditorMode #matchingReadyButton,
-#matchingScreen.miniEditorMode #matchingEndButton{
-  display:none !important;
-}
-
-#matchingScreen.miniEditorMode #miniGameBox{
-  width:min(94vw,720px);
-  height:min(55svh,360px);
-  min-height:200px;
-  margin:4px auto 0;
-  flex:0 1 auto;
-}
-
-#matchingScreen.miniEditorMode #miniTouchZone{
-  display:none;
-}
-
-#matchingScreen.miniEditorMode #miniEditorToolbar{
-  display:block;
-}
-
-#matchingScreen.miniEditorMode #miniGameTitle{
-  opacity:.52;
-}
-
-#matchingScreen.miniEditorMode #miniGameStageLabel{
-  opacity:.75;
-}
-
-#matchingScreen.miniEditorMode #miniGameScore{
-  opacity:.55;
-}
-\n@media (orientation:portrait) and (pointer:coarse){\n  #miniModeMenuButton{\n    top:8px;\n    right:8px;\n    width:36px;\n    height:36px;\n  }\n\n  #miniModeMenuOptions{\n    top:50px;\n    right:8px;\n    width:min(68vw,240px);\n  }\n\n  #matchingScreen.miniEditorMode{\n    padding-top:48px;\n  }\n\n  #matchingScreen.miniEditorMode #miniGameBox{\n    height:min(52svh,330px);\n    min-height:185px;\n  }\n\n  #miniEditorToolbar{\n    width:min(94vw,430px);\n  }\n}\n\n@media (orientation:landscape) and (pointer:coarse){\n  #matchingScreen.miniEditorMode{\n    padding:48px 10px 8px;\n    overflow:hidden;\n  }\n\n  #matchingScreen.miniEditorMode #miniGameBox{\n    height:min(55svh,330px);\n    max-height:330px;\n  }\n\n  #miniEditorToolbar{\n    width:min(94vw,720px);\n  }\n}\n
 @media (orientation:portrait) and (pointer:coarse){
   #matchingScreen{
     justify-content:flex-start;
@@ -743,6 +475,286 @@ canvas{
     max-height:calc(100svh - 58px);
     margin:3px auto 0;
     flex:1 1 auto;
+  }
+}
+
+#miniMenuButton,
+#miniMakerMenuButton{
+  position:absolute;
+  top:10px;
+  right:10px;
+  z-index:12;
+  width:38px;
+  height:38px;
+  margin:0;
+  padding:0;
+  border:1px solid rgba(255,255,255,.24);
+  border-radius:11px;
+  background:rgba(0,0,0,.5);
+  color:#fff;
+  font-size:18px;
+  font-weight:900;
+  backdrop-filter:blur(8px);
+  pointer-events:auto;
+  touch-action:none;
+}
+
+.miniMenuItems{
+  position:absolute;
+  top:54px;
+  right:10px;
+  z-index:11;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:6px;
+  width:150px;
+  pointer-events:none;
+}
+
+.miniMenuItems.show{
+  pointer-events:none;
+}
+
+.miniMenuItem{
+  min-height:40px;
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:11px;
+  background:rgba(10,15,23,.9);
+  color:#fff;
+  font-size:13px;
+  font-weight:900;
+  opacity:.72;
+  transform:translateY(-4px) scale(.98);
+  transition:opacity .08s,transform .08s,background .08s;
+}
+
+.miniMenuItem.active{
+  opacity:1;
+  transform:translateY(0) scale(1.03);
+  background:rgba(35,105,170,.95);
+  border-color:rgba(125,205,255,.72);
+}
+
+.miniMakerView,
+#miniCourseListView{
+  display:none;
+  position:relative;
+  width:min(96vw,760px);
+  max-height:calc(100svh - 16px);
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  overflow:auto;
+  padding:4px 2px 10px;
+}
+
+#matchingScreen.miniCreateMode .miniMakerView,
+#matchingScreen.miniCourseListMode #miniCourseListView{
+  display:flex;
+}
+
+#matchingScreen.miniCreateMode .matchingTitle,
+#matchingScreen.miniCreateMode #matchingCount,
+#matchingScreen.miniCreateMode #matchingTimer,
+#matchingScreen.miniCreateMode #matchingStatus,
+#matchingScreen.miniCreateMode #miniGameBox,
+#matchingScreen.miniCreateMode #matchingReadyButton,
+#matchingScreen.miniCreateMode #matchingEndButton,
+#matchingScreen.miniCourseListMode .matchingTitle,
+#matchingScreen.miniCourseListMode #matchingCount,
+#matchingScreen.miniCourseListMode #matchingTimer,
+#matchingScreen.miniCourseListMode #matchingStatus,
+#matchingScreen.miniCourseListMode #miniGameBox,
+#matchingScreen.miniCourseListMode #matchingReadyButton,
+#matchingScreen.miniCourseListMode #matchingEndButton{
+  display:none !important;
+}
+
+.miniMakerHeader{
+  position:relative;
+  width:100%;
+  min-height:48px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+}
+
+.miniMakerHeaderLeft{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.miniMakerKicker{
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:1.5px;
+  opacity:.68;
+}
+
+.miniCourseNameInput{
+  width:min(50vw,320px);
+  min-width:130px;
+  height:38px;
+  padding:0 12px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:10px;
+  background:rgba(0,0,0,.28);
+  color:#fff;
+  outline:none;
+  font-size:15px;
+  font-weight:800;
+}
+
+.miniMakerCanvasWrap{
+  position:relative;
+  width:min(94vw,720px);
+  aspect-ratio:720/260;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:16px;
+  background:rgba(3,7,12,.88);
+  overflow:hidden;
+  box-shadow:inset 0 0 45px rgba(0,0,0,.25),0 12px 38px rgba(0,0,0,.2);
+}
+
+#miniMakerCanvas{
+  display:block;
+  width:100%;
+  height:100%;
+  touch-action:none;
+}
+
+.miniMakerTools{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:6px;
+  width:100%;
+}
+
+.miniMakerTool{
+  min-width:72px;
+  height:38px;
+  padding:0 10px;
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:10px;
+  background:rgba(255,255,255,.06);
+  color:#fff;
+  font-size:12px;
+  font-weight:900;
+}
+
+.miniMakerTool.selected{
+  background:#1976ff;
+  border-color:#5ba7ff;
+}
+
+.miniMakerHint{
+  font-size:11px;
+  opacity:.58;
+  text-align:center;
+}
+
+.miniMakerMenuButton{
+  position:absolute !important;
+  top:5px !important;
+  right:4px !important;
+}
+
+.miniMakerMenuItems{
+  position:absolute;
+  top:49px;
+  right:4px;
+}
+
+.miniCourseListHeader{
+  position:relative;
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+}
+
+.miniCourseListTitle{
+  font-size:22px;
+  font-weight:900;
+}
+
+.miniNewCourseButton{
+  max-width:420px;
+  margin-top:0;
+}
+
+.miniCourseSection{
+  width:min(94vw,620px);
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.miniCourseSectionTitle{
+  width:min(94vw,620px);
+  margin-top:8px;
+  font-size:12px;
+  font-weight:900;
+  opacity:.55;
+  letter-spacing:1px;
+}
+
+.miniCourseCard{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-height:48px;
+  padding:7px 8px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:12px;
+  background:rgba(255,255,255,.05);
+}
+
+.miniCourseCardName{
+  flex:1 1 auto;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:13px;
+  font-weight:800;
+}
+
+.miniCourseCardState{
+  font-size:12px;
+  font-weight:900;
+  opacity:.7;
+}
+
+.miniCourseCardButton{
+  flex:0 0 auto;
+  height:34px;
+  padding:0 10px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:9px;
+  background:rgba(255,255,255,.08);
+  color:#fff;
+  font-size:11px;
+  font-weight:900;
+}
+
+@media (orientation:portrait) and (pointer:coarse){
+  .miniMakerView,
+  #miniCourseListView{
+    width:96vw;
+    max-height:calc(100svh - 10px);
+  }
+  .miniMakerHeader{
+    min-height:44px;
+  }
+  .miniCourseNameInput{
+    width:min(58vw,280px);
   }
 }
 
@@ -1762,42 +1774,46 @@ html.roomJoinMode #roomJoinScreen{
       <div id="miniMoveGuide"></div>
       <div id="miniMoveCircle"></div>
     </div>
+    <button id="miniMenuButton" class="miniMenuButton" aria-label="ミニゲームメニュー">☰</button>
+    <div id="miniMenuItems" class="miniMenuItems"></div>
   </div>
 
-  <div id="miniEditorToolbar">
-    <input id="miniEditorCourseName" class="miniEditorCourseName" maxlength="28" placeholder="コース名" autocomplete="off" spellcheck="false">
-    <div id="miniEditorTools">
-      <button class="miniEditorTool selected" data-mini-tool="terrain">地形</button>
-      <button class="miniEditorTool" data-mini-tool="platform">足場</button>
-      <button class="miniEditorTool" data-mini-tool="hazard">針</button>
-      <button class="miniEditorTool" data-mini-tool="start">スタート</button>
-      <button class="miniEditorTool" data-mini-tool="goal">ゴール</button>
-      <button class="miniEditorTool" data-mini-tool="erase">消しゴム</button>
+  <div id="miniMakerView" aria-label="ミニゲームコース作成">
+    <div class="miniMakerHeader">
+      <div class="miniMakerHeaderLeft">
+        <span class="miniMakerKicker">作る</span>
+        <input id="miniCourseNameInput" class="miniCourseNameInput" maxlength="24" autocomplete="off" spellcheck="false">
+      </div>
+      <button id="miniMakerMenuButton" class="miniMenuButton miniMakerMenuButton" aria-label="コース作成メニュー">☰</button>
+      <div id="miniMakerMenuItems" class="miniMenuItems miniMakerMenuItems"></div>
     </div>
-    <div class="miniEditorHint">タップ・ドラッグで配置　／　変更は自動保存</div>
+    <div id="miniMakerCanvasWrap" class="miniMakerCanvasWrap">
+      <canvas id="miniMakerCanvas" width="720" height="260" aria-label="コース作成キャンバス"></canvas>
+    </div>
+    <div class="miniMakerTools" id="miniMakerTools">
+      <button class="miniMakerTool selected" data-mini-tool="terrain">地形</button>
+      <button class="miniMakerTool" data-mini-tool="platform">足場</button>
+      <button class="miniMakerTool" data-mini-tool="spike">針</button>
+      <button class="miniMakerTool" data-mini-tool="start">スタート</button>
+      <button class="miniMakerTool" data-mini-tool="goal">ゴール</button>
+      <button class="miniMakerTool" data-mini-tool="eraser">消す</button>
+    </div>
+    <div class="miniMakerHint">タップ・ドラッグで配置　／　スタートとゴールは1つだけ</div>
   </div>
 
-  <button id="miniModeMenuButton" class="miniModeMenuButton" aria-label="ミニゲームメニュー">☰</button>
-  <div id="miniModeMenuOptions" class="miniModeMenuOptions" aria-hidden="true"></div>
+  <div id="miniCourseListView" aria-label="コース一覧">
+    <div class="miniCourseListHeader">
+      <div class="miniCourseListTitle">コース一覧</div>
+      <button id="miniCourseListBackButton" class="preStartSmallButton">戻る</button>
+    </div>
+    <button id="miniNewCourseButton" class="button miniNewCourseButton">＋ 新しいコース</button>
+    <div id="miniLocalCourseList" class="miniCourseSection"></div>
+    <div class="miniCourseSectionTitle">公開済み</div>
+    <div id="miniPublicCourseList" class="miniCourseSection"></div>
+  </div>
 
   <button id="matchingReadyButton" class="button">準備OK</button>
   <button id="matchingEndButton" class="button secondary">マッチング終了を要求</button>
-
-  <div id="miniCourseModal">
-    <div class="miniCourseBox">
-      <div class="miniCourseTitle">コース一覧</div>
-      <button id="miniNewCourseButton" class="button">新しいコース</button>
-      <div id="miniLocalCourseSection" class="miniCourseSection">
-        <div class="miniCourseSectionTitle">自作コース</div>
-        <div id="miniLocalCourseList"></div>
-      </div>
-      <div id="miniPublishedCourseSection" class="miniCourseSection">
-        <div class="miniCourseSectionTitle">公開済み</div>
-        <div id="miniPublishedCourseList"></div>
-      </div>
-      <button id="miniCourseCloseButton" class="button secondary">閉じる</button>
-    </div>
-  </div>
 </div>
 
 <div id="ruleScreen">
@@ -2071,15 +2087,15 @@ import {
 
 import {
   getFirestore,
+  collection,
   doc,
   setDoc,
+  getDocs,
   getDoc,
   updateDoc,
   deleteDoc,
   onSnapshot,
   runTransaction,
-  collection,
-  getDocs,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
@@ -2188,23 +2204,25 @@ let miniActionLastFrameTime = 0;
 let miniActionPreviousStage = 0;
 let miniLastNetworkUpdate = 0;
 let miniNetworkSyncing = false;
-let miniMode = "play";
-let miniPersistentLoaded = false;
-let miniEditorCourses = [];
-let miniEditorCourseId = "";
-let miniEditorCourse = null;
-let miniEditorTool = "terrain";
-let miniPublishedStagesCache = [];
-let miniPublishedStagesLoadedAt = 0;
-let miniEditorTestHash = "";
-let miniEditorTestCourseId = "";
-let miniMenuPointerId = null;
+let miniWorkspaceMode = "play";
+let miniWorkspaceView = "editor";
+let miniWorkspaceCourseId = null;
+let miniMakerTool = "terrain";
+let miniMakerTestMode = false;
+let miniMakerTestCourseId = null;
+let miniMakerTestSnapshotHash = "";
+let miniMakerTestStart = 0;
+let miniPublicStages = [];
+let miniPublicStagesLoaded = false;
+let miniPublicStagesLoading = null;
+let miniMakerPointerId = null;
+let miniMakerLastCell = null;
 let miniMenuHoldTimer = null;
-let miniMenuOpen = false;
-let miniMenuHighlightedIndex = -1;
-let miniEditorPointerId = null;
-let miniEditorLastCell = "";
-let miniEditorDrawing = false;
+let miniMenuHolding = false;
+let miniMenuOpened = false;
+let miniMenuHoverIndex = -1;
+let miniMenuPointerId = null;
+let miniMenuContext = null;
 let matchingLastFinalizedState = false;
 let matchingNotificationPlayed = false;
 let miniGameStarted = false;
@@ -2435,36 +2453,6 @@ const matchingTimer =
 const matchingStatus =
   document.getElementById("matchingStatus");
 
-const matchingTitle =
-  document.querySelector(".matchingTitle");
-
-const miniEditorToolbar =
-  document.getElementById("miniEditorToolbar");
-
-const miniEditorCourseName =
-  document.getElementById("miniEditorCourseName");
-
-const miniModeMenuButton =
-  document.getElementById("miniModeMenuButton");
-
-const miniModeMenuOptions =
-  document.getElementById("miniModeMenuOptions");
-
-const miniCourseModal =
-  document.getElementById("miniCourseModal");
-
-const miniLocalCourseList =
-  document.getElementById("miniLocalCourseList");
-
-const miniPublishedCourseList =
-  document.getElementById("miniPublishedCourseList");
-
-const miniCourseCloseButton =
-  document.getElementById("miniCourseCloseButton");
-
-const miniNewCourseButton =
-  document.getElementById("miniNewCourseButton");
-
 const miniGameScore =
   document.getElementById("miniGameScore");
 
@@ -2476,6 +2464,45 @@ const miniGameCanvas =
 
 const miniGameMessage =
   document.getElementById("miniGameMessage");
+
+const miniMenuButton =
+  document.getElementById("miniMenuButton");
+
+const miniMenuItems =
+  document.getElementById("miniMenuItems");
+
+const miniMakerView =
+  document.getElementById("miniMakerView");
+
+const miniMakerCanvas =
+  document.getElementById("miniMakerCanvas");
+
+const miniMakerMenuButton =
+  document.getElementById("miniMakerMenuButton");
+
+const miniMakerMenuItems =
+  document.getElementById("miniMakerMenuItems");
+
+const miniMakerTools =
+  document.getElementById("miniMakerTools");
+
+const miniCourseNameInput =
+  document.getElementById("miniCourseNameInput");
+
+const miniCourseListView =
+  document.getElementById("miniCourseListView");
+
+const miniCourseListBackButton =
+  document.getElementById("miniCourseListBackButton");
+
+const miniNewCourseButton =
+  document.getElementById("miniNewCourseButton");
+
+const miniLocalCourseList =
+  document.getElementById("miniLocalCourseList");
+
+const miniPublicCourseList =
+  document.getElementById("miniPublicCourseList");
 
 const miniTouchZone =
   document.getElementById("miniTouchZone");
@@ -5366,9 +5393,6 @@ async function loadLocalPlayer(){
 function hidePreMatchScreens(){
   preStart.style.display = "none";
   matchingScreen.style.display = "none";
-  miniCourseModal.style.display = "none";
-  closeMiniMenu();
-  resetMiniActionHoldState();
   ruleScreen.style.display = "none";
 }
 
@@ -5378,15 +5402,33 @@ function updateMatchingUI(data){
     return;
   }
 
+  if(data.status === "waiting" && data.matchingFinalizedAt && (miniMakerTestMode || miniWorkspaceMode !== "play")){
+    miniMakerTestMode = false;
+    miniWorkspaceMode = "play";
+    miniWorkspaceView = "editor";
+    saveMiniWorkspaceState();
+    stopMiniActionGame();
+    miniCourseListView.style.display = "none";
+    matchingScreen.classList.remove("miniCreateMode","miniCourseListMode");
+  }
+
+  if(data.status === "waiting" && !data.matchingFinalizedAt && miniMakerTestMode){
+    renderMiniTestMode();
+    return;
+  }
+
+  if(data.status === "waiting" && !data.matchingFinalizedAt && miniWorkspaceMode !== "play"){
+    renderMiniWorkspaceMode();
+    return;
+  }
+
   if(data.status === "waiting" && !data.matchingFinalizedAt){
     matchingScreen.style.display = "flex";
-    if(!miniPersistentLoaded) loadMiniPersistentState();
     ensureMiniActionGameStarted();
     menu.style.display = "none";
     gameUI.style.display = "none";
     preStart.style.display = "none";
     ruleScreen.style.display = "none";
-    setMiniModeUi();
 
     const players = data.players || {};
     const count = Object.keys(players).length;
@@ -5398,7 +5440,7 @@ function updateMatchingUI(data){
     if(!countdownReady){
       matchingTimer.textContent = "—";
       matchingStatus.textContent = "あと1人でカウント開始";
-      matchingEndButton.style.display = miniMode === "edit" ? "none" : "none";
+      matchingEndButton.style.display = "none";
     }else{
       const remain = Math.max(0, RANDOM_MAX_WAIT - (Date.now() - countdownStartedAt));
       matchingTimer.textContent = String(Math.ceil(remain / 1000));
@@ -5406,7 +5448,7 @@ function updateMatchingUI(data){
         ? "メンバーが決定しました…"
         : "他のプレイヤーを待っています…";
 
-      matchingEndButton.style.display = miniMode === "edit" ? "none" : "block";
+      matchingEndButton.style.display = "block";
       matchingEndButton.textContent = (data.matchingEndRequests || {})[currentUser.uid]
         ? "マッチング終了を要求済み"
         : "マッチング終了を要求";
@@ -5417,15 +5459,11 @@ function updateMatchingUI(data){
   }
 
   if(data.status === "waiting" && data.matchingFinalizedAt){
-    matchingScreen.classList.remove("miniEditorMode");
     matchingScreen.style.display = "flex";
     menu.style.display = "none";
     gameUI.style.display = "none";
     preStart.style.display = "none";
     ruleScreen.style.display = "none";
-    stopMiniActionGame();
-    miniMode = "play";
-    miniPersistentLoaded = false;
 
     const count = Object.keys(data.players || {}).length;
     matchingCount.textContent = `${count} PLAYERS`;
@@ -5468,8 +5506,6 @@ function updateRuleUI(data){
   }
 
   matchingScreen.style.display = "none";
-  miniCourseModal.style.display = "none";
-  closeMiniMenu();
   stopMiniActionGame();
   preStart.style.display = "none";
   gameUI.style.display = "none";
@@ -7946,9 +7982,6 @@ function finishLocalGame(
   }
 
   gameEnded = true;
-  resetMiniActionHoldState();
-  closeMiniMenu();
-  miniCourseModal.style.display = "none";
   gameStarted = false;
   matchHasStarted = false;
 
@@ -8962,8 +8995,10 @@ function gameLoop(
 
   updateStartProgress();
   updateNeonEdges(time);
-  if(miniMode === "edit") drawMiniEditor();
   updateMiniActionGame(delta,time);
+  if(latestMatchData && matchType === "random" && latestMatchData.status === "waiting" && !latestMatchData.matchingFinalizedAt && miniWorkspaceMode === "play" && !miniMakerTestMode){
+    ensureMiniActionGameStarted();
+  }
 
   if(latestMatchData){
     if(latestMatchData.status === "waiting" && matchType === "random") updateMatchingUI(latestMatchData);
@@ -9339,12 +9374,23 @@ matchingReadyButton.addEventListener(
 );
 
 function miniActionIsVisible(){
+  if(miniMakerTestMode){
+    return Boolean(
+      matchingScreen &&
+      matchingScreen.style.display === "flex" &&
+      !gameEnded &&
+      miniMakerTestMode
+    );
+  }
   return Boolean(
     matchingScreen &&
     matchingScreen.style.display === "flex" &&
     matchType === "random" &&
     latestMatchData &&
     latestMatchData.status === "waiting" &&
+    !latestMatchData.matchingFinalizedAt &&
+    miniWorkspaceMode === "play" &&
+    !miniMakerTestMode &&
     !gameEnded
   );
 }
@@ -9418,6 +9464,277 @@ const MINI_ACTION_STAGES = [
   }
 ];
 
+const MINI_WORKSPACE_KEY = "3Dfps_mini_workspace_v1";
+const MINI_COURSES_KEY = "3Dfps_mini_courses_v1";
+const MINI_EDITOR_CELL = 20;
+const MINI_EDITOR_COLS = 36;
+const MINI_EDITOR_ROWS = 13;
+const MINI_TEST_LIMIT = 15;
+
+function miniClone(value){
+  return JSON.parse(JSON.stringify(value));
+}
+
+function miniStageHash(value){
+  try{
+    const raw = JSON.stringify(value);
+    let hash = 2166136261;
+    for(let i=0;i<raw.length;i++){
+      hash ^= raw.charCodeAt(i);
+      hash = Math.imul(hash,16777619);
+    }
+    return String(hash >>> 0);
+  }catch(error){
+    return "";
+  }
+}
+
+function miniCourseStageSnapshot(course){
+  if(!course) return null;
+  return {
+    name:String(course.name || "コース"),
+    blocks:Array.isArray(course.blocks) ? course.blocks : [],
+    start:course.start || {col:1,row:9},
+    goal:course.goal || {col:34,row:10}
+  };
+}
+
+function getMiniCourseHash(course){
+  return miniStageHash(miniCourseStageSnapshot(course));
+}
+
+function createDefaultMiniCourse(id = "local-1",name = "新しいコース"){
+  const blocks = [];
+  for(let col=0;col<MINI_EDITOR_COLS;col++){
+    blocks.push({col,row:11,type:"terrain"});
+  }
+  return {
+    id,
+    name,
+    blocks,
+    start:{col:1,row:9},
+    goal:{col:34,row:10},
+    test:{valid:false,snapshotHash:"",time:0}
+  };
+}
+
+function normalizeMiniCourse(course,index=0){
+  const source = course && typeof course === "object" ? course : createDefaultMiniCourse();
+  const blocks = Array.isArray(source.blocks) ? source.blocks : [];
+  const normalizedBlocks = [];
+  const occupied = new Set();
+  for(const block of blocks){
+    const col = Math.max(0,Math.min(MINI_EDITOR_COLS - 1,Math.floor(Number(block?.col))));
+    const row = Math.max(0,Math.min(MINI_EDITOR_ROWS - 1,Math.floor(Number(block?.row))));
+    const type = ["terrain","platform","spike"].includes(block?.type) ? block.type : "";
+    if(!type) continue;
+    const key = `${col}:${row}`;
+    if(occupied.has(key)) continue;
+    occupied.add(key);
+    normalizedBlocks.push({col,row,type});
+  }
+  const start = source.start && Number.isFinite(Number(source.start.col)) && Number.isFinite(Number(source.start.row))
+    ? {col:Math.max(0,Math.min(MINI_EDITOR_COLS - 1,Math.floor(Number(source.start.col)))),row:Math.max(0,Math.min(MINI_EDITOR_ROWS - 1,Math.floor(Number(source.start.row))))}
+    : {col:1,row:9};
+  const goal = source.goal && Number.isFinite(Number(source.goal.col)) && Number.isFinite(Number(source.goal.row))
+    ? {col:Math.max(0,Math.min(MINI_EDITOR_COLS - 1,Math.floor(Number(source.goal.col)))),row:Math.max(0,Math.min(MINI_EDITOR_ROWS - 1,Math.floor(Number(source.goal.row))))}
+    : {col:34,row:10};
+  const test = source.test && typeof source.test === "object"
+    ? {valid:Boolean(source.test.valid),snapshotHash:String(source.test.snapshotHash || ""),time:Number(source.test.time || 0)}
+    : {valid:false,snapshotHash:"",time:0};
+  return {
+    id:String(source.id || `local-${index+1}`),
+    name:String(source.name || `コース ${index+1}`).slice(0,24),
+    blocks:normalizedBlocks,
+    start,
+    goal,
+    test
+  };
+}
+
+function loadMiniCourses(){
+  try{
+    const raw = JSON.parse(localStorage.getItem(MINI_COURSES_KEY) || "[]");
+    if(!Array.isArray(raw) || raw.length === 0) return [createDefaultMiniCourse()];
+    return raw.map((course,index)=>normalizeMiniCourse(course,index));
+  }catch(error){
+    return [createDefaultMiniCourse()];
+  }
+}
+
+let miniLocalCourses = loadMiniCourses();
+
+function saveMiniCourses(){
+  try{
+    localStorage.setItem(MINI_COURSES_KEY,JSON.stringify(miniLocalCourses));
+  }catch(error){
+    console.error("mini course save error",error);
+  }
+}
+
+function currentMiniCourse(){
+  if(!miniLocalCourses.length) return null;
+  let course = miniLocalCourses.find(item => item.id === miniWorkspaceCourseId);
+  if(!course){
+    course = miniLocalCourses[0];
+    miniWorkspaceCourseId = course.id;
+  }
+  return course;
+}
+
+function loadMiniWorkspaceState(){
+  try{
+    const state = JSON.parse(localStorage.getItem(MINI_WORKSPACE_KEY) || "{}");
+    miniWorkspaceMode = state.mode === "create" ? "create" : "play";
+    miniWorkspaceView = state.view === "courses" ? "courses" : "editor";
+    miniWorkspaceCourseId = state.courseId ? String(state.courseId) : null;
+    miniMakerTool = ["terrain","platform","spike","start","goal","eraser"].includes(state.tool)
+      ? state.tool
+      : "terrain";
+  }catch(error){
+    miniWorkspaceMode = "play";
+    miniWorkspaceView = "editor";
+    miniWorkspaceCourseId = null;
+    miniMakerTool = "terrain";
+  }
+  currentMiniCourse();
+}
+
+function saveMiniWorkspaceState(){
+  try{
+    localStorage.setItem(MINI_WORKSPACE_KEY,JSON.stringify({
+      mode:miniWorkspaceMode,
+      view:miniWorkspaceView,
+      courseId:miniWorkspaceCourseId,
+      tool:miniMakerTool
+    }));
+  }catch(error){
+    console.error("mini workspace save error",error);
+  }
+}
+
+loadMiniWorkspaceState();
+saveMiniCourses();
+saveMiniWorkspaceState();
+
+function invalidateMiniCourseTest(course){
+  if(!course) return;
+  course.test = {valid:false,snapshotHash:"",time:0};
+}
+
+function canPublishCurrentCourse(){
+  const course = currentMiniCourse();
+  if(!course || !course.test?.valid) return false;
+  const currentHash = getMiniCourseHash(course);
+  return Boolean(
+    course.test.snapshotHash &&
+    currentHash === course.test.snapshotHash &&
+    Number(course.test.time) <= MINI_TEST_LIMIT
+  );
+}
+
+function miniCourseToStage(course){
+  const normalized = normalizeMiniCourse(course);
+  const platforms = [];
+  const hazards = [];
+  for(const block of normalized.blocks){
+    const x = block.col * MINI_EDITOR_CELL;
+    const y = block.row * MINI_EDITOR_CELL;
+    if(block.type === "terrain") platforms.push({x,y,w:MINI_EDITOR_CELL,h:MINI_EDITOR_CELL});
+    if(block.type === "platform") platforms.push({x,y,w:MINI_EDITOR_CELL,h:8});
+    if(block.type === "spike") hazards.push({x,y,w:MINI_EDITOR_CELL,h:MINI_EDITOR_CELL});
+  }
+  return {
+    id:`local:${normalized.id}`,
+    name:normalized.name,
+    worldWidth:MINI_EDITOR_COLS * MINI_EDITOR_CELL,
+    start:{
+      x:normalized.start.col * MINI_EDITOR_CELL + 2,
+      y:normalized.start.row * MINI_EDITOR_CELL
+    },
+    goalX:normalized.goal.col * MINI_EDITOR_CELL,
+    platforms,
+    hazards,
+    ceilings:[]
+  };
+}
+
+function sanitizePublicMiniStage(raw,docId){
+  if(!raw || typeof raw !== "object") return null;
+  const worldWidth = Math.max(160,Math.min(4000,Number(raw.worldWidth) || 720));
+  const startX = Number(raw?.start?.x);
+  const startY = Number(raw?.start?.y);
+  const goalX = Number(raw.goalX);
+  if(!Number.isFinite(startX) || !Number.isFinite(startY) || !Number.isFinite(goalX)) return null;
+  const platforms = Array.isArray(raw.platforms) ? raw.platforms.map(item => ({
+    x:Number(item?.x),y:Number(item?.y),w:Number(item?.w),h:Number(item?.h)
+  })).filter(item => Object.values(item).every(Number.isFinite) && item.w > 0 && item.h > 0) : [];
+  const hazards = Array.isArray(raw.hazards) ? raw.hazards.map(item => ({
+    x:Number(item?.x),y:Number(item?.y),w:Number(item?.w),h:Number(item?.h)
+  })).filter(item => Object.values(item).every(Number.isFinite) && item.w > 0 && item.h > 0) : [];
+  if(platforms.length === 0) return null;
+  return {
+    id:`public:${String(docId)}`,
+    publicId:String(docId),
+    name:String(raw.name || "公開コース").slice(0,32),
+    worldWidth,
+    start:{x:Math.max(0,Math.min(worldWidth - 16,startX)),y:Math.max(0,startY)},
+    goalX:Math.max(0,Math.min(worldWidth - 16,goalX)),
+    platforms,
+    hazards,
+    ceilings:Array.isArray(raw.ceilings) ? raw.ceilings.map(item => ({x:Number(item?.x),y:Number(item?.y),w:Number(item?.w),h:Number(item?.h)})).filter(item => Object.values(item).every(Number.isFinite) && item.w > 0 && item.h > 0) : []
+  };
+}
+
+async function loadMiniPublicStages(force=false){
+  if(!force && miniPublicStagesLoaded) return miniPublicStages;
+  if(miniPublicStagesLoading) return miniPublicStagesLoading;
+  miniPublicStagesLoading = (async()=>{
+    try{
+      const user = await ensureAuth();
+      if(!user) throw new Error("AUTH");
+      const snapshot = await getDocs(collection(db,"miniCoursesPublic"));
+      const stages = [];
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data() || {};
+        const stage = sanitizePublicMiniStage(data.stage,data.id || docSnap.id);
+        if(stage){
+          stage.ownerUid = String(data.ownerUid || "");
+          stage.sourceCourseId = String(data.sourceCourseId || "");
+          stage.createdAt = typeof data.createdAt === "number" ? data.createdAt : 0;
+          stages.push(stage);
+        }
+      });
+      miniPublicStages = stages;
+      miniPublicStagesLoaded = true;
+      return stages;
+    }catch(error){
+      console.error("mini public stage load error",error);
+      miniPublicStages = [];
+      miniPublicStagesLoaded = false;
+      return [];
+    }finally{
+      miniPublicStagesLoading = null;
+    }
+  })();
+  return miniPublicStagesLoading;
+}
+
+function chooseMiniActionStage(){
+  const pool = miniPublicStages.length > 0 ? miniPublicStages : [MINI_ACTION_STAGES[0]];
+  if(pool.length === 1) {
+    miniActionPreviousStage = pool[0].id;
+    return pool[0];
+  }
+  let next = pool[Math.floor(Math.random() * pool.length)];
+  let guard = 0;
+  while(String(next.id) === String(miniActionPreviousStage) && guard++ < 12){
+    next = pool[Math.floor(Math.random() * pool.length)];
+  }
+  miniActionPreviousStage = next.id;
+  return next;
+}
+
 function getMiniBestKey(stageId){
   return `3Dfps_mini_action_best_stage_${stageId}`;
 }
@@ -9435,206 +9752,11 @@ function saveMiniBestTime(stageId,time){
   const previous = getMiniBestTime(stageId);
   if(previous !== null && previous <= time) return false;
   try{
-    localStorage.setItem(getMiniBestKey(stageId), String(time));
+    localStorage.setItem(getMiniBestKey(stageId),String(time));
     return true;
   }catch(error){
     return previous === null;
   }
-}
-
-function miniClone(value){
-  return JSON.parse(JSON.stringify(value));
-}
-
-function makeMiniId(prefix="course"){
-  try{
-    if(crypto.randomUUID) return `${prefix}-${crypto.randomUUID()}`;
-  }catch(error){}
-  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2,10)}`;
-}
-
-function createDefaultMiniEditorCourse(){
-  const base = MINI_ACTION_STAGES[0];
-  return {
-    id:makeMiniId("course"),
-    name:"コース1",
-    worldWidth:720,
-    terrain:[
-      {x:0,y:216,w:720,h:44}
-    ],
-    platforms:[
-      {x:168,y:184,w:72,h:24,kind:"solid"},
-      {x:300,y:160,w:72,h:24,kind:"solid"},
-      {x:456,y:184,w:72,h:24,kind:"solid"}
-    ],
-    hazards:[
-      {x:264,y:192,w:24,h:24},
-      {x:396,y:192,w:24,h:24},
-      {x:576,y:192,w:24,h:24}
-    ],
-    start:{x:24,y:194},
-    goalX:672,
-    verifiedHash:"",
-    verifiedTime:0,
-    updatedAt:Date.now()
-  };
-}
-
-function sanitizeMiniCourse(raw){
-  const source = raw && typeof raw === "object" ? raw : {};
-  const terrain = Array.isArray(source.terrain)
-    ? source.terrain
-        .filter(block => block && Number.isFinite(Number(block.x)) && Number.isFinite(Number(block.y)) && Number.isFinite(Number(block.w)) && Number.isFinite(Number(block.h)))
-        .map(block => ({x:Number(block.x),y:Number(block.y),w:Number(block.w),h:Number(block.h)}))
-        .slice(0,900)
-    : [];
-  const platforms = Array.isArray(source.platforms)
-    ? source.platforms
-        .filter(block => block && Number.isFinite(Number(block.x)) && Number.isFinite(Number(block.y)) && Number.isFinite(Number(block.w)) && Number.isFinite(Number(block.h)))
-        .map(block => ({x:Number(block.x),y:Number(block.y),w:Number(block.w),h:Number(block.h),kind:"solid"}))
-        .slice(0,900)
-    : [];
-  const hazards = Array.isArray(source.hazards)
-    ? source.hazards
-        .filter(block => block && Number.isFinite(Number(block.x)) && Number.isFinite(Number(block.y)) && Number.isFinite(Number(block.w)) && Number.isFinite(Number(block.h)))
-        .map(block => ({x:Number(block.x),y:Number(block.y),w:Number(block.w),h:Number(block.h)}))
-        .slice(0,900)
-    : [];
-  const start = source.start && Number.isFinite(Number(source.start.x)) && Number.isFinite(Number(source.start.y))
-    ? {x:Number(source.start.x),y:Number(source.start.y)}
-    : null;
-  const goalX = Number.isFinite(Number(source.goalX)) ? Number(source.goalX) : null;
-  return {
-    id:String(source.id || makeMiniId("course")),
-    name:String(source.name || "無題コース").trim().slice(0,28) || "無題コース",
-    worldWidth:720,
-    terrain,
-    platforms,
-    hazards,
-    start,
-    goalX,
-    verifiedHash:String(source.verifiedHash || ""),
-    verifiedTime:Number(source.verifiedTime || 0),
-    updatedAt:Number(source.updatedAt || Date.now())
-  };
-}
-
-function getMiniCourseHash(course){
-  if(!course) return "";
-  const normalized = sanitizeMiniCourse(course);
-  normalized.verifiedHash = "";
-  normalized.verifiedTime = 0;
-  normalized.updatedAt = 0;
-  return String(hashString(JSON.stringify(normalized)));
-}
-
-function isMiniCourseVerified(course){
-  if(!course || !course.verifiedHash) return false;
-  return getMiniCourseHash(course) === String(course.verifiedHash) && Number(course.verifiedTime) > 0 && Number(course.verifiedTime) <= 15;
-}
-
-function saveMiniPersistentState(){
-  try{
-    localStorage.setItem("3Dfps_mini_builder_state",JSON.stringify({
-      mode:miniMode === "test" ? "edit" : miniMode,
-      courseId:miniEditorCourseId,
-      tool:miniEditorTool
-    }));
-    localStorage.setItem("3Dfps_mini_builder_courses",JSON.stringify(miniEditorCourses));
-  }catch(error){
-    console.error("mini builder local save error",error);
-  }
-}
-
-function loadMiniPersistentState(){
-  if(miniPersistentLoaded) return;
-  miniPersistentLoaded = true;
-  let saved = null;
-  let courses = [];
-  try{
-    saved = JSON.parse(localStorage.getItem("3Dfps_mini_builder_state") || "null");
-    courses = JSON.parse(localStorage.getItem("3Dfps_mini_builder_courses") || "[]");
-  }catch(error){
-    saved = null;
-    courses = [];
-  }
-  miniEditorCourses = Array.isArray(courses)
-    ? courses.map(sanitizeMiniCourse)
-    : [];
-  if(!miniEditorCourses.length){
-    miniEditorCourses = [createDefaultMiniEditorCourse()];
-  }
-  const wantedId = saved?.courseId || "";
-  const wantedCourse = miniEditorCourses.find(course => course.id === wantedId) || miniEditorCourses[0];
-  miniEditorCourse = miniClone(wantedCourse);
-  miniEditorCourseId = wantedCourse.id;
-  miniEditorTool = ["terrain","platform","hazard","start","goal","erase"].includes(saved?.tool) ? saved.tool : "terrain";
-  miniMode = saved?.mode === "edit" ? "edit" : "play";
-  saveMiniPersistentState();
-  updateMiniEditorUI();
-}
-
-function updateMiniEditorCourseReference(){
-  if(!miniEditorCourse) return;
-  const index = miniEditorCourses.findIndex(course => course.id === miniEditorCourseId);
-  if(index >= 0){
-    miniEditorCourses[index] = sanitizeMiniCourse(miniEditorCourse);
-    miniEditorCourse = miniClone(miniEditorCourses[index]);
-  }
-}
-
-function saveMiniEditorChange(){
-  if(!miniEditorCourse) return;
-  miniEditorCourse.updatedAt = Date.now();
-  miniEditorCourse.verifiedHash = "";
-  miniEditorCourse.verifiedTime = 0;
-  updateMiniEditorCourseReference();
-  saveMiniPersistentState();
-  updateMiniEditorUI();
-  drawMiniEditor();
-}
-
-function getCurrentMiniEditorCourse(){
-  if(!miniEditorCourse){
-    loadMiniPersistentState();
-  }
-  return miniEditorCourse;
-}
-
-function editorCourseToPlayableStage(course){
-  const source = sanitizeMiniCourse(course);
-  return {
-    id:`local:${source.id}`,
-    _sourceId:`local:${source.id}`,
-    name:source.name,
-    worldWidth:source.worldWidth,
-    start:source.start ? {...source.start} : {x:-100,y:-100},
-    goalX:Number(source.goalX),
-    terrain:source.terrain.map(block => ({...block})),
-    platforms:source.platforms.map(block => ({...block,kind:"solid"})),
-    hazards:source.hazards.map(block => ({...block}))
-  };
-}
-
-function validateMiniEditorCourseForTest(course){
-  if(!course) return "コースがありません。";
-  if(!course.start || !Number.isFinite(Number(course.start.x)) || !Number.isFinite(Number(course.start.y))) return "スタートを置いてね。";
-  if(!Number.isFinite(Number(course.goalX))) return "ゴールを置いてね。";
-  if(course.start.x < 0 || course.start.x >= 704 || course.start.y < 0 || course.start.y > 238) return "スタートの位置を見直してね。";
-  if(course.goalX < 16 || course.goalX > 704) return "ゴールの位置を見直してね。";
-  return "";
-}
-
-function getMiniStageKey(stage){
-  return String(stage?._sourceId ?? stage?.id ?? "builtin:1");
-}
-
-function getFallbackMiniActionStage(){
-  return miniClone(MINI_ACTION_STAGES[0]);
-}
-
-function chooseMiniActionStage(){
-  return getFallbackMiniActionStage();
 }
 
 function resizeMiniActionCanvas(){
@@ -9647,59 +9769,6 @@ function resizeMiniActionCanvas(){
     miniGameCanvas.width = width;
     miniGameCanvas.height = height;
   }
-}
-
-async function loadPublishedMiniStages(force=false){
-  const now = Date.now();
-  if(!force && now - miniPublishedStagesLoadedAt < 30000 && miniPublishedStagesCache.length) return miniPublishedStagesCache;
-  try{
-    const snapshot = await getDocs(collection(db,"publishedMiniStages"));
-    const stages = [];
-    snapshot.forEach(docSnap => {
-      try{
-        const data = docSnap.data() || {};
-        const stage = data.stage ? sanitizeMiniCourse(data.stage) : null;
-        if(!stage || !stage.start || !Number.isFinite(Number(stage.goalX))) return;
-        stages.push({
-          id:docSnap.id,
-          _sourceId:docSnap.id,
-          name:stage.name,
-          worldWidth:720,
-          start:{...stage.start},
-          goalX:Number(stage.goalX),
-          terrain:stage.terrain.map(block => ({...block})),
-          platforms:stage.platforms.map(block => ({...block,kind:"solid"})),
-          hazards:stage.hazards.map(block => ({...block}))
-        });
-      }catch(error){}
-    });
-    miniPublishedStagesCache = stages;
-    miniPublishedStagesLoadedAt = now;
-    return stages;
-  }catch(error){
-    console.error("published mini stage load error",error);
-    return [];
-  }
-}
-
-async function choosePlayableMiniActionStage(){
-  const publicStages = await loadPublishedMiniStages(false);
-  const pool = publicStages.length ? publicStages : [getFallbackMiniActionStage()];
-  let next = pool[Math.floor(Math.random() * pool.length)];
-  if(pool.length > 1 && miniActionState?.stage){
-    const previousKey = getMiniStageKey(miniActionState.stage);
-    let guard = 0;
-    while(getMiniStageKey(next) === previousKey && guard++ < 12){
-      next = pool[Math.floor(Math.random() * pool.length)];
-    }
-  }
-  return miniClone(next);
-}
-
-async function startNextPlayableMiniActionStage(){
-  const stage = await choosePlayableMiniActionStage();
-  if(!miniActionIsVisible()) return;
-  startMiniActionStage(stage);
 }
 
 function showMiniActionMessage(text){
@@ -9719,16 +9788,27 @@ function updateMiniActionLabels(){
   const stage = miniActionState.stage;
   const best = getMiniBestTime(stage.id);
   const time = Math.max(0,miniActionState.elapsed || 0);
-  miniGameStageLabel.textContent = `${miniMode === "test" ? "TEST" : "STAGE"} · ${stage.name}`;
-  if(miniMode === "test"){
-    miniGameScore.textContent = `TIME ${time.toFixed(2)}s · LIMIT 15.00s`;
-  }else{
-    miniGameScore.textContent = `TIME ${time.toFixed(2)}s · BEST ${best === null ? "--" : best.toFixed(2) + "s"}`;
+  miniGameStageLabel.textContent = `STAGE ${stage.id} · ${stage.name}`;
+  miniGameScore.textContent = `TIME ${time.toFixed(2)}s · BEST ${best === null ? "--" : best.toFixed(2) + "s"}`;
+}
+
+function resetMiniActionHoldState(){
+  miniActionInput.left = false;
+  miniActionInput.right = false;
+  miniActionInput.jump = false;
+  miniActionInput.jumpPressed = false;
+  const pointerIds = [miniTouchState.movePointerId,miniTouchState.jumpPointerId];
+  for(const pointerId of pointerIds){
+    if(pointerId === null) continue;
+    try{ miniTouchZone?.releasePointerCapture(pointerId); }catch(error){}
   }
+  miniTouchState.movePointerId = null;
+  miniTouchState.jumpPointerId = null;
+  hideMiniTouchVisual();
 }
 
 async function syncMiniActionState(force=false){
-  if(!matchRef || matchType !== "random" || !currentUser || gameEnded || miniMode !== "play" || !miniActionState?.active) return;
+  if(!matchRef || matchType !== "random" || !currentUser || gameEnded || miniMakerTestMode || !miniActionState?.active) return;
   const now = performance.now();
   if(!force && (now - miniLastNetworkUpdate < 150 || miniNetworkSyncing)) return;
   miniLastNetworkUpdate = now;
@@ -9738,7 +9818,6 @@ async function syncMiniActionState(force=false){
     await updateDoc(matchRef,{
       [`players.${currentUser.uid}.miniActive`]:true,
       [`players.${currentUser.uid}.miniStageId`]:state.stage.id,
-      [`players.${currentUser.uid}.miniStageKey`]:getMiniStageKey(state.stage),
       [`players.${currentUser.uid}.miniX`]:state.x,
       [`players.${currentUser.uid}.miniY`]:state.y
     });
@@ -9755,7 +9834,6 @@ async function clearMiniActionRemoteState(){
     await updateDoc(matchRef,{
       [`players.${currentUser.uid}.miniActive`]:false,
       [`players.${currentUser.uid}.miniStageId`]:null,
-      [`players.${currentUser.uid}.miniStageKey`]:null,
       [`players.${currentUser.uid}.miniX`]:0,
       [`players.${currentUser.uid}.miniY`]:0
     });
@@ -9764,37 +9842,15 @@ async function clearMiniActionRemoteState(){
   }
 }
 
-function resetMiniActionHoldState(){
-  const moveId = miniTouchState.movePointerId;
-  const jumpId = miniTouchState.jumpPointerId;
-  if(miniTouchZone){
-    try{ if(moveId !== null) miniTouchZone.releasePointerCapture(moveId); }catch(error){}
-    try{ if(jumpId !== null) miniTouchZone.releasePointerCapture(jumpId); }catch(error){}
-  }
-  miniTouchState.movePointerId = null;
-  miniTouchState.jumpPointerId = null;
-  miniTouchState.moveOriginX = 0;
-  miniTouchState.moveCurrentX = 0;
-  miniTouchState.moveY = 0;
-  miniTouchState.jumpStartX = 0;
-  miniTouchState.jumpStartY = 0;
-  miniTouchState.jumpStartTime = 0;
-  miniActionInput.left = false;
-  miniActionInput.right = false;
-  miniActionInput.jump = false;
-  miniActionInput.jumpPressed = false;
-  hideMiniTouchVisual();
-}
-
-function startMiniActionStage(stage = getFallbackMiniActionStage()){
-  if(!miniGameCanvas) return;
+function startMiniActionStage(stage = chooseMiniActionStage()){
+  if(!miniGameCanvas || !stage) return;
   resizeMiniActionCanvas();
   const start = stage.start;
   miniActionState = {
     active:true,
-    stage:miniClone(stage),
-    x:Number(start.x),
-    y:Number(start.y),
+    stage,
+    x:start.x,
+    y:start.y,
     vx:0,
     vy:0,
     width:16,
@@ -9816,15 +9872,18 @@ function startMiniActionStage(stage = getFallbackMiniActionStage()){
 }
 
 async function ensureMiniActionGameStarted(){
-  loadMiniPersistentState();
-  if(miniMode === "edit"){
-    enterMiniEditorMode(false);
+  if(miniMakerTestMode || miniWorkspaceMode !== "play") return;
+  if(miniActionState?.active) return;
+  if(!miniPublicStagesLoaded){
+    miniGameStarted = true;
+    showMiniActionMessage("ステージを読み込み中…");
+    const stages = await loadMiniPublicStages();
+    if(!miniActionIsVisible() || miniActionState?.active) return;
+    hideMiniActionMessage();
+    startMiniActionStage(stages.length ? chooseMiniActionStage() : MINI_ACTION_STAGES[0]);
     return;
   }
-  if(miniMode === "test") miniMode = "edit";
-  if(!miniActionState || !miniActionState.active){
-    await startNextPlayableMiniActionStage();
-  }
+  startMiniActionStage(chooseMiniActionStage());
 }
 
 function stopMiniActionGame(){
@@ -9833,7 +9892,7 @@ function stopMiniActionGame(){
     matchType === "random" &&
     matchRef &&
     currentUser &&
-    miniMode === "play"
+    !miniMakerTestMode
   );
   if(shouldClearRemote) clearMiniActionRemoteState();
   if(miniActionState) miniActionState.active = false;
@@ -9844,30 +9903,6 @@ function stopMiniActionGame(){
   if(miniGameMessage) miniGameMessage.classList.remove("show");
 }
 
-function miniActionIsVisible(){
-  return Boolean(
-    matchingScreen &&
-    matchingScreen.style.display === "flex" &&
-    matchType === "random" &&
-    latestMatchData &&
-    latestMatchData.status === "waiting" &&
-    !gameEnded &&
-    (miniMode === "play" || miniMode === "test") &&
-    !latestMatchData.matchingFinalizedAt
-  );
-}
-
-function miniActionWorldToScreen(state,worldX,worldY,viewW,viewH){
-  const targetCamera = Math.max(0,Math.min(
-    state.stage.worldWidth - 720,
-    state.x - 180
-  ));
-  return {
-    x:(worldX - targetCamera) * viewW / 720,
-    y:worldY * viewH / 260
-  };
-}
-
 function miniActionRectHit(a,b){
   return a.x < b.x + b.w &&
     a.x + a.width > b.x &&
@@ -9875,49 +9910,21 @@ function miniActionRectHit(a,b){
     a.y + a.height > b.y;
 }
 
-async function resetMiniActionRandomStage(message="RESET"){ 
-  if(!miniActionState || !miniActionState.active || miniMode !== "play") return;
-  resetMiniActionHoldState();
-  showMiniActionMessage(message);
-  const stage = await choosePlayableMiniActionStage();
-  if(!miniActionState || !miniActionState.active || miniMode !== "play") return;
-  const start = stage.start;
-  miniActionState.stage = miniClone(stage);
-  miniActionState.x = Number(start.x);
-  miniActionState.y = Number(start.y);
-  miniActionState.vx = 0;
-  miniActionState.vy = 0;
-  miniActionState.onGround = false;
-  miniActionState.coyote = 0;
-  miniActionState.jumpBuffer = 0;
-  miniActionState.startTime = performance.now();
-  miniActionState.elapsed = 0;
-  miniActionState.clearPending = false;
-  miniActionState.flashUntil = performance.now() + 160;
-  updateMiniActionLabels();
-  syncMiniActionState(true);
-  setTimeout(() => {
-    if(miniActionState && miniActionState.active) hideMiniActionMessage();
-  },400);
-}
-
 function resetMiniActionStage(message="",randomizeStage=false){
   if(!miniActionState || !miniActionState.active) return;
   resetMiniActionHoldState();
-  if(randomizeStage && miniMode === "play"){
-    resetMiniActionRandomStage(message || "RESET");
-    return;
-  }
-  const stage = miniActionState.stage;
+  const stage = randomizeStage ? chooseMiniActionStage() : miniActionState.stage;
   const start = stage.start;
-  miniActionState.x = Number(start.x);
-  miniActionState.y = Number(start.y);
+  miniActionState.stage = stage;
+  miniActionState.x = start.x;
+  miniActionState.y = start.y;
   miniActionState.vx = 0;
   miniActionState.vy = 0;
   miniActionState.onGround = false;
   miniActionState.coyote = 0;
   miniActionState.jumpBuffer = 0;
   miniActionState.startTime = performance.now();
+  miniMakerTestStart = miniMakerTestMode ? miniActionState.startTime : miniMakerTestStart;
   miniActionState.elapsed = 0;
   miniActionState.clearPending = false;
   miniActionState.flashUntil = performance.now() + 160;
@@ -9933,33 +9940,36 @@ function resetMiniActionStage(message="",randomizeStage=false){
   syncMiniActionState(true);
 }
 
-function finishMiniEditorTest(success,elapsed,message){
-  const course = getCurrentMiniEditorCourse();
-  const testedHash = miniEditorTestHash;
-  const validNow = getMiniCourseHash(course) === testedHash && miniEditorCourseId === miniEditorTestCourseId;
-  if(success && validNow && elapsed <= 15){
-    course.verifiedHash = testedHash;
-    course.verifiedTime = elapsed;
-    updateMiniEditorCourseReference();
-    saveMiniPersistentState();
-    miniMode = "edit";
-    miniPersistentLoaded = true;
-    updateMiniEditorUI();
-    showMiniActionMessage(message || `CLEAR  ${elapsed.toFixed(2)}s`);
-    setTimeout(() => {
-      if(miniMode === "edit" && miniActionState) stopMiniActionGame();
-      drawMiniEditor();
-    },850);
-    return;
+function completeMiniCourseTest(time){
+  const course = miniLocalCourses.find(item => item.id === miniMakerTestCourseId);
+  const unchanged = Boolean(course && getMiniCourseHash(course) === miniMakerTestSnapshotHash);
+  const valid = Boolean(course && unchanged && time <= MINI_TEST_LIMIT);
+  if(course){
+    course.test = {
+      valid,
+      snapshotHash:valid ? miniMakerTestSnapshotHash : "",
+      time:valid ? time : 0
+    };
+    saveMiniCourses();
   }
-  miniMode = "edit";
-  saveMiniPersistentState();
-  updateMiniEditorUI();
-  showMiniActionMessage(message || "TEST FAILED");
+  showMiniActionMessage(valid ? `✓ クリア  ${time.toFixed(2)}s` : "テスト失敗");
   setTimeout(() => {
-    if(miniMode === "edit" && miniActionState) stopMiniActionGame();
-    drawMiniEditor();
-  },700);
+    if(!miniMakerTestMode) return;
+    stopMiniCourseTest();
+  },850);
+}
+
+function stopMiniCourseTest(){
+  miniMakerTestMode = false;
+  miniMakerTestCourseId = null;
+  miniMakerTestSnapshotHash = "";
+  miniMakerTestStart = 0;
+  stopMiniActionGame();
+  miniWorkspaceMode = "create";
+  miniWorkspaceView = "editor";
+  matchingScreen.classList.remove("miniCourseListMode");
+  saveMiniWorkspaceState();
+  renderMiniWorkspaceMode();
 }
 
 function completeMiniActionStage(){
@@ -9967,551 +9977,24 @@ function completeMiniActionStage(){
   miniActionState.clearPending = true;
   const state = miniActionState;
   state.elapsed = (performance.now() - state.startTime) / 1000;
-  if(miniMode === "test"){
-    const elapsed = state.elapsed;
-    const passed = elapsed <= 15;
-    finishMiniEditorTest(passed,elapsed,passed ? `CLEAR  ${elapsed.toFixed(2)}s` : "15秒以内にクリアできませんでした");
+  if(miniMakerTestMode){
+    completeMiniCourseTest(state.elapsed);
     return;
   }
   const isBest = saveMiniBestTime(state.stage.id,state.elapsed);
   updateMiniActionLabels();
   showMiniActionMessage(isBest ? `NEW BEST  ${state.elapsed.toFixed(2)}s` : `CLEAR  ${state.elapsed.toFixed(2)}s`);
-  setTimeout(async () => {
+  setTimeout(() => {
     if(!miniActionState || miniActionState !== state || !miniActionState.active) return;
     if(!miniActionIsVisible()) return;
-    await startNextPlayableMiniActionStage();
+    startMiniActionStage(chooseMiniActionStage());
   },850);
-}
-
-function updateMiniEditorUI(){
-  if(!miniEditorCourse) return;
-  if(miniEditorCourseName) miniEditorCourseName.value = miniEditorCourse.name || "";
-  document.querySelectorAll(".miniEditorTool").forEach(button => {
-    button.classList.toggle("selected",button.dataset.miniTool === miniEditorTool);
-  });
-}
-
-function getMiniEditorDrawTransform(){
-  const width = miniGameCanvas?.clientWidth || 420;
-  const height = miniGameCanvas?.clientHeight || 260;
-  const pixelScaleX = miniGameCanvas ? miniGameCanvas.width / Math.max(1,width) : 1;
-  const pixelScaleY = miniGameCanvas ? miniGameCanvas.height / Math.max(1,height) : 1;
-  const scale = Math.min(width / 720, height / 260);
-  return {
-    width,
-    height,
-    pixelScaleX,
-    pixelScaleY,
-    scale,
-    drawWidth:720 * scale,
-    drawHeight:260 * scale,
-    offsetX:(width - 720 * scale) / 2,
-    offsetY:(height - 260 * scale) / 2
-  };
-}
-
-function miniEditorPoint(event){
-  const rect = miniGameCanvas.getBoundingClientRect();
-  const tx = getMiniEditorDrawTransform();
-  const x = (event.clientX - rect.left - tx.offsetX) / tx.scale;
-  const y = (event.clientY - rect.top - tx.offsetY) / tx.scale;
-  return {x,y};
-}
-
-function miniEditorCell(point){
-  return {
-    x:Math.floor(point.x / 24) * 24,
-    y:Math.floor(point.y / 24) * 24
-  };
-}
-
-function miniEditorBlockAt(list,x,y){
-  return list.findIndex(block => x < block.x + block.w && x + 24 > block.x && y < block.y + block.h && y + 24 > block.y);
-}
-
-function miniEditorApplyAt(point){
-  if(!miniEditorCourse) return;
-  if(point.x < 0 || point.x >= 720 || point.y < 0 || point.y >= 260) return;
-  const cell = miniEditorCell(point);
-  const cellKey = `${cell.x},${cell.y}`;
-  if(cellKey === miniEditorLastCell && miniEditorDrawing) return;
-  miniEditorLastCell = cellKey;
-  const course = miniEditorCourse;
-  if(miniEditorTool === "terrain"){
-    const index = miniEditorBlockAt(course.terrain,cell.x,cell.y);
-    if(index < 0) course.terrain.push({x:cell.x,y:cell.y,w:24,h:24});
-  }else if(miniEditorTool === "platform"){
-    const index = miniEditorBlockAt(course.platforms,cell.x,cell.y);
-    if(index < 0) course.platforms.push({x:cell.x,y:cell.y,w:24,h:24,kind:"solid"});
-  }else if(miniEditorTool === "hazard"){
-    const index = miniEditorBlockAt(course.hazards,cell.x,cell.y);
-    if(index < 0) course.hazards.push({x:cell.x,y:cell.y,w:24,h:24});
-  }else if(miniEditorTool === "start"){
-    course.start = {x:cell.x + 4,y:Math.max(0,cell.y + 2)};
-  }else if(miniEditorTool === "goal"){
-    course.goalX = Math.min(704,Math.max(16,cell.x + 4));
-  }else if(miniEditorTool === "erase"){
-    let changed = false;
-    const terrainIndex = miniEditorBlockAt(course.terrain,cell.x,cell.y);
-    if(terrainIndex >= 0){ course.terrain.splice(terrainIndex,1); changed = true; }
-    const platformIndex = miniEditorBlockAt(course.platforms,cell.x,cell.y);
-    if(platformIndex >= 0){ course.platforms.splice(platformIndex,1); changed = true; }
-    const hazardIndex = miniEditorBlockAt(course.hazards,cell.x,cell.y);
-    if(hazardIndex >= 0){ course.hazards.splice(hazardIndex,1); changed = true; }
-    if(course.start && point.x >= course.start.x - 6 && point.x <= course.start.x + 22 && point.y >= course.start.y - 6 && point.y <= course.start.y + 28){
-      course.start = null;
-      changed = true;
-    }
-    if(Number.isFinite(Number(course.goalX)) && Math.abs(point.x - Number(course.goalX)) <= 16){
-      course.goalX = null;
-      changed = true;
-    }
-    if(!changed) return;
-  }
-  saveMiniEditorChange();
-}
-
-function drawMiniEditor(){
-  if(!miniGameCanvas || !miniEditorCourse || miniMode === "test" || miniMode === "play") return;
-  resizeMiniActionCanvas();
-  const ctx = miniGameCanvas.getContext("2d");
-  if(!ctx) return;
-  const tx = getMiniEditorDrawTransform();
-  const px = miniGameCanvas.width / Math.max(1,tx.width);
-  const py = miniGameCanvas.height / Math.max(1,tx.height);
-  ctx.setTransform(1,0,0,1,0,0);
-  ctx.clearRect(0,0,miniGameCanvas.width,miniGameCanvas.height);
-  ctx.setTransform(px * tx.scale,0,0,py * tx.scale,px * tx.offsetX,py * tx.offsetY);
-
-  const bg = ctx.createLinearGradient(0,0,0,260);
-  bg.addColorStop(0,"#111c2b");
-  bg.addColorStop(.62,"#07101b");
-  bg.addColorStop(1,"#02050a");
-  ctx.fillStyle = bg;
-  ctx.fillRect(0,0,720,260);
-
-  ctx.strokeStyle = "rgba(120,175,225,.15)";
-  ctx.lineWidth = 1;
-  for(let x=0;x<=720;x+=24){
-    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,260); ctx.stroke();
-  }
-  for(let y=0;y<=260;y+=24){
-    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(720,y); ctx.stroke();
-  }
-
-  for(const block of miniEditorCourse.terrain){
-    ctx.fillStyle = "#28445d";
-    ctx.fillRect(block.x,block.y,block.w,block.h);
-    ctx.strokeStyle = "rgba(103,196,255,.95)";
-    ctx.strokeRect(block.x + .5,block.y + .5,block.w - 1,block.h - 1);
-  }
-
-  for(const block of miniEditorCourse.platforms){
-    ctx.fillStyle = "#5b4c32";
-    ctx.fillRect(block.x,block.y,block.w,block.h);
-    ctx.strokeStyle = "rgba(255,214,126,.9)";
-    ctx.strokeRect(block.x + .5,block.y + .5,block.w - 1,block.h - 1);
-  }
-
-  for(const hazard of miniEditorCourse.hazards){
-    ctx.fillStyle = "#7f335f";
-    ctx.beginPath();
-    ctx.moveTo(hazard.x,hazard.y + hazard.h);
-    ctx.lineTo(hazard.x + hazard.w / 2,hazard.y);
-    ctx.lineTo(hazard.x + hazard.w,hazard.y + hazard.h);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = "rgba(255,132,203,.9)";
-    ctx.stroke();
-  }
-
-  if(miniEditorCourse.start){
-    ctx.strokeStyle = "rgba(255,255,255,.85)";
-    ctx.setLineDash([4,3]);
-    ctx.strokeRect(miniEditorCourse.start.x,Math.max(0,miniEditorCourse.start.y),16,22);
-    ctx.setLineDash([]);
-    ctx.font = "900 11px Arial";
-    ctx.fillStyle = "rgba(255,255,255,.86)";
-    ctx.fillText("S",miniEditorCourse.start.x + 4,miniEditorCourse.start.y - 4);
-  }
-
-  if(Number.isFinite(Number(miniEditorCourse.goalX))){
-    const goalX = Number(miniEditorCourse.goalX);
-    const goalPlatform = [...miniEditorCourse.platforms,...miniEditorCourse.terrain].find(block => goalX >= block.x && goalX <= block.x + block.w) || null;
-    const groundY = Number(goalPlatform?.y ?? 216);
-    const flagTopY = groundY - 42;
-    ctx.strokeStyle = "rgba(170,221,255,.95)";
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(goalX,flagTopY); ctx.lineTo(goalX,groundY); ctx.stroke();
-    ctx.fillStyle = "rgba(116,207,255,.9)";
-    ctx.beginPath(); ctx.moveTo(goalX + 1,flagTopY); ctx.lineTo(goalX + 34,flagTopY + 10); ctx.lineTo(goalX + 1,flagTopY + 20); ctx.closePath(); ctx.fill();
-  }
-}
-
-function setMiniModeUi(){
-  const editing = miniMode === "edit";
-  const testing = miniMode === "test";
-  matchingScreen.classList.toggle("miniEditorMode",editing);
-  if(matchingTitle) matchingTitle.textContent = editing ? "CREATE" : "MATCHING...";
-  if(editing){
-    miniModeMenuButton.setAttribute("aria-label","作るメニュー");
-    updateMiniEditorUI();
-    drawMiniEditor();
-  }else if(testing){
-    miniModeMenuButton.setAttribute("aria-label","作るメニュー");
-  }else{
-    miniModeMenuButton.setAttribute("aria-label","ミニゲームメニュー");
-  }
-}
-
-function enterMiniEditorMode(persist=true){
-  loadMiniPersistentState();
-  stopMiniActionGame();
-  miniMode = "edit";
-  if(!miniEditorCourse) loadMiniPersistentState();
-  if(!miniEditorCourse){
-    miniEditorCourses = [createDefaultMiniEditorCourse()];
-    miniEditorCourseId = miniEditorCourses[0].id;
-    miniEditorCourse = miniClone(miniEditorCourses[0]);
-  }
-  if(persist) saveMiniPersistentState();
-  setMiniModeUi();
-  drawMiniEditor();
-}
-
-async function enterMiniPlayMode(persist=true){
-  loadMiniPersistentState();
-  stopMiniActionGame();
-  miniMode = "play";
-  if(persist) saveMiniPersistentState();
-  setMiniModeUi();
-  await startNextPlayableMiniActionStage();
-}
-
-function enterMiniTestMode(){
-  loadMiniPersistentState();
-  const course = getCurrentMiniEditorCourse();
-  const problem = validateMiniEditorCourseForTest(course);
-  if(problem){
-    showMiniActionMessage(problem);
-    setTimeout(()=>hideMiniActionMessage(),900);
-    return;
-  }
-  stopMiniActionGame();
-  miniMode = "test";
-  miniEditorTestHash = getMiniCourseHash(course);
-  miniEditorTestCourseId = miniEditorCourseId;
-  setMiniModeUi();
-  startMiniActionStage(editorCourseToPlayableStage(course));
-}
-
-async function resetMiniMenuAction(){
-  if(miniMode !== "play") return;
-  resetMiniActionHoldState();
-  await resetMiniActionRandomStage("RESET");
-}
-
-async function publishCurrentMiniCourse(){
-  const course = getCurrentMiniEditorCourse();
-  const hash = getMiniCourseHash(course);
-  if(!isMiniCourseVerified(course) || hash !== String(course.verifiedHash)){
-    showMiniActionMessage("15秒以内のテストクリアが必要です");
-    setTimeout(()=>hideMiniActionMessage(),1000);
-    return;
-  }
-  try{
-    const publicId = makeMiniId("stage");
-    const publicRef = doc(db,"publishedMiniStages",publicId);
-    await setDoc(publicRef,{
-      ownerUid:currentUser.uid,
-      name:course.name,
-      stage:{
-        name:course.name,
-        worldWidth:720,
-        terrain:course.terrain.map(block=>({...block})),
-        platforms:course.platforms.map(block=>({...block,kind:"solid"})),
-        hazards:course.hazards.map(block=>({...block})),
-        start:course.start ? {...course.start} : null,
-        goalX:Number(course.goalX)
-      },
-      sourceCourseId:course.id,
-      sourceHash:hash,
-      publishedAt:serverTimestamp()
-    });
-    miniPublishedStagesLoadedAt = 0;
-    showMiniActionMessage("公開しました！");
-    setTimeout(()=>hideMiniActionMessage(),1000);
-  }catch(error){
-    console.error("mini publish error",error);
-    showMiniActionMessage("公開に失敗しました");
-    setTimeout(()=>hideMiniActionMessage(),1000);
-  }
-}
-
-function getMiniMenuActions(){
-  if(miniMode === "play") return [
-    {id:"reset",label:"リセット",enabled:true},
-    {id:"edit",label:"「作る」に切り替え",enabled:true}
-  ];
-  const actions = [
-    {id:"test",label:"テストプレイ",enabled:true},
-    {id:"courses",label:"コース一覧",enabled:true},
-    {id:"play",label:"「遊ぶ」に切り替え",enabled:true}
-  ];
-  if(isMiniCourseVerified(getCurrentMiniEditorCourse())){
-    actions.push({id:"publish",label:"公開する",enabled:true});
-  }
-  return actions;
-}
-
-function renderMiniMenuOptions(){
-  if(!miniModeMenuOptions) return;
-  miniModeMenuOptions.innerHTML = "";
-  getMiniMenuActions().forEach((action,index)=>{
-    const button = document.createElement("button");
-    button.className = "miniModeMenuOption" + (action.enabled ? "" : " disabled");
-    button.dataset.action = action.id;
-    button.dataset.index = String(index);
-    button.textContent = action.label;
-    miniModeMenuOptions.appendChild(button);
-  });
-}
-
-function openMiniMenu(){
-  renderMiniMenuOptions();
-  miniMenuOpen = true;
-  miniMenuHighlightedIndex = -1;
-  miniModeMenuOptions.classList.add("open");
-  miniModeMenuOptions.setAttribute("aria-hidden","false");
-}
-
-function closeMiniMenu(){
-  miniMenuOpen = false;
-  miniMenuHighlightedIndex = -1;
-  miniModeMenuOptions.classList.remove("open");
-  miniModeMenuOptions.setAttribute("aria-hidden","true");
-  miniModeMenuOptions.querySelectorAll(".miniModeMenuOption").forEach(button => button.classList.remove("active"));
-}
-
-function getMiniMenuIndexFromPoint(clientX,clientY){
-  if(!miniModeMenuOptions || !miniMenuOpen) return -1;
-  const options = [...miniModeMenuOptions.querySelectorAll(".miniModeMenuOption")];
-  for(let i=0;i<options.length;i++){
-    const rect = options[i].getBoundingClientRect();
-    if(clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom){
-      return i;
-    }
-  }
-  return -1;
-}
-
-function highlightMiniMenuIndex(index){
-  miniMenuHighlightedIndex = index;
-  miniModeMenuOptions.querySelectorAll(".miniModeMenuOption").forEach((button,i)=>button.classList.toggle("active",i === index && !button.classList.contains("disabled")));
-}
-
-async function executeMiniMenuAction(actionId){
-  closeMiniMenu();
-  if(actionId === "reset") await resetMiniMenuAction();
-  if(actionId === "edit") enterMiniEditorMode(true);
-  if(actionId === "test") enterMiniTestMode();
-  if(actionId === "courses") await openMiniCourseList();
-  if(actionId === "play") await enterMiniPlayMode(true);
-  if(actionId === "publish") await publishCurrentMiniCourse();
-}
-
-function setupMiniModeMenu(){
-  if(!miniModeMenuButton || !miniModeMenuOptions) return;
-  miniModeMenuButton.addEventListener("pointerdown",event=>{
-    event.preventDefault();
-    miniMenuPointerId = event.pointerId;
-    miniMenuHoldTimer = setTimeout(()=>{
-      if(miniMenuPointerId === event.pointerId){
-        openMiniMenu();
-        try{ miniModeMenuButton.setPointerCapture(event.pointerId); }catch(error){}
-      }
-    },450);
-  },{passive:false});
-
-  miniModeMenuButton.addEventListener("pointermove",event=>{
-    if(!miniMenuOpen || event.pointerId !== miniMenuPointerId) return;
-    event.preventDefault();
-    highlightMiniMenuIndex(getMiniMenuIndexFromPoint(event.clientX,event.clientY));
-  },{passive:false});
-
-  const release = async event => {
-    if(event.pointerId !== miniMenuPointerId) return;
-    event.preventDefault();
-    if(miniMenuHoldTimer){ clearTimeout(miniMenuHoldTimer); miniMenuHoldTimer = null; }
-    if(miniMenuOpen){
-      const index = getMiniMenuIndexFromPoint(event.clientX,event.clientY);
-      const action = getMiniMenuActions()[index];
-      if(action && action.enabled) await executeMiniMenuAction(action.id);
-      else closeMiniMenu();
-    }
-    miniMenuPointerId = null;
-  };
-
-  miniModeMenuButton.addEventListener("pointerup",release,{passive:false});
-  miniModeMenuButton.addEventListener("pointercancel",release,{passive:false});
-  miniModeMenuButton.addEventListener("pointerleave",event=>{
-    if(miniMenuOpen && event.pointerId === miniMenuPointerId){
-      highlightMiniMenuIndex(getMiniMenuIndexFromPoint(event.clientX,event.clientY));
-    }
-  },{passive:false});
-}
-
-async function openMiniCourseList(){
-  loadMiniPersistentState();
-  updateMiniCourseListLocal();
-  miniCourseModal.style.display = "flex";
-  miniPublishedCourseList.innerHTML = '<div class="miniCourseEmpty">読み込み中…</div>';
-  const stages = await loadPublishedMiniStages(true);
-  updateMiniCourseListPublished(stages);
-}
-
-function closeMiniCourseList(){
-  miniCourseModal.style.display = "none";
-}
-
-function updateMiniCourseListLocal(){
-  miniLocalCourseList.innerHTML = "";
-  for(const course of miniEditorCourses){
-    const row = document.createElement("div");
-    row.className = "miniCourseRow";
-    const name = document.createElement("div");
-    name.className = "miniCourseRowName";
-    name.textContent = course.name || "無題コース";
-    const check = document.createElement("div");
-    check.className = "miniCourseCheck";
-    check.textContent = isMiniCourseVerified(course) ? "✓" : "";
-    const select = document.createElement("button");
-    select.className = "miniCourseAction";
-    select.textContent = course.id === miniEditorCourseId ? "編集中" : "開く";
-    select.addEventListener("click",()=>{
-      miniEditorCourseId = course.id;
-      miniEditorCourse = miniClone(course);
-      miniMode = "edit";
-      saveMiniPersistentState();
-      closeMiniCourseList();
-      setMiniModeUi();
-      drawMiniEditor();
-    });
-    row.appendChild(name);
-    row.appendChild(check);
-    row.appendChild(select);
-    miniLocalCourseList.appendChild(row);
-  }
-}
-
-function createAndOpenNewMiniCourse(){
-  const course = createDefaultMiniEditorCourse();
-  course.name = `コース${miniEditorCourses.length + 1}`;
-  miniEditorCourses.push(course);
-  miniEditorCourseId = course.id;
-  miniEditorCourse = miniClone(course);
-  miniMode = "edit";
-  saveMiniPersistentState();
-  closeMiniCourseList();
-  setMiniModeUi();
-  drawMiniEditor();
-}
-
-function updateMiniCourseListPublished(stages){
-  miniPublishedCourseList.innerHTML = "";
-  if(!stages.length){
-    const empty = document.createElement("div");
-    empty.className = "miniCourseEmpty";
-    empty.textContent = "まだ公開コースがありません。";
-    miniPublishedCourseList.appendChild(empty);
-    return;
-  }
-  // Load only metadata again so delete ownership can be shown accurately.
-  getDocs(collection(db,"publishedMiniStages")).then(snapshot=>{
-    const entries = [];
-    snapshot.forEach(docSnap=>{
-      const data = docSnap.data() || {};
-      const stage = stages.find(item=>item.id === docSnap.id);
-      if(!stage) return;
-      entries.push({id:docSnap.id,name:String(data.name || stage.name || "無題コース"),ownerUid:data.ownerUid || ""});
-    });
-    for(const entry of entries){
-      const row = document.createElement("div");
-      row.className = "miniCourseRow";
-      const name = document.createElement("div");
-      name.className = "miniCourseRowName";
-      name.textContent = entry.name;
-      const label = document.createElement("div");
-      label.className = "miniCourseCheck";
-      label.textContent = entry.ownerUid === currentUser?.uid ? "自分" : "";
-      row.appendChild(name);
-      row.appendChild(label);
-      if(entry.ownerUid === currentUser?.uid){
-        const del = document.createElement("button");
-        del.className = "miniCourseAction danger";
-        del.textContent = "削除";
-        del.addEventListener("click",async()=>{
-          try{
-            await deleteDoc(doc(db,"publishedMiniStages",entry.id));
-            miniPublishedStagesLoadedAt = 0;
-            await openMiniCourseList();
-          }catch(error){
-            console.error("published mini delete error",error);
-          }
-        });
-        row.appendChild(del);
-      }
-      miniPublishedCourseList.appendChild(row);
-    }
-  }).catch(error=>{
-    console.error("published course metadata error",error);
-    miniPublishedCourseList.innerHTML = '<div class="miniCourseEmpty">公開コースを読み込めませんでした。</div>';
-  });
-}
-
-function setupMiniEditorControls(){
-  document.querySelectorAll(".miniEditorTool").forEach(button=>{
-    button.addEventListener("click",()=>{
-      miniEditorTool = button.dataset.miniTool;
-      saveMiniPersistentState();
-      updateMiniEditorUI();
-    });
-  });
-  miniEditorCourseName?.addEventListener("input",()=>{
-    if(!miniEditorCourse) return;
-    miniEditorCourse.name = String(miniEditorCourseName.value || "").slice(0,28);
-    saveMiniEditorChange();
-  });
-  miniGameCanvas.addEventListener("pointerdown",event=>{
-    if(miniMode !== "edit") return;
-    event.preventDefault();
-    miniEditorPointerId = event.pointerId;
-    miniEditorDrawing = true;
-    miniEditorLastCell = "";
-    try{ miniGameCanvas.setPointerCapture(event.pointerId); }catch(error){}
-    miniEditorApplyAt(miniEditorPoint(event));
-  },{passive:false});
-  miniGameCanvas.addEventListener("pointermove",event=>{
-    if(miniMode !== "edit" || !miniEditorDrawing || event.pointerId !== miniEditorPointerId) return;
-    event.preventDefault();
-    if(["terrain","platform","hazard","erase"].includes(miniEditorTool)) miniEditorApplyAt(miniEditorPoint(event));
-  },{passive:false});
-  const release = event=>{
-    if(event.pointerId !== miniEditorPointerId) return;
-    event.preventDefault();
-    try{ miniGameCanvas.releasePointerCapture(event.pointerId); }catch(error){}
-    miniEditorPointerId = null;
-    miniEditorDrawing = false;
-    miniEditorLastCell = "";
-    drawMiniEditor();
-  };
-  miniGameCanvas.addEventListener("pointerup",release,{passive:false});
-  miniGameCanvas.addEventListener("pointercancel",release,{passive:false});
 }
 
 function updateMiniActionGame(delta,time){
   if(!miniActionState || !miniActionState.active) return;
   if(!miniActionIsVisible()){
+    stopMiniActionGame();
     return;
   }
 
@@ -10551,7 +10034,6 @@ function updateMiniActionGame(delta,time){
   }
 
   const previousBottom = state.y + state.height;
-  const previousTop = state.y;
   const previousX = state.x;
   state.x += state.vx * clampedDelta;
   state.x = Math.max(0,Math.min(stage.worldWidth - state.width,state.x));
@@ -10559,15 +10041,7 @@ function updateMiniActionGame(delta,time){
   state.y += state.vy * clampedDelta;
   state.onGround = false;
 
-  const oneWayPlatforms = [
-    ...(Array.isArray(stage.terrain) ? stage.terrain : []),
-    ...(Array.isArray(stage.platforms) ? stage.platforms.filter(platform => platform?.kind !== "solid" && platform?.solid !== true) : [])
-  ];
-  const solidPlatforms = Array.isArray(stage.platforms)
-    ? stage.platforms.filter(platform => platform?.kind === "solid" || platform?.solid === true)
-    : [];
-
-  for(const platform of oneWayPlatforms){
+  for(const platform of stage.platforms){
     const horizontalOverlap = state.x + state.width > platform.x && state.x < platform.x + platform.w;
     if(!horizontalOverlap) continue;
     if(state.vy >= 0 && previousBottom <= platform.y + 5 && state.y + state.height >= platform.y){
@@ -10577,15 +10051,11 @@ function updateMiniActionGame(delta,time){
     }
   }
 
-  for(const platform of solidPlatforms){
-    const horizontalOverlap = state.x + state.width > platform.x && state.x < platform.x + platform.w;
+  for(const ceiling of stage.ceilings || []){
+    const horizontalOverlap = state.x + state.width > ceiling.x && state.x < ceiling.x + ceiling.w;
     if(!horizontalOverlap) continue;
-    if(state.vy >= 0 && previousBottom <= platform.y + 5 && state.y + state.height >= platform.y){
-      state.y = platform.y - state.height;
-      state.vy = 0;
-      state.onGround = true;
-    }else if(state.vy < 0 && previousTop >= platform.y + platform.h - 5 && state.y <= platform.y + platform.h){
-      state.y = platform.y + platform.h;
+    if(state.vy < 0 && state.y <= ceiling.y + ceiling.h && previousBottom > ceiling.y + ceiling.h){
+      state.y = ceiling.y + ceiling.h;
       state.vy = 0;
     }
   }
@@ -10595,32 +10065,23 @@ function updateMiniActionGame(delta,time){
   for(const hazard of stage.hazards || []){
     const hitRect = {x:state.x,y:state.y,width:state.width,height:state.height};
     if(miniActionRectHit(hitRect,hazard)){
-      resetMiniActionHoldState();
-      if(miniMode === "play"){
-        resetMiniActionRandomStage("TRY AGAIN!");
-      }else{
-        resetMiniActionStage("TRY AGAIN!",false);
-      }
+      resetMiniActionStage("TRY AGAIN!",!miniMakerTestMode);
       drawMiniActionGame();
       return;
     }
   }
 
   if(state.y > 290){
-    resetMiniActionHoldState();
-    if(miniMode === "play"){
-      resetMiniActionRandomStage("MISS!");
-    }else{
-      resetMiniActionStage("MISS!",false);
-    }
+    resetMiniActionStage("MISS!",!miniMakerTestMode);
     drawMiniActionGame();
     return;
   }
 
-  state.elapsed = (performance.now() - state.startTime) / 1000;
-  if(miniMode === "test" && state.elapsed > 15){
-    state.clearPending = true;
-    finishMiniEditorTest(false,state.elapsed,"15秒以内にクリアできませんでした");
+  if(miniMakerTestMode && (performance.now() - miniMakerTestStart) / 1000 > MINI_TEST_LIMIT){
+    resetMiniActionHoldState();
+    miniActionState.clearPending = true;
+    showMiniActionMessage("15秒以内にクリアしてね");
+    completeMiniCourseTest(MINI_TEST_LIMIT + .001);
     drawMiniActionGame();
     return;
   }
@@ -10631,30 +10092,28 @@ function updateMiniActionGame(delta,time){
     return;
   }
 
+  state.elapsed = (performance.now() - state.startTime) / 1000;
   syncMiniActionState();
   updateMiniActionLabels();
   drawMiniActionGame();
 }
 
-function drawMiniActionRemotePlayers(ctx,stage,camera,now){
+function drawMiniActionRemotePlayers(ctx,stage){
   if(!latestMatchData?.players || !currentUser) return;
   for(const [uid,player] of Object.entries(latestMatchData.players)){
     if(uid === currentUser.uid) continue;
     if(!player?.miniActive) continue;
-    const remoteStageKey = player.miniStageKey ?? player.miniStageId;
-    if(String(remoteStageKey) !== String(getMiniStageKey(stage))) continue;
+    if(String(player.miniStageId) !== String(stage.id)) continue;
     const x = Number(player.miniX);
     const y = Number(player.miniY);
     if(!Number.isFinite(x) || !Number.isFinite(y)) continue;
-
-    const alpha = 0.34;
+    const alpha = .34;
     const width = 16;
     const height = 22;
     const playerGrad = ctx.createLinearGradient(x,y,x,y + height);
     playerGrad.addColorStop(0,"#ffffff");
     playerGrad.addColorStop(.28,"#79c9ff");
     playerGrad.addColorStop(1,"#3b5bff");
-
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.fillStyle = playerGrad;
@@ -10666,7 +10125,6 @@ function drawMiniActionRemotePlayers(ctx,stage,camera,now){
 }
 
 function drawMiniActionGame(){
-  if(miniMode === "edit"){ drawMiniEditor(); return; }
   if(!miniGameCanvas || !miniActionState) return;
   resizeMiniActionCanvas();
   const ctx = miniGameCanvas.getContext("2d");
@@ -10675,22 +10133,14 @@ function drawMiniActionGame(){
   const height = miniGameCanvas.clientHeight || 260;
   const pixelScaleX = miniGameCanvas.width / Math.max(1,width);
   const pixelScaleY = miniGameCanvas.height / Math.max(1,height);
-  const scale = Math.min(width / 720, height / 260);
+  const scale = Math.min(width / 720,height / 260);
   const drawWidth = 720 * scale;
   const drawHeight = 260 * scale;
   const offsetX = (width - drawWidth) / 2;
   const offsetY = (height - drawHeight) / 2;
-
   ctx.setTransform(1,0,0,1,0,0);
   ctx.clearRect(0,0,miniGameCanvas.width,miniGameCanvas.height);
-  ctx.setTransform(
-    pixelScaleX * scale,
-    0,
-    0,
-    pixelScaleY * scale,
-    pixelScaleX * offsetX,
-    pixelScaleY * offsetY
-  );
+  ctx.setTransform(pixelScaleX*scale,0,0,pixelScaleY*scale,pixelScaleX*offsetX,pixelScaleY*offsetY);
 
   const bg = ctx.createLinearGradient(0,0,0,260);
   bg.addColorStop(0,"#111c2b");
@@ -10699,15 +10149,14 @@ function drawMiniActionGame(){
   ctx.fillStyle = bg;
   ctx.fillRect(0,0,720,260);
 
-  const camera = Math.max(0,Math.min(miniActionState.stage.worldWidth - 720,miniActionState.x - 180));
   const stage = miniActionState.stage;
-
+  const camera = Math.max(0,Math.min(stage.worldWidth - 720,miniActionState.x - 180));
   ctx.save();
   ctx.translate(-camera,0);
 
   for(let i=0;i<12;i++){
-    const px = camera + ((i * 127 + stage.id * 53) % 760) - 20;
-    const py = 48 + ((i * 31 + stage.id * 17) % 105);
+    const px = camera + ((i * 127 + String(stage.id).length * 53) % 760) - 20;
+    const py = 48 + ((i * 31 + String(stage.id).length * 17) % 105);
     ctx.fillStyle = "rgba(150,195,255,.13)";
     ctx.beginPath();
     ctx.arc(px,py,(i % 3) + 1,0,Math.PI*2);
@@ -10753,9 +10202,7 @@ function drawMiniActionGame(){
   }
 
   const goalX = stage.goalX;
-  const goalPlatform = stage.platforms.find(platform =>
-    goalX >= platform.x && goalX <= platform.x + platform.w
-  ) || stage.platforms[stage.platforms.length - 1];
+  const goalPlatform = stage.platforms.find(platform => goalX >= platform.x && goalX <= platform.x + platform.w) || stage.platforms[stage.platforms.length - 1];
   const goalGroundY = Number(goalPlatform?.y ?? 220);
   const flagTopY = goalGroundY - 42;
   const flagBottomY = goalGroundY;
@@ -10773,7 +10220,7 @@ function drawMiniActionGame(){
   ctx.closePath();
   ctx.fill();
 
-  drawMiniActionRemotePlayers(ctx,stage,camera,performance.now());
+  if(!miniMakerTestMode) drawMiniActionRemotePlayers(ctx,stage);
 
   const p = miniActionState;
   const playerGrad = ctx.createLinearGradient(p.x,p.y,p.x,p.y + p.height);
@@ -10784,7 +10231,6 @@ function drawMiniActionGame(){
   ctx.fillRect(p.x,p.y,p.width,p.height);
   ctx.fillStyle = "rgba(7,22,41,.9)";
   ctx.fillRect(p.x + 3,p.y + 5,p.width - 6,5);
-
   ctx.restore();
 
   if(miniActionState.flashUntil > performance.now()){
@@ -10825,12 +10271,10 @@ function miniTouchPoint(event){
 
 function setupMiniActionTouchControls(){
   if(!miniTouchZone) return;
-
   miniTouchZone.addEventListener("pointerdown",event=>{
     if(!miniActionIsVisible()) return;
     event.preventDefault();
     const point = miniTouchPoint(event);
-
     if(point.x < point.width / 2){
       if(miniTouchState.movePointerId !== null) return;
       miniTouchState.movePointerId = event.pointerId;
@@ -10843,7 +10287,6 @@ function setupMiniActionTouchControls(){
       updateMiniTouchVisual();
       return;
     }
-
     if(miniTouchState.jumpPointerId !== null) return;
     miniTouchState.jumpPointerId = event.pointerId;
     miniTouchState.jumpStartX = point.x;
@@ -10877,15 +10320,11 @@ function setupMiniActionTouchControls(){
       miniActionInput.right = false;
       hideMiniTouchVisual();
     }
-
     if(event.pointerId === miniTouchState.jumpPointerId){
       event.preventDefault();
       const point = miniTouchPoint(event);
       const duration = performance.now() - miniTouchState.jumpStartTime;
-      const distance = Math.hypot(
-        point.x - miniTouchState.jumpStartX,
-        point.y - miniTouchState.jumpStartY
-      );
+      const distance = Math.hypot(point.x - miniTouchState.jumpStartX,point.y - miniTouchState.jumpStartY);
       if(duration <= 260 && distance <= 14){
         miniActionInput.jump = true;
         miniActionInput.jumpPressed = true;
@@ -10894,77 +10333,540 @@ function setupMiniActionTouchControls(){
       miniTouchState.jumpPointerId = null;
     }
   };
-
   miniTouchZone.addEventListener("pointerup",release,{passive:false});
   miniTouchZone.addEventListener("pointercancel",release,{passive:false});
 }
 
-function bindMiniActionControl(button,action){
-  const press = event => {
-    event.preventDefault();
-    if(!miniActionIsVisible()) return;
-    if(action === "jump"){
-      miniActionInput.jump = true;
-      miniActionInput.jumpPressed = true;
+function miniEditorPoint(event){
+  const rect = miniMakerCanvas.getBoundingClientRect();
+  return {
+    col:Math.max(0,Math.min(MINI_EDITOR_COLS - 1,Math.floor((event.clientX - rect.left) * MINI_EDITOR_COLS / rect.width))),
+    row:Math.max(0,Math.min(MINI_EDITOR_ROWS - 1,Math.floor((event.clientY - rect.top) * MINI_EDITOR_ROWS / rect.height)))
+  };
+}
+
+function miniFindBlock(course,col,row){
+  return course.blocks.find(block => block.col === col && block.row === row) || null;
+}
+
+function miniRemoveBlock(course,col,row){
+  course.blocks = course.blocks.filter(block => block.col !== col || block.row !== row);
+}
+
+function miniApplyEditorTool(col,row){
+  const course = currentMiniCourse();
+  if(!course) return;
+  const tool = miniMakerTool;
+  if(tool === "terrain" || tool === "platform" || tool === "spike"){
+    miniRemoveBlock(course,col,row);
+    course.blocks.push({col,row,type:tool});
+  }else if(tool === "eraser"){
+    miniRemoveBlock(course,col,row);
+    if(course.start?.col === col && course.start?.row === row) course.start = {col:1,row:9};
+    if(course.goal?.col === col && course.goal?.row === row) course.goal = {col:34,row:10};
+  }else if(tool === "start"){
+    course.start = {col,row};
+  }else if(tool === "goal"){
+    course.goal = {col,row};
+  }
+  invalidateMiniCourseTest(course);
+  saveMiniCourses();
+  miniWorkspaceCourseId = course.id;
+  saveMiniWorkspaceState();
+  renderMiniMaker();
+}
+
+function renderMiniMaker(){
+  const course = currentMiniCourse();
+  if(!course || !miniMakerCanvas) return;
+  if(miniCourseNameInput && document.activeElement !== miniCourseNameInput){
+    miniCourseNameInput.value = course.name;
+  }
+  const ctx = miniMakerCanvas.getContext("2d");
+  if(!ctx) return;
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.clearRect(0,0,720,260);
+  const bg = ctx.createLinearGradient(0,0,0,260);
+  bg.addColorStop(0,"#121f2f");
+  bg.addColorStop(1,"#02060b");
+  ctx.fillStyle = bg;
+  ctx.fillRect(0,0,720,260);
+  ctx.strokeStyle = "rgba(255,255,255,.07)";
+  ctx.lineWidth = 1;
+  for(let x=0;x<=720;x+=20){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,260);ctx.stroke();}
+  for(let y=0;y<=260;y+=20){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(720,y);ctx.stroke();}
+  for(const block of course.blocks){
+    const x=block.col*20;
+    const y=block.row*20;
+    if(block.type === "terrain"){
+      const grad=ctx.createLinearGradient(0,y,0,y+20);
+      grad.addColorStop(0,"#344c63");
+      grad.addColorStop(1,"#162333");
+      ctx.fillStyle=grad;
+      ctx.fillRect(x,y,20,20);
+      ctx.strokeStyle="rgba(103,196,255,.82)";
+      ctx.strokeRect(x+.5,y+.5,19,19);
+    }else if(block.type === "platform"){
+      ctx.fillStyle="#526d83";
+      ctx.fillRect(x,y,20,8);
+      ctx.strokeStyle="rgba(156,218,255,.88)";
+      ctx.strokeRect(x+.5,y+.5,19,7);
+    }else if(block.type === "spike"){
+      ctx.fillStyle="#a14a79";
+      ctx.beginPath();
+      ctx.moveTo(x,y+20);
+      ctx.lineTo(x+10,y);
+      ctx.lineTo(x+20,y+20);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+  ctx.save();
+  ctx.globalAlpha=.75;
+  ctx.strokeStyle="#ffd45a";
+  ctx.lineWidth=2;
+  ctx.strokeRect(course.start.col*20+5,course.start.row*20+5,10,10);
+  ctx.fillStyle="#ffd45a";
+  ctx.font="bold 9px Arial";
+  ctx.fillText("START",course.start.col*20+1,course.start.row*20-2);
+  ctx.strokeStyle="#73e7ff";
+  ctx.beginPath();
+  const gx=course.goal.col*20+10;
+  ctx.moveTo(gx,course.goal.row*20+18);
+  ctx.lineTo(gx,course.goal.row*20+2);
+  ctx.stroke();
+  ctx.fillStyle="#73e7ff";
+  ctx.beginPath();
+  ctx.moveTo(gx,course.goal.row*20+2);
+  ctx.lineTo(gx+11,course.goal.row*20+6);
+  ctx.lineTo(gx,course.goal.row*20+10);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  if(canPublishCurrentCourse()){
+    ctx.fillStyle="rgba(86,255,139,.92)";
+    ctx.font="bold 12px Arial";
+    ctx.fillText("✓ TEST CLEAR",8,18);
+  }
+}
+
+function renderMiniWorkspaceMode(){
+  if(!matchingScreen) return;
+  matchingScreen.style.display = "flex";
+
+  if(miniWorkspaceMode !== "create"){
+    const alreadyPlay = !matchingScreen.classList.contains("miniCreateMode") &&
+      !matchingScreen.classList.contains("miniCourseListMode") &&
+      !miniMakerTestMode;
+    matchingScreen.classList.remove("miniCreateMode","miniCourseListMode");
+    miniCourseListView.style.display = "none";
+    if(miniActionState?.active) return;
+    if(!alreadyPlay) ensureMiniActionGameStarted();
+    return;
+  }
+
+  stopMiniActionGame();
+  if(miniWorkspaceView === "courses"){
+    const alreadyList = matchingScreen.classList.contains("miniCourseListMode");
+    matchingScreen.classList.remove("miniCreateMode");
+    matchingScreen.classList.add("miniCourseListMode");
+    if(!alreadyList) renderMiniCourseList();
+  }else{
+    const alreadyMaker = matchingScreen.classList.contains("miniCreateMode");
+    matchingScreen.classList.remove("miniCourseListMode");
+    matchingScreen.classList.add("miniCreateMode");
+    if(!alreadyMaker) renderMiniMaker();
+  }
+}
+
+function renderMiniTestMode(){
+  if(!matchingScreen) return;
+  matchingScreen.style.display = "flex";
+  matchingScreen.classList.remove("miniCreateMode","miniCourseListMode");
+  if(miniMakerTestMode){
+    if(matchingScreen.querySelector(".matchingTitle")) matchingScreen.querySelector(".matchingTitle").textContent = "TEST PLAY";
+    if(matchingCount) matchingCount.style.display = "none";
+    if(matchingTimer) matchingTimer.style.display = "none";
+    if(matchingStatus) matchingStatus.style.display = "none";
+    matchingReadyButton.style.display = "none";
+    matchingEndButton.style.display = "none";
+    miniGameBox.style.display = "block";
+    resizeMiniActionCanvas();
+  }
+}
+
+function createMiniCourseCard(name,stateText,buttons){
+  const card=document.createElement("div");
+  card.className="miniCourseCard";
+  const nameEl=document.createElement("div");
+  nameEl.className="miniCourseCardName";
+  nameEl.textContent=name;
+  const stateEl=document.createElement("div");
+  stateEl.className="miniCourseCardState";
+  stateEl.textContent=stateText || "";
+  card.appendChild(nameEl);
+  if(stateText) card.appendChild(stateEl);
+  for(const button of buttons){
+    const b=document.createElement("button");
+    b.className="miniCourseCardButton";
+    b.textContent=button.label;
+    b.addEventListener("click",button.action);
+    card.appendChild(b);
+  }
+  return card;
+}
+
+async function renderMiniCourseList(){
+  if(miniLocalCourseList){
+    miniLocalCourseList.innerHTML="";
+    for(const course of miniLocalCourses){
+      const valid = canPublishCourse(course);
+      miniLocalCourseList.appendChild(createMiniCourseCard(
+        course.name,
+        valid ? "✓" : "",
+        [
+          {label:course.id===miniWorkspaceCourseId?"編集中":"編集",action:()=>{
+            miniWorkspaceCourseId=course.id;
+            miniWorkspaceMode="create";
+            miniWorkspaceView="editor";
+            saveMiniWorkspaceState();
+            renderMiniWorkspaceMode();
+          }}
+        ]
+      ));
+    }
+  }
+  if(miniPublicCourseList){
+    miniPublicCourseList.innerHTML="";
+    if(!miniPublicStagesLoaded){
+      const loading=document.createElement("div");
+      loading.className="miniMakerHint";
+      loading.textContent="公開コースを読み込み中…";
+      miniPublicCourseList.appendChild(loading);
+      await loadMiniPublicStages(true);
+    }
+    if(miniPublicStages.length===0){
+      const empty=document.createElement("div");
+      empty.className="miniMakerHint";
+      empty.textContent="まだ公開コースはありません。";
+      miniPublicCourseList.appendChild(empty);
     }else{
-      miniActionInput[action] = true;
+      for(const stage of miniPublicStages){
+        const canDelete = currentUser && stage.ownerUid === currentUser.uid;
+        const buttons=[];
+        if(canDelete) buttons.push({label:"削除",action:()=>deleteMiniPublicStage(stage)});
+        miniPublicCourseList.appendChild(createMiniCourseCard(stage.name,"公開済み",buttons));
+      }
+    }
+  }
+}
+
+function canPublishCourse(course){
+  if(!course || !course.test?.valid) return false;
+  return Boolean(course.test.snapshotHash && course.test.snapshotHash === getMiniCourseHash(course) && Number(course.test.time) <= MINI_TEST_LIMIT);
+}
+
+async function deleteMiniPublicStage(stage){
+  if(!stage?.publicId || !currentUser) return;
+  try{
+    await deleteDoc(doc(db,"miniCoursesPublic",stage.publicId));
+    miniPublicStages = miniPublicStages.filter(item => item.publicId !== stage.publicId);
+    miniPublicStagesLoaded = true;
+    renderMiniCourseList();
+  }catch(error){
+    console.error("mini public stage delete error",error);
+  }
+}
+
+function openMiniCourseList(){
+  miniMakerTestMode=false;
+  stopMiniActionGame();
+  miniWorkspaceMode="create";
+  miniWorkspaceView="courses";
+  saveMiniWorkspaceState();
+  renderMiniWorkspaceMode();
+}
+
+function startMiniCourseTest(){
+  const course=currentMiniCourse();
+  if(!course) return;
+  miniMakerTestMode=true;
+  miniMakerTestCourseId=course.id;
+  miniMakerTestSnapshotHash=getMiniCourseHash(course);
+  miniMakerTestStart=performance.now();
+  miniWorkspaceMode="create";
+  miniWorkspaceView="editor";
+  saveMiniWorkspaceState();
+  matchingScreen.classList.remove("miniCreateMode","miniCourseListMode");
+  matchingScreen.style.display="flex";
+  miniGameBox.style.display="block";
+  if(matchingScreen.querySelector(".matchingTitle")) matchingScreen.querySelector(".matchingTitle").textContent="TEST PLAY";
+  matchingCount.style.display="none";
+  matchingTimer.style.display="none";
+  matchingStatus.style.display="none";
+  matchingReadyButton.style.display="none";
+  matchingEndButton.style.display="none";
+  startMiniActionStage(miniCourseToStage(course));
+}
+
+async function publishCurrentMiniCourse(){
+  const course=currentMiniCourse();
+  if(!course || !canPublishCurrentCourse()) return;
+  try{
+    const user=await ensureAuth();
+    const publicRef=doc(collection(db,"miniCoursesPublic"));
+    const stage=miniCourseToStage(course);
+    stage.id=`public:${publicRef.id}`;
+    await setDoc(publicRef,{
+      name:course.name,
+      ownerUid:user.uid,
+      sourceCourseId:course.id,
+      stage,
+      testTime:Number(course.test.time),
+      createdAt:Date.now(),
+      publishedAt:serverTimestamp()
+    });
+    const publicStage=sanitizePublicMiniStage(stage,publicRef.id);
+    if(publicStage){
+      publicStage.ownerUid=user.uid;
+      publicStage.sourceCourseId=course.id;
+      miniPublicStages.push(publicStage);
+      miniPublicStagesLoaded=true;
+    }
+    showMiniActionMessage("公開しました");
+    openMiniCourseList();
+  }catch(error){
+    console.error("mini public stage publish error",error);
+    showMiniActionMessage("公開に失敗しました");
+    setTimeout(hideMiniActionMessage,900);
+  }
+}
+
+function getMiniMenuActions(context){
+  if(context === "maker"){
+    const actions=[
+      {label:"テストプレイ",action:startMiniCourseTest},
+      {label:"コース一覧",action:openMiniCourseList},
+      {label:"遊ぶに切り替え",action:()=>{
+        miniMakerTestMode=false;
+        miniWorkspaceMode="play";
+        miniWorkspaceView="editor";
+        saveMiniWorkspaceState();
+        renderMiniWorkspaceMode();
+      }}
+    ];
+    if(canPublishCurrentCourse()) actions.push({label:"公開する",action:publishCurrentMiniCourse});
+    return actions;
+  }
+  return [
+    {label:"リセット",action:()=>resetMiniActionStage("RESET",true)},
+    {label:"作るに切り替え",action:()=>{
+      miniMakerTestMode=false;
+      miniWorkspaceMode="create";
+      miniWorkspaceView="editor";
+      stopMiniActionGame();
+      saveMiniWorkspaceState();
+      renderMiniWorkspaceMode();
+    }}
+  ];
+}
+
+function closeMiniMenu(){
+  if(miniMenuHoldTimer){clearTimeout(miniMenuHoldTimer);miniMenuHoldTimer=null;}
+  miniMenuHolding=false;
+  miniMenuOpened=false;
+  miniMenuHoverIndex=-1;
+  miniMenuPointerId=null;
+  miniMenuContext=null;
+  for(const container of [miniMenuItems,miniMakerMenuItems]){
+    if(!container) continue;
+    container.classList.remove("show");
+    container.innerHTML="";
+  }
+}
+
+function updateMiniMenuHover(event){
+  const container = miniMenuContext === "maker" ? miniMakerMenuItems : miniMenuItems;
+  if(!container || !miniMenuOpened) return;
+  const items=[...container.querySelectorAll(".miniMenuItem")];
+  let index=-1;
+  for(let i=0;i<items.length;i++){
+    const rect=items[i].getBoundingClientRect();
+    if(event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom){
+      index=i;
+      break;
+    }
+  }
+  miniMenuHoverIndex=index;
+  items.forEach((item,i)=>item.classList.toggle("active",i===index));
+}
+
+function openMiniMenu(context){
+  closeMiniMenu();
+  const container=context === "maker" ? miniMakerMenuItems : miniMenuItems;
+  if(!container) return;
+  miniMenuContext=context;
+  for(const item of getMiniMenuActions(context)){
+    const button=document.createElement("button");
+    button.type="button";
+    button.className="miniMenuItem";
+    button.textContent=item.label;
+    container.appendChild(button);
+  }
+  container.classList.add("show");
+  miniMenuOpened=true;
+}
+
+function setupMiniHoldMenu(button,context){
+  if(!button) return;
+  const startHold=event=>{
+    event.preventDefault();
+    closeMiniMenu();
+    miniMenuHolding=true;
+    miniMenuPointerId=event.pointerId;
+    try{button.setPointerCapture(event.pointerId);}catch(error){}
+    miniMenuHoldTimer=setTimeout(()=>{
+      if(!miniMenuHolding || miniMenuPointerId !== event.pointerId) return;
+      openMiniMenu(context);
+      updateMiniMenuHover(event);
+    },320);
+  };
+  const move=event=>{
+    if(!miniMenuHolding || miniMenuPointerId !== event.pointerId) return;
+    event.preventDefault();
+    if(miniMenuOpened) updateMiniMenuHover(event);
+  };
+  const end=event=>{
+    if(miniMenuPointerId !== event.pointerId) return;
+    event.preventDefault();
+    const actionIndex=miniMenuOpened ? miniMenuHoverIndex : -1;
+    const contextAtRelease=miniMenuContext;
+    const actions=miniMenuOpened ? getMiniMenuActions(contextAtRelease) : [];
+    closeMiniMenu();
+    if(actionIndex>=0 && actionIndex<actions.length){
+      actions[actionIndex].action();
     }
   };
-  const release = event => {
+  button.addEventListener("pointerdown",startHold,{passive:false});
+  button.addEventListener("pointermove",move,{passive:false});
+  button.addEventListener("pointerup",end,{passive:false});
+  button.addEventListener("pointercancel",end,{passive:false});
+}
+
+function setupMiniMakerEditor(){
+  if(!miniMakerCanvas) return;
+  miniMakerCanvas.addEventListener("pointerdown",event=>{
     event.preventDefault();
-    if(action === "jump") miniActionInput.jump = false;
-    else miniActionInput[action] = false;
+    miniMakerPointerId=event.pointerId;
+    miniMakerLastCell=null;
+    try{miniMakerCanvas.setPointerCapture(event.pointerId);}catch(error){}
+    const cell=miniEditorPoint(event);
+    miniMakerLastCell=cell;
+    miniApplyEditorTool(cell.col,cell.row);
+  },{passive:false});
+  miniMakerCanvas.addEventListener("pointermove",event=>{
+    if(miniMakerPointerId !== event.pointerId) return;
+    event.preventDefault();
+    const cell=miniEditorPoint(event);
+    if(!miniMakerLastCell || cell.col !== miniMakerLastCell.col || cell.row !== miniMakerLastCell.row){
+      miniMakerLastCell=cell;
+      if(["terrain","platform","spike","eraser"].includes(miniMakerTool)) miniApplyEditorTool(cell.col,cell.row);
+    }
+  },{passive:false});
+  const end=event=>{
+    if(miniMakerPointerId !== event.pointerId) return;
+    event.preventDefault();
+    miniMakerPointerId=null;
+    miniMakerLastCell=null;
   };
-  button.addEventListener("pointerdown",press);
-  button.addEventListener("pointerup",release);
-  button.addEventListener("pointercancel",release);
-  button.addEventListener("pointerleave",release);
+  miniMakerCanvas.addEventListener("pointerup",end,{passive:false});
+  miniMakerCanvas.addEventListener("pointercancel",end,{passive:false});
 }
 
 setupMiniActionTouchControls();
+setupMiniMakerEditor();
+setupMiniHoldMenu(miniMenuButton,"play");
+setupMiniHoldMenu(miniMakerMenuButton,"maker");
 
-window.addEventListener("keydown",event => {
+if(miniMakerTools){
+  miniMakerTools.querySelectorAll("[data-mini-tool]").forEach(button=>{
+    button.addEventListener("click",()=>{
+      miniMakerTool=button.dataset.miniTool || "terrain";
+      miniMakerTools.querySelectorAll("[data-mini-tool]").forEach(item=>item.classList.toggle("selected",item===button));
+      saveMiniWorkspaceState();
+    });
+  });
+}
+
+if(miniCourseNameInput){
+  miniCourseNameInput.addEventListener("input",()=>{
+    const course=currentMiniCourse();
+    if(!course) return;
+    course.name=String(miniCourseNameInput.value || "コース").slice(0,24);
+    invalidateMiniCourseTest(course);
+    saveMiniCourses();
+    saveMiniWorkspaceState();
+    renderMiniMaker();
+  });
+}
+
+if(miniCourseListBackButton){
+  miniCourseListBackButton.addEventListener("click",()=>{
+    miniWorkspaceView="editor";
+    saveMiniWorkspaceState();
+    renderMiniWorkspaceMode();
+  });
+}
+
+if(miniNewCourseButton){
+  miniNewCourseButton.addEventListener("click",()=>{
+    const id=`local-${Date.now().toString(36)}-${Math.floor(Math.random()*100000).toString(36)}`;
+    const course=createDefaultMiniCourse(id,`コース ${miniLocalCourses.length + 1}`);
+    miniLocalCourses.push(course);
+    miniWorkspaceCourseId=course.id;
+    miniWorkspaceMode="create";
+    miniWorkspaceView="editor";
+    saveMiniCourses();
+    saveMiniWorkspaceState();
+    renderMiniWorkspaceMode();
+  });
+}
+
+window.addEventListener("keydown",event=>{
   if(!miniActionIsVisible()) return;
   if(event.code === "ArrowLeft" || event.code === "KeyA"){
     event.preventDefault();
-    miniActionInput.left = true;
+    miniActionInput.left=true;
   }
   if(event.code === "ArrowRight" || event.code === "KeyD"){
     event.preventDefault();
-    miniActionInput.right = true;
+    miniActionInput.right=true;
   }
   if(event.code === "Space" || event.code === "ArrowUp" || event.code === "KeyW"){
     event.preventDefault();
-    miniActionInput.jump = true;
-    miniActionInput.jumpPressed = true;
+    miniActionInput.jump=true;
+    miniActionInput.jumpPressed=true;
   }
   if(event.code === "KeyR"){
     event.preventDefault();
-    if(miniMode === "play") resetMiniActionRandomStage("RESET");
-    if(miniMode === "test") resetMiniActionStage("RESET",false);
+    resetMiniActionStage("RESET",!miniMakerTestMode);
   }
 });
 
-window.addEventListener("keyup",event => {
-  if(event.code === "ArrowLeft" || event.code === "KeyA") miniActionInput.left = false;
-  if(event.code === "ArrowRight" || event.code === "KeyD") miniActionInput.right = false;
-  if(event.code === "Space" || event.code === "ArrowUp" || event.code === "KeyW") miniActionInput.jump = false;
+window.addEventListener("keyup",event=>{
+  if(event.code === "ArrowLeft" || event.code === "KeyA") miniActionInput.left=false;
+  if(event.code === "ArrowRight" || event.code === "KeyD") miniActionInput.right=false;
+  if(event.code === "Space" || event.code === "ArrowUp" || event.code === "KeyW") miniActionInput.jump=false;
 });
 
-window.addEventListener("resize",resizeMiniActionCanvas);
+window.addEventListener("blur",()=>{
+  resetMiniActionHoldState();
+});
 
 window.addEventListener("resize",()=>{
   resizeMiniActionCanvas();
-  if(miniMode === "edit") drawMiniEditor();
-});
-
-setupMiniModeMenu();
-setupMiniEditorControls();
-
-miniCourseCloseButton.addEventListener("click",closeMiniCourseList);
-miniNewCourseButton.addEventListener("click",createAndOpenNewMiniCourse);
-miniCourseModal.addEventListener("pointerdown",event=>{
-  if(event.target === miniCourseModal) closeMiniCourseList();
+  renderMiniMaker();
 });
 
 shareCodeButton.addEventListener(
