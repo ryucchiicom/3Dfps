@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.9.3. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.9.3 changes: added a persistent mini-action course creator/play mode, long-press/swipe mini-action menus, local course saving and verification, Firebase publication copies, random public-course play, and reset-state handling. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
+<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.10.0. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.10.0 changes: expanded the random-match mini action into persistent Play/Create modes with local course editing, Firebase-published course lists, test verification, random Firebase course selection, and press/swipe menu controls. Version 2.0.0 is reserved for the public release. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
 <title>3Dfps</title>
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
@@ -301,6 +301,212 @@ canvas{
   touch-action:none;
 }
 
+#miniMenuButton{
+  position:absolute;
+  top:10px;
+  right:10px;
+  z-index:9;
+  width:38px;
+  height:38px;
+  border:1px solid rgba(255,255,255,.2);
+  border-radius:11px;
+  background:rgba(7,12,20,.74);
+  color:#fff;
+  font-size:20px;
+  font-weight:900;
+  line-height:1;
+  backdrop-filter:blur(8px);
+  touch-action:none;
+}
+
+#miniMenuPanel{
+  position:absolute;
+  top:54px;
+  right:10px;
+  z-index:10;
+  display:none;
+  width:150px;
+  padding:5px;
+  border:1px solid rgba(255,255,255,.13);
+  border-radius:14px;
+  background:rgba(7,12,20,.9);
+  backdrop-filter:blur(12px);
+  box-shadow:0 14px 42px rgba(0,0,0,.38);
+}
+
+#miniMenuPanel.show{display:block;}
+
+.miniMenuItem{
+  width:100%;
+  min-height:42px;
+  border:0;
+  border-radius:10px;
+  background:transparent;
+  color:#fff;
+  font-size:13px;
+  font-weight:850;
+  text-align:left;
+  padding:0 12px;
+}
+
+.miniMenuItem.highlight{
+  background:rgba(25,118,255,.72);
+}
+
+#miniEditorTools{
+  position:absolute;
+  left:10px;
+  right:10px;
+  bottom:10px;
+  z-index:8;
+  display:none;
+  flex-wrap:wrap;
+  gap:6px;
+  justify-content:center;
+  padding:7px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:13px;
+  background:rgba(7,12,20,.72);
+  backdrop-filter:blur(8px);
+}
+
+.miniEditorTool{
+  min-width:58px;
+  height:34px;
+  padding:0 9px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:9px;
+  background:rgba(255,255,255,.07);
+  color:#fff;
+  font-size:11px;
+  font-weight:850;
+}
+
+.miniEditorTool.selected{
+  background:#1976ff;
+  border-color:#5ba7ff;
+}
+
+#miniEditorHint{
+  position:absolute;
+  left:50%;
+  top:12px;
+  z-index:8;
+  transform:translateX(-50%);
+  display:none;
+  padding:5px 9px;
+  border-radius:9px;
+  background:rgba(7,12,20,.58);
+  font-size:10px;
+  opacity:.7;
+  white-space:nowrap;
+}
+
+#miniCourseListOverlay{
+  position:absolute;
+  inset:0;
+  z-index:30;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:14px;
+  background:rgba(0,0,0,.64);
+  backdrop-filter:blur(8px);
+}
+
+#miniCourseListOverlay.show{display:flex;}
+
+#miniCourseListBox{
+  width:min(92%,500px);
+  max-height:86%;
+  overflow:auto;
+  padding:16px;
+  border:1px solid rgba(255,255,255,.13);
+  border-radius:18px;
+  background:rgba(15,20,28,.97);
+  box-shadow:0 20px 80px rgba(0,0,0,.48);
+}
+
+#miniCourseListTitle{
+  text-align:center;
+  font-size:20px;
+  font-weight:900;
+  margin-bottom:12px;
+}
+
+.miniCourseSectionTitle{
+  margin:12px 0 7px;
+  font-size:12px;
+  font-weight:900;
+  opacity:.62;
+}
+
+.miniCourseRow{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:9px;
+  margin:5px 0;
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:11px;
+  background:rgba(255,255,255,.045);
+}
+
+.miniCourseRowMain{
+  min-width:0;
+  flex:1;
+}
+
+.miniCourseName{
+  font-size:13px;
+  font-weight:850;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.miniCourseMeta{
+  margin-top:2px;
+  font-size:10px;
+  opacity:.52;
+}
+
+.miniCourseAction{
+  min-width:62px;
+  height:34px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:9px;
+  background:rgba(255,255,255,.07);
+  color:#fff;
+  font-size:11px;
+  font-weight:850;
+}
+
+.miniCourseAction.delete{
+  background:rgba(160,45,65,.33);
+}
+
+.miniCourseEmpty{
+  padding:10px;
+  border-radius:10px;
+  background:rgba(255,255,255,.035);
+  font-size:11px;
+  opacity:.6;
+}
+
+.matchingScreen.miniEditorMode #miniEditorTools,
+.matchingScreen.miniEditorMode #miniEditorHint{
+  display:flex;
+}
+
+.matchingScreen.miniEditorMode #miniEditorHint{
+  display:block;
+}
+
+.matchingScreen.miniEditorMode #miniTouchZone{
+  display:none;
+}
+
 #miniGameMessage{
   position:absolute;
   left:50%;
@@ -369,268 +575,6 @@ canvas{
 #miniGameControls{
   display:none;
 }
-
-#miniGameMenuButton{
-  position:absolute;
-  right:10px;
-  top:10px;
-  z-index:12;
-  width:36px;
-  height:36px;
-  padding:0;
-  border:1px solid rgba(255,255,255,.2);
-  border-radius:10px;
-  background:rgba(5,10,18,.72);
-  color:#fff;
-  font-size:18px;
-  font-weight:900;
-  line-height:1;
-  backdrop-filter:blur(8px);
-  touch-action:none;
-  pointer-events:auto;
-}
-
-.miniGameMenu{
-  position:absolute;
-  right:10px;
-  top:52px;
-  z-index:13;
-  display:none;
-  flex-direction:column;
-  gap:6px;
-  width:min(170px,52vw);
-  padding:7px;
-  border:1px solid rgba(255,255,255,.14);
-  border-radius:13px;
-  background:rgba(8,14,23,.94);
-  box-shadow:0 14px 40px rgba(0,0,0,.38);
-  backdrop-filter:blur(12px);
-  pointer-events:none;
-}
-
-.miniGameMenu.show{
-  display:flex;
-}
-
-.miniGameMenuOption{
-  min-height:40px;
-  padding:0 12px;
-  border:1px solid rgba(255,255,255,.1);
-  border-radius:9px;
-  background:rgba(255,255,255,.055);
-  color:#fff;
-  font-size:13px;
-  font-weight:900;
-  text-align:left;
-}
-
-.miniGameMenuOption.highlight{
-  background:#1976ff;
-  border-color:#66abff;
-}
-
-#miniBuilderPalette{
-  position:absolute;
-  left:0;
-  right:0;
-  bottom:0;
-  z-index:11;
-  display:none;
-  padding:6px;
-  background:rgba(5,10,18,.92);
-  border-top:1px solid rgba(255,255,255,.1);
-  backdrop-filter:blur(10px);
-  pointer-events:auto;
-}
-
-.miniBuilderTools{
-  display:grid;
-  grid-template-columns:repeat(6,minmax(0,1fr));
-  gap:4px;
-}
-
-.miniBuilderTool{
-  min-width:0;
-  height:34px;
-  padding:0 4px;
-  border:1px solid rgba(255,255,255,.12);
-  border-radius:8px;
-  background:rgba(255,255,255,.06);
-  color:#fff;
-  font-size:10px;
-  font-weight:900;
-}
-
-.miniBuilderTool.selected{
-  background:#1976ff;
-  border-color:#5ba7ff;
-}
-
-#miniBuilderScroll{
-  display:block;
-  width:100%;
-  height:22px;
-  margin-top:2px;
-  accent-color:#1976ff;
-  touch-action:none;
-}
-
-#miniCourseListOverlay{
-  position:absolute;
-  inset:0;
-  z-index:30;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  padding:12px;
-  background:rgba(0,0,0,.62);
-  backdrop-filter:blur(8px);
-  pointer-events:auto;
-}
-
-#miniCourseListOverlay.show{
-  display:flex;
-}
-
-.miniCourseListBox{
-  width:min(92vw,460px);
-  max-height:88%;
-  padding:14px;
-  border:1px solid rgba(255,255,255,.14);
-  border-radius:16px;
-  background:rgba(12,18,27,.97);
-  box-shadow:0 18px 60px rgba(0,0,0,.48);
-  overflow:auto;
-}
-
-.miniCourseListHeader{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  margin-bottom:10px;
-}
-
-.miniCourseListTitle{
-  font-size:18px;
-  font-weight:900;
-}
-
-.miniCourseListClose{
-  height:32px;
-  padding:0 10px;
-  border:1px solid rgba(255,255,255,.14);
-  border-radius:8px;
-  background:rgba(255,255,255,.07);
-  color:#fff;
-  font-size:12px;
-  font-weight:900;
-}
-
-.miniCourseSectionTitle{
-  margin:14px 2px 6px;
-  font-size:11px;
-  font-weight:900;
-  letter-spacing:1px;
-  opacity:.6;
-}
-
-.miniCourseItem{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  width:100%;
-  min-height:42px;
-  margin:4px 0;
-  padding:7px 9px;
-  border:1px solid rgba(255,255,255,.1);
-  border-radius:10px;
-  background:rgba(255,255,255,.045);
-  color:#fff;
-  text-align:left;
-}
-
-.miniCourseItemMain{
-  flex:1;
-  min-width:0;
-}
-
-.miniCourseItemName{
-  font-size:13px;
-  font-weight:900;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-
-.miniCourseItemMeta{
-  margin-top:2px;
-  font-size:10px;
-  opacity:.58;
-}
-
-.miniCourseItemBadge{
-  font-size:13px;
-  font-weight:900;
-}
-
-.miniCourseDelete{
-  width:34px;
-  height:32px;
-  border:1px solid rgba(255,255,255,.12);
-  border-radius:8px;
-  background:rgba(255,70,70,.1);
-  color:#ff9b9b;
-  font-size:14px;
-  font-weight:900;
-}
-
-#matchingScreen.miniBuilderMode #matchingCount,
-#matchingScreen.miniBuilderMode #matchingTimer,
-#matchingScreen.miniBuilderMode #matchingStatus{
-  display:none !important;
-}
-
-#matchingScreen.miniBuilderMode #matchingTitle{
-  display:block;
-}
-
-#matchingScreen.miniBuilderMode #miniBuilderPalette{
-  display:block;
-}
-
-#matchingScreen.miniBuilderMode #miniTouchZone{
-  bottom:64px;
-}
-
-#matchingScreen.miniBuilderMode:not(.miniBuilderTestMode) #miniTouchZone{
-  pointer-events:none;
-}
-
-#matchingScreen.miniBuilderMode #miniGameBox{
-  width:min(94vw,720px);
-  height:min(70svh,520px);
-  min-height:260px;
-  margin:5px auto;
-  flex:0 1 auto;
-}
-
-#matchingScreen.miniBuilderMode #miniGameStageLabel{
-  max-width:58%;
-}
-
-#matchingScreen.miniBuilderTestMode #miniBuilderPalette{
-  display:none;
-}
-
-#matchingScreen.miniBuilderTestMode #miniTouchZone{
-  bottom:0;
-}
-
-#matchingScreen.miniBuilderTestMode #miniGameBox{
-  height:min(70svh,520px);
-}
-
 
 .roomMatchButton{
   background:linear-gradient(135deg,#7847ff,#a047d7);
@@ -739,31 +683,6 @@ canvas{
     flex:1 1 auto;
   }
 }
-
-
-@media (orientation:portrait) and (pointer:coarse){
-  #matchingScreen.miniBuilderMode{
-    padding-left:8px;
-    padding-right:8px;
-    overflow:hidden;
-  }
-  #matchingScreen.miniBuilderMode #miniGameBox{
-    width:min(96vw,520px);
-    height:min(68svh,520px);
-    min-height:270px;
-  }
-}
-
-@media (orientation:landscape) and (pointer:coarse){
-  #matchingScreen.miniBuilderMode #miniGameBox{
-    width:min(92vw,900px);
-    height:calc(100svh - 34px);
-    max-height:calc(100svh - 34px);
-    min-height:220px;
-    margin:2px auto;
-  }
-}
-
 
 #ruleScreen{
   inset:0;
@@ -1672,7 +1591,7 @@ html.roomJoinMode #roomJoinScreen{
     <h1 class="title">3Dfps</h1>
 
     <div class="subtitle">
-      v1.9.3
+      v1.9.1
     </div>
 
     <button id="randomMatchButton" class="button">
@@ -1781,31 +1700,28 @@ html.roomJoinMode #roomJoinScreen{
       <div id="miniMoveGuide"></div>
       <div id="miniMoveCircle"></div>
     </div>
-    <button id="miniGameMenuButton" class="miniGameMenuButton" aria-label="ミニゲームメニュー">☰</button>
-    <div id="miniGameMenu" class="miniGameMenu" aria-hidden="true"></div>
-    <div id="miniBuilderPalette">
-      <div class="miniBuilderTools">
-        <button class="miniBuilderTool selected" data-tool="terrain">地形</button>
-        <button class="miniBuilderTool" data-tool="platform">足場</button>
-        <button class="miniBuilderTool" data-tool="spike">針</button>
-        <button class="miniBuilderTool" data-tool="start">スタート</button>
-        <button class="miniBuilderTool" data-tool="goal">ゴール</button>
-        <button class="miniBuilderTool" data-tool="erase">消す</button>
-      </div>
-      <input id="miniBuilderScroll" type="range" min="0" max="720" step="24" value="0" aria-label="コース位置">
+    <button id="miniMenuButton" type="button" aria-label="ミニゲームメニュー">☰</button>
+    <div id="miniMenuPanel" aria-hidden="true"></div>
+    <div id="miniEditorTools" aria-label="コース編集ツール">
+      <button class="miniEditorTool selected" data-editor-tool="terrain">地形</button>
+      <button class="miniEditorTool" data-editor-tool="platform">足場</button>
+      <button class="miniEditorTool" data-editor-tool="spike">針</button>
+      <button class="miniEditorTool" data-editor-tool="start">スタート</button>
+      <button class="miniEditorTool" data-editor-tool="goal">ゴール</button>
+      <button class="miniEditorTool" data-editor-tool="erase">消す</button>
     </div>
-  </div>
-  <div id="miniCourseListOverlay" aria-hidden="true">
-    <div class="miniCourseListBox">
-      <div class="miniCourseListHeader">
-        <div class="miniCourseListTitle">コース一覧</div>
-        <button id="miniCourseListClose" class="miniCourseListClose">閉じる</button>
-      </div>
-      <div id="miniCourseListContent"></div>
-    </div>
+    <div id="miniEditorHint">タップで配置、ドラッグで移動</div>
   </div>
   <button id="matchingReadyButton" class="button">準備OK</button>
   <button id="matchingEndButton" class="button secondary">マッチング終了を要求</button>
+  <div id="miniCourseListOverlay">
+    <div id="miniCourseListBox">
+      <div id="miniCourseListTitle">コース一覧</div>
+      <div id="miniDraftCourseSection"></div>
+      <div id="miniPublishedCourseSection"></div>
+      <button id="miniCourseListClose" class="button secondary">閉じる</button>
+    </div>
+  </div>
 </div>
 
 <div id="ruleScreen">
@@ -2079,11 +1995,11 @@ import {
 
 import {
   getFirestore,
-  collection,
-  getDocs,
   doc,
   setDoc,
   getDoc,
+  getDocs,
+  collection,
   updateDoc,
   deleteDoc,
   onSnapshot,
@@ -2196,34 +2112,31 @@ let miniActionLastFrameTime = 0;
 let miniActionPreviousStage = 0;
 let miniLastNetworkUpdate = 0;
 let miniNetworkSyncing = false;
-let miniBuilderStore = null;
-let miniBuilderMode = "play";
-let miniBuilderCourseId = null;
-let miniBuilderCameraX = 0;
-let miniBuilderSelectedTool = "terrain";
-let miniBuilderTestMode = false;
-let miniBuilderTestCourseId = null;
-let miniBuilderTestRevision = null;
-let miniBuilderMenuOpen = false;
-let miniBuilderMenuPointerId = null;
-let miniBuilderMenuHoldTimer = null;
-let miniBuilderMenuHoldStarted = false;
-let miniBuilderMenuHighlight = null;
-let miniBuilderPointer = {
-  id:null,
-  startX:0,
-  startY:0,
-  lastX:0,
-  lastY:0,
-  worldX:0,
-  worldY:0,
-  index:-1,
-  dragging:false,
-  moved:false
-};
+let miniMode = "play";
+let miniEditorTool = "terrain";
+let miniEditorCameraX = 0;
+let miniDraftRevision = 0;
+let miniVerifiedRevision = -1;
+let miniTestRevision = -1;
 let miniPublishedStagesCache = [];
-let miniPublishedStagesLoadedAt = 0;
-let miniPublishedStagesPromise = null;
+let miniPublishedStagesCacheAt = 0;
+let miniPublishedStageLoading = false;
+let miniCourseListOpen = false;
+let miniPlayStageLoading = false;
+let miniMenuPointerId = null;
+let miniMenuOpened = false;
+let miniMenuLongPressTimer = null;
+let miniMenuHighlightIndex = -1;
+let miniEditorPointerId = null;
+let miniEditorPointerStartX = 0;
+let miniEditorPointerStartY = 0;
+let miniEditorLastX = 0;
+let miniEditorDidPan = false;
+let miniTestStartTime = 0;
+let miniTestRunning = false;
+let miniTestElapsed = 0;
+let miniTestCompleted = false;
+let miniLastRenderedMode = "";
 let matchingLastFinalizedState = false;
 let matchingNotificationPlayed = false;
 let miniGameStarted = false;
@@ -2454,9 +2367,6 @@ const matchingTimer =
 const matchingStatus =
   document.getElementById("matchingStatus");
 
-const matchingTitle =
-  document.querySelector("#matchingScreen .matchingTitle");
-
 const miniGameScore =
   document.getElementById("miniGameScore");
 
@@ -2469,23 +2379,26 @@ const miniGameCanvas =
 const miniGameMessage =
   document.getElementById("miniGameMessage");
 
-const miniGameMenuButton =
-  document.getElementById("miniGameMenuButton");
+const miniMenuButton =
+  document.getElementById("miniMenuButton");
 
-const miniGameMenu =
-  document.getElementById("miniGameMenu");
+const miniMenuPanel =
+  document.getElementById("miniMenuPanel");
 
-const miniBuilderPalette =
-  document.getElementById("miniBuilderPalette");
+const miniEditorTools =
+  document.getElementById("miniEditorTools");
 
-const miniBuilderScroll =
-  document.getElementById("miniBuilderScroll");
+const miniEditorHint =
+  document.getElementById("miniEditorHint");
 
 const miniCourseListOverlay =
   document.getElementById("miniCourseListOverlay");
 
-const miniCourseListContent =
-  document.getElementById("miniCourseListContent");
+const miniDraftCourseSection =
+  document.getElementById("miniDraftCourseSection");
+
+const miniPublishedCourseSection =
+  document.getElementById("miniPublishedCourseSection");
 
 const miniCourseListClose =
   document.getElementById("miniCourseListClose");
@@ -4764,7 +4677,6 @@ async function startRandomMatch(){
   statusEl.textContent = "マッチング中…";
   try{
     const user = await ensureAuth();
-    await loadAllPublishedMiniStages();
     const queueRef = doc(db, "matchmaking", "global");
 
     const result = await runTransaction(db, async transaction => {
@@ -5000,6 +4912,8 @@ async function startMatch(
   matchingNotificationPlayed = false;
   matchingMiniScore = 0;
   miniGameStarted = false;
+  miniMode = loadMiniLocalState().mode;
+  miniLastRenderedMode = "";
   ruleAdvanceInFlight = false;
   latestMatchData = null;
   wpEarned = 0;
@@ -5386,14 +5300,13 @@ function hidePreMatchScreens(){
 function updateMatchingUI(data){
   if(matchType !== "random"){
     matchingScreen.style.display = "none";
+    miniCourseListOpen = false;
+    miniCourseListOverlay?.classList.remove("show");
     return;
   }
-  ensureMiniBuilderStore();
-  updateMiniBuilderVisualMode();
 
   if(data.status === "waiting" && !data.matchingFinalizedAt){
     matchingScreen.style.display = "flex";
-    ensureMiniActionGameStarted();
     menu.style.display = "none";
     gameUI.style.display = "none";
     preStart.style.display = "none";
@@ -5417,18 +5330,26 @@ function updateMatchingUI(data){
         ? "メンバーが決定しました…"
         : "他のプレイヤーを待っています…";
 
-      matchingEndButton.style.display = "block";
+      matchingEndButton.style.display = miniMode === "play" ? "block" : "none";
       matchingEndButton.textContent = (data.matchingEndRequests || {})[currentUser.uid]
         ? "マッチング終了を要求済み"
         : "マッチング終了を要求";
       matchingEndButton.disabled = Boolean((data.matchingEndRequests || {})[currentUser.uid]);
     }
     matchingReadyButton.style.display = "none";
+
+    matchingScreen.classList.toggle("miniEditorMode", miniMode === "editor");
+    matchingScreen.classList.toggle("miniTestMode", miniMode === "test");
+    if(miniLastRenderedMode !== miniMode || (miniMode === "editor" && !miniActionState)){
+      miniLastRenderedMode = miniMode;
+      updateMiniModeUI();
+    }
     return;
   }
 
   if(data.status === "waiting" && data.matchingFinalizedAt){
     matchingScreen.style.display = "flex";
+    matchingScreen.classList.remove("miniEditorMode","miniTestMode");
     menu.style.display = "none";
     gameUI.style.display = "none";
     preStart.style.display = "none";
@@ -5450,6 +5371,7 @@ function updateMatchingUI(data){
     matchingReadyButton.style.display = "block";
     matchingReadyButton.textContent = ready ? "✓ 準備OK" : "準備OK";
     matchingReadyButton.disabled = ready;
+    stopMiniActionGame();
 
     if(!matchingLastFinalizedState){
       matchingLastFinalizedState = true;
@@ -5466,8 +5388,8 @@ function updateMatchingUI(data){
   }
 
   matchingScreen.style.display = "none";
+  matchingScreen.classList.remove("miniEditorMode","miniTestMode");
 }
-
 function updateRuleUI(data){
   if(!data || data.status !== "rule"){
     ruleScreen.style.display = "none";
@@ -9346,13 +9268,15 @@ function miniActionIsVisible(){
     matchType === "random" &&
     latestMatchData &&
     latestMatchData.status === "waiting" &&
-    !gameEnded
+    !gameEnded &&
+    (miniMode === "play" || miniMode === "test") &&
+    miniActionState?.active
   );
 }
 
 const MINI_ACTION_STAGES = [
   {
-    id:"1",
+    id:1,
     name:"NEON RUN",
     worldWidth:1360,
     start:{x:42,y:188},
@@ -9373,14 +9297,117 @@ const MINI_ACTION_STAGES = [
   }
 ];
 
-const MINI_BUILDER_STORAGE_KEY = "3Dfps_mini_builder_v1";
-const MINI_BUILDER_WORLD_WIDTH = 1440;
-const MINI_BUILDER_GRID = 24;
-const MINI_BUILDER_DEFAULT_NAME = "新しいコース";
-const MINI_TEST_LIMIT = 15;
+function cloneMiniStage(stage){
+  return JSON.parse(JSON.stringify(stage));
+}
+
+function getMiniLocalStorageKey(){
+  return "3Dfps_mini_action_editor_v1";
+}
+
+function getDefaultMiniDraft(){
+  return {
+    id:"local-draft",
+    name:"マイコース",
+    worldWidth:2400,
+    start:{x:48,y:188},
+    goalX:2240,
+    goalY:176,
+    terrainPlatforms:[
+      {x:0,y:220,w:2400,h:40}
+    ],
+    solidPlatforms:[],
+    platforms:[],
+    hazards:[],
+    ceilings:[],
+    revision:0
+  };
+}
+
+function normalizeMiniCustomStage(stage){
+  const fallback = getDefaultMiniDraft();
+  const source = stage && typeof stage === "object" ? stage : fallback;
+  const normalized = {
+    id: String(source.id || "local-draft"),
+    name: String(source.name || "マイコース").slice(0,24),
+    worldWidth:Math.max(720,Math.min(6000,Number(source.worldWidth) || fallback.worldWidth)),
+    start:{
+      x:clamp(Number(source.start?.x) || fallback.start.x,0,5900),
+      y:clamp(Number(source.start?.y) || fallback.start.y,0,238)
+    },
+    goalX:clamp(Number(source.goalX) || fallback.goalX,20,5900),
+    goalY:clamp(Number(source.goalY) || fallback.goalY,0,238),
+    terrainPlatforms:Array.isArray(source.terrainPlatforms) ? source.terrainPlatforms.map(v=>({x:Number(v.x)||0,y:Number(v.y)||0,w:Number(v.w)||16,h:Number(v.h)||16})) : [],
+    solidPlatforms:Array.isArray(source.solidPlatforms) ? source.solidPlatforms.map(v=>({x:Number(v.x)||0,y:Number(v.y)||0,w:Number(v.w)||16,h:Number(v.h)||16})) : [],
+    platforms:Array.isArray(source.platforms) ? source.platforms.map(v=>({x:Number(v.x)||0,y:Number(v.y)||0,w:Number(v.w)||16,h:Number(v.h)||16})) : [],
+    hazards:Array.isArray(source.hazards) ? source.hazards.map(v=>({x:Number(v.x)||0,y:Number(v.y)||0,w:Number(v.w)||16,h:Number(v.h)||16})) : [],
+    ceilings:Array.isArray(source.ceilings) ? source.ceilings.map(v=>({x:Number(v.x)||0,y:Number(v.y)||0,w:Number(v.w)||16,h:Number(v.h)||16})) : [],
+    revision:Math.max(0,Math.floor(Number(source.revision)||0))
+  };
+  if(normalized.terrainPlatforms.length === 0 && normalized.solidPlatforms.length === 0 && normalized.platforms.length === 0){
+    normalized.terrainPlatforms = cloneMiniStage(fallback).terrainPlatforms;
+  }
+  return normalized;
+}
+
+function loadMiniLocalState(){
+  const fallback = {
+    mode:"play",
+    tool:"terrain",
+    cameraX:0,
+    draft:getDefaultMiniDraft(),
+    verifiedRevision:-1
+  };
+  try{
+    const raw = localStorage.getItem(getMiniLocalStorageKey());
+    if(!raw) return fallback;
+    const data = JSON.parse(raw);
+    const draft = normalizeMiniCustomStage(data.draft);
+    return {
+      mode:["play","editor","test"].includes(data.mode) ? data.mode : "play",
+      tool:["terrain","platform","spike","start","goal","erase"].includes(data.tool) ? data.tool : "terrain",
+      cameraX:clamp(Number(data.cameraX)||0,0,Math.max(0,draft.worldWidth-720)),
+      draft,
+      verifiedRevision:Number.isFinite(Number(data.verifiedRevision)) ? Number(data.verifiedRevision) : -1
+    };
+  }catch(error){
+    return fallback;
+  }
+}
+
+function saveMiniLocalState(){
+  try{
+    const state = {
+      mode:miniMode,
+      tool:miniEditorTool,
+      cameraX:miniEditorCameraX,
+      draft:normalizeMiniCustomStage(miniDraftStage),
+      verifiedRevision:miniVerifiedRevision
+    };
+    localStorage.setItem(getMiniLocalStorageKey(),JSON.stringify(state));
+  }catch(error){}
+}
+
+let miniDraftStage = getDefaultMiniDraft();
+{
+  const saved = loadMiniLocalState();
+  miniMode = saved.mode;
+  miniEditorTool = saved.tool;
+  miniEditorCameraX = saved.cameraX;
+  miniDraftStage = saved.draft;
+  miniDraftRevision = saved.draft.revision;
+  miniVerifiedRevision = saved.verifiedRevision;
+}
+
+function markMiniDraftChanged(){
+  miniDraftRevision += 1;
+  miniDraftStage.revision = miniDraftRevision;
+  miniVerifiedRevision = -1;
+  saveMiniLocalState();
+}
 
 function getMiniBestKey(stageId){
-  return `3Dfps_mini_action_best_stage_${stageId}`;
+  return `3Dfps_mini_action_best_stage_${String(stageId)}`;
 }
 
 function getMiniBestTime(stageId){
@@ -9403,362 +9430,82 @@ function saveMiniBestTime(stageId,time){
   }
 }
 
-function miniBuilderClone(value){
-  return JSON.parse(JSON.stringify(value));
+function randomizeMiniStageFallback(){
+  return cloneMiniStage(MINI_ACTION_STAGES[0]);
 }
 
-function makeMiniBuilderId(){
-  return "course_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8);
-}
-
-function makeMiniBuilderCourse(name = MINI_BUILDER_DEFAULT_NAME){
-  return {
-    id:makeMiniBuilderId(),
-    name,
-    revision:0,
-    verifiedRevision:null,
-    verifiedTime:null,
-    blocks:[
-      {type:"terrain",x:0,y:220,w:1440,h:40},
-      {type:"start",x:48,y:198,w:24,h:22},
-      {type:"goal",x:1320,y:178,w:24,h:42}
-    ]
-  };
-}
-
-function normalizeMiniBuilderBlock(block){
-  if(!block || typeof block !== "object") return null;
-  const type = ["terrain","platform","spike","start","goal"].includes(block.type)
-    ? block.type
-    : null;
-  if(!type) return null;
-  const sizeDefaults = {
-    terrain:{w:48,h:24},
-    platform:{w:48,h:24},
-    spike:{w:24,h:24},
-    start:{w:24,h:22},
-    goal:{w:24,h:42}
-  };
-  const d = sizeDefaults[type];
-  return {
-    type,
-    x:Math.max(0,Math.min(MINI_BUILDER_WORLD_WIDTH - Math.max(1,Number(block.w)||d.w),Number(block.x)||0)),
-    y:Math.max(0,Math.min(238,Number(block.y)||0)),
-    w:Math.max(1,Number(block.w)||d.w),
-    h:Math.max(1,Number(block.h)||d.h)
-  };
-}
-
-function normalizeMiniBuilderCourse(course){
-  const safe = course && typeof course === "object" ? course : makeMiniBuilderCourse();
-  const blocks = Array.isArray(safe.blocks)
-    ? safe.blocks.map(normalizeMiniBuilderBlock).filter(Boolean)
-    : [];
-  let start = blocks.find(block => block.type === "start");
-  if(!start){
-    start = {type:"start",x:48,y:198,w:24,h:22};
-    blocks.unshift(start);
-  }
-  let goal = blocks.find(block => block.type === "goal");
-  if(!goal){
-    goal = {type:"goal",x:1320,y:178,w:24,h:42};
-    blocks.push(goal);
-  }
-  const verifiedRevision =
-    safe.verifiedRevision === null || safe.verifiedRevision === undefined
-      ? null
-      : (Number.isFinite(Number(safe.verifiedRevision)) ? Number(safe.verifiedRevision) : null);
-  const verifiedTime =
-    safe.verifiedTime === null || safe.verifiedTime === undefined
-      ? null
-      : (Number.isFinite(Number(safe.verifiedTime)) ? Number(safe.verifiedTime) : null);
-  return {
-    id:String(safe.id || makeMiniBuilderId()),
-    name:String(safe.name || MINI_BUILDER_DEFAULT_NAME).slice(0,40),
-    revision:Math.max(0,Number(safe.revision)||0),
-    verifiedRevision,
-    verifiedTime,
-    blocks
-  };
-}
-
-function loadMiniBuilderStore(){
-  try{
-    const raw = localStorage.getItem(MINI_BUILDER_STORAGE_KEY);
-    if(raw){
-      const parsed = JSON.parse(raw);
-      const courses = Array.isArray(parsed.courses)
-        ? parsed.courses.map(normalizeMiniBuilderCourse)
-        : [];
-      const store = {
-        mode:parsed.mode === "create" ? "create" : "play",
-        currentCourseId:parsed.currentCourseId ? String(parsed.currentCourseId) : null,
-        selectedTool:["terrain","platform","spike","start","goal","erase"].includes(parsed.selectedTool) ? parsed.selectedTool : "terrain",
-        courses
-      };
-      if(!store.courses.length) store.courses.push(makeMiniBuilderCourse());
-      if(!store.currentCourseId || !store.courses.some(course => course.id === store.currentCourseId)){
-        store.currentCourseId = store.courses[0].id;
-      }
-      return store;
-    }
-  }catch(error){}
-  const first = makeMiniBuilderCourse();
-  return {
-    mode:"play",
-    currentCourseId:first.id,
-    selectedTool:"terrain",
-    courses:[first]
-  };
-}
-
-function saveMiniBuilderStore(){
-  if(!miniBuilderStore) return;
-  try{
-    miniBuilderStore.mode = miniBuilderMode === "create" ? "create" : "play";
-    miniBuilderStore.currentCourseId = miniBuilderCourseId;
-    miniBuilderStore.selectedTool = miniBuilderSelectedTool;
-    localStorage.setItem(MINI_BUILDER_STORAGE_KEY,JSON.stringify(miniBuilderStore));
-  }catch(error){}
-}
-
-function getMiniBuilderCourse(courseId = miniBuilderCourseId){
-  if(!miniBuilderStore) return null;
-  return miniBuilderStore.courses.find(course => course.id === String(courseId)) || null;
-}
-
-function miniBuilderCourseChanged(course){
-  if(!course) return;
-  course.revision = Math.max(0,Number(course.revision)||0) + 1;
-  course.verifiedRevision = null;
-  course.verifiedTime = null;
-  saveMiniBuilderStore();
-}
-
-function ensureMiniBuilderStore(){
-  if(!miniBuilderStore) miniBuilderStore = loadMiniBuilderStore();
-  miniBuilderMode = miniBuilderStore.mode === "create" ? "create" : "play";
-  miniBuilderCourseId = miniBuilderStore.currentCourseId;
-  miniBuilderSelectedTool = miniBuilderStore.selectedTool || "terrain";
-  if(!getMiniBuilderCourse()){
-    const course = makeMiniBuilderCourse();
-    miniBuilderStore.courses.push(course);
-    miniBuilderCourseId = course.id;
-    saveMiniBuilderStore();
-  }
-  miniBuilderStore.courses = miniBuilderStore.courses.map(normalizeMiniBuilderCourse);
-}
-
-function miniBuilderCourseEligible(course){
-  return Boolean(
-    course &&
-    course.verifiedRevision !== null &&
-    course.verifiedRevision === course.revision &&
-    Number(course.verifiedTime) <= MINI_TEST_LIMIT
-  );
-}
-
-function miniBuilderCourseToStage(course){
-  const safe = normalizeMiniBuilderCourse(course);
-  const terrain = safe.blocks.filter(block => block.type === "terrain" || block.type === "platform");
-  const spikes = safe.blocks.filter(block => block.type === "spike");
-  const start = safe.blocks.find(block => block.type === "start") || {x:48,y:198,w:24,h:22};
-  const goal = safe.blocks.find(block => block.type === "goal") || {x:1320,y:178,w:24,h:42};
-  const platforms = terrain.map(block => ({
-    x:block.x,
-    y:block.y,
-    w:block.w,
-    h:block.h,
-    type:block.type
-  }));
-  return {
-    id:`local:${safe.id}:${safe.revision}`,
-    sourceCourseId:safe.id,
-    name:safe.name,
-    worldWidth:MINI_BUILDER_WORLD_WIDTH,
-    start:{x:start.x,y:start.y},
-    goalX:goal.x,
-    goalY:goal.y,
-    platforms,
-    hazards:spikes.map(block => ({x:block.x,y:block.y,w:block.w,h:block.h,type:"spike"})),
-    blocks:safe.blocks
-  };
-}
-
-function miniStageFromLegacy(stage){
-  if(!stage) return MINI_ACTION_STAGES[0];
-  if(Array.isArray(stage.blocks)){
-    return stage;
-  }
-  const blocks = [];
-  for(const platform of stage.platforms || []){
-    blocks.push({type:"terrain",x:platform.x,y:platform.y,w:platform.w,h:platform.h});
-  }
-  for(const hazard of stage.hazards || []){
-    blocks.push({type:"spike",x:hazard.x,y:hazard.y,w:hazard.w,h:hazard.h});
-  }
-  const goalPlatform = (stage.platforms || []).find(platform =>
-    Number(stage.goalX) >= platform.x && Number(stage.goalX) <= platform.x + platform.w
-  ) || (stage.platforms || [])[stage.platforms?.length - 1];
-  blocks.push({type:"start",x:stage.start?.x || 42,y:stage.start?.y || 188,w:24,h:22});
-  blocks.push({type:"goal",x:Number(stage.goalX)||1290,y:Number(goalPlatform?.y ?? 178) - 42,w:24,h:42});
-  return {...stage,blocks};
-}
-
-function normalizeMiniPublishedStage(stage,idFallback){
-  try{
-    const raw = stage && typeof stage === "object" ? stage : null;
-    if(!raw) return null;
-    const normalized = miniStageFromLegacy(raw);
-    const blocks = Array.isArray(normalized.blocks)
-      ? normalized.blocks.map(normalizeMiniBuilderBlock).filter(Boolean)
-      : [];
-    const start = blocks.find(block => block.type === "start") || normalized.start || {x:42,y:188};
-    const goal = blocks.find(block => block.type === "goal") || {x:Number(normalized.goalX)||1290,y:Number(normalized.goalY)||178,w:24,h:42};
-    const terrains = blocks.filter(block => block.type === "terrain" || block.type === "platform");
-    const spikes = blocks.filter(block => block.type === "spike");
-    if(!Number.isFinite(Number(normalized.worldWidth)) || Number(normalized.worldWidth) <= 0) return null;
-    if(!terrains.length) return null;
-    return {
-      id:String(normalized.id || idFallback || "1"),
-      name:String(normalized.name || "CUSTOM").slice(0,40),
-      ownerUid:raw.ownerUid || null,
-      publicId:idFallback ? String(idFallback) : null,
-      worldWidth:Math.max(720,Number(normalized.worldWidth)),
-      start:{x:Number(start.x)||42,y:Number(start.y)||188},
-      goalX:Number(goal.x),
-      goalY:Number(goal.y),
-      platforms:terrains,
-      hazards:spikes,
-      blocks
-    };
-  }catch(error){
-    return null;
-  }
-}
-
-async function loadAllPublishedMiniStages(force=false){
+async function loadPublishedMiniStages(force=false){
+  if(miniPublishedStageLoading) return miniPublishedStagesCache;
   const now = Date.now();
-  if(!force && miniPublishedStagesLoadedAt && now - miniPublishedStagesLoadedAt < 30000){
+  if(!force && miniPublishedStagesCache.length && now - miniPublishedStagesCacheAt < 10000){
     return miniPublishedStagesCache;
   }
-  if(miniPublishedStagesPromise) return miniPublishedStagesPromise;
-  miniPublishedStagesPromise = (async()=>{
-    try{
-      const snapshot = await getDocs(collection(db,"miniStages"));
-      const stages = [];
-      for(const document of snapshot.docs){
-        const data = document.data() || {};
-        if(data.published === false) continue;
-        const stage = normalizeMiniPublishedStage(data.stage,document.id);
-        if(stage){
-          stage.id = document.id;
-          stages.push(stage);
+  miniPublishedStageLoading = true;
+  try{
+    const snap = await getDocs(collection(db,"miniStages"));
+    const stages = [];
+    for(const item of snap.docs){
+      const data = item.data() || {};
+      const stage = normalizeMiniCustomStage(data.stage);
+      if(!data.stage || !Number.isFinite(stage.worldWidth) || stage.worldWidth < 720) continue;
+      stage.id = `firebase-${item.id}`;
+      stage.name = String(data.name || stage.name || "公開コース").slice(0,24);
+      stages.push(stage);
+    }
+    miniPublishedStagesCache = stages;
+    miniPublishedStagesCacheAt = Date.now();
+    return stages;
+  }catch(error){
+    console.error("mini published stages load error",error);
+    return miniPublishedStagesCache;
+  }finally{
+    miniPublishedStageLoading = false;
+  }
+}
+
+async function chooseMiniActionStageAsync(){
+  try{
+    const stages = await loadPublishedMiniStages(false);
+    if(stages.length){
+      let next = stages[Math.floor(Math.random()*stages.length)];
+      if(stages.length > 1 && miniActionPreviousStage){
+        let guard=0;
+        while(String(next.id)===String(miniActionPreviousStage) && guard++<10){
+          next = stages[Math.floor(Math.random()*stages.length)];
         }
       }
-      miniPublishedStagesCache = stages;
-      miniPublishedStagesLoadedAt = Date.now();
-      return stages;
-    }catch(error){
-      console.error("published mini stages load error",error);
-      return miniPublishedStagesCache;
-    }finally{
-      miniPublishedStagesPromise = null;
+      miniActionPreviousStage = next.id;
+      return cloneMiniStage(next);
     }
-  })();
-  return miniPublishedStagesPromise;
-}
-
-async function loadPublishedMiniStagesForList(){
-  return loadAllPublishedMiniStages(true);
-}
-
-function getMiniPlayableStagePool(){
-  const fallback = MINI_ACTION_STAGES[0];
-  const publicStages = Array.isArray(miniPublishedStagesCache)
-    ? miniPublishedStagesCache.filter(stage => stage && stage.id !== "1")
-    : [];
-  return [fallback,...publicStages];
-}
-
-function chooseMiniActionStage(){
-  const pool = getMiniPlayableStagePool();
-  if(pool.length === 1) return pool[0];
-  let next = pool[Math.floor(Math.random() * pool.length)];
-  if(miniActionPreviousStage !== null && miniActionPreviousStage !== undefined && pool.length > 1){
-    let guard = 0;
-    while(String(next.id) === String(miniActionPreviousStage) && guard++ < 12){
-      next = pool[Math.floor(Math.random() * pool.length)];
-    }
+  }catch(error){
+    console.error("mini stage choose error",error);
   }
-  miniActionPreviousStage = next.id;
-  return next;
+  miniActionPreviousStage = 1;
+  return randomizeMiniStageFallback();
 }
 
-function resetMiniActionInputState(){
+function resetMiniTouchState(){
+  miniTouchState.movePointerId = null;
+  miniTouchState.jumpPointerId = null;
   miniActionInput.left = false;
   miniActionInput.right = false;
   miniActionInput.jump = false;
   miniActionInput.jumpPressed = false;
-  miniTouchState.movePointerId = null;
-  miniTouchState.jumpPointerId = null;
   hideMiniTouchVisual();
-}
-
-function resizeMiniActionCanvas(){
-  if(!miniGameCanvas) return;
-  const rect = miniGameCanvas.getBoundingClientRect();
-  const dpr = Math.min(2,window.devicePixelRatio || 1);
-  const width = Math.max(1,Math.floor(rect.width * dpr));
-  const height = Math.max(1,Math.floor(rect.height * dpr));
-  if(miniGameCanvas.width !== width || miniGameCanvas.height !== height){
-    miniGameCanvas.width = width;
-    miniGameCanvas.height = height;
-  }
-}
-
-function showMiniActionMessage(text){
-  if(!miniGameMessage) return;
-  miniGameMessage.textContent = text;
-  miniGameMessage.classList.add("show");
-}
-
-function hideMiniActionMessage(){
-  if(!miniGameMessage) return;
-  miniGameMessage.textContent = "";
-  miniGameMessage.classList.remove("show");
-}
-
-function getCurrentMiniStageLabel(stage){
-  if(miniBuilderMode === "create" && !miniBuilderTestMode) return "CREATE · " + (getMiniBuilderCourse()?.name || MINI_BUILDER_DEFAULT_NAME);
-  if(stage?.id === "1") return `STAGE 1 · ${stage.name}`;
-  return `STAGE · ${stage?.name || "CUSTOM"}`;
 }
 
 function updateMiniActionLabels(){
   if(!miniActionState || !miniGameStageLabel || !miniGameScore) return;
   const stage = miniActionState.stage;
+  const best = getMiniBestTime(stage.id);
   const time = Math.max(0,miniActionState.elapsed || 0);
-  if(miniBuilderMode === "create" && !miniBuilderTestMode){
-    const course = getMiniBuilderCourse();
-    miniGameStageLabel.textContent = `CREATE · ${course?.name || MINI_BUILDER_DEFAULT_NAME}`;
-    miniGameScore.textContent = course
-      ? `REV ${course.revision} · ${miniBuilderCourseEligible(course) ? "✓" : "未テスト"}`
-      : "";
-    return;
-  }
-  const best = !stage?.id?.startsWith("local:") ? getMiniBestTime(stage.id) : null;
-  const prefix = miniBuilderTestMode ? "TEST" : getCurrentMiniStageLabel(stage);
-  miniGameStageLabel.textContent = prefix;
-  if(miniBuilderTestMode){
-    miniGameScore.textContent = `TIME ${time.toFixed(2)}s / ${MINI_TEST_LIMIT.toFixed(0)}s`;
-  }else{
-    miniGameScore.textContent = `TIME ${time.toFixed(2)}s · BEST ${best === null ? "--" : best.toFixed(2) + "s"}`;
-  }
+  const prefix = miniMode === "test" ? "TEST" : "TIME";
+  miniGameStageLabel.textContent = `STAGE ${stage.id} · ${stage.name}`;
+  miniGameScore.textContent = `${prefix} ${time.toFixed(2)}s · BEST ${best === null ? "--" : best.toFixed(2) + "s"}`;
 }
 
 async function syncMiniActionState(force=false){
-  if(!matchRef || matchType !== "random" || !currentUser || gameEnded || !miniActionState?.active || miniBuilderMode !== "play" || miniBuilderTestMode) return;
+  if(!matchRef || matchType !== "random" || miniMode !== "play" || !currentUser || gameEnded || !miniActionState?.active) return;
   const now = performance.now();
   if(!force && (now - miniLastNetworkUpdate < 150 || miniNetworkSyncing)) return;
   miniLastNetworkUpdate = now;
@@ -9792,14 +9539,14 @@ async function clearMiniActionRemoteState(){
   }
 }
 
-function startMiniActionStage(stage = chooseMiniActionStage(),options={}){
+function startMiniActionStage(stage = randomizeMiniStageFallback()){
   if(!miniGameCanvas) return;
   resizeMiniActionCanvas();
-  const safeStage = normalizeMiniPublishedStage(stage,stage?.id) || MINI_ACTION_STAGES[0];
-  const start = safeStage.start;
+  const cleanStage = cloneMiniStage(stage);
+  const start = cleanStage.start;
   miniActionState = {
     active:true,
-    stage:safeStage,
+    stage:cleanStage,
     x:start.x,
     y:start.y,
     vx:0,
@@ -9812,75 +9559,81 @@ function startMiniActionStage(stage = chooseMiniActionStage(),options={}){
     startTime:performance.now(),
     elapsed:0,
     flashUntil:0,
-    clearPending:false,
-    testMode:Boolean(options.testMode),
-    testCourseId:options.testCourseId || null,
-    testRevision:options.testRevision ?? null
+    clearPending:false
   };
-  resetMiniActionInputState();
+  resetMiniTouchState();
   miniGameStarted = true;
   miniActionLastFrameTime = performance.now();
+  miniTestRunning = miniMode === "test";
+  miniTestStartTime = performance.now();
+  miniTestElapsed = 0;
+  miniTestCompleted = false;
   hideMiniActionMessage();
   updateMiniActionLabels();
-  if(miniActionState.testMode){
-    miniBuilderTestMode = true;
-    miniBuilderTestCourseId = options.testCourseId || null;
-    miniBuilderTestRevision = options.testRevision ?? null;
-  }else if(miniBuilderMode === "play"){
-    miniBuilderTestMode = false;
-    miniBuilderTestCourseId = null;
-    miniBuilderTestRevision = null;
+  if(miniMode === "play") syncMiniActionState(true);
+  else clearMiniActionRemoteState();
+}
+
+async function startRandomMiniActionStage(){
+  if(miniPlayStageLoading || miniMode !== "play") return;
+  miniPlayStageLoading = true;
+  stopMiniActionGame(false);
+  miniGameStageLabel.textContent = "STAGE -- · LOADING";
+  miniGameScore.textContent = "TIME 0.00s · BEST --";
+  try{
+    const stage = await chooseMiniActionStageAsync();
+    if(miniMode !== "play" || !miniActionIsVisible() && matchingScreen.style.display !== "flex") return;
+    startMiniActionStage(stage);
+  }catch(error){
+    console.error("mini random start error",error);
+    startMiniActionStage(randomizeMiniStageFallback());
+  }finally{
+    miniPlayStageLoading = false;
   }
-  syncMiniActionState(true);
 }
 
 function ensureMiniActionGameStarted(){
-  ensureMiniBuilderStore();
-  if(miniBuilderMode === "create"){
-    startMiniBuilderView();
+  if(miniMode === "editor"){
+    stopMiniActionGame(false);
     return;
   }
   if(!miniActionState || !miniActionState.active){
-    if(!miniPublishedStagesLoadedAt) loadAllPublishedMiniStages().catch(()=>{});
-    startMiniActionStage();
+    if(miniMode === "test"){
+      startMiniActionStage(miniDraftStage);
+    }else{
+      startRandomMiniActionStage();
+    }
   }
 }
 
-function stopMiniActionGame(){
+function stopMiniActionGame(clearRemote=true){
   const shouldClearRemote = Boolean(
+    clearRemote &&
     miniActionState?.active &&
     matchType === "random" &&
     matchRef &&
     currentUser &&
-    miniBuilderMode === "play"
+    miniMode === "play"
   );
   if(shouldClearRemote) clearMiniActionRemoteState();
   if(miniActionState) miniActionState.active = false;
   miniActionState = null;
   miniActionLastFrameTime = 0;
-  resetMiniActionInputState();
+  miniTestRunning = false;
+  miniTestCompleted = false;
+  resetMiniTouchState();
   miniGameStarted = false;
-  miniBuilderTestMode = false;
-  miniBuilderTestCourseId = null;
-  miniBuilderTestRevision = null;
-  closeMiniGameMenu();
-  closeMiniCourseList();
   if(miniGameMessage) miniGameMessage.classList.remove("show");
 }
 
-function miniActionWorldToScreen(state,worldX,worldY,viewW,viewH,cameraOverride=null){
-  const targetCamera = cameraOverride === null
-    ? Math.max(0,Math.min(state.stage.worldWidth - 720,state.x - 180))
-    : Math.max(0,Math.min(state.stage.worldWidth - 720,cameraOverride));
-  const scale = Math.min(viewW / 720,viewH / 260);
-  const drawWidth = 720 * scale;
-  const drawHeight = 260 * scale;
-  const offsetX = (viewW - drawWidth) / 2;
-  const offsetY = (viewH - drawHeight) / 2;
+function miniActionWorldToScreen(state,worldX,worldY,viewW,viewH){
+  const targetCamera = Math.max(0,Math.min(
+    state.stage.worldWidth - 720,
+    state.x - 180
+  ));
   return {
-    x:offsetX + (worldX - targetCamera) * scale,
-    y:offsetY + worldY * scale,
-    scale
+    x:(worldX - targetCamera) * viewW / 720,
+    y:worldY * viewH / 260
   };
 }
 
@@ -9891,28 +9644,15 @@ function miniActionRectHit(a,b){
     a.y + a.height > b.y;
 }
 
-function miniStageCollisionBlocks(stage){
-  return (stage.blocks || []).filter(block => block.type === "terrain" || block.type === "platform");
-}
-
-function miniStageSpikes(stage){
-  if(Array.isArray(stage.blocks)) return stage.blocks.filter(block => block.type === "spike");
-  return stage.hazards || [];
-}
-
-function miniStageGoal(stage){
-  const goal = (stage.blocks || []).find(block => block.type === "goal");
-  if(goal) return goal;
-  return {x:Number(stage.goalX)||1290,y:Number(stage.goalY)||178,w:24,h:42};
-}
-
 function resetMiniActionStage(message="",randomizeStage=false){
   if(!miniActionState || !miniActionState.active) return;
-  const isTest = miniBuilderTestMode || miniActionState.testMode;
-  const stage = randomizeStage && !isTest ? chooseMiniActionStage() : miniActionState.stage;
-  const safeStage = normalizeMiniPublishedStage(stage,stage?.id) || MINI_ACTION_STAGES[0];
-  const start = safeStage.start;
-  miniActionState.stage = safeStage;
+  resetMiniTouchState();
+  if(randomizeStage){
+    startRandomMiniActionStage();
+    return;
+  }
+  const stage = miniActionState.stage;
+  const start = stage.start;
   miniActionState.x = start.x;
   miniActionState.y = start.y;
   miniActionState.vx = 0;
@@ -9924,7 +9664,10 @@ function resetMiniActionStage(message="",randomizeStage=false){
   miniActionState.elapsed = 0;
   miniActionState.clearPending = false;
   miniActionState.flashUntil = performance.now() + 160;
-  resetMiniActionInputState();
+  miniTestRunning = miniMode === "test";
+  miniTestStartTime = performance.now();
+  miniTestElapsed = 0;
+  miniTestCompleted = false;
   if(message){
     showMiniActionMessage(message);
     setTimeout(() => {
@@ -9934,7 +9677,17 @@ function resetMiniActionStage(message="",randomizeStage=false){
     hideMiniActionMessage();
   }
   updateMiniActionLabels();
-  syncMiniActionState(true);
+  if(miniMode === "play") syncMiniActionState(true);
+}
+
+function verifyMiniDraftFromTest(time){
+  if(miniMode !== "test") return;
+  if(time <= 15 && miniTestRevision === miniDraftRevision){
+    miniVerifiedRevision = miniDraftRevision;
+    saveMiniLocalState();
+    return true;
+  }
+  return false;
 }
 
 function completeMiniActionStage(){
@@ -9942,30 +9695,20 @@ function completeMiniActionStage(){
   miniActionState.clearPending = true;
   const state = miniActionState;
   state.elapsed = (performance.now() - state.startTime) / 1000;
-  if(miniBuilderTestMode || state.testMode){
-    const course = getMiniBuilderCourse(state.testCourseId || miniBuilderTestCourseId);
-    const unchanged = Boolean(
-      course &&
-      Number(course.revision) === Number(state.testRevision)
-    );
-    const underLimit = state.elapsed <= MINI_TEST_LIMIT;
-    if(course && unchanged && underLimit){
-      course.verifiedRevision = course.revision;
-      course.verifiedTime = state.elapsed;
-      saveMiniBuilderStore();
-      showMiniActionMessage(`✓ CLEAR  ${state.elapsed.toFixed(2)}s`);
-    }else if(underLimit){
-      showMiniActionMessage("CLEAR  変更を検出");
-    }else{
-      showMiniActionMessage(`15秒以内にクリアできませんでした (${state.elapsed.toFixed(2)}s)`);
-    }
+
+  if(miniMode === "test"){
+    const verified = verifyMiniDraftFromTest(state.elapsed);
+    miniTestRunning = false;
+    miniTestCompleted = true;
+    showMiniActionMessage(verified
+      ? `CLEAR ${state.elapsed.toFixed(2)}s · ✓ VERIFIED`
+      : `CLEAR ${state.elapsed.toFixed(2)}s${state.elapsed > 15 ? " · 15秒超過" : " · 変更後に再テスト"}`);
+    updateMiniActionLabels();
     setTimeout(() => {
-      if(!miniActionState || miniActionState !== state) return;
-      miniBuilderTestMode = false;
-      miniBuilderTestCourseId = null;
-      miniBuilderTestRevision = null;
-      startMiniBuilderView();
-    },900);
+      if(!miniActionState || miniActionState !== state || !miniActionState.active) return;
+      if(miniMode !== "test") return;
+      startMiniActionStage(miniDraftStage);
+    },850);
     return;
   }
 
@@ -9974,15 +9717,22 @@ function completeMiniActionStage(){
   showMiniActionMessage(isBest ? `NEW BEST  ${state.elapsed.toFixed(2)}s` : `CLEAR  ${state.elapsed.toFixed(2)}s`);
   setTimeout(() => {
     if(!miniActionState || miniActionState !== state || !miniActionState.active) return;
-    if(!miniActionIsVisible()) return;
-    startMiniActionStage();
+    if(miniMode !== "play") return;
+    startRandomMiniActionStage();
   },850);
+}
+
+function getMiniStageAllPlatforms(stage){
+  const terrain = Array.isArray(stage.terrainPlatforms) ? stage.terrainPlatforms : [];
+  const standard = Array.isArray(stage.platforms) ? stage.platforms : [];
+  const solid = Array.isArray(stage.solidPlatforms) ? stage.solidPlatforms : [];
+  return [...terrain,...standard,...solid];
 }
 
 function updateMiniActionGame(delta,time){
   if(!miniActionState || !miniActionState.active) return;
   if(!miniActionIsVisible()){
-    stopMiniActionGame();
+    stopMiniActionGame(miniMode === "play");
     return;
   }
 
@@ -9993,6 +9743,8 @@ function updateMiniActionGame(delta,time){
     drawMiniActionGame();
     return;
   }
+
+  if(miniMode === "test") miniTestElapsed = (performance.now() - miniTestStartTime) / 1000;
 
   if(miniActionInput.jumpPressed){
     state.jumpBuffer = .12;
@@ -10029,56 +9781,64 @@ function updateMiniActionGame(delta,time){
   state.y += state.vy * clampedDelta;
   state.onGround = false;
 
-  for(const platform of miniStageCollisionBlocks(stage)){
+  for(const platform of getMiniStageAllPlatforms(stage)){
     const horizontalOverlap = state.x + state.width > platform.x && state.x < platform.x + platform.w;
     if(!horizontalOverlap) continue;
     if(state.vy >= 0 && previousBottom <= platform.y + 5 && state.y + state.height >= platform.y){
       state.y = platform.y - state.height;
       state.vy = 0;
       state.onGround = true;
-      continue;
     }
-    if(platform.type === "platform" && state.vy < 0 && previousTop >= platform.y + platform.h - 4 && state.y <= platform.y + platform.h){
+    if(stage.solidPlatforms?.includes(platform) && state.vy < 0 && previousTop >= platform.y + platform.h - 4 && state.y <= platform.y + platform.h){
       state.y = platform.y + platform.h;
       state.vy = 0;
     }
   }
 
-  if(state.x < 0){
-    state.x = 0;
-    state.vx = 0;
+  for(const platform of stage.solidPlatforms || []){
+    const horizontalOverlap = state.x + state.width > platform.x && state.x < platform.x + platform.w;
+    if(!horizontalOverlap) continue;
+    if(state.vy < 0 && previousTop >= platform.y + platform.h - 4 && state.y <= platform.y + platform.h){
+      state.y = platform.y + platform.h;
+      state.vy = 0;
+    }
   }
 
-  for(const hazard of miniStageSpikes(stage)){
+  for(const hazard of stage.hazards || []){
     const hitRect = {x:state.x,y:state.y,width:state.width,height:state.height};
     if(miniActionRectHit(hitRect,hazard)){
-      resetMiniActionStage("TRY AGAIN!",true);
+      resetMiniActionStage(miniMode === "test" ? "MISS!" : "MISS!",miniMode === "play");
       drawMiniActionGame();
       return;
     }
   }
 
   if(state.y > 290){
-    resetMiniActionStage("MISS!",true);
+    resetMiniActionStage("MISS!",miniMode === "play");
     drawMiniActionGame();
     return;
   }
 
-  const goal = miniStageGoal(stage);
-  if(state.x + state.width >= goal.x){
+  const goalX = Number(stage.goalX || 0);
+  const goalY = Number(stage.goalY ?? 178);
+  const goalRect = {x:goalX,y:goalY,w:24,h:50};
+  const reachesGoal = stage.id === 1
+    ? state.x + state.width >= goalX
+    : miniActionRectHit({x:state.x,y:state.y,width:state.width,height:state.height},goalRect);
+  if(reachesGoal){
     completeMiniActionStage();
     drawMiniActionGame();
     return;
   }
 
   state.elapsed = (performance.now() - state.startTime) / 1000;
-  syncMiniActionState();
+  if(miniMode === "play") syncMiniActionState();
   updateMiniActionLabels();
   drawMiniActionGame();
 }
 
-function drawMiniActionRemotePlayers(ctx,stage,camera,now,viewScale=1){
-  if(!latestMatchData?.players || !currentUser || miniBuilderMode !== "play" || miniBuilderTestMode) return;
+function drawMiniActionRemotePlayers(ctx,stage,camera,now){
+  if(miniMode !== "play" || !latestMatchData?.players || !currentUser) return;
   for(const [uid,player] of Object.entries(latestMatchData.players)){
     if(uid === currentUser.uid) continue;
     if(!player?.miniActive) continue;
@@ -10087,7 +9847,7 @@ function drawMiniActionRemotePlayers(ctx,stage,camera,now,viewScale=1){
     const y = Number(player.miniY);
     if(!Number.isFinite(x) || !Number.isFinite(y)) continue;
 
-    const alpha = .34;
+    const alpha = 0.34;
     const width = 16;
     const height = 22;
     const playerGrad = ctx.createLinearGradient(x,y,x,y + height);
@@ -10103,6 +9863,20 @@ function drawMiniActionRemotePlayers(ctx,stage,camera,now,viewScale=1){
     ctx.fillRect(x + 3,y + 5,width - 6,5);
     ctx.restore();
   }
+}
+
+function drawMiniActionPlatform(ctx,platform,solid=false){
+  const grad = ctx.createLinearGradient(0,platform.y,0,platform.y + platform.h);
+  grad.addColorStop(0,solid ? "#4a5361" : "#28394f");
+  grad.addColorStop(1,solid ? "#18202a" : "#0c1624");
+  ctx.fillStyle = grad;
+  ctx.fillRect(platform.x,platform.y,platform.w,platform.h);
+  ctx.strokeStyle = solid ? "rgba(255,215,127,.8)" : "rgba(103,196,255,.84)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(platform.x,platform.y + .5);
+  ctx.lineTo(platform.x + platform.w,platform.y + .5);
+  ctx.stroke();
 }
 
 function drawMiniActionGame(){
@@ -10138,179 +9912,533 @@ function drawMiniActionGame(){
   ctx.fillStyle = bg;
   ctx.fillRect(0,0,720,260);
 
-  const editorMode = miniBuilderMode === "create" && !miniBuilderTestMode;
-  const camera = editorMode
-    ? Math.max(0,Math.min(MINI_BUILDER_WORLD_WIDTH - 720,miniBuilderCameraX))
-    : Math.max(0,Math.min(miniActionState.stage.worldWidth - 720,miniActionState.x - 180));
   const stage = miniActionState.stage;
+  const camera = Math.max(0,Math.min(stage.worldWidth - 720,miniActionState.x - 180));
 
   ctx.save();
   ctx.translate(-camera,0);
 
-  if(editorMode){
-    ctx.fillStyle = "rgba(120,170,230,.08)";
-    ctx.fillRect(camera,0,720,260);
-    ctx.strokeStyle = "rgba(255,255,255,.06)";
-    ctx.lineWidth = 1;
-    for(let x=Math.floor(camera / MINI_BUILDER_GRID) * MINI_BUILDER_GRID;x<=camera+720;x+=MINI_BUILDER_GRID){
-      ctx.beginPath();
-      ctx.moveTo(x,0);
-      ctx.lineTo(x,260);
-      ctx.stroke();
-    }
-    for(let y=0;y<=260;y+=MINI_BUILDER_GRID){
-      ctx.beginPath();
-      ctx.moveTo(camera,y);
-      ctx.lineTo(camera+720,y);
-      ctx.stroke();
-    }
-  }else{
-    for(let i=0;i<12;i++){
-      const px = camera + ((i * 127 + String(stage.id).length * 53) % 760) - 20;
-      const py = 48 + ((i * 31 + String(stage.id).length * 17) % 105);
-      ctx.fillStyle = "rgba(150,195,255,.13)";
-      ctx.beginPath();
-      ctx.arc(px,py,(i % 3) + 1,0,Math.PI*2);
-      ctx.fill();
-    }
+  for(let i=0;i<12;i++){
+    const px = camera + ((i * 127 + String(stage.id).length * 53) % 760) - 20;
+    const py = 48 + ((i * 31 + String(stage.id).length * 17) % 105);
+    ctx.fillStyle = "rgba(150,195,255,.13)";
+    ctx.beginPath();
+    ctx.arc(px,py,(i % 3) + 1,0,Math.PI*2);
+    ctx.fill();
   }
 
-  const blocks = stage.blocks || [];
-  for(const block of blocks){
-    if(block.type === "start"){
-      if(editorMode){
-        ctx.save();
-        ctx.strokeStyle = "rgba(93,214,255,.6)";
-        ctx.setLineDash([4,4]);
-        ctx.strokeRect(block.x,block.y,block.w,block.h);
-        ctx.fillStyle = "rgba(93,214,255,.15)";
-        ctx.fillRect(block.x,block.y,block.w,block.h);
-        ctx.restore();
-      }
-      continue;
-    }
-    if(block.type === "goal"){
-      const goalY = block.y;
-      ctx.strokeStyle = "rgba(170,221,255,.95)";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(block.x,goalY);
-      ctx.lineTo(block.x,goalY+42);
-      ctx.stroke();
-      ctx.fillStyle = "rgba(116,207,255,.86)";
-      ctx.beginPath();
-      ctx.moveTo(block.x+1,goalY);
-      ctx.lineTo(block.x+35,goalY+10);
-      ctx.lineTo(block.x+1,goalY+20);
-      ctx.closePath();
-      ctx.fill();
-      if(editorMode){
-        ctx.strokeStyle = "rgba(255,255,255,.35)";
-        ctx.strokeRect(block.x,block.y,block.w,block.h);
-      }
-      continue;
-    }
-    if(block.type === "terrain"){
-      const grad = ctx.createLinearGradient(0,block.y,0,block.y+block.h);
-      grad.addColorStop(0,"#28394f");
-      grad.addColorStop(1,"#0c1624");
-      ctx.fillStyle = grad;
-      ctx.fillRect(block.x,block.y,block.w,block.h);
-      ctx.strokeStyle = "rgba(103,196,255,.84)";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(block.x,block.y+.5);
-      ctx.lineTo(block.x+block.w,block.y+.5);
-      ctx.stroke();
-      if(editorMode){
-        ctx.strokeStyle = "rgba(106,220,255,.35)";
-        ctx.strokeRect(block.x,block.y,block.w,block.h);
-      }
-      continue;
-    }
-    if(block.type === "platform"){
-      ctx.fillStyle = "#46566b";
-      ctx.fillRect(block.x,block.y,block.w,block.h);
-      ctx.strokeStyle = "rgba(255,231,153,.82)";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(block.x+.5,block.y+.5,block.w-1,block.h-1);
-      if(editorMode){
-        ctx.fillStyle = "rgba(255,220,90,.08)";
-        ctx.fillRect(block.x,block.y,block.w,block.h);
-      }
-      continue;
-    }
-    if(block.type === "spike"){
-      ctx.fillStyle = "#7f335f";
-      ctx.beginPath();
-      ctx.moveTo(block.x,block.y+block.h);
-      ctx.lineTo(block.x+block.w/2,block.y);
-      ctx.lineTo(block.x+block.w,block.y+block.h);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "rgba(255,132,203,.72)";
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-      continue;
-    }
+  for(const platform of stage.terrainPlatforms || []) drawMiniActionPlatform(ctx,platform,false);
+  for(const platform of stage.platforms || []) drawMiniActionPlatform(ctx,platform,false);
+  for(const platform of stage.solidPlatforms || []) drawMiniActionPlatform(ctx,platform,true);
+
+  for(const ceiling of stage.ceilings || []){
+    ctx.fillStyle = "#1a2a3d";
+    ctx.fillRect(ceiling.x,ceiling.y,ceiling.w,ceiling.h);
+    ctx.strokeStyle = "rgba(161,108,255,.56)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(ceiling.x,ceiling.y + ceiling.h - .5);
+    ctx.lineTo(ceiling.x + ceiling.w,ceiling.y + ceiling.h - .5);
+    ctx.stroke();
   }
 
-  if(!editorMode){
-    const goal = miniStageGoal(stage);
-    if(!Array.isArray(stage.blocks) || !stage.blocks.some(block => block.type === "goal")){
-      const flagTopY = Number(goal.y ?? 178);
-      ctx.strokeStyle = "rgba(170,221,255,.95)";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(goal.x,flagTopY);
-      ctx.lineTo(goal.x,flagTopY+42);
-      ctx.stroke();
-      ctx.fillStyle = "rgba(116,207,255,.86)";
-      ctx.beginPath();
-      ctx.moveTo(goal.x+1,flagTopY);
-      ctx.lineTo(goal.x+35,flagTopY+10);
-      ctx.lineTo(goal.x+1,flagTopY+20);
-      ctx.closePath();
-      ctx.fill();
-    }
-    drawMiniActionRemotePlayers(ctx,stage,camera,performance.now());
+  for(const hazard of stage.hazards || []){
+    ctx.fillStyle = "#7f335f";
+    ctx.beginPath();
+    ctx.moveTo(hazard.x,hazard.y + hazard.h);
+    ctx.lineTo(hazard.x + hazard.w / 2,hazard.y);
+    ctx.lineTo(hazard.x + hazard.w,hazard.y + hazard.h);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,132,203,.72)";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
   }
+
+  const goalX = Number(stage.goalX || 0);
+  const goalPlatform = (stage.terrainPlatforms || stage.platforms || []).find(platform =>
+    goalX >= platform.x && goalX <= platform.x + platform.w
+  ) || null;
+  const goalGroundY = stage.id === 1
+    ? Number(goalPlatform?.y ?? 220)
+    : Number(stage.goalY ?? (goalPlatform?.y ?? 220));
+  const flagTopY = goalGroundY - 42;
+  const flagBottomY = goalGroundY;
+  ctx.strokeStyle = "rgba(170,221,255,.95)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(goalX,flagTopY);
+  ctx.lineTo(goalX,flagBottomY);
+  ctx.stroke();
+  ctx.fillStyle = "rgba(116,207,255,.86)";
+  ctx.beginPath();
+  ctx.moveTo(goalX + 1,flagTopY);
+  ctx.lineTo(goalX + 34,flagTopY + 10);
+  ctx.lineTo(goalX + 1,flagTopY + 20);
+  ctx.closePath();
+  ctx.fill();
+
+  drawMiniActionRemotePlayers(ctx,stage,camera,performance.now());
 
   const p = miniActionState;
-  const playerGrad = ctx.createLinearGradient(p.x,p.y,p.x,p.y+p.height);
+  const playerGrad = ctx.createLinearGradient(p.x,p.y,p.x,p.y + p.height);
   playerGrad.addColorStop(0,"#e7f4ff");
   playerGrad.addColorStop(.28,"#79c9ff");
   playerGrad.addColorStop(1,"#3b5bff");
-  if(editorMode){
-    ctx.globalAlpha = 0;
-  }else{
-    ctx.fillStyle = playerGrad;
-    ctx.fillRect(p.x,p.y,p.width,p.height);
-    ctx.fillStyle = "rgba(7,22,41,.9)";
-    ctx.fillRect(p.x+3,p.y+5,p.width-6,5);
-  }
-  ctx.globalAlpha = 1;
-
-  if(editorMode){
-    const course = getMiniBuilderCourse();
-    if(course){
-      const selection = miniBuilderSelectedTool;
-      ctx.fillStyle = "rgba(255,255,255,.7)";
-      ctx.font = "bold 11px Arial";
-      ctx.fillText(`TOOL: ${selection.toUpperCase()}`,camera+10,16);
-      ctx.fillText("タップで配置 / ドラッグで移動",camera+10,31);
-    }
-  }
+  ctx.fillStyle = playerGrad;
+  ctx.fillRect(p.x,p.y,p.width,p.height);
+  ctx.fillStyle = "rgba(7,22,41,.9)";
+  ctx.fillRect(p.x + 3,p.y + 5,p.width - 6,5);
 
   ctx.restore();
 
   if(miniActionState.flashUntil > performance.now()){
     const alpha = Math.max(0,(miniActionState.flashUntil - performance.now()) / 160) * .35;
-    ctx.setTransform(1,0,0,1,0,0);
     ctx.fillStyle = `rgba(255,255,255,${alpha})`;
-    ctx.fillRect(0,0,miniGameCanvas.width,miniGameCanvas.height);
+    ctx.fillRect(0,0,720,260);
   }
 }
+
+function miniEditorPoint(event){
+  const rect = miniGameCanvas.getBoundingClientRect();
+  const width = Math.max(1,rect.width);
+  const height = Math.max(1,rect.height);
+  const scale = Math.min(width / 720,height / 260);
+  const drawWidth = 720 * scale;
+  const drawHeight = 260 * scale;
+  const offsetX = (width - drawWidth) / 2;
+  const offsetY = (height - drawHeight) / 2;
+  const x = (event.clientX - rect.left - offsetX) / Math.max(.0001,scale) + miniEditorCameraX;
+  const y = (event.clientY - rect.top - offsetY) / Math.max(.0001,scale);
+  return {x:Math.max(0,Math.min(miniDraftStage.worldWidth,x)),y:Math.max(0,Math.min(259,y))};
+}
+
+function snapMiniEditor(value,grid=16){
+  return Math.round(value/grid)*grid;
+}
+
+function miniBlockAt(stage,tool,x,y){
+  const sets = [];
+  if(tool === "terrain") sets.push(stage.terrainPlatforms || []);
+  if(tool === "platform") sets.push(stage.solidPlatforms || []);
+  if(tool === "spike") sets.push(stage.hazards || []);
+  for(const list of sets){
+    for(const block of list){
+      if(x >= block.x && x <= block.x + block.w && y >= block.y && y <= block.y + block.h) return block;
+    }
+  }
+  return null;
+}
+
+function editMiniDraftAt(point){
+  const stage = miniDraftStage;
+  const x = snapMiniEditor(point.x);
+  const y = snapMiniEditor(point.y);
+  const tool = miniEditorTool;
+  let changed = false;
+
+  if(tool === "terrain" || tool === "platform" || tool === "spike"){
+    const width = tool === "spike" ? 32 : 80;
+    const height = tool === "spike" ? 24 : (tool === "terrain" ? 40 : 16);
+    const list = tool === "terrain" ? stage.terrainPlatforms : tool === "platform" ? stage.solidPlatforms : stage.hazards;
+    const item = {x:clamp(x,0,stage.worldWidth-width),y:clamp(y,0,260-height),w:width,h:height};
+    list.push(item);
+    changed = true;
+  }else if(tool === "start"){
+    stage.start = {x:clamp(x,0,stage.worldWidth-16),y:clamp(y,0,238)};
+    changed = true;
+  }else if(tool === "goal"){
+    stage.goalX = clamp(x,16,stage.worldWidth-16);
+    stage.goalY = clamp(y,0,238);
+    changed = true;
+  }else if(tool === "erase"){
+    const targets = ["terrainPlatforms","solidPlatforms","hazards"];
+    for(const key of targets){
+      const list = stage[key] || [];
+      const index = list.findIndex(block => x >= block.x && x <= block.x + block.w && y >= block.y && y <= block.y + block.h);
+      if(index >= 0){
+        list.splice(index,1);
+        changed = true;
+        break;
+      }
+    }
+    if(!changed && Math.hypot(x - stage.start.x,y - stage.start.y) < 24){
+      stage.start = {x:48,y:188};
+      changed = true;
+    }
+    if(!changed && Math.abs(x - stage.goalX) < 24 && Math.abs(y - stage.goalY) < 32){
+      stage.goalX = Math.max(16,Math.min(stage.worldWidth-16,2240));
+      stage.goalY = 176;
+      changed = true;
+    }
+  }
+
+  if(changed){
+    markMiniDraftChanged();
+    drawMiniEditor();
+  }
+}
+
+function drawMiniEditor(){
+  if(!miniGameCanvas) return;
+  resizeMiniActionCanvas();
+  const ctx = miniGameCanvas.getContext("2d");
+  if(!ctx) return;
+  const width = miniGameCanvas.clientWidth || 420;
+  const height = miniGameCanvas.clientHeight || 260;
+  const pixelScaleX = miniGameCanvas.width / Math.max(1,width);
+  const pixelScaleY = miniGameCanvas.height / Math.max(1,height);
+  const scale = Math.min(width / 720,height / 260);
+  const drawWidth = 720*scale;
+  const drawHeight = 260*scale;
+  const offsetX = (width-drawWidth)/2;
+  const offsetY = (height-drawHeight)/2;
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.clearRect(0,0,miniGameCanvas.width,miniGameCanvas.height);
+  ctx.setTransform(pixelScaleX*scale,0,0,pixelScaleY*scale,pixelScaleX*offsetX,pixelScaleY*offsetY);
+  ctx.fillStyle = "#07101b";
+  ctx.fillRect(0,0,720,260);
+  ctx.save();
+  ctx.translate(-miniEditorCameraX,0);
+
+  const startX = Math.floor(miniEditorCameraX/16)*16;
+  for(let x=startX;x<miniEditorCameraX+720+16;x+=16){
+    ctx.strokeStyle = "rgba(255,255,255,.045)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x,0);ctx.lineTo(x,260);ctx.stroke();
+  }
+  for(let y=0;y<=260;y+=16){
+    ctx.strokeStyle = "rgba(255,255,255,.045)";
+    ctx.beginPath();
+    ctx.moveTo(miniEditorCameraX,y);ctx.lineTo(miniEditorCameraX+720,y);ctx.stroke();
+  }
+
+  for(const block of miniDraftStage.terrainPlatforms || []) drawMiniActionPlatform(ctx,block,false);
+  for(const block of miniDraftStage.solidPlatforms || []) drawMiniActionPlatform(ctx,block,true);
+  for(const hazard of miniDraftStage.hazards || []){
+    ctx.fillStyle = "#9b456e";
+    ctx.beginPath();
+    ctx.moveTo(hazard.x,hazard.y+hazard.h);
+    ctx.lineTo(hazard.x+hazard.w/2,hazard.y);
+    ctx.lineTo(hazard.x+hazard.w,hazard.y+hazard.h);
+    ctx.closePath();ctx.fill();
+  }
+
+  ctx.strokeStyle = "rgba(96,211,255,.86)";
+  ctx.lineWidth = 2;
+  ctx.setLineDash([5,4]);
+  ctx.beginPath();
+  ctx.moveTo(miniDraftStage.start.x,0);ctx.lineTo(miniDraftStage.start.x,260);ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = "#7ee7ff";
+  ctx.font = "bold 11px Arial";
+  ctx.fillText("START",miniDraftStage.start.x+5,18);
+
+  const gx=miniDraftStage.goalX, gy=miniDraftStage.goalY;
+  ctx.strokeStyle="rgba(170,221,255,.95)";ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(gx,gy-42);ctx.lineTo(gx,gy);ctx.stroke();
+  ctx.fillStyle="rgba(116,207,255,.86)";
+  ctx.beginPath();ctx.moveTo(gx+1,gy-42);ctx.lineTo(gx+35,gy-32);ctx.lineTo(gx+1,gy-22);ctx.closePath();ctx.fill();
+
+  ctx.restore();
+  ctx.fillStyle="rgba(255,255,255,.55)";
+  ctx.font="bold 10px Arial";
+  ctx.fillText(`x ${Math.round(miniEditorCameraX)}-${Math.round(miniEditorCameraX+720)}`,8,14);
+}
+
+function updateMiniModeUI(){
+  if(!matchingScreen || matchingScreen.style.display !== "flex") return;
+  matchingScreen.classList.toggle("miniEditorMode",miniMode === "editor");
+  matchingScreen.classList.toggle("miniTestMode",miniMode === "test");
+  if(miniMode === "editor"){
+    stopMiniActionGame(false);
+    miniGameStageLabel.textContent = "CREATE · マイコース";
+    miniGameScore.textContent = miniVerifiedRevision === miniDraftRevision ? "✓ 15.00s以内テスト済み" : "未テスト";
+    drawMiniEditor();
+  }else if(miniMode === "test"){
+    if(!miniActionState?.active || miniActionState.stage.id !== "local-draft"){
+      startMiniActionStage(miniDraftStage);
+    }
+    miniTestRevision = miniDraftRevision;
+  }else{
+    ensureMiniActionGameStarted();
+  }
+  updateMiniEditorToolUI();
+  saveMiniLocalState();
+}
+
+function updateMiniEditorToolUI(){
+  miniEditorTools?.querySelectorAll(".miniEditorTool").forEach(button=>{
+    button.classList.toggle("selected",button.dataset.editorTool===miniEditorTool);
+  });
+}
+
+function setMiniMode(mode){
+  if(!["play","editor","test"].includes(mode)) return;
+  miniMode = mode;
+  saveMiniLocalState();
+  closeMiniMenu();
+  miniCourseListOpen = false;
+  miniCourseListOverlay?.classList.remove("show");
+  if(mode !== "play") clearMiniActionRemoteState();
+  updateMiniModeUI();
+}
+
+async function openMiniCourseList(){
+  closeMiniMenu();
+  miniCourseListOpen = true;
+  miniCourseListOverlay?.classList.add("show");
+  if(miniDraftCourseSection) miniDraftCourseSection.innerHTML = "";
+  if(miniPublishedCourseSection) miniPublishedCourseSection.innerHTML = "<div class=\"miniCourseSectionTitle\">公開済みコース</div><div class=\"miniCourseEmpty\">読み込み中…</div>";
+
+  const draftRow = document.createElement("div");
+  draftRow.className="miniCourseRow";
+  const draftMain=document.createElement("div");draftMain.className="miniCourseRowMain";
+  const draftName=document.createElement("div");draftName.className="miniCourseName";draftName.textContent=`${miniVerifiedRevision===miniDraftRevision?"✓ ":""}${miniDraftStage.name}`;
+  const draftMeta=document.createElement("div");draftMeta.className="miniCourseMeta";draftMeta.textContent=`変更 ${miniDraftRevision}${miniVerifiedRevision===miniDraftRevision?" · テスト済み":" · 未テスト"}`;
+  draftMain.append(draftName,draftMeta);draftRow.appendChild(draftMain);
+  miniDraftCourseSection.innerHTML="<div class=\"miniCourseSectionTitle\">端末のコース</div>";
+  miniDraftCourseSection.appendChild(draftRow);
+
+  miniPublishedCourseSection.innerHTML="<div class=\"miniCourseSectionTitle\">公開済みコース</div>";
+  try{
+    const snap = await getDocs(collection(db,"miniStages"));
+    const stages = [];
+    for(const item of snap.docs){
+      const data = item.data() || {};
+      if(!data.stage) continue;
+      const stage = normalizeMiniCustomStage(data.stage);
+      stage.id = `firebase-${item.id}`;
+      stage.name = String(data.name || stage.name || "公開コース").slice(0,24);
+      stages.push(stage);
+
+      const row=document.createElement("div");row.className="miniCourseRow";
+      const main=document.createElement("div");main.className="miniCourseRowMain";
+      const name=document.createElement("div");name.className="miniCourseName";name.textContent=stage.name;
+      const meta=document.createElement("div");meta.className="miniCourseMeta";meta.textContent=data.ownerUid===currentUser?.uid ? "Firebase公開・自分のコース" : "Firebase公開ステージ";
+      main.append(name,meta);row.appendChild(main);
+      const play=document.createElement("button");play.className="miniCourseAction";play.textContent="遊ぶ";
+      play.addEventListener("click",()=>{ setMiniMode("play"); startMiniActionStage(stage); });
+      row.appendChild(play);
+      if(data.ownerUid===currentUser?.uid){
+        const del=document.createElement("button");del.className="miniCourseAction delete";del.textContent="削除";
+        del.addEventListener("click",()=>deleteMiniPublishedCourse(item.id));
+        row.appendChild(del);
+      }
+      miniPublishedCourseSection.appendChild(row);
+    }
+    miniPublishedStagesCache = stages;
+    miniPublishedStagesCacheAt = Date.now();
+    if(!stages.length){
+      const empty=document.createElement("div");empty.className="miniCourseEmpty";empty.textContent="まだ公開コースがありません。";miniPublishedCourseSection.appendChild(empty);
+    }
+  }catch(error){
+    console.error("mini course list error",error);
+    miniPublishedCourseSection.innerHTML="<div class=\"miniCourseSectionTitle\">公開済みコース</div><div class=\"miniCourseEmpty\">読み込めませんでした。Firebaseの設定を確認してね。</div>";
+  }
+}
+
+async function deleteMiniPublishedCourse(docId){
+  try{
+    await deleteDoc(doc(db,"miniStages",docId));
+    miniPublishedStagesCache = miniPublishedStagesCache.filter(stage=>stage.id!==`firebase-${docId}`);
+    await openMiniCourseList();
+  }catch(error){
+    console.error("mini published delete error",error);
+    showMiniActionMessage("削除できませんでした");
+  }
+}
+
+async function publishMiniDraft(){
+  if(miniVerifiedRevision !== miniDraftRevision) return;
+  try{
+    const stage = normalizeMiniCustomStage(cloneMiniStage(miniDraftStage));
+    stage.id = `published-${Date.now()}`;
+    const ref = doc(collection(db,"miniStages"));
+    await setDoc(ref,{
+      ownerUid:currentUser.uid,
+      name:stage.name,
+      stage,
+      publishedAt:serverTimestamp()
+    });
+    miniPublishedStagesCacheAt = 0;
+    miniPublishedStagesCache = [];
+    showMiniActionMessage("公開しました！");
+    closeMiniMenu();
+    setTimeout(()=>hideMiniActionMessage(),800);
+  }catch(error){
+    console.error("mini publish error",error);
+    showMiniActionMessage("公開できませんでした");
+  }
+}
+
+function buildMiniMenuItems(){
+  if(!miniMenuPanel) return [];
+  miniMenuPanel.innerHTML="";
+  const items=[];
+  if(miniMode === "editor"){
+    items.push(["テストプレイ",()=>{ setMiniMode("test"); miniTestRevision=miniDraftRevision; startMiniActionStage(miniDraftStage); }]);
+    items.push(["コース一覧",()=>openMiniCourseList()]);
+    items.push(["遊ぶ",()=>setMiniMode("play")]);
+    if(miniVerifiedRevision===miniDraftRevision) items.push(["公開する",()=>publishMiniDraft()]);
+  }else{
+    items.push(["リセット",()=>resetMiniActionStage("RESET",true)]);
+    items.push(["作るに切り替え",()=>setMiniMode("editor")]);
+  }
+  items.forEach(([label,action],index)=>{
+    const button=document.createElement("button");
+    button.className="miniMenuItem";
+    button.textContent=label;
+    button.dataset.menuIndex=String(index);
+    button.addEventListener("pointerenter",()=>setMiniMenuHighlight(index));
+    miniMenuPanel.appendChild(button);
+  });
+  return items;
+}
+
+function setMiniMenuHighlight(index){
+  miniMenuHighlightIndex=index;
+  miniMenuPanel?.querySelectorAll(".miniMenuItem").forEach((button,i)=>button.classList.toggle("highlight",i===index));
+}
+
+function miniMenuItemAtPoint(clientX,clientY){
+  const items=[...(miniMenuPanel?.querySelectorAll(".miniMenuItem")||[])];
+  for(let i=0;i<items.length;i++){
+    const rect=items[i].getBoundingClientRect();
+    if(clientX>=rect.left&&clientX<=rect.right&&clientY>=rect.top&&clientY<=rect.bottom) return i;
+  }
+  return -1;
+}
+
+function closeMiniMenu(){
+  if(miniMenuLongPressTimer){clearTimeout(miniMenuLongPressTimer);miniMenuLongPressTimer=null;}
+  miniMenuOpened=false;
+  miniMenuPointerId=null;
+  miniMenuHighlightIndex=-1;
+  if(miniMenuPanel){miniMenuPanel.classList.remove("show");miniMenuPanel.setAttribute("aria-hidden","true");}
+}
+
+function openMiniMenu(){
+  buildMiniMenuItems();
+  miniMenuOpened=true;
+  miniMenuPanel?.classList.add("show");
+  miniMenuPanel?.setAttribute("aria-hidden","false");
+  setMiniMenuHighlight(-1);
+}
+
+function setupMiniMenu(){
+  if(!miniMenuButton) return;
+  miniMenuButton.addEventListener("pointerdown",event=>{
+    if(!matchingScreen || matchingScreen.style.display!=="flex") return;
+    event.preventDefault();
+    miniMenuPointerId=event.pointerId;
+    try{miniMenuButton.setPointerCapture(event.pointerId);}catch(error){}
+    if(miniMode === "editor"){
+      miniMenuLongPressTimer=setTimeout(()=>{miniMenuLongPressTimer=null;openMiniMenu();},600);
+    }else{
+      openMiniMenu();
+    }
+  },{passive:false});
+  miniMenuButton.addEventListener("pointermove",event=>{
+    if(event.pointerId!==miniMenuPointerId || !miniMenuOpened) return;
+    event.preventDefault();
+    setMiniMenuHighlight(miniMenuItemAtPoint(event.clientX,event.clientY));
+  },{passive:false});
+  miniMenuButton.addEventListener("pointerup",event=>{
+    if(event.pointerId!==miniMenuPointerId) return;
+    event.preventDefault();
+    const chosen=miniMenuOpened?miniMenuItemAtPoint(event.clientX,event.clientY):-1;
+    const wasOpen=miniMenuOpened;
+    const items=buildMiniMenuItems();
+    closeMiniMenu();
+    if(wasOpen && chosen>=0 && items[chosen]) items[chosen][1]();
+  },{passive:false});
+  miniMenuButton.addEventListener("pointercancel",closeMiniMenu,{passive:false});
+}
+
+function setupMiniEditor(){
+  if(!miniGameCanvas) return;
+  miniEditorTools?.querySelectorAll(".miniEditorTool").forEach(button=>{
+    button.addEventListener("click",()=>{
+      miniEditorTool=button.dataset.editorTool||"terrain";
+      saveMiniLocalState();
+      updateMiniEditorToolUI();
+    });
+  });
+  miniGameCanvas.addEventListener("pointerdown",event=>{
+    if(miniMode!=="editor" || miniCourseListOpen) return;
+    event.preventDefault();
+    miniEditorPointerId=event.pointerId;
+    miniEditorPointerStartX=event.clientX;
+    miniEditorPointerStartY=event.clientY;
+    miniEditorLastX=event.clientX;
+    miniEditorDidPan=false;
+    try{miniGameCanvas.setPointerCapture(event.pointerId);}catch(error){}
+  },{passive:false});
+  miniGameCanvas.addEventListener("pointermove",event=>{
+    if(miniMode!=="editor" || event.pointerId!==miniEditorPointerId) return;
+    event.preventDefault();
+    const dx=event.clientX-miniEditorLastX;
+    if(Math.abs(event.clientX-miniEditorPointerStartX)>7 || Math.abs(event.clientY-miniEditorPointerStartY)>7){
+      miniEditorDidPan=true;
+      miniEditorCameraX=clamp(miniEditorCameraX-dx,0,Math.max(0,miniDraftStage.worldWidth-720));
+      miniEditorLastX=event.clientX;
+      saveMiniLocalState();
+      drawMiniEditor();
+    }
+  },{passive:false});
+  miniGameCanvas.addEventListener("pointerup",event=>{
+    if(miniMode!=="editor" || event.pointerId!==miniEditorPointerId) return;
+    event.preventDefault();
+    if(!miniEditorDidPan) editMiniDraftAt(miniEditorPoint(event));
+    miniEditorPointerId=null;
+  },{passive:false});
+  miniGameCanvas.addEventListener("pointercancel",()=>{miniEditorPointerId=null;miniEditorDidPan=false;},{passive:false});
+}
+
+setupMiniMenu();
+setupMiniEditor();
+
+if(miniCourseListClose){
+  miniCourseListClose.addEventListener("click",()=>{
+    miniCourseListOpen=false;
+    miniCourseListOverlay?.classList.remove("show");
+  });
+}
+
+window.addEventListener("keydown",event => {
+  if(!miniActionIsVisible()) return;
+  if(event.code === "ArrowLeft" || event.code === "KeyA"){
+    event.preventDefault();
+    miniActionInput.left = true;
+  }
+  if(event.code === "ArrowRight" || event.code === "KeyD"){
+    event.preventDefault();
+    miniActionInput.right = true;
+  }
+  if(event.code === "Space" || event.code === "ArrowUp" || event.code === "KeyW"){
+    event.preventDefault();
+    miniActionInput.jump = true;
+    miniActionInput.jumpPressed = true;
+  }
+  if(event.code === "KeyR"){
+    event.preventDefault();
+    resetMiniActionStage("RESET",true);
+  }
+});
+
+window.addEventListener("keyup",event => {
+  if(event.code === "ArrowLeft" || event.code === "KeyA") miniActionInput.left = false;
+  if(event.code === "ArrowRight" || event.code === "KeyD") miniActionInput.right = false;
+  if(event.code === "Space" || event.code === "ArrowUp" || event.code === "KeyW") miniActionInput.jump = false;
+});
+
+window.addEventListener("resize",()=>{
+  resizeMiniActionCanvas();
+  if(miniMode === "editor") drawMiniEditor();
+  else if(miniActionState) drawMiniActionGame();
+});
 
 function hideMiniTouchVisual(){
   if(miniMoveGuide) miniMoveGuide.classList.remove("show");
@@ -10334,563 +10462,17 @@ function updateMiniTouchVisual(){
 function miniTouchPoint(event){
   const rect = miniTouchZone.getBoundingClientRect();
   return {
-    x:Math.max(0,Math.min(rect.width,event.clientX-rect.left)),
-    y:Math.max(0,Math.min(rect.height,event.clientY-rect.top)),
+    x:Math.max(0,Math.min(rect.width,event.clientX - rect.left)),
+    y:Math.max(0,Math.min(rect.height,event.clientY - rect.top)),
     width:rect.width,
     height:rect.height
   };
-}
-
-function getMiniBuilderCanvasPoint(event){
-  const rect = miniGameCanvas.getBoundingClientRect();
-  const width = rect.width || 420;
-  const height = rect.height || 260;
-  const scale = Math.min(width / 720,height / 260);
-  const drawWidth = 720 * scale;
-  const drawHeight = 260 * scale;
-  const offsetX = (width - drawWidth) / 2;
-  const offsetY = (height - drawHeight) / 2;
-  const localX = (event.clientX - rect.left - offsetX) / Math.max(.001,scale);
-  const localY = (event.clientY - rect.top - offsetY) / Math.max(.001,scale);
-  return {
-    x:Math.max(0,Math.min(MINI_BUILDER_WORLD_WIDTH,localX+miniBuilderCameraX)),
-    y:Math.max(0,Math.min(260,localY))
-  };
-}
-
-function miniBuilderSnap(value){
-  return Math.round(value / MINI_BUILDER_GRID) * MINI_BUILDER_GRID;
-}
-
-function miniBuilderGetBlockAt(course,x,y){
-  if(!course) return -1;
-  for(let i=course.blocks.length-1;i>=0;i--){
-    const block = course.blocks[i];
-    if(x >= block.x && x <= block.x+block.w && y >= block.y && y <= block.y+block.h) return i;
-  }
-  return -1;
-}
-
-function miniBuilderCreateBlock(tool,x,y){
-  const sizes = {
-    terrain:{w:48,h:24},
-    platform:{w:48,h:24},
-    spike:{w:24,h:24},
-    start:{w:24,h:22},
-    goal:{w:24,h:42}
-  };
-  const d = sizes[tool];
-  if(!d) return null;
-  let block = {
-    type:tool,
-    x:miniBuilderSnap(x),
-    y:miniBuilderSnap(y),
-    w:d.w,
-    h:d.h
-  };
-  block.x = Math.max(0,Math.min(MINI_BUILDER_WORLD_WIDTH-block.w,block.x));
-  block.y = Math.max(0,Math.min(238,block.y));
-  return block;
-}
-
-function miniBuilderEnsureSingleSpecial(course,type){
-  if(type !== "start" && type !== "goal") return;
-  course.blocks = course.blocks.filter(block => block.type !== type);
-}
-
-function miniBuilderHandlePointerDown(event){
-  if(!miniBuilderMode || miniBuilderTestMode || !miniActionIsVisible() || !miniGameCanvas) return;
-  event.preventDefault();
-  const course = getMiniBuilderCourse();
-  if(!course) return;
-  const point = getMiniBuilderCanvasPoint(event);
-  miniBuilderPointer.id = event.pointerId;
-  miniBuilderPointer.startX = point.x;
-  miniBuilderPointer.startY = point.y;
-  miniBuilderPointer.lastX = point.x;
-  miniBuilderPointer.lastY = point.y;
-  miniBuilderPointer.worldX = point.x;
-  miniBuilderPointer.worldY = point.y;
-  miniBuilderPointer.index = miniBuilderGetBlockAt(course,point.x,point.y);
-  miniBuilderPointer.dragging = miniBuilderPointer.index >= 0;
-  miniBuilderPointer.moved = false;
-  try{ miniGameCanvas.setPointerCapture(event.pointerId); }catch(error){}
-}
-
-function miniBuilderHandlePointerMove(event){
-  if(!miniBuilderMode || miniBuilderTestMode || event.pointerId !== miniBuilderPointer.id) return;
-  event.preventDefault();
-  const course = getMiniBuilderCourse();
-  if(!course) return;
-  const point = getMiniBuilderCanvasPoint(event);
-  miniBuilderPointer.lastX = point.x;
-  miniBuilderPointer.lastY = point.y;
-  if(Math.hypot((point.x - miniBuilderPointer.startX), (point.y - miniBuilderPointer.startY)) > 8){
-    miniBuilderPointer.moved = true;
-  }
-  if(!miniBuilderPointer.dragging || miniBuilderPointer.index < 0) return;
-  const block = course.blocks[miniBuilderPointer.index];
-  if(!block) return;
-  block.x = Math.max(0,Math.min(MINI_BUILDER_WORLD_WIDTH-block.w,miniBuilderSnap(point.x-block.w/2)));
-  block.y = Math.max(0,Math.min(238,miniBuilderSnap(point.y-block.h/2)));
-  drawMiniActionGame();
-}
-
-function miniBuilderHandlePointerUp(event){
-  if(!miniBuilderMode || miniBuilderTestMode || event.pointerId !== miniBuilderPointer.id) return;
-  event.preventDefault();
-  const course = getMiniBuilderCourse();
-  if(!course){
-    miniBuilderPointer.id = null;
-    return;
-  }
-  const point = getMiniBuilderCanvasPoint(event);
-  const index = miniBuilderPointer.index;
-  const wasDrag = miniBuilderPointer.dragging;
-  const moved = miniBuilderPointer.moved;
-  if(wasDrag && index >= 0){
-    const block = course.blocks[index];
-    if(block){
-      block.x = Math.max(0,Math.min(MINI_BUILDER_WORLD_WIDTH-block.w,miniBuilderSnap(block.x)));
-      block.y = Math.max(0,Math.min(238,miniBuilderSnap(block.y)));
-      miniBuilderCourseChanged(course);
-    }
-  }else if(!moved){
-    if(miniBuilderSelectedTool === "erase"){
-      if(index >= 0){
-        course.blocks.splice(index,1);
-        miniBuilderCourseChanged(course);
-      }
-    }else{
-      miniBuilderEnsureSingleSpecial(course,miniBuilderSelectedTool);
-      const block = miniBuilderCreateBlock(miniBuilderSelectedTool,point.x,point.y);
-      if(block){
-        course.blocks.push(block);
-        miniBuilderCourseChanged(course);
-      }
-    }
-  }
-  miniBuilderPointer.id = null;
-  miniBuilderPointer.index = -1;
-  miniBuilderPointer.dragging = false;
-  miniBuilderPointer.moved = false;
-  drawMiniActionGame();
-}
-
-function setupMiniBuilderCanvasControls(){
-  if(!miniGameCanvas) return;
-  miniGameCanvas.addEventListener("pointerdown",miniBuilderHandlePointerDown,{passive:false});
-  miniGameCanvas.addEventListener("pointermove",miniBuilderHandlePointerMove,{passive:false});
-  miniGameCanvas.addEventListener("pointerup",miniBuilderHandlePointerUp,{passive:false});
-  miniGameCanvas.addEventListener("pointercancel",miniBuilderHandlePointerUp,{passive:false});
-}
-
-function setMiniBuilderMode(mode){
-  ensureMiniBuilderStore();
-  if(miniActionState?.active) stopMiniActionGame();
-  miniBuilderMode = mode === "create" ? "create" : "play";
-  miniBuilderStore.mode = miniBuilderMode;
-  saveMiniBuilderStore();
-  closeMiniGameMenu();
-  closeMiniCourseList();
-  if(miniBuilderMode === "create"){
-    startMiniBuilderView();
-  }else{
-    miniBuilderTestMode = false;
-    miniBuilderTestCourseId = null;
-    miniBuilderTestRevision = null;
-    startMiniActionPlayMode();
-  }
-}
-
-function startMiniBuilderView(){
-  ensureMiniBuilderStore();
-  miniBuilderMode = "create";
-  miniBuilderStore.mode = "create";
-  saveMiniBuilderStore();
-  const course = getMiniBuilderCourse();
-  if(!course) return;
-  miniBuilderCameraX = Math.max(0,Math.min(720,miniBuilderCameraX));
-  miniBuilderScroll.value = String(miniBuilderCameraX);
-  const stage = miniBuilderCourseToStage(course);
-  startMiniActionStage(stage);
-  miniActionState.stage = stage;
-  miniBuilderTestMode = false;
-  miniBuilderTestCourseId = null;
-  miniBuilderTestRevision = null;
-  updateMiniBuilderVisualMode();
-}
-
-function startMiniActionPlayMode(){
-  ensureMiniBuilderStore();
-  miniBuilderMode = "play";
-  miniBuilderStore.mode = "play";
-  saveMiniBuilderStore();
-  if(miniActionState?.active) stopMiniActionGame();
-  loadAllPublishedMiniStages().catch(()=>{});
-  startMiniActionStage();
-  updateMiniBuilderVisualMode();
-}
-
-function updateMiniBuilderVisualMode(){
-  if(!matchingScreen) return;
-  matchingScreen.classList.toggle("miniBuilderMode",miniBuilderMode === "create");
-  matchingScreen.classList.toggle("miniBuilderTestMode",miniBuilderTestMode);
-  matchingTitle.textContent = miniBuilderMode === "create" ? "CREATE" : "MATCHING...";
-  if(miniBuilderMode === "create"){
-    updateMiniBuilderPalette();
-  }
-  updateMiniActionLabels();
-}
-
-function updateMiniBuilderPalette(){
-  if(!miniBuilderPalette) return;
-  miniBuilderPalette.style.display = miniBuilderMode === "create" && !miniBuilderTestMode ? "block" : "none";
-  miniBuilderPalette.querySelectorAll(".miniBuilderTool").forEach(button => {
-    button.classList.toggle("selected",button.dataset.tool === miniBuilderSelectedTool);
-  });
-  if(miniBuilderScroll) miniBuilderScroll.value = String(miniBuilderCameraX);
-}
-
-function beginMiniBuilderTest(){
-  const course = getMiniBuilderCourse();
-  if(!course) return;
-  closeMiniGameMenu();
-  miniBuilderTestMode = true;
-  miniBuilderTestCourseId = course.id;
-  miniBuilderTestRevision = course.revision;
-  const stage = miniBuilderCourseToStage(course);
-  startMiniActionStage(stage,{testMode:true,testCourseId:course.id,testRevision:course.revision});
-  updateMiniBuilderVisualMode();
-}
-
-function createNewMiniCourse(){
-  ensureMiniBuilderStore();
-  const course = makeMiniBuilderCourse();
-  miniBuilderStore.courses.push(course);
-  miniBuilderCourseId = course.id;
-  miniBuilderStore.mode = "create";
-  miniBuilderMode = "create";
-  saveMiniBuilderStore();
-  closeMiniCourseList();
-  startMiniBuilderView();
-}
-
-function selectMiniCourse(courseId){
-  ensureMiniBuilderStore();
-  if(!getMiniBuilderCourse(courseId)) return;
-  miniBuilderCourseId = String(courseId);
-  miniBuilderStore.currentCourseId = miniBuilderCourseId;
-  miniBuilderStore.mode = "create";
-  miniBuilderMode = "create";
-  saveMiniBuilderStore();
-  closeMiniCourseList();
-  startMiniBuilderView();
-}
-
-function deleteLocalMiniCourse(courseId){
-  ensureMiniBuilderStore();
-  if(miniBuilderStore.courses.length <= 1) return;
-  miniBuilderStore.courses = miniBuilderStore.courses.filter(course => course.id !== String(courseId));
-  if(!getMiniBuilderCourse()) miniBuilderCourseId = miniBuilderStore.courses[0].id;
-  saveMiniBuilderStore();
-  renderMiniCourseList();
-  startMiniBuilderView();
-}
-
-function openMiniCourseList(){
-  ensureMiniBuilderStore();
-  closeMiniGameMenu();
-  miniCourseListOverlay.classList.add("show");
-  miniCourseListOverlay.setAttribute("aria-hidden","false");
-  renderMiniCourseList();
-  loadPublishedMiniStagesForList().then(()=>renderMiniCourseList()).catch(()=>{});
-}
-
-function closeMiniCourseList(){
-  if(!miniCourseListOverlay) return;
-  miniCourseListOverlay.classList.remove("show");
-  miniCourseListOverlay.setAttribute("aria-hidden","true");
-}
-
-function renderMiniCourseList(){
-  if(!miniCourseListContent) return;
-  ensureMiniBuilderStore();
-  miniCourseListContent.innerHTML = "";
-
-  const localTitle = document.createElement("div");
-  localTitle.className = "miniCourseSectionTitle";
-  localTitle.textContent = "自分のコース";
-  miniCourseListContent.appendChild(localTitle);
-
-  const newButton = document.createElement("button");
-  newButton.className = "miniCourseItem";
-  newButton.textContent = "＋ 新しいコース";
-  newButton.addEventListener("click",createNewMiniCourse);
-  miniCourseListContent.appendChild(newButton);
-
-  for(const course of miniBuilderStore.courses){
-    const button = document.createElement("button");
-    button.className = "miniCourseItem";
-    button.dataset.courseId = course.id;
-    const main = document.createElement("div");
-    main.className = "miniCourseItemMain";
-    const name = document.createElement("div");
-    name.className = "miniCourseItemName";
-    name.textContent = course.name + (course.id === miniBuilderCourseId ? "  ・編集中" : "");
-    const meta = document.createElement("div");
-    meta.className = "miniCourseItemMeta";
-    meta.textContent = `REV ${course.revision}${course.verifiedRevision === course.revision && course.verifiedRevision !== null ? ` · ${Number(course.verifiedTime).toFixed(2)}秒` : ""}`;
-    main.appendChild(name);
-    main.appendChild(meta);
-    const badge = document.createElement("div");
-    badge.className = "miniCourseItemBadge";
-    badge.textContent = miniBuilderCourseEligible(course) ? "✓" : "";
-    button.appendChild(main);
-    button.appendChild(badge);
-    button.addEventListener("click",()=>selectMiniCourse(course.id));
-    miniCourseListContent.appendChild(button);
-  }
-
-  const publicTitle = document.createElement("div");
-  publicTitle.className = "miniCourseSectionTitle";
-  publicTitle.textContent = "公開済み";
-  miniCourseListContent.appendChild(publicTitle);
-
-  const publicStages = miniPublishedStagesCache.filter(stage =>
-    stage && stage.ownerUid === currentUser?.uid
-  );
-  if(!publicStages.length){
-    const empty = document.createElement("div");
-    empty.className = "miniCourseItemMeta";
-    empty.textContent = "公開したコースはここに表示されます。";
-    miniCourseListContent.appendChild(empty);
-  }else{
-    for(const stage of publicStages){
-      const row = document.createElement("div");
-      row.className = "miniCourseItem";
-      const main = document.createElement("div");
-      main.className = "miniCourseItemMain";
-      const name = document.createElement("div");
-      name.className = "miniCourseItemName";
-      name.textContent = stage.name;
-      const meta = document.createElement("div");
-      meta.className = "miniCourseItemMeta";
-      meta.textContent = "Firebase公開コース";
-      main.appendChild(name);
-      main.appendChild(meta);
-      const deleteButton = document.createElement("button");
-      deleteButton.className = "miniCourseDelete";
-      deleteButton.textContent = "×";
-      deleteButton.addEventListener("click",event=>{
-        event.stopPropagation();
-        deletePublishedMiniStage(stage.id);
-      });
-      row.appendChild(main);
-      row.appendChild(deleteButton);
-      miniCourseListContent.appendChild(row);
-    }
-  }
-}
-
-async function publishMiniCourse(){
-  const course = getMiniBuilderCourse();
-  if(!course || !miniBuilderCourseEligible(course) || !currentUser) return;
-  try{
-    const publicId = `public_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`;
-    const stage = miniBuilderCourseToStage(course);
-    stage.id = publicId;
-    await setDoc(doc(db,"miniStages",publicId),{
-      published:true,
-      ownerUid:currentUser.uid,
-      sourceCourseId:course.id,
-      sourceRevision:course.revision,
-      name:course.name,
-      stage:miniBuilderClone(stage),
-      publishedAt:serverTimestamp()
-    });
-      miniPublishedStagesLoadedAt = 0;
-    await loadAllPublishedMiniStages(true);
-    showMiniActionMessage("公開したよ！");
-    setTimeout(()=>{ if(miniBuilderMode === "create") updateMiniBuilderVisualMode(); },650);
-  }catch(error){
-    console.error("publish mini stage error",error);
-    showMiniActionMessage("公開できませんでした");
-  }
-}
-
-async function deletePublishedMiniStage(publicId){
-  if(!publicId || !currentUser) return;
-  try{
-    await deleteDoc(doc(db,"miniStages",String(publicId)));
-      miniPublishedStagesLoadedAt = 0;
-    await loadAllPublishedMiniStages(true);
-    renderMiniCourseList();
-  }catch(error){
-    console.error("delete published mini stage error",error);
-  }
-}
-
-function miniMenuActions(){
-  const actions = [];
-  if(miniBuilderMode === "create"){
-    actions.push({id:"test",label:"テストプレイ"});
-    actions.push({id:"courses",label:"コース一覧"});
-    if(miniBuilderCourseEligible(getMiniBuilderCourse())) actions.push({id:"publish",label:"公開する"});
-    actions.push({id:"play",label:"「遊ぶ」に切り替え"});
-  }else{
-    actions.push({id:"reset",label:"リセット"});
-    actions.push({id:"create",label:"「作る」に切り替え"});
-  }
-  return actions;
-}
-
-function renderMiniGameMenu(){
-  if(!miniGameMenu) return;
-  miniGameMenu.innerHTML = "";
-  for(const action of miniMenuActions()){
-    const button = document.createElement("button");
-    button.className = "miniGameMenuOption";
-    button.dataset.action = action.id;
-    button.textContent = action.label;
-    miniGameMenu.appendChild(button);
-  }
-}
-
-function openMiniGameMenu(){
-  renderMiniGameMenu();
-  miniBuilderMenuOpen = true;
-  miniGameMenuHighlight = null;
-  miniGameMenu.classList.add("show");
-  miniGameMenu.setAttribute("aria-hidden","false");
-}
-
-function closeMiniGameMenu(){
-  if(miniBuilderMenuHoldTimer){
-    clearTimeout(miniBuilderMenuHoldTimer);
-    miniBuilderMenuHoldTimer = null;
-  }
-  miniBuilderMenuPointerId = null;
-  miniBuilderMenuHoldStarted = false;
-  miniBuilderMenuHighlight = null;
-  miniBuilderMenuOpen = false;
-  if(miniGameMenu){
-    miniGameMenu.classList.remove("show");
-    miniGameMenu.setAttribute("aria-hidden","true");
-  }
-}
-
-function getMiniMenuOptionAtPoint(clientX,clientY){
-  if(!miniGameMenu) return null;
-  const options = Array.from(miniGameMenu.querySelectorAll(".miniGameMenuOption"));
-  return options.find(option=>{
-    const rect = option.getBoundingClientRect();
-    return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
-  }) || null;
-}
-
-function highlightMiniMenuOption(option){
-  miniGameMenu?.querySelectorAll(".miniGameMenuOption").forEach(button=>button.classList.toggle("highlight",button === option));
-  miniGameMenuHighlight = option?.dataset.action || null;
-}
-
-function executeMiniMenuAction(action){
-  closeMiniGameMenu();
-  if(!action) return;
-  if(action === "reset"){
-    resetMiniActionStage("RESET",true);
-    return;
-  }
-  if(action === "create"){
-    setMiniBuilderMode("create");
-    return;
-  }
-  if(action === "play"){
-    setMiniBuilderMode("play");
-    return;
-  }
-  if(action === "test"){
-    beginMiniBuilderTest();
-    return;
-  }
-  if(action === "courses"){
-    openMiniCourseList();
-    return;
-  }
-  if(action === "publish"){
-    publishMiniCourse();
-  }
-}
-
-function miniMenuPointerMove(event){
-  if(!miniBuilderMenuOpen || event.pointerId !== miniBuilderMenuPointerId) return;
-  const option = getMiniMenuOptionAtPoint(event.clientX,event.clientY);
-  highlightMiniMenuOption(option);
-}
-
-function miniMenuPointerUp(event){
-  if(event.pointerId !== miniBuilderMenuPointerId) return;
-  event.preventDefault();
-  const option = getMiniMenuOptionAtPoint(event.clientX,event.clientY);
-  const action = option?.dataset.action || null;
-  executeMiniMenuAction(action);
-}
-
-function setupMiniGameMenu(){
-  if(!miniGameMenuButton) return;
-  miniGameMenuButton.addEventListener("pointerdown",event=>{
-    event.preventDefault();
-    miniBuilderMenuPointerId = event.pointerId;
-    miniBuilderMenuHoldStarted = false;
-    if(miniBuilderMode === "create"){
-      miniBuilderMenuHoldTimer = setTimeout(()=>{
-        miniBuilderMenuHoldTimer = null;
-        miniBuilderMenuHoldStarted = true;
-        openMiniGameMenu();
-      },420);
-    }else{
-      openMiniGameMenu();
-    }
-    try{ miniGameMenuButton.setPointerCapture(event.pointerId); }catch(error){}
-  },{passive:false});
-  miniGameMenuButton.addEventListener("pointermove",event=>{
-    if(miniBuilderMode === "create" && !miniBuilderMenuHoldStarted) return;
-    miniMenuPointerMove(event);
-  },{passive:false});
-  miniGameMenuButton.addEventListener("pointerup",miniMenuPointerUp,{passive:false});
-  miniGameMenuButton.addEventListener("pointercancel",event=>{
-    if(event.pointerId === miniBuilderMenuPointerId) closeMiniGameMenu();
-  },{passive:false});
-  window.addEventListener("pointermove",miniMenuPointerMove,{passive:false});
-  window.addEventListener("pointerup",miniMenuPointerUp,{passive:false});
-}
-
-function setupMiniBuilderControls(){
-  ensureMiniBuilderStore();
-  document.querySelectorAll(".miniBuilderTool").forEach(button=>{
-    button.addEventListener("click",()=>{
-      miniBuilderSelectedTool = button.dataset.tool || "terrain";
-      miniBuilderStore.selectedTool = miniBuilderSelectedTool;
-      saveMiniBuilderStore();
-      updateMiniBuilderPalette();
-    });
-  });
-  miniBuilderScroll?.addEventListener("input",()=>{
-    miniBuilderCameraX = Number(miniBuilderScroll.value) || 0;
-    drawMiniActionGame();
-    saveMiniBuilderStore();
-  });
-  miniCourseListClose?.addEventListener("click",closeMiniCourseList);
-  miniCourseListOverlay?.addEventListener("pointerdown",event=>{
-    if(event.target === miniCourseListOverlay) closeMiniCourseList();
-  });
 }
 
 function setupMiniActionTouchControls(){
   if(!miniTouchZone) return;
 
   miniTouchZone.addEventListener("pointerdown",event=>{
-    if(miniBuilderMode === "create" && !miniBuilderTestMode) return;
     if(!miniActionIsVisible()) return;
     event.preventDefault();
     const point = miniTouchPoint(event);
@@ -10917,7 +10499,6 @@ function setupMiniActionTouchControls(){
   },{passive:false});
 
   miniTouchZone.addEventListener("pointermove",event=>{
-    if(miniBuilderMode === "create" && !miniBuilderTestMode) return;
     if(!miniActionIsVisible()) return;
     if(event.pointerId === miniTouchState.movePointerId){
       event.preventDefault();
@@ -10951,7 +10532,7 @@ function setupMiniActionTouchControls(){
         point.x - miniTouchState.jumpStartX,
         point.y - miniTouchState.jumpStartY
       );
-      if(duration <= 260 && distance <= 14 && (miniBuilderMode !== "create" || miniBuilderTestMode)){
+      if(duration <= 260 && distance <= 14){
         miniActionInput.jump = true;
         miniActionInput.jumpPressed = true;
         setTimeout(()=>{ miniActionInput.jump = false; },80);
@@ -10965,10 +10546,9 @@ function setupMiniActionTouchControls(){
 }
 
 function bindMiniActionControl(button,action){
-  if(!button) return;
   const press = event => {
     event.preventDefault();
-    if(!miniActionIsVisible() || (miniBuilderMode === "create" && !miniBuilderTestMode)) return;
+    if(!miniActionIsVisible()) return;
     if(action === "jump"){
       miniActionInput.jump = true;
       miniActionInput.jumpPressed = true;
@@ -10987,39 +10567,8 @@ function bindMiniActionControl(button,action){
   button.addEventListener("pointerleave",release);
 }
 
-setupMiniBuilderControls();
-setupMiniBuilderCanvasControls();
-setupMiniGameMenu();
 setupMiniActionTouchControls();
 
-window.addEventListener("keydown",event => {
-  if(!miniActionIsVisible() || (miniBuilderMode === "create" && !miniBuilderTestMode)) return;
-  if(event.code === "ArrowLeft" || event.code === "KeyA"){
-    event.preventDefault();
-    miniActionInput.left = true;
-  }
-  if(event.code === "ArrowRight" || event.code === "KeyD"){
-    event.preventDefault();
-    miniActionInput.right = true;
-  }
-  if(event.code === "Space" || event.code === "ArrowUp" || event.code === "KeyW"){
-    event.preventDefault();
-    miniActionInput.jump = true;
-    miniActionInput.jumpPressed = true;
-  }
-  if(event.code === "KeyR"){
-    event.preventDefault();
-    resetMiniActionStage("RESET",true);
-  }
-});
-
-window.addEventListener("keyup",event => {
-  if(event.code === "ArrowLeft" || event.code === "KeyA") miniActionInput.left = false;
-  if(event.code === "ArrowRight" || event.code === "KeyD") miniActionInput.right = false;
-  if(event.code === "Space" || event.code === "ArrowUp" || event.code === "KeyW") miniActionInput.jump = false;
-});
-
-window.addEventListener("resize",resizeMiniActionCanvas);
 
 shareCodeButton.addEventListener(
   "click",
