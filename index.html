@@ -400,10 +400,12 @@ canvas{
   align-items:stretch;
   gap:6px;
   width:min(170px,58vw);
+  display:none;
   pointer-events:none;
 }
 
 #miniMenuOptions.show{
+  display:flex;
   pointer-events:none;
 }
 
@@ -9461,7 +9463,7 @@ function createDefaultMiniEditorCourse(){
       id:"editor",
       name:"MY COURSE",
       worldWidth:MINI_EDITOR_WORLD_WIDTH,
-      start:{x:42,y:198},
+      start:{x:42,y:188},
       goalX:1290,
       goalY:MINI_EDITOR_DEFAULT_GOAL_Y,
       platforms:[],
@@ -10355,7 +10357,7 @@ function drawMiniEditor(){
     if(target.type==="goal"){
       ctx.strokeRect(goalX-7,goalY-48,42,55);
     }else if(target.type==="start"){
-      ctx.strokeRect(stage.start.x-3,stage.start.y-3,22,28);
+      // スタートは見えないブロック。選択中も表示しない。
     }else{
       const list=target.type==="platform"?stage.platforms:
         target.type==="terrain"?stage.terrain:
@@ -10594,6 +10596,7 @@ function miniMenuClose(){
   miniMenuSelectedIndex=-1;
   if(miniMenuOptions){
     miniMenuOptions.classList.remove("show");
+    miniMenuOptions.style.display="none";
     miniMenuOptions.setAttribute("aria-hidden","true");
     miniMenuOptions.querySelectorAll(".miniMenuOption").forEach(button=>button.classList.remove("active"));
   }
@@ -10605,6 +10608,7 @@ function miniMenuOpenNow(){
   miniMenuOpen=true;
   if(miniMenuOptions){
     miniMenuOptions.classList.add("show");
+    miniMenuOptions.style.display="flex";
     miniMenuOptions.setAttribute("aria-hidden","false");
   }
 }
