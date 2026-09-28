@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.10.0. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.9.1 changes; Release 1.9.3 adds persistent mini-action course creation/testing/publishing and mini-game menus: fixed portrait mini-action rendering so the game keeps its native aspect ratio instead of vertically stretching, and changed floating terrain so only some terrain platforms float while adding extra vertical height variation. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
+<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.10.2. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.10.2 changes; Release 1.9.3 adds persistent mini-action course creation/testing/publishing and mini-game menus: fixed portrait mini-action rendering so the game keeps its native aspect ratio instead of vertically stretching, and changed floating terrain so only some terrain platforms float while adding extra vertical height variation. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
 <title>3Dfps</title>
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
@@ -488,7 +488,7 @@ canvas{
 
 #miniEditorQuickbar{
   display:grid;
-  grid-template-columns:repeat(5,minmax(0,1fr));
+  grid-template-columns:repeat(6,minmax(0,1fr));
   gap:4px;
   width:100%;
 }
@@ -1835,6 +1835,7 @@ html.roomJoinMode #roomJoinScreen{
       </div>
       <div id="miniEditorQuickbar">
         <button class="miniEditorQuickTool" data-quick-tool="erase">消去</button>
+        <button class="miniEditorQuickTool" data-quick-tool="start">スタート</button>
         <button class="miniEditorQuickTool" data-recent-slot="0">足場</button>
         <button class="miniEditorQuickTool" data-recent-slot="1">地形</button>
         <button class="miniEditorQuickTool" data-recent-slot="2">針</button>
@@ -11082,15 +11083,29 @@ function updateMiniActionGame(delta,time){
   for(const hazard of stage.hazards||[]){
     const hitRect={x:state.x,y:state.y,width:state.width,height:state.height};
     if(miniActionRectHit(hitRect,hazard)){
-      resetMiniActionStage("TRY AGAIN!",!miniEditorTestMode);
-      drawMiniActionGame();
+      if(miniEditorTestMode){
+        const testStage=cloneMiniData(stage);
+        startMiniActionStage(testStage);
+        showMiniActionMessage("TRY AGAIN!");
+        drawMiniActionGame();
+      }else{
+        resetMiniActionStage("TRY AGAIN!",true);
+        drawMiniActionGame();
+      }
       return;
     }
   }
 
   if(state.y>290){
-    resetMiniActionStage("MISS!",!miniEditorTestMode);
-    drawMiniActionGame();
+    if(miniEditorTestMode){
+      const testStage=cloneMiniData(stage);
+      startMiniActionStage(testStage);
+      showMiniActionMessage("MISS!");
+      drawMiniActionGame();
+    }else{
+      resetMiniActionStage("MISS!",true);
+      drawMiniActionGame();
+    }
     return;
   }
 
