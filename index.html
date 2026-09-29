@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.10.2. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.10.2 changes; Release 1.9.3 adds persistent mini-action course creation/testing/publishing and mini-game menus: fixed portrait mini-action rendering so the game keeps its native aspect ratio instead of vertically stretching, and changed floating terrain so only some terrain platforms float while adding extra vertical height variation. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
+<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.10.2. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.9.1 changes; Release 1.9.3 adds persistent mini-action course creation/testing/publishing and mini-game menus: fixed portrait mini-action rendering so the game keeps its native aspect ratio instead of vertically stretching, and changed floating terrain so only some terrain platforms float while adding extra vertical height variation. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
 <title>3Dfps</title>
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
@@ -488,7 +488,7 @@ canvas{
 
 #miniEditorQuickbar{
   display:grid;
-  grid-template-columns:repeat(6,minmax(0,1fr));
+  grid-template-columns:repeat(5,minmax(0,1fr));
   gap:4px;
   width:100%;
 }
@@ -1709,7 +1709,7 @@ html.roomJoinMode #roomJoinScreen{
     <h1 class="title">3Dfps</h1>
 
     <div class="subtitle">
-      v1.10.0
+      v1.10.2
     </div>
 
     <button id="randomMatchButton" class="button">
@@ -1835,7 +1835,6 @@ html.roomJoinMode #roomJoinScreen{
       </div>
       <div id="miniEditorQuickbar">
         <button class="miniEditorQuickTool" data-quick-tool="erase">消去</button>
-        <button class="miniEditorQuickTool" data-quick-tool="start">スタート</button>
         <button class="miniEditorQuickTool" data-recent-slot="0">足場</button>
         <button class="miniEditorQuickTool" data-recent-slot="1">地形</button>
         <button class="miniEditorQuickTool" data-recent-slot="2">針</button>
@@ -9489,7 +9488,7 @@ function normalizeMiniEditorStage(stage){
         x:Math.max(0,Math.min(worldWidth-16,Number(sourceStart.x))),
         y:Math.max(20,Math.min(238,Number(sourceStart.y)))
       }
-    : {x:42,y:198};
+    : {x:42,y:188};
 
   const cleanRectList = value => Array.isArray(value)
     ? value.map(item => ({
@@ -10093,6 +10092,17 @@ function resetMiniActionStage(message="",randomizeStage=false){
   keepMiniMatchAlive(true);
 }
 
+function restartMiniEditorTest(){
+  if(!miniEditorTestMode||!miniActionState?.active) return;
+  const stage=cloneMiniData(miniActionState.stage);
+  startMiniActionStage(stage);
+  miniEditorTestHashAtStart=hashMiniStage(stage);
+  miniEditorTestStartTime=miniActionState?.startTime||performance.now();
+  miniEditorTestMode=true;
+  updateMiniActionLabels();
+  drawMiniActionGame();
+}
+
 function finishMiniEditorTest(success,time){
   const course=getCurrentMiniEditorCourse();
   const currentHash=hashMiniStage(course.stage);
@@ -10358,7 +10368,10 @@ function drawMiniEditor(){
     if(target.type==="goal"){
       ctx.strokeRect(goalX-7,goalY-48,42,55);
     }else if(target.type==="start"){
-      // スタートは見えないブロック。選択中も表示しない。
+      ctx.setLineDash([4,3]);
+      ctx.strokeStyle="rgba(120,220,255,.95)";
+      ctx.strokeRect(stage.start.x-4,stage.start.y-4,24,30);
+      ctx.setLineDash([]);
     }else{
       const list=target.type==="platform"?stage.platforms:
         target.type==="terrain"?stage.terrain:
@@ -10368,6 +10381,15 @@ function drawMiniEditor(){
       const item=list[target.index];
       if(item) ctx.strokeRect(item.x-3,item.y-3,item.w+6,item.h+6);
     }
+  }else if(miniEditorSelectedTool==="start"){
+    ctx.setLineDash([4,3]);
+    ctx.strokeStyle="rgba(120,220,255,.82)";
+    ctx.lineWidth=2;
+    ctx.strokeRect(stage.start.x-4,stage.start.y-4,24,30);
+    ctx.setLineDash([]);
+    ctx.fillStyle="rgba(120,220,255,.9)";
+    ctx.font="bold 9px Arial";
+    ctx.fillText("START",stage.start.x-1,stage.start.y-8);
   }
   ctx.fillStyle="rgba(255,255,255,.62)";
   ctx.font="bold 10px Arial";
@@ -10748,6 +10770,12 @@ function setupMiniEditorControls(){
       miniEditorToolbar?.classList.remove("moreOpen");
       const course=getCurrentMiniEditorCourse();
       const point=miniEditorPointerToWorld(event);
+      if(miniEditorSelectedTool==="start"){
+        placeMiniEditorTool(course,point.x,point.y);
+        updateMiniEditorSave(course,true);
+        drawMiniEditor();
+        return;
+      }
       const target=getMiniEditorTarget(course,point.x,point.y);
       if(miniEditorSelectedTool==="erase"){
         if(target){
@@ -11084,10 +11112,7 @@ function updateMiniActionGame(delta,time){
     const hitRect={x:state.x,y:state.y,width:state.width,height:state.height};
     if(miniActionRectHit(hitRect,hazard)){
       if(miniEditorTestMode){
-        const testStage=cloneMiniData(stage);
-        startMiniActionStage(testStage);
-        showMiniActionMessage("TRY AGAIN!");
-        drawMiniActionGame();
+        restartMiniEditorTest();
       }else{
         resetMiniActionStage("TRY AGAIN!",true);
         drawMiniActionGame();
@@ -11098,10 +11123,7 @@ function updateMiniActionGame(delta,time){
 
   if(state.y>290){
     if(miniEditorTestMode){
-      const testStage=cloneMiniData(stage);
-      startMiniActionStage(testStage);
-      showMiniActionMessage("MISS!");
-      drawMiniActionGame();
+      restartMiniEditorTest();
     }else{
       resetMiniActionStage("MISS!",true);
       drawMiniActionGame();
