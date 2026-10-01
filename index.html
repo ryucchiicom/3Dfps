@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.10.3. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.9.1 changes; Release 1.9.3 adds persistent mini-action course creation/testing/publishing and mini-game menus: fixed portrait mini-action rendering so the game keeps its native aspect ratio instead of vertically stretching, and changed floating terrain so only some terrain platforms float while adding extra vertical height variation. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
+<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.11.0. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.9.1 changes; Release 1.9.3 adds persistent mini-action course creation/testing/publishing and mini-game menus: fixed portrait mini-action rendering so the game keeps its native aspect ratio instead of vertically stretching, and changed floating terrain so only some terrain platforms float while adding extra vertical height variation. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
 <title>3Dfps</title>
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
@@ -145,79 +145,274 @@ canvas{
   transform:scale(.98);
 }
 
-#otherMenuWrap{
+#mainOtherMenuWrap{
   position:relative;
   width:100%;
-  margin-top:8px;
+  margin-top:4px;
 }
 
 #otherMenuButton{
-  display:block;
-  width:72%;
-  height:34px;
-  margin:0 auto;
-  border:0;
+  width:100%;
+  height:40px;
+  border:1px solid rgba(255,255,255,.13);
   border-radius:999px;
-  background:rgba(255,255,255,.10);
-  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.065);
   color:rgba(255,255,255,.86);
   font-size:13px;
-  font-weight:700;
+  font-weight:800;
   cursor:pointer;
   touch-action:none;
 }
 
 #otherMenuButton:active{
-  transform:scale(.98);
+  transform:scale(.985);
 }
 
 #otherMenuOptions{
   position:absolute;
-  left:50%;
-  bottom:42px;
-  z-index:12;
+  left:0;
+  right:0;
+  bottom:46px;
+  z-index:120;
   display:none;
   flex-direction:column;
-  align-items:stretch;
   gap:6px;
-  width:min(170px,58vw);
-  transform:translateX(-50%);
+  width:min(190px,72%);
+  margin:0 auto;
   pointer-events:none;
 }
 
 #otherMenuOptions.show{
   display:flex;
-  pointer-events:none;
-  animation:otherMenuOptionsIn .28s ease-out both;
 }
 
 .otherMenuOption{
-  width:100%;
-  min-height:40px;
-  border:1px solid rgba(255,255,255,.12);
-  border-radius:12px;
-  background:rgba(25,31,41,.96);
+  height:40px;
+  border:1px solid rgba(255,255,255,.17);
+  border-radius:13px;
+  background:rgba(8,13,20,.95);
   color:#fff;
-  font-size:14px;
-  font-weight:800;
-  box-shadow:0 10px 30px rgba(0,0,0,.28);
-  cursor:pointer;
-  touch-action:none;
+  font-size:13px;
+  font-weight:900;
+  text-align:center;
+  box-shadow:0 10px 28px rgba(0,0,0,.28);
+  pointer-events:none;
+  animation:otherMenuFloatUp .22s ease both;
 }
+
+.otherMenuOption:nth-child(2){animation-delay:.035s;}
 
 .otherMenuOption.active{
   background:#1976ff;
+  border-color:#67adff;
 }
 
-@keyframes otherMenuOptionsIn{
-  from{
-    opacity:0;
-    transform:translate(-50%,10px) scale(.96);
-  }
-  to{
-    opacity:1;
-    transform:translate(-50%,0) scale(1);
-  }
+@keyframes otherMenuFloatUp{
+  from{opacity:0;transform:translateY(10px) scale(.98);}
+  to{opacity:1;transform:translateY(0) scale(1);}
+}
+
+@keyframes miniMenuFloatDown{
+  from{opacity:0;transform:translateY(-10px) scale(.98);}
+  to{opacity:1;transform:translateY(0) scale(1);}
+}
+
+#playerSettingsButton.legacyPlayerSettingsButton{
+  display:none !important;
+}
+
+.playerColorRow{
+  display:grid;
+  grid-template-columns:58px 1fr;
+  gap:10px;
+  align-items:center;
+}
+
+#playerColorInput{
+  width:58px;
+  height:44px;
+  padding:0;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:12px;
+  background:transparent;
+}
+
+#playerColorHexInput{
+  width:100%;
+}
+
+.controlLayoutPreview{
+  position:relative;
+  width:100%;
+  height:170px;
+  margin-top:8px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:16px;
+  background:linear-gradient(180deg,rgba(30,42,58,.92),rgba(5,9,15,.96));
+  overflow:hidden;
+  touch-action:none;
+}
+
+.controlLayoutPreview::after{
+  content:"ドラッグして配置";
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  font-size:10px;
+  font-weight:800;
+  opacity:.25;
+  pointer-events:none;
+}
+
+.controlLayoutItem{
+  position:absolute;
+  transform:translate(-50%,-50%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid rgba(255,255,255,.2);
+  background:rgba(255,255,255,.1);
+  color:#fff;
+  user-select:none;
+  -webkit-user-select:none;
+  pointer-events:auto;
+  touch-action:none;
+}
+
+#layoutStick{
+  width:54px;
+  height:54px;
+  border-radius:50%;
+}
+
+#layoutFire{
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  background:rgba(220,50,50,.28);
+}
+
+#layoutJump{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  background:rgba(35,130,255,.28);
+}
+
+.controlLayoutLabel{
+  position:absolute;
+  top:7px;
+  left:9px;
+  z-index:2;
+  font-size:10px;
+  font-weight:900;
+  opacity:.6;
+  pointer-events:none;
+}
+
+#matchingScreen.standaloneMiniMode .matchingTitle,
+#matchingScreen.standaloneMiniMode #matchingCount,
+#matchingScreen.standaloneMiniMode #matchingTimer,
+#matchingScreen.standaloneMiniMode #matchingStatus,
+#matchingScreen.standaloneMiniMode #matchingReadyButton,
+#matchingScreen.standaloneMiniMode #matchingEndButton{
+  display:none !important;
+}
+
+#matchingScreen.standaloneMiniMode{
+  justify-content:center;
+  gap:0;
+}
+
+#matchingScreen.standaloneMiniMode #miniGameBox{
+  width:min(96vw,860px);
+  height:min(78svh,620px);
+  min-height:220px;
+  margin:0;
+}
+
+#miniFavoritesModal{
+  position:absolute;
+  inset:0;
+  z-index:26;
+  display:none;
+  flex-direction:column;
+  padding:12px;
+  background:rgba(5,9,15,.97);
+  border-radius:17px;
+  pointer-events:auto;
+  overflow:hidden;
+}
+
+#miniGameBox.favoriteListMode #miniGameCanvas,
+#miniGameBox.favoriteListMode #miniGameTitle,
+#miniGameBox.favoriteListMode #miniGameStageLabel,
+#miniGameBox.favoriteListMode #miniGameScore,
+#miniGameBox.favoriteListMode #miniTouchZone,
+#miniGameBox.favoriteListMode #miniGameMessage,
+#miniGameBox.favoriteListMode #miniEditorToolbar{
+  display:none !important;
+}
+
+#miniGameBox.favoriteListMode #miniFavoritesModal{
+  display:flex;
+}
+
+.miniFavoriteHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-bottom:8px;
+}
+
+.miniFavoriteTitle{
+  font-size:15px;
+  font-weight:900;
+}
+
+.miniFavoriteClose,
+.miniFavoriteItem{
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:10px;
+  background:rgba(255,255,255,.06);
+  color:#fff;
+}
+
+.miniFavoriteClose{
+  height:32px;
+  padding:0 10px;
+  font-size:11px;
+  font-weight:900;
+}
+
+#miniFavoritesList{
+  flex:1 1 auto;
+  overflow:auto;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.miniFavoriteItem{
+  width:100%;
+  min-height:48px;
+  padding:8px 10px;
+  text-align:left;
+  font-size:12px;
+  font-weight:900;
+}
+
+.miniFavoriteItemMeta{
+  display:block;
+  margin-top:2px;
+  font-size:9px;
+  opacity:.55;
+}
+
+.miniFavoriteItem.stageOne{
+  order:999;
 }
 
 .info{
@@ -482,23 +677,12 @@ canvas{
 #miniMenuOptions.show{
   display:flex;
   pointer-events:none;
-  animation:miniMenuOptionsIn .28s ease-out both;
-}
-
-@keyframes miniMenuOptionsIn{
-  from{
-    opacity:0;
-    transform:translateY(-10px) scale(.96);
-  }
-  to{
-    opacity:1;
-    transform:translateY(0) scale(1);
-  }
 }
 
 .miniMenuOption{
   min-height:38px;
   padding:0 12px;
+  animation:miniMenuFloatDown .22s ease both;
   border:1px solid rgba(255,255,255,.18);
   border-radius:11px;
   background:rgba(8,13,20,.92);
@@ -1796,7 +1980,7 @@ html.roomJoinMode #roomJoinScreen{
     <h1 class="title">3Dfps</h1>
 
     <div class="subtitle">
-      v1.10.3
+      v1.11.0
     </div>
 
     <button id="randomMatchButton" class="button">
@@ -1807,10 +1991,19 @@ html.roomJoinMode #roomJoinScreen{
       ルームマッチ
     </button>
 
-    <div id="otherMenuWrap">
-      <div id="otherMenuOptions" aria-hidden="true"></div>
+    <div id="mainOtherMenuWrap">
       <button id="otherMenuButton" type="button">その他…</button>
+      <div id="otherMenuOptions" aria-hidden="true"></div>
     </div>
+
+    <button
+      id="playerSettingsButton"
+      class="button secondary legacyPlayerSettingsButton"
+      aria-hidden="true"
+      tabindex="-1"
+    >
+      設定
+    </button>
 
     <div id="status"></div>
 
@@ -1861,6 +2054,24 @@ html.roomJoinMode #roomJoinScreen{
       <span class="settingLabel">感度</span>
       <input id="sensitivityInput" class="playerSettingsRange" type="range" min="50" max="200" step="1" value="100">
       <div id="sensitivityValue" class="rangeValue">100%</div>
+    </div>
+
+    <div class="settingRow">
+      <span class="settingLabel">自分の色</span>
+      <div class="playerColorRow">
+        <input id="playerColorInput" type="color" value="#4da3ff" aria-label="プレイヤー色">
+        <input id="playerColorHexInput" class="input" maxlength="7" value="#4da3ff" placeholder="#4da3ff" autocomplete="off" spellcheck="false" aria-label="カラーコード">
+      </div>
+    </div>
+
+    <div class="settingRow">
+      <span class="settingLabel">スマホ操作の配置</span>
+      <div class="controlLayoutPreview" id="controlLayoutPreview">
+        <div class="controlLayoutLabel">可動OFF時のスティック・ボタン位置</div>
+        <div class="controlLayoutItem" id="layoutStick">S</div>
+        <div class="controlLayoutItem" id="layoutFire">F</div>
+        <div class="controlLayoutItem" id="layoutJump">J</div>
+      </div>
     </div>
 
     <div class="settingRow">
@@ -1917,6 +2128,11 @@ html.roomJoinMode #roomJoinScreen{
         <button class="miniEditorTool" data-tool="goal">ゴール</button>
         <button class="miniEditorTool" data-tool="accelerator">加速</button>
         <button class="miniEditorTool" data-tool="decelerator">減速</button>
+        <button class="miniEditorTool" data-tool="moving">移動足場</button>
+        <button class="miniEditorTool" data-tool="pendulum">振り子足場</button>
+        <button class="miniEditorTool" data-tool="gravity">重力反転</button>
+        <button class="miniEditorTool" data-tool="bounce">跳ねる足場</button>
+        <button class="miniEditorTool" data-tool="item">アイテム</button>
       </div>
       <div id="miniEditorQuickbar">
         <button class="miniEditorQuickTool" data-quick-tool="erase">消去</button>
@@ -1946,6 +2162,14 @@ html.roomJoinMode #roomJoinScreen{
         <div id="miniCourseListPublished"></div>
       </div>
     </div>
+  </div>
+
+  <div id="miniFavoritesModal" aria-hidden="true">
+    <div class="miniFavoriteHeader">
+      <div class="miniFavoriteTitle">お気に入り</div>
+      <button id="miniFavoritesClose" class="miniFavoriteClose" type="button">閉じる</button>
+    </div>
+    <div id="miniFavoritesList"></div>
   </div>
 
   <button id="matchingReadyButton" class="button">準備OK</button>
@@ -2356,11 +2580,13 @@ let miniMenuOpen = false;
 let miniMenuLongPressTriggered = false;
 let miniMenuSelectedIndex = -1;
 let miniMenuOptionsCache = [];
+let miniCourseListOpen = false;
+let miniFavoritesListOpen = false;
+let standaloneMiniMode = false;
 let otherMenuPointerId = null;
 let otherMenuOpen = false;
 let otherMenuSelectedIndex = -1;
 let otherMenuOptionsCache = [];
-let miniCourseListOpen = false;
 let matchingLastFinalizedState = false;
 let matchingNotificationPlayed = false;
 let miniGameStarted = false;
@@ -2693,6 +2919,24 @@ const playerSettingsModal =
 const playerSettingsButton =
   document.getElementById("playerSettingsButton");
 
+const playerColorInput =
+  document.getElementById("playerColorInput");
+
+const playerColorHexInput =
+  document.getElementById("playerColorHexInput");
+
+const controlLayoutPreview =
+  document.getElementById("controlLayoutPreview");
+
+const layoutStick =
+  document.getElementById("layoutStick");
+
+const layoutFire =
+  document.getElementById("layoutFire");
+
+const layoutJump =
+  document.getElementById("layoutJump");
+
 const closePlayerSettingsButton =
   document.getElementById("closePlayerSettingsButton");
 
@@ -2728,7 +2972,14 @@ const DEFAULT_PLAYER_SETTINGS = {
   playerName: "",
   movableStick: "on",
   sensitivity: 100,
-  rightTapAction: "none"
+  rightTapAction: "none",
+  color: "#4da3ff",
+  fixedStickX: 14,
+  fixedStickY: 78,
+  fireX: 87,
+  fireY: 81,
+  jumpX: 75,
+  jumpY: 76
 };
 
 let playerSettings = { ...DEFAULT_PLAYER_SETTINGS };
@@ -2761,6 +3012,26 @@ function loadPlayerSettings(){
   if(!["none","jumpGrab","fire"].includes(playerSettings.rightTapAction)){
     playerSettings.rightTapAction = "none";
   }
+  playerSettings.color = normalizePlayerColor(playerSettings.color);
+  playerSettings.fixedStickX = clamp(Number(playerSettings.fixedStickX) || DEFAULT_PLAYER_SETTINGS.fixedStickX,5,95);
+  playerSettings.fixedStickY = clamp(Number(playerSettings.fixedStickY) || DEFAULT_PLAYER_SETTINGS.fixedStickY,10,90);
+  playerSettings.fireX = clamp(Number(playerSettings.fireX) || DEFAULT_PLAYER_SETTINGS.fireX,10,90);
+  playerSettings.fireY = clamp(Number(playerSettings.fireY) || DEFAULT_PLAYER_SETTINGS.fireY,10,90);
+  playerSettings.jumpX = clamp(Number(playerSettings.jumpX) || DEFAULT_PLAYER_SETTINGS.jumpX,10,90);
+  playerSettings.jumpY = clamp(Number(playerSettings.jumpY) || DEFAULT_PLAYER_SETTINGS.jumpY,10,90);
+}
+
+function normalizePlayerColor(value){
+  const raw=String(value||"").trim();
+  if(/^#[0-9a-fA-F]{6}$/.test(raw)) return raw.toLowerCase();
+  if(/^#[0-9a-fA-F]{3}$/.test(raw)){
+    return "#"+raw.slice(1).split("").map(ch=>ch+ch).join("").toLowerCase();
+  }
+  return "#4da3ff";
+}
+
+function getPlayerColorHex(){
+  return normalizePlayerColor(playerSettings.color);
 }
 
 function savePlayerSettings(){
@@ -2796,6 +3067,10 @@ function updatePlayerSettingsUI(){
   playerNameInput.value = playerSettings.playerName;
   sensitivityInput.value = String(playerSettings.sensitivity);
   sensitivityValue.textContent = playerSettings.sensitivity + "%";
+  if(playerColorInput) playerColorInput.value = playerSettings.color;
+  if(playerColorHexInput) playerColorHexInput.value = playerSettings.color;
+  updateControlLayoutPreview();
+  applyPlayerControlPositions();
 
   document.querySelectorAll("[data-player-setting]").forEach(group => {
     const value = playerSettings[group.dataset.playerSetting];
@@ -2815,8 +3090,69 @@ function closePlayerSettings(){
   updatePlayerSettingsUI();
 }
 
+function applyControlItemPosition(element,x,y){
+  if(!element) return;
+  element.style.left=`${Number(x)}%`;
+  element.style.top=`${Number(y)}%`;
+}
+
+function updateControlLayoutPreview(){
+  applyControlItemPosition(layoutStick,playerSettings.fixedStickX,playerSettings.fixedStickY);
+  applyControlItemPosition(layoutFire,playerSettings.fireX,playerSettings.fireY);
+  applyControlItemPosition(layoutJump,playerSettings.jumpX,playerSettings.jumpY);
+}
+
+function applyPlayerControlPositions(){
+  if(joystickBase){
+    joystickBase.style.left=`${playerSettings.fixedStickX}%`;
+    joystickBase.style.top=`${playerSettings.fixedStickY}%`;
+  }
+  if(fireButton){
+    fireButton.style.left=`${playerSettings.fireX}%`;
+    fireButton.style.top=`${playerSettings.fireY}%`;
+    fireButton.style.right="auto";
+    fireButton.style.bottom="auto";
+    fireButton.style.transform="translate(-50%,-50%)";
+  }
+  if(jumpButton){
+    jumpButton.style.left=`${playerSettings.jumpX}%`;
+    jumpButton.style.top=`${playerSettings.jumpY}%`;
+    jumpButton.style.right="auto";
+    jumpButton.style.bottom="auto";
+    jumpButton.style.transform="translate(-50%,-50%)";
+  }
+}
+
+function setupControlLayoutPreview(){
+  if(!controlLayoutPreview) return;
+  const map={stick:"fixedStick",fire:"fire",jump:"jump"};
+  let active=null;
+  const getPoint=event=>{
+    const rect=controlLayoutPreview.getBoundingClientRect();
+    return {x:clamp((event.clientX-rect.left)/rect.width*100,8,92),y:clamp((event.clientY-rect.top)/rect.height*100,8,92)};
+  };
+  const setPos=(kind,point)=>{
+    const key=map[kind];
+    if(key==="fixedStick"){playerSettings.fixedStickX=point.x;playerSettings.fixedStickY=point.y;applyControlItemPosition(layoutStick,point.x,point.y);}
+    if(key==="fire"){playerSettings.fireX=point.x;playerSettings.fireY=point.y;applyControlItemPosition(layoutFire,point.x,point.y);}
+    if(key==="jump"){playerSettings.jumpX=point.x;playerSettings.jumpY=point.y;applyControlItemPosition(layoutJump,point.x,point.y);}
+    savePlayerSettings();
+    applyPlayerControlPositions();
+  };
+  controlLayoutPreview.querySelectorAll(".controlLayoutItem").forEach(el=>{
+    el.addEventListener("pointerdown",event=>{
+      event.preventDefault();active=el;try{el.setPointerCapture(event.pointerId);}catch(error){};
+      setPos(el.id.replace("layout","").toLowerCase(),getPoint(event));
+    },{passive:false});
+    el.addEventListener("pointermove",event=>{if(!active||active!==el)return;event.preventDefault();setPos(el.id.replace("layout","").toLowerCase(),getPoint(event));},{passive:false});
+    el.addEventListener("pointerup",()=>{active=null;},{passive:false});
+    el.addEventListener("pointercancel",()=>{active=null;},{passive:false});
+  });
+}
+
 loadPlayerSettings();
 updatePlayerSettingsUI();
+setupControlLayoutPreview();
 
 
 function normalizeSettings(settings){
@@ -3638,7 +3974,8 @@ function playerColor(uid){
 }
 
 
-function createPlayerMesh(uid){
+function createPlayerMesh(uid,colorHex=""){
+
 
   const group =
     new THREE.Group();
@@ -3655,7 +3992,7 @@ function createPlayerMesh(uid){
     new THREE.MeshStandardMaterial({
 
       color:
-        playerColor(uid),
+        normalizePlayerColor(colorHex) || playerColor(uid),
 
       roughness:.8
 
@@ -3736,6 +4073,8 @@ function createPlayerMesh(uid){
 
   group.userData.uid =
     uid;
+  group.userData.bodyMaterial =
+    bodyMaterial;
 
   scene.add(group);
 
@@ -4448,6 +4787,9 @@ async function createMatch(
       name:
         getPlayerName(),
 
+      color:
+        getPlayerColorHex(),
+
       x:
         spawn.x,
 
@@ -4879,6 +5221,9 @@ function getPlayerName(){
 
 async function startRandomMatch(){
 
+  roomMatchModalOpen = false;
+  if(roomMatchModal) roomMatchModal.style.display = "none";
+
   if(gameStarted || currentMatchId){
     return;
   }
@@ -4950,6 +5295,7 @@ async function startRandomMatch(){
       const player = {
         uid:user.uid,
         name:getPlayerName(),
+        color:getPlayerColorHex(),
         x:spawn.x,
         y:spawn.y,
         z:spawn.z,
@@ -5084,6 +5430,8 @@ async function startMatch(
 
   menu.style.display =
     "none";
+  roomMatchModalOpen = false;
+  if(roomMatchModal) roomMatchModal.style.display = "none";
 
   gameUI.style.display =
     "none";
@@ -5726,7 +6074,8 @@ function updateRemotePlayers(
 
       mesh =
         createPlayerMesh(
-          uid
+          uid,
+          player?.color || ""
         );
 
       playerMeshes.set(
@@ -5736,6 +6085,10 @@ function updateRemotePlayers(
 
     }
 
+
+    if(mesh.userData.bodyMaterial){
+      mesh.userData.bodyMaterial.color.set(normalizePlayerColor(player?.color) || playerColor(uid));
+    }
 
     mesh.position.set(
 
@@ -8382,6 +8735,10 @@ function leaveCurrentMatch(){
 
 
 async function handleReturn(){
+  if(standaloneMiniMode){
+    exitStandaloneMiniGame();
+    return;
+  }
 
   const wasHost =
     isHost;
@@ -8687,8 +9044,8 @@ function setupMobileInput(){
         joystickBase.style.left = `${x}px`;
         joystickBase.style.top = `${y}px`;
       }else{
-        joystickBase.style.left = "76px";
-        joystickBase.style.top = "calc(100% - 76px)";
+        joystickBase.style.left = `${playerSettings.fixedStickX}%`;
+        joystickBase.style.top = `${playerSettings.fixedStickY}%`;
       }
 
       joystickBase.style.opacity =
@@ -9465,13 +9822,12 @@ matchingReadyButton.addEventListener(
 );
 
 function miniActionIsVisible(){
+  if(!matchingScreen||matchingScreen.style.display!=="flex"||gameEnded) return false;
+  if(standaloneMiniMode) return Boolean(miniActionState?.active && (miniMode==="play"||miniEditorTestMode));
   return Boolean(
-    matchingScreen &&
-    matchingScreen.style.display === "flex" &&
     matchType === "random" &&
     latestMatchData &&
     latestMatchData.status === "waiting" &&
-    !gameEnded &&
     (miniMode === "play" || miniEditorTestMode)
   );
 }
@@ -9522,6 +9878,9 @@ const miniCourseListDrafts = document.getElementById("miniCourseListDrafts");
 const miniNewCourseButton = document.getElementById("miniNewCourseButton");
 const miniCourseListPublished = document.getElementById("miniCourseListPublished");
 const miniCourseListPublishedStatus = document.getElementById("miniCourseListPublishedStatus");
+const miniFavoritesModal = document.getElementById("miniFavoritesModal");
+const miniFavoritesClose = document.getElementById("miniFavoritesClose");
+const miniFavoritesList = document.getElementById("miniFavoritesList");
 
 let miniEditorScrollX = 0;
 let miniEditorRecentTools = ["platform","terrain","hazard"];
@@ -9536,7 +9895,12 @@ const MINI_EDITOR_TOOL_LABELS = {
   start:"スタート",
   goal:"ゴール",
   accelerator:"加速",
-  decelerator:"減速"
+  decelerator:"減速",
+  moving:"移動足場",
+  pendulum:"振り子足場",
+  gravity:"重力反転",
+  bounce:"跳ねる足場",
+  item:"アイテム"
 };
 
 function cloneMiniData(value){
@@ -9565,7 +9929,12 @@ function createDefaultMiniEditorCourse(){
       terrain:[{x:0,y:220,w:MINI_EDITOR_WORLD_WIDTH,h:40}],
       hazards:[],
       accelerators:[],
-      decelerators:[]
+      decelerators:[],
+      movingPlatforms:[],
+      pendulums:[],
+      gravityBlocks:[],
+      bouncePlatforms:[],
+      items:[]
     },
     verifiedHash:"",
     updatedAt:Date.now(),
@@ -9583,7 +9952,7 @@ function normalizeMiniEditorStage(stage){
         x:Math.max(0,Math.min(worldWidth-16,Number(sourceStart.x))),
         y:Math.max(20,Math.min(238,Number(sourceStart.y)))
       }
-    : {x:42,y:198};
+    : {x:42,y:188};
 
   const cleanRectList = value => Array.isArray(value)
     ? value.map(item => ({
@@ -9599,6 +9968,21 @@ function normalizeMiniEditorStage(stage){
   const hazards = cleanRectList(source.hazards);
   const accelerators = cleanRectList(source.accelerators);
   const decelerators = cleanRectList(source.decelerators);
+  const movingPlatforms = Array.isArray(source.movingPlatforms) ? source.movingPlatforms.map(item=>({
+    x:Number(item?.x)||0, y:Number(item?.y)||0, w:Math.max(20,Number(item?.w)||60), h:Math.max(10,Number(item?.h)||20),
+    baseX:Number(item?.baseX ?? item?.x)||0, baseY:Number(item?.baseY ?? item?.y)||0,
+    range:Math.max(10,Number(item?.range)||100), speed:Math.max(.2,Number(item?.speed)||1.2), phase:Number(item?.phase)||0
+  })).filter(item=>item.w>0&&item.h>0) : [];
+  const pendulums = Array.isArray(source.pendulums) ? source.pendulums.map(item=>({
+    x:Number(item?.x)||0, y:Number(item?.y)||0, w:Math.max(20,Number(item?.w)||60), h:Math.max(10,Number(item?.h)||20),
+    anchorX:Number(item?.anchorX ?? item?.x)||0, anchorY:Number(item?.anchorY ?? item?.y)||0,
+    range:Math.max(20,Number(item?.range)||90), speed:Math.max(.2,Number(item?.speed)||1), phase:Number(item?.phase)||0
+  })).filter(item=>item.w>0&&item.h>0) : [];
+  const gravityBlocks = cleanRectList(source.gravityBlocks);
+  const bouncePlatforms = cleanRectList(source.bouncePlatforms);
+  const items = Array.isArray(source.items) ? source.items.map(item=>({
+    x:Number(item?.x)||0, y:Number(item?.y)||0, w:Math.max(16,Number(item?.w)||20), h:Math.max(16,Number(item?.h)||20), type:String(item?.type||"doubleJump")
+  })).filter(item=>item.w>0&&item.h>0) : [];
 
   if(rawWorldWidth > 0 && rawWorldWidth <= 720 && terrain.length === 1){
     const base = terrain[0];
@@ -9618,7 +10002,12 @@ function normalizeMiniEditorStage(stage){
     terrain,
     hazards,
     accelerators,
-    decelerators
+    decelerators,
+    movingPlatforms,
+    pendulums,
+    gravityBlocks,
+    bouncePlatforms,
+    items
   };
 }
 
@@ -9630,16 +10019,39 @@ function miniStageForPhysics(stage){
     terrain:cloneMiniData(normalized.terrain),
     hazards:cloneMiniData(normalized.hazards),
     accelerators:cloneMiniData(normalized.accelerators),
-    decelerators:cloneMiniData(normalized.decelerators)
+    decelerators:cloneMiniData(normalized.decelerators),
+    movingPlatforms:cloneMiniData(normalized.movingPlatforms),
+    pendulums:cloneMiniData(normalized.pendulums),
+    gravityBlocks:cloneMiniData(normalized.gravityBlocks),
+    bouncePlatforms:cloneMiniData(normalized.bouncePlatforms),
+    items:cloneMiniData(normalized.items)
   };
 }
 
-function getMiniCollisionSurfaces(stage){
+function getMiniDynamicBlocks(stage,time=performance.now()){
+  const t=Number(time||performance.now())/1000;
+  const moving=(Array.isArray(stage?.movingPlatforms)?stage.movingPlatforms:[]).map(item=>({
+    ...item,
+    x:Number(item.baseX ?? item.x)+Math.sin(t*Number(item.speed||1)+Number(item.phase||0))*Number(item.range||100),
+    y:Number(item.baseY ?? item.y),
+    kind:"moving"
+  }));
+  const pendulums=(Array.isArray(stage?.pendulums)?stage.pendulums:[]).map(item=>{
+    const theta=t*Number(item.speed||1)+Number(item.phase||0);
+    const swing=Math.sin(theta)*Number(item.range||90);
+    return {...item,x:Number(item.anchorX ?? item.x)+swing,y:Number(item.anchorY ?? item.y)+Math.abs(1-Math.cos(theta))*Number(item.range||90)*.22,kind:"pendulum"};
+  });
+  return [...moving,...pendulums];
+}
+
+function getMiniCollisionSurfaces(stage,time=performance.now()){
   return [
     ...(Array.isArray(stage?.terrain) ? stage.terrain.map(item=>({...item,kind:"terrain"})) : []),
     ...(Array.isArray(stage?.platforms) ? stage.platforms.map(item=>({...item,kind:"platform"})) : []),
     ...(Array.isArray(stage?.accelerators) ? stage.accelerators.map(item=>({...item,kind:"accelerator"})) : []),
-    ...(Array.isArray(stage?.decelerators) ? stage.decelerators.map(item=>({...item,kind:"decelerator"})) : [])
+    ...(Array.isArray(stage?.decelerators) ? stage.decelerators.map(item=>({...item,kind:"decelerator"})) : []),
+    ...(Array.isArray(stage?.bouncePlatforms) ? stage.bouncePlatforms.map(item=>({...item,kind:"bounce"})) : []),
+    ...getMiniDynamicBlocks(stage,time)
   ];
 }
 
@@ -9655,7 +10067,12 @@ function hashMiniStage(stage){
     platforms:normalized.platforms,
     hazards:normalized.hazards,
     accelerators:normalized.accelerators,
-    decelerators:normalized.decelerators
+    decelerators:normalized.decelerators,
+    movingPlatforms:normalized.movingPlatforms,
+    pendulums:normalized.pendulums,
+    gravityBlocks:normalized.gravityBlocks,
+    bouncePlatforms:normalized.bouncePlatforms,
+    items:normalized.items
   });
   let hash = 2166136261;
   for(let i=0;i<stable.length;i++){
@@ -9833,7 +10250,11 @@ function isValidMiniRuntimeStage(stage){
     ...(Array.isArray(stage.platforms)?stage.platforms:[]),
     ...(Array.isArray(stage.terrain)?stage.terrain:[]),
     ...(Array.isArray(stage.accelerators)?stage.accelerators:[]),
-    ...(Array.isArray(stage.decelerators)?stage.decelerators:[])
+    ...(Array.isArray(stage.decelerators)?stage.decelerators:[]),
+    ...(Array.isArray(stage.movingPlatforms)?stage.movingPlatforms:[]),
+    ...(Array.isArray(stage.pendulums)?stage.pendulums:[]),
+    ...(Array.isArray(stage.gravityBlocks)?stage.gravityBlocks:[]),
+    ...(Array.isArray(stage.bouncePlatforms)?stage.bouncePlatforms:[])
   ];
   return surfaces.every(item=>Number.isFinite(Number(item.x))&&Number.isFinite(Number(item.y))&&Number(item.w)>0&&Number(item.h)>0);
 }
@@ -9847,6 +10268,78 @@ function chooseRandomFrom(array,previousId=null){
     pick=array[Math.floor(Math.random()*array.length)];
   }
   return pick;
+}
+
+const MINI_FAVORITES_STORAGE_KEY="3Dfps_mini_favorites_v1";
+
+function getMiniFavoriteIds(){
+  try{
+    const parsed=JSON.parse(localStorage.getItem(MINI_FAVORITES_STORAGE_KEY)||"[]");
+    const ids=Array.isArray(parsed)?parsed.map(value=>String(value)):[];
+    if(!ids.includes("1")) ids.push("1");
+    return [...new Set(ids)];
+  }catch(error){
+    return ["1"];
+  }
+}
+
+function saveMiniFavoriteIds(ids){
+  try{localStorage.setItem(MINI_FAVORITES_STORAGE_KEY,JSON.stringify([...new Set(ids.map(value=>String(value)))]));}catch(error){}
+}
+
+function isMiniFavoriteStage(stage){
+  if(!stage) return false;
+  return getMiniFavoriteIds().includes(String(stage.id));
+}
+
+function toggleMiniFavoriteStage(stage){
+  if(!stage) return;
+  const id=String(stage.id);
+  const ids=getMiniFavoriteIds();
+  const index=ids.indexOf(id);
+  if(index>=0){
+    if(id==="1" && !window.confirm("このステージのお気に入りを解除すると、二度と遊べなくなる可能性があります。公式ステージ1のお気に入りを解除する？")) return;
+    ids.splice(index,1);
+    if(id==="1") showMiniActionMessage("ステージ1のお気に入りを解除したよ");
+  }else{
+    ids.push(id);
+    showMiniActionMessage("お気に入りに追加したよ");
+  }
+  saveMiniFavoriteIds(ids);
+}
+
+function getMiniAllPlayableStages(){
+  const stages=[cloneMiniData(MINI_ACTION_STAGES[0])];
+  for(const stage of miniPublicStagesCache){
+    if(!stages.some(item=>String(item.id)===String(stage.id))) stages.push(cloneMiniData(stage));
+  }
+  return stages;
+}
+
+function openMiniFavoritesModal(){
+  miniFavoritesListOpen=true;
+  miniCourseListOpen=false;
+  stopMiniActionGame();
+  renderMiniFavoritesList();
+  setMiniGameVisualMode();
+}
+
+function closeMiniFavoritesModal(){
+  miniFavoritesListOpen=false;
+  setMiniGameVisualMode();
+  if(standaloneMiniMode){
+    miniMode="play";
+    startMiniActionStage(chooseMiniActionStage());
+  }else{
+    ensureMiniPlayMode(true);
+  }
+}
+
+function renderMiniFavoritesList(){
+  if(!miniFavoritesList) return;
+  const ids=getMiniFavoriteIds();
+  const favorites=getMiniAllPlayableStages().filter(stage=>ids.includes(String(stage.id)));
+  miniFavoritesList.innerHTML=favorites.map(stage=>`<button type="button" class="miniFavoriteItem${String(stage.id)==="1"?" stageOne":""}" data-favorite-stage="${escapeHtml(String(stage.id))}">${escapeHtml(stage.name)}${String(stage.id)==="1"?" · 公式":""}<span class="miniFavoriteItemMeta">${stageLabelPrefix(stage)}</span></button>`).join("")||'<div style="font-size:11px;opacity:.55;padding:12px">まだお気に入りがないよ。</div>';
 }
 
 function chooseMiniActionStage(){
@@ -9993,6 +10486,8 @@ function setMiniGameVisualMode(){
   miniGameBox.classList.toggle("miniEditorMode",miniMode==="make"&&!miniEditorTestMode);
   miniGameBox.classList.toggle("miniTestMode",miniEditorTestMode);
   miniGameBox.classList.toggle("courseListMode",miniCourseListOpen);
+  miniGameBox.classList.toggle("favoriteListMode",miniFavoritesListOpen);
+  if(miniFavoritesModal) miniFavoritesModal.setAttribute("aria-hidden",String(!miniFavoritesListOpen));
 }
 
 function startMiniActionStage(stage=chooseMiniActionStage()){
@@ -10013,6 +10508,10 @@ function startMiniActionStage(stage=chooseMiniActionStage()){
     coyote:0,
     jumpBuffer:0,
     speedMultiplier:1,
+    gravity:1,
+    gravityFlipCooldown:0,
+    inventory:{doubleJump:false},
+    doubleJumpAvailable:false,
     startTime:performance.now(),
     elapsed:0,
     flashUntil:0,
@@ -10183,6 +10682,10 @@ function resetMiniActionStage(message="",randomizeStage=false){
   miniActionState.coyote=0;
   miniActionState.jumpBuffer=0;
   miniActionState.speedMultiplier=1;
+  miniActionState.gravity=1;
+  miniActionState.gravityFlipCooldown=0;
+  miniActionState.inventory={doubleJump:false};
+  miniActionState.doubleJumpAvailable=false;
   miniActionState.startTime=performance.now();
   miniActionState.elapsed=0;
   miniActionState.clearPending=false;
@@ -10283,7 +10786,12 @@ function getMiniEditorTarget(course,x,y){
     ["platform",stage.platforms],
     ["terrain",stage.terrain],
     ["accelerator",stage.accelerators],
-    ["decelerator",stage.decelerators]
+    ["decelerator",stage.decelerators],
+    ["moving",stage.movingPlatforms],
+    ["pendulum",stage.pendulums],
+    ["gravity",stage.gravityBlocks],
+    ["bounce",stage.bouncePlatforms],
+    ["item",stage.items]
   ];
   for(const [type,list] of lists){
     for(let i=list.length-1;i>=0;i--){
@@ -10300,7 +10808,12 @@ function removeMiniEditorTarget(course,target){
     target.type==="terrain"?course.stage.terrain:
     target.type==="hazard"?course.stage.hazards:
     target.type==="accelerator"?course.stage.accelerators:
-    course.stage.decelerators;
+    target.type==="decelerator"?course.stage.decelerators:
+    target.type==="moving"?course.stage.movingPlatforms:
+    target.type==="pendulum"?course.stage.pendulums:
+    target.type==="gravity"?course.stage.gravityBlocks:
+    target.type==="bounce"?course.stage.bouncePlatforms:
+    course.stage.items;
   if(Array.isArray(list)) list.splice(target.index,1);
 }
 
@@ -10342,6 +10855,33 @@ function placeMiniEditorTool(course,x,y){
       course.stage.terrain=course.stage.terrain.filter(block=>!(block.x===item.x&&block.y===item.y));
       list.push(item);
     }
+  }else if(tool==="moving"){
+    const exists=course.stage.movingPlatforms.some(block=>Math.round(block.baseX)===clampCellX&&Math.round(block.baseY)===clampCellY);
+    if(!exists){
+      const rangeInput=window.prompt("移動足場の移動幅(px)","100");
+      const speedInput=window.prompt("移動速度（1が標準）","1.2");
+      const range=Math.max(20,Math.min(280,Number(rangeInput)||100));
+      const speed=Math.max(.2,Math.min(4,Number(speedInput)||1.2));
+      course.stage.movingPlatforms.push({x:clampCellX,y:clampCellY,w:60,h:20,baseX:clampCellX,baseY:clampCellY,range,speed,phase:0});
+    }
+  }else if(tool==="pendulum"){
+    const exists=course.stage.pendulums.some(block=>Math.round(block.anchorX)===clampCellX&&Math.round(block.anchorY)===clampCellY);
+    if(!exists){
+      const rangeInput=window.prompt("振り子の振れ幅(px)","90");
+      const speedInput=window.prompt("振り子の速度（1が標準）","1");
+      const range=Math.max(20,Math.min(280,Number(rangeInput)||90));
+      const speed=Math.max(.2,Math.min(4,Number(speedInput)||1));
+      course.stage.pendulums.push({x:clampCellX,y:clampCellY,w:60,h:20,anchorX:clampCellX,anchorY:clampCellY,range,speed,phase:0});
+    }
+  }else if(tool==="gravity"){
+    const item={x:clampCellX,y:clampCellY,w:cell,h:cell};
+    if(!course.stage.gravityBlocks.some(block=>block.x===item.x&&block.y===item.y)) course.stage.gravityBlocks.push(item);
+  }else if(tool==="bounce"){
+    const item={x:clampCellX,y:clampCellY,w:cell,h:cell};
+    if(!course.stage.bouncePlatforms.some(block=>block.x===item.x&&block.y===item.y)) course.stage.bouncePlatforms.push(item);
+  }else if(tool==="item"){
+    const item={x:clampCellX,y:clampCellY,w:cell,h:cell,type:"doubleJump"};
+    if(!course.stage.items.some(block=>block.x===item.x&&block.y===item.y)) course.stage.items.push(item);
   }
 }
 
@@ -10361,12 +10901,20 @@ function moveMiniEditorTarget(course,target,x,y){
     target.type==="terrain"?course.stage.terrain:
     target.type==="hazard"?course.stage.hazards:
     target.type==="accelerator"?course.stage.accelerators:
-    course.stage.decelerators;
+    target.type==="decelerator"?course.stage.decelerators:
+    target.type==="moving"?course.stage.movingPlatforms:
+    target.type==="pendulum"?course.stage.pendulums:
+    target.type==="gravity"?course.stage.gravityBlocks:
+    target.type==="bounce"?course.stage.bouncePlatforms:
+    course.stage.items;
   const item=list[target.index];
   if(!item) return;
-  item.x=Math.max(0,Math.min(MINI_EDITOR_WORLD_WIDTH-item.w,sx));
-  item.y=Math.max(0,Math.min(248-item.h,sy));
+  const nx=Math.max(0,Math.min(MINI_EDITOR_WORLD_WIDTH-(Number(item.w)||20),sx));
+  const ny=Math.max(0,Math.min(248-(Number(item.h)||20),sy));
+  item.x=nx; item.y=ny;
   if(target.type==="terrain") item.h=Math.max(MINI_EDITOR_GRID,260-item.y);
+  if(target.type==="moving"){ item.baseX=nx; item.baseY=ny; }
+  if(target.type==="pendulum"){ item.anchorX=nx; item.anchorY=ny; }
 }
 
 function drawMiniEditor(){
@@ -10444,6 +10992,31 @@ function drawMiniEditor(){
     ctx.beginPath();
     ctx.moveTo(item.x+5,item.y+7);ctx.lineTo(item.x+10,item.y+13);ctx.lineTo(item.x+15,item.y+7);ctx.closePath();ctx.fill();
   }
+  for(const item of stage.bouncePlatforms){
+    ctx.fillStyle="rgba(58,120,180,.92)";
+    ctx.fillRect(item.x,item.y,item.w,item.h);
+    ctx.strokeStyle="rgba(130,220,255,.95)";ctx.strokeRect(item.x+.5,item.y+.5,item.w-1,item.h-1);
+    ctx.strokeStyle="rgba(255,255,255,.9)";ctx.lineWidth=1.2;
+    ctx.beginPath();ctx.moveTo(item.x+4,item.y+14);ctx.lineTo(item.x+10,item.y+6);ctx.lineTo(item.x+16,item.y+14);ctx.stroke();
+  }
+  for(const item of stage.movingPlatforms){
+    ctx.fillStyle="rgba(61,121,179,.92)";ctx.fillRect(item.baseX,item.baseY,item.w,item.h);
+    ctx.strokeStyle="rgba(122,203,255,.9)";ctx.strokeRect(item.baseX+.5,item.baseY+.5,item.w-1,item.h-1);
+    ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(item.baseX-item.range,item.baseY+item.h/2);ctx.lineTo(item.baseX+item.range+item.w,item.baseY+item.h/2);ctx.stroke();ctx.setLineDash([]);
+  }
+  for(const item of stage.pendulums){
+    ctx.strokeStyle="rgba(207,180,255,.72)";ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(item.anchorX,item.anchorY);ctx.lineTo(item.anchorX+item.range,item.anchorY);ctx.stroke();
+    ctx.fillStyle="rgba(171,121,255,.92)";ctx.fillRect(item.anchorX,item.anchorY,item.w,item.h);
+  }
+  for(const item of stage.gravityBlocks){
+    ctx.fillStyle="rgba(188,86,255,.88)";ctx.fillRect(item.x,item.y,item.w,item.h);
+    ctx.strokeStyle="rgba(232,176,255,.95)";ctx.strokeRect(item.x+.5,item.y+.5,item.w-1,item.h-1);
+    ctx.fillStyle="#fff";ctx.font="bold 13px Arial";ctx.textAlign="center";ctx.fillText(item.y<130?"↓":"↑",item.x+item.w/2,item.y+15);ctx.textAlign="left";
+  }
+  for(const item of stage.items){
+    ctx.fillStyle="rgba(255,214,70,.95)";ctx.beginPath();ctx.arc(item.x+item.w/2,item.y+item.h/2,7,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#fff6bc";ctx.font="bold 9px Arial";ctx.textAlign="center";ctx.fillText("+",item.x+item.w/2,item.y+item.h/2+3);ctx.textAlign="left";
+  }
   for(const item of stage.hazards){
     ctx.fillStyle="#8e3e70";
     ctx.beginPath();ctx.moveTo(item.x,item.y+item.h);ctx.lineTo(item.x+item.w/2,item.y);ctx.lineTo(item.x+item.w,item.y+item.h);ctx.closePath();ctx.fill();
@@ -10475,7 +11048,12 @@ function drawMiniEditor(){
         target.type==="terrain"?stage.terrain:
         target.type==="hazard"?stage.hazards:
         target.type==="accelerator"?stage.accelerators:
-        stage.decelerators;
+        target.type==="decelerator"?stage.decelerators:
+        target.type==="moving"?stage.movingPlatforms:
+        target.type==="pendulum"?stage.pendulums:
+        target.type==="gravity"?stage.gravityBlocks:
+        target.type==="bounce"?stage.bouncePlatforms:
+        stage.items;
       const item=list[target.index];
       if(item) ctx.strokeRect(item.x-3,item.y-3,item.w+6,item.h+6);
     }
@@ -10557,6 +11135,26 @@ function drawMiniActionGame(){
     ctx.fillStyle="rgba(255,239,224,.95)";
     ctx.beginPath();ctx.moveTo(block.x+5,block.y+7);ctx.lineTo(block.x+10,block.y+13);ctx.lineTo(block.x+15,block.y+7);ctx.closePath();ctx.fill();
   }
+  for(const block of stage.bouncePlatforms||[]){
+    ctx.fillStyle="rgba(58,120,180,.9)";ctx.fillRect(block.x,block.y,block.w,block.h);
+    ctx.strokeStyle="rgba(132,218,255,.9)";ctx.strokeRect(block.x+.5,block.y+.5,block.w-1,block.h-1);
+    ctx.strokeStyle="rgba(255,255,255,.88)";ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(block.x+4,block.y+14);ctx.lineTo(block.x+10,block.y+6);ctx.lineTo(block.x+16,block.y+14);ctx.stroke();
+  }
+  for(const block of getMiniDynamicBlocks(stage,performance.now())){
+    ctx.fillStyle=block.kind==="pendulum"?"rgba(171,121,255,.92)":"rgba(61,121,179,.92)";
+    ctx.fillRect(block.x,block.y,block.w,block.h);
+    ctx.strokeStyle=block.kind==="pendulum"?"rgba(232,202,255,.92)":"rgba(122,203,255,.92)";ctx.strokeRect(block.x+.5,block.y+.5,block.w-1,block.h-1);
+    if(block.kind==="pendulum"){ctx.strokeStyle="rgba(215,190,255,.72)";ctx.beginPath();ctx.moveTo(block.anchorX,block.anchorY);ctx.lineTo(block.x+block.w/2,block.y);ctx.stroke();}
+  }
+  for(const block of stage.gravityBlocks||[]){
+    ctx.fillStyle="rgba(188,86,255,.9)";ctx.fillRect(block.x,block.y,block.w,block.h);
+    ctx.strokeStyle="rgba(232,176,255,.95)";ctx.strokeRect(block.x+.5,block.y+.5,block.w-1,block.h-1);
+    ctx.fillStyle="#fff";ctx.font="bold 13px Arial";ctx.textAlign="center";ctx.fillText(block.y<130?"↓":"↑",block.x+block.w/2,block.y+15);ctx.textAlign="left";
+  }
+  for(const item of stage.items||[]){
+    ctx.fillStyle="rgba(255,214,70,.96)";ctx.beginPath();ctx.arc(item.x+item.w/2,item.y+item.h/2,7,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#fff6bc";ctx.font="bold 9px Arial";ctx.textAlign="center";ctx.fillText("+",item.x+item.w/2,item.y+item.h/2+3);ctx.textAlign="left";
+  }
 
   for(const hazard of stage.hazards||[]){
     ctx.fillStyle="#7f335f";
@@ -10576,11 +11174,17 @@ function drawMiniActionGame(){
 
   const p=miniActionState;
   const playerGrad=ctx.createLinearGradient(p.x,p.y,p.x,p.y+p.height);
-  playerGrad.addColorStop(0,"#e7f4ff");
-  playerGrad.addColorStop(.28,"#79c9ff");
-  playerGrad.addColorStop(1,"#3b5bff");
+  const pc=getPlayerColorHex();
+  const pcRgb=hexToRgb(pc);
+  playerGrad.addColorStop(0,"#ffffff");
+  playerGrad.addColorStop(.28,pc);
+  playerGrad.addColorStop(1,`rgb(${Math.round(pcRgb.r*.65)},${Math.round(pcRgb.g*.65)},${Math.round(pcRgb.b*.65)})`);
   ctx.fillStyle=playerGrad;ctx.fillRect(p.x,p.y,p.width,p.height);
   ctx.fillStyle="rgba(7,22,41,.9)";ctx.fillRect(p.x+3,p.y+5,p.width-6,5);
+  if(p.inventory?.doubleJump){
+    ctx.fillStyle="rgba(255,214,70,.95)";ctx.beginPath();ctx.arc(camera+674,28,12,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#111";ctx.font="bold 8px Arial";ctx.textAlign="center";ctx.fillText("DJ",camera+674,31);ctx.textAlign="left";
+  }
   ctx.restore();
 
   if(miniActionState.flashUntil>performance.now()){
@@ -10687,13 +11291,22 @@ function miniMenuSetOptions(){
   if(!miniMenuOptions) return [];
   let options=[];
   if(miniMode==="play"){
-    options=[{label:"リセット",action:"reset"},{label:"作る",action:"make"}];
+    const favorite=isMiniFavoriteStage(miniActionState?.stage);
+    options=[
+      {label:favorite?"お気に入り解除":"お気に入り",action:"favorite"},
+      {label:"お気に入り一覧",action:"favorites"},
+      {label:"リセット",action:"reset"},
+      {label:"次のステージ",action:"next"},
+      {label:"作る",action:"make"}
+    ];
+    if(standaloneMiniMode) options.push({label:"終了",action:"standaloneExit"});
   }else{
     options=[
       {label:miniEditorTestMode?"テストプレイを終了":"テストプレイ",action:miniEditorTestMode?"testExit":"test"},
       {label:"コース一覧",action:"list"},
       {label:"遊ぶ",action:"play"}
     ];
+    if(standaloneMiniMode) options.push({label:"終了",action:"standaloneExit"});
   }
   miniMenuOptions.innerHTML=options.map((option,index)=>`<button class="miniMenuOption" type="button" data-index="${index}">${escapeHtml(option.label)}</button>`).join("");
   miniMenuOptionsCache=options;
@@ -10740,8 +11353,22 @@ function miniMenuPickAt(clientX,clientY){
 }
 
 async function miniMenuExecute(action){
+  if(action==="favorite"){
+    toggleMiniFavoriteStage(miniActionState?.stage);
+    miniMenuSetOptions();
+    return;
+  }
+  if(action==="favorites"){
+    openMiniFavoritesModal();
+    return;
+  }
   if(action==="reset"){
-    if(miniActionState?.active) resetMiniActionStage("RESET",true);
+    if(miniActionState?.active) resetMiniActionStage("RESET",false);
+    else ensureMiniPlayMode(true);
+    return;
+  }
+  if(action==="next"){
+    if(miniActionState?.active) startMiniActionStage(chooseMiniActionStage());
     else ensureMiniPlayMode(true);
     return;
   }
@@ -10763,7 +11390,137 @@ async function miniMenuExecute(action){
   }
   if(action==="play"){
     ensureMiniPlayMode(true);
+    return;
   }
+  if(action==="standaloneExit"){
+    exitStandaloneMiniGame();
+  }
+}
+
+function otherMenuSetOptions(){
+  if(!otherMenuOptions) return [];
+  const options=[{label:"設定",action:"settings"},{label:"ミニゲーム",action:"mini"}];
+  otherMenuOptions.innerHTML=options.map((option,index)=>`<button class="otherMenuOption" type="button" data-index="${index}">${escapeHtml(option.label)}</button>`).join("");
+  otherMenuOptionsCache=options;
+  otherMenuSelectedIndex=-1;
+  return options;
+}
+
+function otherMenuClose(){
+  otherMenuOpen=false;
+  otherMenuSelectedIndex=-1;
+  if(otherMenuOptions){
+    otherMenuOptions.classList.remove("show");
+    otherMenuOptions.setAttribute("aria-hidden","true");
+    otherMenuOptions.querySelectorAll(".otherMenuOption").forEach(button=>button.classList.remove("active"));
+  }
+  otherMenuPointerId=null;
+}
+
+function otherMenuOpenNow(){
+  otherMenuSetOptions();
+  otherMenuOpen=true;
+  if(otherMenuOptions){
+    otherMenuOptions.classList.add("show");
+    otherMenuOptions.setAttribute("aria-hidden","false");
+  }
+}
+
+function otherMenuPickAt(clientX,clientY){
+  if(!otherMenuOpen||!otherMenuOptions) return -1;
+  const buttons=[...otherMenuOptions.querySelectorAll(".otherMenuOption")];
+  let found=-1;
+  buttons.forEach((button,index)=>{
+    const rect=button.getBoundingClientRect();
+    const inside=clientX>=rect.left&&clientX<=rect.right&&clientY>=rect.top&&clientY<=rect.bottom;
+    button.classList.toggle("active",inside);
+    if(inside) found=index;
+  });
+  otherMenuSelectedIndex=found;
+  return found;
+}
+
+async function otherMenuExecute(action){
+  if(action==="settings"){
+    openPlayerSettings();
+    return;
+  }
+  if(action==="mini"){
+    openStandaloneMiniGame();
+  }
+}
+
+function setupOtherMenu(){
+  if(!otherMenuButton||!otherMenuOptions) return;
+  const release=async event=>{
+    if(event.pointerId!==otherMenuPointerId) return;
+    event.preventDefault();
+    const index=otherMenuOpen?otherMenuPickAt(event.clientX,event.clientY):-1;
+    const action=index>=0&&otherMenuOptionsCache[index]?otherMenuOptionsCache[index].action:null;
+    otherMenuClose();
+    if(action) await otherMenuExecute(action);
+  };
+  otherMenuButton.addEventListener("pointerdown",event=>{
+    event.preventDefault();
+    otherMenuPointerId=event.pointerId;
+    otherMenuOpenNow();
+    otherMenuPickAt(event.clientX,event.clientY);
+    try{otherMenuButton.setPointerCapture(event.pointerId);}catch(error){}
+  },{passive:false});
+  otherMenuButton.addEventListener("pointermove",event=>{
+    if(event.pointerId!==otherMenuPointerId||!otherMenuOpen) return;
+    event.preventDefault();
+    otherMenuPickAt(event.clientX,event.clientY);
+  },{passive:false});
+  otherMenuButton.addEventListener("pointerup",release,{passive:false});
+  otherMenuButton.addEventListener("pointercancel",event=>{
+    if(event.pointerId!==otherMenuPointerId) return;
+    event.preventDefault();otherMenuClose();
+  },{passive:false});
+  window.addEventListener("pointerup",event=>{
+    if(otherMenuPointerId===null||event.pointerId!==otherMenuPointerId) return;
+    event.preventDefault();
+    const index=otherMenuOpen?otherMenuPickAt(event.clientX,event.clientY):-1;
+    const action=index>=0&&otherMenuOptionsCache[index]?otherMenuOptionsCache[index].action:null;
+    otherMenuClose();
+    if(action) otherMenuExecute(action);
+  },{passive:false,capture:true});
+  window.addEventListener("blur",otherMenuClose);
+}
+
+function openStandaloneMiniGame(){
+  standaloneMiniMode=true;
+  otherMenuClose();
+  menu.style.display="none";
+  if(playerSettingsModal) playerSettingsModal.style.display="none";
+  if(roomMatchModal) roomMatchModal.style.display="none";
+  hidePreMatchScreens();
+  matchType="standalone";
+  latestMatchData=null;
+  miniCourseListOpen=false;
+  miniFavoritesListOpen=false;
+  miniEditorTestMode=false;
+  miniMode="play";
+  matchingScreen.classList.add("standaloneMiniMode");
+  matchingScreen.style.display="flex";
+  setMiniGameVisualMode();
+  stopMiniActionGame();
+  startMiniActionStage(chooseMiniActionStage());
+  loadMiniPublicStages().then(()=>{
+    if(standaloneMiniMode&&miniActionState?.active) startMiniActionStage(chooseMiniActionStage());
+  });
+}
+
+function exitStandaloneMiniGame(){
+  standaloneMiniMode=false;
+  miniFavoritesListOpen=false;
+  miniCourseListOpen=false;
+  stopMiniActionGame();
+  matchingScreen.classList.remove("standaloneMiniMode");
+  matchingScreen.style.display="none";
+  menu.style.display="flex";
+  setMiniGameVisualMode();
+  saveMiniViewState();
 }
 
 function setupMiniMenu(){
@@ -10810,104 +11567,6 @@ function setupMiniMenu(){
     if(action) miniMenuExecute(action);
   },{passive:false,capture:true});
   window.addEventListener("blur",()=>miniMenuClose());
-}
-
-function otherMenuSetOptions(){
-  if(!otherMenuOptions) return [];
-  const options=[
-    {label:"設定",action:"settings"},
-    {label:"ミニゲーム",action:"miniGame"}
-  ];
-  otherMenuOptions.innerHTML=options.map((option,index)=>`<button class="otherMenuOption" type="button" data-index="${index}">${escapeHtml(option.label)}</button>`).join("");
-  otherMenuOptionsCache=options;
-  otherMenuSelectedIndex=-1;
-  return options;
-}
-
-function otherMenuClose(){
-  otherMenuOpen=false;
-  otherMenuSelectedIndex=-1;
-  if(otherMenuOptions){
-    otherMenuOptions.classList.remove("show");
-    otherMenuOptions.style.display="none";
-    otherMenuOptions.setAttribute("aria-hidden","true");
-    otherMenuOptions.querySelectorAll(".otherMenuOption").forEach(button=>button.classList.remove("active"));
-  }
-  otherMenuPointerId=null;
-}
-
-function otherMenuOpenNow(){
-  otherMenuSetOptions();
-  otherMenuOpen=true;
-  if(otherMenuOptions){
-    otherMenuOptions.classList.add("show");
-    otherMenuOptions.style.display="flex";
-    otherMenuOptions.setAttribute("aria-hidden","false");
-  }
-}
-
-function otherMenuPickAt(clientX,clientY){
-  if(!otherMenuOpen||!otherMenuOptions) return -1;
-  const buttons=[...otherMenuOptions.querySelectorAll(".otherMenuOption")];
-  let found=-1;
-  buttons.forEach((button,index)=>{
-    const rect=button.getBoundingClientRect();
-    const inside=clientX>=rect.left&&clientX<=rect.right&&clientY>=rect.top&&clientY<=rect.bottom;
-    button.classList.toggle("active",inside);
-    if(inside) found=index;
-  });
-  otherMenuSelectedIndex=found;
-  return found;
-}
-
-async function otherMenuExecute(action){
-  if(action==="settings") openPlayerSettings();
-  else if(action==="miniGame") await startRandomMatch();
-}
-
-function setupOtherMenu(){
-  if(!otherMenuButton||!otherMenuOptions) return;
-
-  otherMenuButton.addEventListener("pointerdown",event=>{
-    event.preventDefault();
-    otherMenuPointerId=event.pointerId;
-    otherMenuOpenNow();
-    otherMenuPickAt(event.clientX,event.clientY);
-    try{otherMenuButton.setPointerCapture(event.pointerId);}catch(error){}
-  },{passive:false});
-
-  otherMenuButton.addEventListener("pointermove",event=>{
-    if(event.pointerId!==otherMenuPointerId||!otherMenuOpen) return;
-    event.preventDefault();
-    otherMenuPickAt(event.clientX,event.clientY);
-  },{passive:false});
-
-  const release=async event=>{
-    if(event.pointerId!==otherMenuPointerId) return;
-    event.preventDefault();
-    const index=otherMenuOpen?otherMenuPickAt(event.clientX,event.clientY):-1;
-    const action=index>=0&&otherMenuOptionsCache[index]?otherMenuOptionsCache[index].action:null;
-    otherMenuClose();
-    if(action) await otherMenuExecute(action);
-  };
-
-  otherMenuButton.addEventListener("pointerup",release,{passive:false});
-  otherMenuButton.addEventListener("pointercancel",event=>{
-    if(event.pointerId!==otherMenuPointerId) return;
-    event.preventDefault();
-    otherMenuClose();
-  },{passive:false});
-
-  window.addEventListener("pointerup",event=>{
-    if(otherMenuPointerId===null||event.pointerId!==otherMenuPointerId) return;
-    event.preventDefault();
-    const index=otherMenuOpen?otherMenuPickAt(event.clientX,event.clientY):-1;
-    const action=index>=0&&otherMenuOptionsCache[index]?otherMenuOptionsCache[index].action:null;
-    otherMenuClose();
-    if(action) otherMenuExecute(action);
-  },{passive:false,capture:true});
-
-  window.addEventListener("blur",()=>otherMenuClose());
 }
 
 function selectMiniEditorTool(tool){
@@ -11035,7 +11694,7 @@ function renderMiniCourseList(){
     return `<div class="miniCourseItem${current?" current":""}>`+
       `<div class="miniCourseItemMain" data-course-id="${escapeHtml(course.id)}">`+
       `<div class="miniCourseItemName">${escapeHtml(course.name)}${verified?'<span class="miniCourseVerified">✓</span>':''}</div>`+
-      `<div class="miniCourseItemMeta">${course.stage.platforms.length+course.stage.terrain.length+course.stage.hazards.length+course.stage.accelerators.length+course.stage.decelerators.length} ブロック</div>`+
+      `<div class="miniCourseItemMeta">${course.stage.platforms.length+course.stage.terrain.length+course.stage.hazards.length+course.stage.accelerators.length+course.stage.decelerators.length+course.stage.movingPlatforms.length+course.stage.pendulums.length+course.stage.gravityBlocks.length+course.stage.bouncePlatforms.length+course.stage.items.length} ブロック</div>`+
       `</div>`+
       `<div class="miniCourseItemActions">`+
       `<button type="button" data-course-rename="${escapeHtml(course.id)}">名前変更</button>`+
@@ -11135,6 +11794,19 @@ async function publishCurrentMiniCourse(){
   }
 }
 
+if(miniFavoritesClose) miniFavoritesClose.addEventListener("click",closeMiniFavoritesModal);
+if(miniFavoritesList) miniFavoritesList.addEventListener("click",event=>{
+  const button=event.target.closest?.("[data-favorite-stage]");
+  if(!button) return;
+  const id=button.dataset.favoriteStage;
+  const stage=getMiniAllPlayableStages().find(item=>String(item.id)===String(id));
+  if(!stage) return;
+  miniFavoritesListOpen=false;
+  miniMode="play";
+  setMiniGameVisualMode();
+  startMiniActionStage(stage);
+});
+
 if(miniCourseListClose) miniCourseListClose.addEventListener("click",closeMiniCourseListModal);
 if(miniCourseListDrafts) miniCourseListDrafts.addEventListener("click",async event=>{
   const main=event.target.closest?.("[data-course-id]");
@@ -11225,10 +11897,7 @@ function updateMiniActionGame(delta,time){
   const state=miniActionState;
   const stage=state.stage;
   const clampedDelta=Math.min(.035,Math.max(.001,delta));
-  if(state.clearPending){
-    drawMiniActionGame();
-    return;
-  }
+  if(state.clearPending){ drawMiniActionGame(); return; }
 
   if(miniEditorTestMode) updateMiniEditorTestTimer();
 
@@ -11253,31 +11922,39 @@ function updateMiniActionGame(delta,time){
   if(state.onGround) state.coyote=.1;
   else state.coyote=Math.max(0,state.coyote-clampedDelta);
 
-  if(state.jumpBuffer>0&&state.coyote>0){
-    state.vy=-455;
-    state.onGround=false;
-    state.coyote=0;
-    state.jumpBuffer=0;
+  const jumpSpeed=455;
+  if(state.jumpBuffer>0){
+    if(state.coyote>0){
+      state.vy=-state.gravity*jumpSpeed;
+      state.onGround=false;
+      state.coyote=0;
+      state.jumpBuffer=0;
+    }else if(state.doubleJumpAvailable){
+      state.vy=-state.gravity*jumpSpeed;
+      state.doubleJumpAvailable=false;
+      state.jumpBuffer=0;
+    }
   }
 
-  const previousBottom=state.y+state.height;
   const previousX=state.x;
+  const previousTop=state.y;
+  const previousBottom=state.y+state.height;
   state.x+=state.vx*clampedDelta;
   state.x=Math.max(0,Math.min(stage.worldWidth-state.width,state.x));
-  state.vy+=1180*clampedDelta;
+  state.vy+=1180*state.gravity*clampedDelta;
   state.y+=state.vy*clampedDelta;
   state.onGround=false;
 
   let landedSurface=null;
-  for(const surface of getMiniCollisionSurfaces(stage)){
+  const surfaces=getMiniCollisionSurfaces(stage,time);
+  for(const surface of surfaces){
     const horizontalOverlap=state.x+state.width>surface.x&&state.x<surface.x+surface.w;
     if(!horizontalOverlap) continue;
-    if(state.vy>=0&&previousBottom<=surface.y+5&&state.y+state.height>=surface.y){
-      state.y=surface.y-state.height;
-      state.vy=0;
-      state.onGround=true;
-      landedSurface=surface;
-      break;
+    if(state.gravity>0 && state.vy>=0 && previousBottom<=surface.y+6 && state.y+state.height>=surface.y){
+      state.y=surface.y-state.height; state.vy=0; state.onGround=true; landedSurface=surface; break;
+    }
+    if(state.gravity<0 && state.vy<=0 && previousTop>=surface.y+surface.h-6 && state.y<=surface.y+surface.h){
+      state.y=surface.y+surface.h; state.vy=0; state.onGround=true; landedSurface=surface; break;
     }
   }
 
@@ -11285,29 +11962,53 @@ function updateMiniActionGame(delta,time){
     if(landedSurface.kind==="accelerator") state.speedMultiplier=MINI_ACCEL_MULTIPLIER;
     else if(landedSurface.kind==="decelerator") state.speedMultiplier=MINI_DECEL_MULTIPLIER;
     else state.speedMultiplier=1;
+    if(landedSurface.kind==="bounce") state.vy=-state.gravity*560;
+    if(state.inventory.doubleJump) state.doubleJumpAvailable=true;
   }
 
   if(state.x<previousX&&state.vx>0) state.vx=0;
 
-  for(const hazard of stage.hazards||[]){
-    const hitRect={x:state.x,y:state.y,width:state.width,height:state.height};
-    if(miniActionRectHit(hitRect,hazard)){
-      if(miniEditorTestMode){
-        restartMiniEditorTest("TRY AGAIN!");
-      }else{
-        resetMiniActionStage("TRY AGAIN!",true);
+  state.gravityFlipCooldown=Math.max(0,state.gravityFlipCooldown-clampedDelta);
+  const playerRect={x:state.x,y:state.y,width:state.width,height:state.height};
+
+  if(state.gravityFlipCooldown<=0){
+    for(const block of stage.gravityBlocks||[]){
+      if(miniActionRectHit(playerRect,block)){
+        state.gravity*=-1;
+        state.y=260-state.y-state.height;
+        state.vy=0;
+        state.onGround=false;
+        state.coyote=0;
+        state.gravityFlipCooldown=.35;
+        break;
       }
+    }
+  }
+
+  for(let i=(stage.items||[]).length-1;i>=0;i--){
+    const item=stage.items[i];
+    if(miniActionRectHit(playerRect,item)){
+      if(String(item.type||"doubleJump")==="doubleJump"){
+        state.inventory.doubleJump=true;
+        state.doubleJumpAvailable=true;
+      }
+      stage.items.splice(i,1);
+      showMiniActionMessage("ITEM GET!");
+    }
+  }
+
+  for(const hazard of stage.hazards||[]){
+    if(miniActionRectHit(playerRect,hazard)){
+      if(miniEditorTestMode) restartMiniEditorTest("TRY AGAIN!");
+      else resetMiniActionStage("TRY AGAIN!",false);
       drawMiniActionGame();
       return;
     }
   }
 
-  if(state.y>290){
-    if(miniEditorTestMode){
-      restartMiniEditorTest("MISS!");
-    }else{
-      resetMiniActionStage("MISS!",true);
-    }
+  if(state.y>300||state.y+state.height< -30){
+    if(miniEditorTestMode) restartMiniEditorTest("MISS!");
+    else resetMiniActionStage("MISS!",false);
     drawMiniActionGame();
     return;
   }
@@ -11315,7 +12016,9 @@ function updateMiniActionGame(delta,time){
   const goalHitX=state.x+state.width>=stage.goalX;
   const playerTop=state.y;
   const playerBottom=state.y+state.height;
-  const goalHitY=playerBottom>=stage.goalY-52&&playerTop<=stage.goalY+18;
+  const goalHitY=state.gravity>0
+    ? playerBottom>=stage.goalY-52&&playerTop<=stage.goalY+18
+    : playerTop<=stage.goalY+52&&playerBottom>=stage.goalY-18;
   if(goalHitX&&goalHitY){
     state.elapsed=(performance.now()-state.startTime)/1000;
     completeMiniActionStage();
@@ -11342,9 +12045,10 @@ function drawMiniActionRemotePlayers(ctx,stage,camera,now){
     const width=16;
     const height=22;
     const playerGrad=ctx.createLinearGradient(x,y,x,y+height);
+    const rgb=hexToRgb(player?.color||"#4da3ff");
     playerGrad.addColorStop(0,"#ffffff");
-    playerGrad.addColorStop(.28,"#79c9ff");
-    playerGrad.addColorStop(1,"#3b5bff");
+    playerGrad.addColorStop(.28,normalizePlayerColor(player?.color));
+    playerGrad.addColorStop(1,`rgb(${Math.round(rgb.r*.65)},${Math.round(rgb.g*.65)},${Math.round(rgb.b*.65)})`);
     ctx.save();
     ctx.globalAlpha=alpha;
     ctx.fillStyle=playerGrad;
@@ -11355,9 +12059,9 @@ function drawMiniActionRemotePlayers(ctx,stage,camera,now){
   }
 }
 
+setupOtherMenu();
 setupMiniActionTouchControls();
 setupMiniMenu();
-setupOtherMenu();
 setupMiniEditorControls();
 loadMiniViewState();
 loadMiniRecentTools();
@@ -11418,6 +12122,32 @@ playerSettingsButton.addEventListener(
   "click",
   openPlayerSettings
 );
+
+if(playerColorInput){
+  playerColorInput.addEventListener("input",()=>{
+    playerSettings.color=normalizePlayerColor(playerColorInput.value);
+    if(playerColorHexInput) playerColorHexInput.value=playerSettings.color;
+    savePlayerSettings();
+    applyPlayerControlPositions();
+  });
+}
+
+if(playerColorHexInput){
+  playerColorHexInput.addEventListener("input",()=>{
+    const value=String(playerColorHexInput.value||"").trim();
+    if(/^#[0-9a-fA-F]{6}$/.test(value)||/^#[0-9a-fA-F]{3}$/.test(value)){
+      playerSettings.color=normalizePlayerColor(value);
+      if(playerColorInput) playerColorInput.value=playerSettings.color;
+      savePlayerSettings();
+    }
+  });
+  playerColorHexInput.addEventListener("blur",()=>{
+    playerSettings.color=normalizePlayerColor(playerColorHexInput.value);
+    playerColorHexInput.value=playerSettings.color;
+    if(playerColorInput) playerColorInput.value=playerSettings.color;
+    savePlayerSettings();
+  });
+}
 
 closePlayerSettingsButton.addEventListener(
   "click",
