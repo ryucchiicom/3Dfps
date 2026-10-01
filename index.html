@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.11.0. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.9.1 changes; Release 1.9.3 adds persistent mini-action course creation/testing/publishing and mini-game menus: fixed portrait mini-action rendering so the game keeps its native aspect ratio instead of vertically stretching, and changed floating terrain so only some terrain platforms float while adding extra vertical height variation. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
+<!-- GPT VERSION TRACKER: 3Dfps HTML. Current version 1.11.1. Future GPT edits must update this tracker whenever the version changes and keep it invisible to players. Release 1.9.1 changes; Release 1.9.3 adds persistent mini-action course creation/testing/publishing and mini-game menus: fixed portrait mini-action rendering so the game keeps its native aspect ratio instead of vertically stretching, and changed floating terrain so only some terrain platforms float while adding extra vertical height variation. Previous release changes and exact legacy notes remain in the source history below this tracker. -->
 <title>3Dfps</title>
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
@@ -152,6 +152,8 @@ canvas{
 }
 
 #otherMenuButton{
+  outline:none;
+  -webkit-focus-ring-color:transparent;
   width:100%;
   height:40px;
   border:1px solid rgba(255,255,255,.13);
@@ -187,6 +189,8 @@ canvas{
 }
 
 .otherMenuOption{
+  outline:none;
+  -webkit-focus-ring-color:transparent;
   height:40px;
   border:1px solid rgba(255,255,255,.17);
   border-radius:13px;
@@ -637,6 +641,8 @@ canvas{
 }
 
 #miniMenuButton{
+  outline:none;
+  -webkit-focus-ring-color:transparent;
   position:absolute;
   top:10px;
   right:10px;
@@ -680,6 +686,8 @@ canvas{
 }
 
 .miniMenuOption{
+  outline:none;
+  -webkit-focus-ring-color:transparent;
   min-height:38px;
   padding:0 12px;
   animation:miniMenuFloatDown .22s ease both;
@@ -1980,7 +1988,7 @@ html.roomJoinMode #roomJoinScreen{
     <h1 class="title">3Dfps</h1>
 
     <div class="subtitle">
-      v1.11.0
+      v1.11.1
     </div>
 
     <button id="randomMatchButton" class="button">
@@ -5221,6 +5229,9 @@ function getPlayerName(){
 
 async function startRandomMatch(){
 
+  gameEnded = false;
+  gameStarted = false;
+  matchHasStarted = false;
   roomMatchModalOpen = false;
   if(roomMatchModal) roomMatchModal.style.display = "none";
 
@@ -9822,8 +9833,9 @@ matchingReadyButton.addEventListener(
 );
 
 function miniActionIsVisible(){
-  if(!matchingScreen||matchingScreen.style.display!=="flex"||gameEnded) return false;
+  if(!matchingScreen||matchingScreen.style.display!=="flex") return false;
   if(standaloneMiniMode) return Boolean(miniActionState?.active && (miniMode==="play"||miniEditorTestMode));
+  if(gameEnded) return false;
   return Boolean(
     matchType === "random" &&
     latestMatchData &&
@@ -11326,6 +11338,7 @@ function miniMenuClose(){
     miniMenuOptions.querySelectorAll(".miniMenuOption").forEach(button=>button.classList.remove("active"));
   }
   miniMenuPointerId=null;
+  try{miniMenuButton?.blur();}catch(error){}
 }
 
 function miniMenuOpenNow(){
@@ -11415,6 +11428,7 @@ function otherMenuClose(){
     otherMenuOptions.querySelectorAll(".otherMenuOption").forEach(button=>button.classList.remove("active"));
   }
   otherMenuPointerId=null;
+  try{otherMenuButton?.blur();}catch(error){}
 }
 
 function otherMenuOpenNow(){
@@ -11490,6 +11504,9 @@ function setupOtherMenu(){
 
 function openStandaloneMiniGame(){
   standaloneMiniMode=true;
+  gameEnded=false;
+  gameStarted=false;
+  matchHasStarted=false;
   otherMenuClose();
   menu.style.display="none";
   if(playerSettingsModal) playerSettingsModal.style.display="none";
