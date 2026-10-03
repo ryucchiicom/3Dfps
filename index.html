@@ -9103,7 +9103,7 @@ function gameLoop(
   updateNeonEdges(time);
   updateMiniActionGame(delta,time);
 
-  if(latestMatchData){
+  if(latestMatchData && !standaloneMiniGameMode){
     if(latestMatchData.status === "waiting" && matchType === "random") updateMatchingUI(latestMatchData);
     if(latestMatchData.status === "rule") updateRuleUI(latestMatchData);
   }
